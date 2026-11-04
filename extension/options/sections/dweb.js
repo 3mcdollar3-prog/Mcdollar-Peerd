@@ -1,0 +1,183 @@
+// @ts-check
+// Options → Decentralized web (preview packages only).
+//
+// Ported from the panel's dweb section. DWEB_ENABLED is a build-time
+// literal: the store package's copy of channel-config.js has it false, the
+// options shell never registers this route or nav entry, the dwebEnabled
+// key doesn't exist in CHANNEL_DEFAULTS, and the module behind loadDweb()
+// isn't even in that artifact — this file is structurally dead code
+// there. loadDweb() from /shared/dweb-loader.js is the ONE sanctioned
+// path to the module (packaging/check-dweb-boundary.ts enforces it).
+
+import m from '/vendor/mithril/mithril.js';
+import { loadDweb } from '/shared/dweb-loader.js';
+import { DWEB_ENABLED } from '/shared/channel-config.js';
+import { openHome } from '/shared/open-home.js';
+import { resetRow } from './reset-row.js';
+import { settingsRow, toggleSwitch, rowController } from '../components/settings-row.js';
+
+/** @typedef {import('./reset-row.js').Send} Send */
+
+export const DwebSection = {
+  /** @param {{ attrs?: { loadStatus?: () => Promise<any> }, state: any }} vnode */
+  oninit(vnode) {
+    vnode.state.dwebStatus = null;             // { available, phase, did }
+    vnode.state.dwebBusy = false;
+    vnode.state.dwebError = null;
+    vnode.state.dwebStopIncomplete = false;
+    vnode.state.dwebOutcomeUnknown = false;
+    if (DWEB_ENABLED) {
+      const loadStatus = vnode.attrs?.loadStatus
+        ?? (() => loadDweb().then((client) => client.getStatus()));
+      loadStatus()
+        .then((s) => { vnode.state.dwebStatus = s; m.redraw(); })
+        .catch(() => {});
+    }
+  },
+
+  /** @param {{ attrs: { state: any, send: Send }, state: any }} vnode */
+  view: ({ attrs: { state, send }, state: ui }) => {
+    // Preview-only key; undefined (and unrenderable) on store packages.
+    const dwebEnabled = !!state.settings?.dwebEnabled;
+    const agentOn = !!state.settings?.dwebAgentEnabled;
+    const { whyOpen, toggleWhy, toggleRow } = rowController(ui);
+
+    // The network switch is NOT a plain toggleRow: it has a third state. When
+    // the setting persisted Off but the live network refused to stop, the
+    // stored value and the running network disagree, and the row has to say
+    // so rather than showing a clean OFF. An explicit Retry stop button keeps
+    // recovery discoverable and requests Off again rather than negating
+    // `dwebEnabled`.
+    const networkBusy = !!ui.dwebBusy;
+    const stopFailed = !!ui.dwebStopIncomplete;
+    const applyNetwork = async () => {
+      if (ui.dwebBusy) return;
+      if (ui.dwebOutcomeUnknown) {
+        location.reload();
+        return;
+      }
+      const targetEnabled = stopFailed ? false : !dwebEnabled;
+      ui.dwebBusy = true;
+      ui.dwebError = null;
+      try {
+        const reply = await send({ type: 'settings/update', patch: { dwebEnabled: targetEnabled } });
+        if (reply?.outcomeKnown === false) {
+          ui.dwebOutcomeUnknown = true;
+          ui.dwebStopIncomplete = false;
+          ui.dwebError = 'Peerd could not confirm whether the dweb change finished. Reload settings to reconcile before changing it again.';
+        } else if (reply?.ok) {
+          ui.dwebOutcomeUnknown = false;
+          ui.dwebStopIncomplete = false;
+        } else if (!targetEnabled && reply?.settings?.dwebEnabled === false) {
+          ui.dwebStopIncomplete = true;
+          ui.dwebError = 'dweb is set to Off, but the live network could not be stopped. Restart peerd or try again.';
+        } else {
+          ui.dwebError = 'Could not update dweb. Try again.';
+        }
+      } catch {
+        ui.dwebOutcomeUnknown = true;
+        ui.dwebStopIncomplete = false;
+        ui.dwebError = 'Peerd could not confirm whether the dweb change finished. Reload settings to reconcile before changing it again.';
+      } finally {
+        ui.dwebBusy = false;
+        m.redraw();
+      }
+    };
+    // Status belongs INSIDE the network row, not between the two rows: it is
+    // only meaningful while the network is on, and a loose paragraph between
+    // rows breaks the scan the row pattern exists to give.
+    const networkStatus = ui.dwebStatus ? m('p.hint', [
+      `Protocol phase ${ui.dwebStatus.phase ?? 'unknown'}. `,
+      ui.dwebStatus.did
+        ? ['Peer identity: ', m('code', ui.dwebStatus.did), '. ',
+          m('a', { href: '#!/transfer' }, 'Back up or restore this identity.')]
+        : 'Identity is vault-stored and created on first room join.',
+    ]) : null;
+    const networkRow = settingsRow({
+      id: 'dweb-network',
+      label: 'Participate in the dweb',
+      pill: networkBusy ? '\u2026' : dwebEnabled ? 'ON' : 'OFF',
+      badge: ui.dwebOutcomeUnknown ? 'STATUS UNKNOWN' : stopFailed ? 'STILL RUNNING' : null,
+      summary: networkBusy
+        ? 'Saving\u2026'
+        : ui.dwebOutcomeUnknown
+          ? 'The last change could not be confirmed. Reload settings to reconcile.'
+        : stopFailed
+          ? 'Set to Off, but the live network is still running. Retry to stop it.'
+          : dwebEnabled
+            ? 'This peerd can join dweb rooms with other instances and run peer-to-peer dwapps.'
+            : 'The peer network is off. Enable it to discover and share peer-hosted apps.',
+      why: dwebEnabled
+        ? 'The peer network connects this browser to other peers to discover, '
+          + 'download, and share published apps. It uses bandwidth and storage; '
+          + 'connected peers can see your network address. Private apps, files, '
+          + 'and chats are not published by turning this on. Turn it off to stop '
+          + 'peer-network activity.'
+        : 'Joining is optional. Turning this on starts peer-network connections '
+          + 'for app discovery and sharing. You can change this choice at any time. '
+          + 'Allowing peers to trigger agent work is a separate setting.',
+      open: whyOpen('dweb-network'),
+      onToggleWhy: toggleWhy('dweb-network'),
+      control: ui.dwebOutcomeUnknown ? m('button.secondary', {
+        type: 'button', disabled: networkBusy, onclick: applyNetwork,
+      }, 'Reload dweb status') : stopFailed ? m('button.secondary', {
+        type: 'button', disabled: networkBusy, onclick: applyNetwork,
+      }, 'Retry stop') : toggleSwitch({
+        on: dwebEnabled,
+        busy: networkBusy,
+        label: `Participate in the dweb - ${dwebEnabled ? 'on' : 'off'}`,
+        onclick: applyNetwork,
+      }),
+      children: networkStatus,
+    });
+
+    return m('div', [
+      m('.dweb-banner', [
+        m('strong', 'Dweb preview. '),
+        'This is research-grade. The protocol may change; data formats '
+        + 'may evolve. Network participation is off until you enable it.',
+      ]),
+      m('p', 'You’re running peerd with the dweb preview enabled. '
+        + 'The core extension is the same peerd that ships on the stores - '
+        + 'only this dweb overlay is preview.'),
+      networkRow,
+      ui.dwebError ? m('p.error', { role: 'alert' }, ui.dwebError) : null,
+      // The dweb AGENT - the mesh-operator actor. Nested under the network
+      // toggle (no network, no agent) and OPT-IN: an agent peers can wake is a
+      // posture the user chooses.
+      dwebEnabled ? toggleRow({
+        id: 'dweb-agent',
+        label: 'dweb agent',
+        on: agentOn,
+        busyKey: 'dwebAgentBusy',
+        disabled: ui.dwebOutcomeUnknown,
+        summary: agentOn
+          ? 'Addressable as "dweb" in chat (message_actor); joins the agent inbox on unlock.'
+          : 'The mesh tools are unavailable - they live on this agent, not the chat agent.',
+        why: 'A dedicated, isolated agent that operates the mesh for you: it '
+          + 'holds the dweb tools (discover, share, install, block), keeps a '
+          + 'ledger of peers and publishers, and monitors messages sent to '
+          + 'your agent - surfacing only what matters. It runs keyless in its '
+          + 'own worker, can never be made to act by an inbound message, and '
+          + 'installs or shares only with your confirmation.',
+        apply: () => send({
+          type: 'settings/update',
+          patch: { dwebAgentEnabled: !agentOn },
+        }),
+      }) : null,
+
+      // Commons is an explicit starter choice; enabling the network does not
+      // install or open it, and joining its named room remains a separate action.
+      dwebEnabled ? m('div', { style: 'margin-top:14px; border-top:1px solid var(--hairline, #2a2a2a); padding-top:14px;' }, [
+        m('h3', 'Chat rooms'),
+        m('p', 'Chat with peers who join the same named room, with room chat '
+          + 'and private one-to-one chats. This is not a global public chat. '
+          + 'In Discover, choose Add and open Chat rooms. To try it with another '
+          + 'profile or machine, open the Chat rooms app there and join the same room code.'),
+        m('button.secondary', { type: 'button', onclick: () => openHome('discover') }, 'Open Discover'),
+      ]) : null,
+
+      ui.dwebOutcomeUnknown ? null : resetRow(send, ['dwebEnabled', 'dwebAgentEnabled']),
+    ]);
+  },
+};

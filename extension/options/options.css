@@ -1,0 +1,840 @@
+/* peerd options page — full-tab settings surface.
+ *
+ * styles.css (linked first) was written for the ~400px side panel and
+ * carries all the component styling this page reuses (provider cards,
+ * inputs, memory editors, log rows, modals). This sheet adds ONLY what
+ * a full browser tab needs: the two-column shell (nav rail + content
+ * column), a readable content max-width, and the locked-vault gate.
+ *
+ * Brand rule holds here exactly as in the panel: monochrome surfaces,
+ * the wordmark is the ONLY color carrier, and failure/error red is the
+ * lone semantic exception. No new accent colors.
+ */
+
+.options-shell {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  min-height: 100vh;
+}
+
+/* --- nav rail ----------------------------------------------------------- */
+
+.options-nav {
+  flex: 0 0 220px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elev);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* why sticky: the content column scrolls long (Activity, pricing
+   * table); the nav should stay reachable without scrolling back up. */
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+/* align-self:flex-start keeps the wordmark CONTENT width in the nav column —
+ * otherwise the flex column stretches it to the full rail and the intro's
+ * terminal rail (::before, inset:0) becomes a long bar right of the blocks. */
+.options-nav .wordmark { margin: 0 0 6px 4px; align-self: flex-start; }
+/* Preview badge sits left-aligned directly under the wordmark (the nav is a
+ * column, so styles.css's align-self:center would float it to the middle of
+ * the rail). There's room at 220px without widening — just left-align it and
+ * match the wordmark's 4px inset. */
+.options-nav .channel-badge { align-self: flex-start; margin: 0 0 14px 4px; }
+/* Preview badge fades in alongside the wordmark's render-in (first open + each
+ * time you switch back to the tab — the Wordmark component restarts this by
+ * toggling the class). */
+.channel-badge--in { animation: channelBadgeIn 300ms 220ms both; }
+@keyframes channelBadgeIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .channel-badge--in { animation: none; }
+}
+
+.options-nav-group {
+  margin: 14px 4px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+}
+.options-nav-group:first-of-type { margin-top: 2px; }
+
+.options-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+.options-nav-item:hover { background: var(--bg); color: var(--fg); }
+/* Active state stays monochrome — weight + surface, never a color. */
+.options-nav-item.is-active {
+  background: var(--bg);
+  color: var(--fg);
+  font-weight: 600;
+}
+.options-nav-item .mem-badge { margin-left: auto; }
+
+/* --- content column ------------------------------------------------------ */
+
+.options-content {
+  flex: 1;
+  min-width: 0;
+  padding: 24px 28px 56px;
+}
+
+.options-page > .actor-isolation-banner {
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  margin-bottom: 18px;
+}
+
+/* why the max-width: styles.css assumed a ~400px panel where lines
+ * could never run long; a full tab needs an explicit readable column. */
+.options-page { max-width: 760px; }
+
+.options-page > h2 {
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Typography parity with the panel's .settings-section-body — the
+ * disclosure Section wrapper is gone, so re-scope its body rules here. */
+.options-page h3 { font-size: 13px; font-weight: 600; margin: 16px 0 4px; }
+.options-page h3:first-of-type { margin-top: 10px; }
+.options-page p { margin: 0 0 10px; color: var(--fg-muted); font-size: 13px; }
+.options-page p.error { color: var(--danger-ink); }
+.options-page .hint { font-size: 12px; margin-top: 4px; }
+/* why: the two buttons of the page Discover's Try opens must not touch. */
+.starter-review > button + button { margin-inline-start: 8px; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Identity replacement is the one destructive action on this page. The
+ * semantic error red is the brand rule's sanctioned exception. */
+.options-page button.danger {
+  background: transparent;
+  color: var(--danger-ink);
+  border-color: var(--danger);
+}
+.options-page button.danger:hover { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.identity-replace-confirmation {
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+.import-summary h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.import-setting-values code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.identity-did {
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.transfer-progress { color: var(--fg); }
+.transfer-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.transfer-progress-row .transfer-progress { margin: 0; }
+.options-page .transfer-status--success { color: var(--fg); }
+.options-page .transfer-status--error { color: var(--danger-ink); }
+.identity-replace-confirmation:focus { outline: 2px solid var(--danger); outline-offset: 2px; }
+
+/* why transfer controls use neutral ink: cyan with light text misses AA text
+ * contrast in light mode, while the product's surface language is monochrome.
+ * The stronger neutral borders also keep form boundaries and focus visible. */
+.transfer-section button { min-height: 44px; }
+.transfer-section button:not(.secondary):not(.danger) {
+  background: var(--fg);
+  color: var(--bg);
+}
+.transfer-section button.secondary { border-color: var(--border-strong); }
+.transfer-section input[type="password"] {
+  box-sizing: border-box;
+  min-height: 44px;
+  border-color: var(--border-strong);
+}
+.transfer-section input[type="file"] {
+  box-sizing: border-box;
+  min-height: 44px;
+  color: var(--fg);
+}
+.transfer-section input[type="file"]::file-selector-button {
+  min-height: 44px;
+  margin-inline-end: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+.transfer-section input[type="password"]:focus,
+.transfer-section input[type="password"]:focus-visible,
+.transfer-section input[type="file"]:focus-visible,
+.transfer-section button:focus-visible {
+  border-color: var(--fg);
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
+/* --- vault gate ----------------------------------------------------------- */
+
+.options-gate {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 16px;
+}
+.options-gate-card {
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+.options-gate-card .wordmark { --wm-size: 36px; }
+.options-gate-card h2 { margin: 6px 0 0; font-size: 17px; font-weight: 600; }
+.options-gate-card p { margin: 0; color: var(--fg-muted); font-size: 13px; }
+
+/* ── Home page: section rhythm + the Library card grid ───────────────────────
+   Monochrome by the brand rule. The primary action (Open) is weight + border,
+   never fill/color (mirrors .options-nav-item.is-active); depth is neutral black
+   alpha, not color; the lone semantic color is --danger TEXT on the delete item. */
+.home-topbar { display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+.home-section + .home-section { margin-top: 28px; }
+.home-section-head { margin: 0 0 12px; }
+.home-section-head h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.home-section-sub { margin: 4px 0 0; font-size: 12.5px; color: var(--fg-muted); }
+
+/* The Library filter — a regular themed search input (the shared
+   input[type=search] rule in styles.css carries the surface + magnifier; this
+   just sizes it for the grid). */
+.library-search { width: 100%; margin: 0 0 14px; font-size: 13px; }
+.library-git-import { margin: 0 0 14px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); }
+.library-git-import > p { margin: 5px 0 8px; font-size: 11px; }
+.library-git-import-row { display: grid; grid-template-columns: minmax(14rem, 2fr) minmax(8rem, 1fr) minmax(8rem, 1fr) auto; gap: 6px; }
+.library-git-import-row input { min-width: 0; font-size: 11px; }
+
+.library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.library-card {
+  display: flex; flex-direction: column; gap: 8px; min-height: 0; padding: 13px 14px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+  transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+}
+.library-card:hover { border-color: var(--border-strong); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); transform: translateY(-1px); }
+.library-card.is-expanded { grid-column: 1 / -1; }
+.library-head { display: flex; align-items: flex-start; gap: 9px; }
+/* The avatar is the card's one splash of brand color (hue set inline, stable
+   per app id) — a saturated block with dark glyph for contrast on every hue. */
+.library-avatar {
+  width: 32px; height: 32px; flex: 0 0 auto; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: #0a0a0a; font-weight: 700; text-transform: uppercase; font-size: 14px;
+}
+.library-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.library-meta { font-size: 11px; color: var(--fg-muted); }
+.library-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.library-tag { font-size: 10px; border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; color: var(--fg-muted); }
+
+/* Favorite: glyph carries the state, amber-gold fill is the splash of color
+   (used by the per-card star AND the header favorites-only toggle). */
+.library-star.is-on { color: var(--amber); }
+/* The manual ↻ spins while a refresh is in flight (brand cadence 0.85s). */
+.library-refresh.is-spinning { animation: library-spin 0.85s linear infinite; }
+@keyframes library-spin { to { transform: rotate(360deg); } }
+/* "update available" for an installed dwapp — a quiet brand-cyan line. */
+.library-update-badge { font-size: 11px; margin: 2px 0 0; color: var(--accent); display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.library-changelog { color: var(--fg-muted); line-height: 1.35; white-space: pre-wrap; }
+.library-notice { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 12px; }
+
+/* Buttons: override the inherited filled-cyan default (styles.css button) on
+   these surfaces — quiet monochrome ghosts; Open is the lone weight-primary. */
+.library-btn, .library-open {
+  font: inherit; font-size: 12.5px; line-height: 1; padding: 5px 11px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: transparent; color: var(--fg); cursor: pointer;
+}
+.library-btn:hover, .library-open:hover { background: var(--bg-elev); }
+.library-open { border-color: var(--border-strong); font-weight: 600; }
+.library-btn:disabled, .library-open:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.library-actions { position: relative; display: flex; align-items: center; gap: 6px; margin-top: auto; }
+.library-actions .spacer { flex: 1; }
+.library-kebab, .library-star { line-height: 1; }
+
+.library-menu {
+  position: absolute; right: 0; bottom: calc(100% + 4px); z-index: 5; min-width: 140px;
+  display: flex; flex-direction: column; padding: 4px;
+  background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+.library-menu-item {
+  text-align: left; font: inherit; font-size: 12.5px; padding: 6px 9px;
+  border: none; border-radius: 4px; background: transparent; color: var(--fg); cursor: pointer;
+}
+.library-menu-item:hover { background: var(--bg); }
+.library-menu-item:disabled { opacity: 0.5; cursor: not-allowed; }
+.library-menu-item.is-danger { color: var(--danger); }
+.library-menu-sep { height: 1px; margin: 4px 2px; background: var(--border); }
+.library-repository, .library-update-conflict { margin-top: 4px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); }
+.library-repository-head { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.library-repository-head .muted { flex: 1; font-family: var(--font-mono); font-size: 10.5px; }
+.library-repository-dirty, .library-remote-actions { display: flex; align-items: center; gap: 6px; margin-top: 9px; font-size: 11px; }
+.library-repository-dirty span, .library-remote-actions span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.library-repository-dirty input { flex: 2; min-width: 8rem; font-size: 11px; }
+.library-repository-clean { margin: 8px 0 0; font-size: 11px; }
+.library-change-list { display: flex; flex-direction: column; gap: 2px; margin-top: 5px; font-size: 10px; overflow: hidden; }
+.library-branch-row, .library-remote-row { display: flex; gap: 6px; margin-top: 9px; }
+.library-branch-row input, .library-remote-row input { flex: 1; min-width: 0; font-size: 11px; }
+.library-branch-row select {
+  min-width: 0; padding: 0 24px 0 7px; border: 1px solid var(--border); border-radius: var(--radius);
+  background-color: var(--bg); color: var(--fg); font: inherit; font-size: 11px;
+}
+.library-repository-help { margin: 7px 0 0; font-size: 10.5px; line-height: 1.4; }
+.library-commit-list { display: flex; flex-direction: column; gap: 0; margin-top: 10px; border-top: 1px solid var(--border); max-height: 260px; overflow: auto; }
+.library-commit-block { border-bottom: 1px solid var(--border); }
+.library-commit { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto auto auto; align-items: center; gap: 7px; padding: 6px 0; font-size: 10.5px; }
+.library-commit-message { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.library-diff { padding: 0 0 8px; }
+.library-diff-summary { margin-bottom: 4px; font-size: 10px; }
+.library-diff pre { max-height: 210px; margin: 0; padding: 7px; overflow: auto; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--fg); font: 10px/1.45 var(--font-mono); white-space: pre; }
+.library-btn.is-armed { color: var(--danger); border-color: var(--danger); }
+.library-update-conflict strong { font-size: 12px; }
+.library-update-conflict p { margin: 5px 0 9px; color: var(--fg-muted); font-size: 11px; line-height: 1.4; }
+@media (max-width: 720px) {
+  .library-git-import-row { grid-template-columns: 1fr; }
+  /* Keep both actions usable when the branch label and refresh control no
+     longer fit on one line. The branch takes its own row, never button space. */
+  .library-repository-head { flex-wrap: wrap; }
+  .library-repository-head > strong { flex: 1; min-width: 0; }
+  .library-repository-head .muted { flex-basis: 100%; min-width: 0; order: 1; overflow-wrap: anywhere; }
+  .library-repository-head button { flex-shrink: 0; min-width: 28px; min-height: 28px; white-space: nowrap; }
+  .library-repository-dirty, .library-remote-actions, .library-branch-row, .library-remote-row { flex-wrap: wrap; }
+  .library-repository-dirty input, .library-branch-row input, .library-remote-row input { flex-basis: 100%; }
+  .library-commit { grid-template-columns: 72px minmax(0, 1fr) auto auto; }
+  .library-commit > .muted { grid-column: 1; grid-row: 2; }
+}
+
+/* ── Discover (the dweb app store, 2a flow) ────────────────────────────────
+   One view with sub-pages: a start list while the peer network is off, a tile
+   grid while it is on, and a page per app and per maker. Surfaces stay
+   monochrome; the only colour is each letter avatar's brand tone (set inline
+   from a token). The type scale mirrors the design-system classes the frames
+   use, scoped to Discover. (The flat .peerd-disc-row list below is Contacts.) */
+.disc-home .type-hero { font-family: var(--font-display); font-size: clamp(32px, 4vw, 54px); line-height: 1; font-weight: 700; letter-spacing: -0.05em; }
+.disc-home .type-page-title { font-size: 18px; line-height: 1.45; font-weight: 600; }
+.disc-home .type-heading { font-size: 16px; line-height: 1.45; font-weight: 700; }
+.disc-home .type-subheading { font-size: 14px; line-height: 1.45; font-weight: 600; }
+.disc-home .type-label-strong { font-size: 13px; line-height: 1.45; font-weight: 600; }
+.disc-home .type-body { font-size: 14px; line-height: 1.45; font-weight: 400; }
+.disc-home .type-body-sm { font-size: 13px; line-height: 1.45; font-weight: 400; }
+.disc-home .type-small { font-size: 12px; line-height: 1.45; font-weight: 400; }
+.disc-home .type-code { font-family: var(--font-mono); font-size: 11px; line-height: 1.45; font-weight: 400; }
+
+.disc-home { width: 100%; max-width: 1080px; margin: 0 auto; }
+.disc-view { display: flex; flex-direction: column; gap: 24px; }
+/* why 640px: the frames draw single-column views at 696px with 28px padding. */
+.disc-view.disc-page, .disc-view.disc-start-view { max-width: 640px; }
+.disc-view .error, .disc-view > p { margin: 0; }
+.disc-intro { display: flex; flex-direction: column; gap: 10px; padding-bottom: 4px; }
+.disc-intro h1 { margin: 0; }
+.disc-intro p { margin: 0; color: var(--secondary); max-width: 46ch; }
+.disc-view > h1 { margin: 0; }
+.disc-section { display: flex; flex-direction: column; gap: 8px; }
+.disc-section--tight { gap: 4px; }
+.disc-btn { min-height: 40px; padding: 0 16px; }
+.disc-primary { min-height: 40px; padding: 0 18px; font-weight: 600; }
+/* why: Open runs the app in its own tab, so it carries the external-link icon. */
+.disc-primary--open { display: inline-flex; align-items: center; gap: 8px; }
+.disc-footnote { margin: 0; color: var(--secondary); }
+.disc-more { align-self: center; }
+
+/* Start list: an icon disc, a title and one sentence, one button. The share
+   row opens in place with an input. */
+.disc-start-list { list-style: none; margin: 0; padding: 0; }
+.disc-start-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 18px 0; border-top: 1px solid var(--border); }
+.disc-start-row.is-open { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 12px; }
+.disc-start-view .disc-start-list > :last-child { border-bottom: 1px solid var(--border); }
+/* why the icon and text share one group: on a narrow column the button wraps
+   under them, and the icon stays beside its title. */
+.disc-start-main { flex: 1 1 320px; min-width: 0; display: flex; align-items: center; gap: 16px; }
+.disc-start-row.is-open > .disc-start-main { flex: none; }
+.disc-start-icon { flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--elev2); color: var(--text); display: flex; align-items: center; justify-content: center; }
+.disc-start-text { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.disc-start-row.is-open .disc-start-text { flex: 1; }
+.disc-start-text > :not(.type-heading) { color: var(--secondary); }
+.disc-start-small { margin-top: 4px; }
+.disc-start-action { flex: none; }
+.disc-start-note { flex: 1 1 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.disc-start-form { display: flex; flex-wrap: wrap; gap: 8px; }
+.disc-start-form input[type="text"] { flex: 1 1 260px; min-width: 0; min-height: 40px; }
+.disc-start-row.is-open > p { margin: 0; }
+.disc-start-form + p:not(.error) { color: var(--secondary); }
+.disc-note-box { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r3); background: var(--elev); }
+.disc-note-icon { flex: none; display: flex; color: var(--text); padding-top: 2px; }
+.disc-note-box p { margin: 0; color: var(--text); }
+
+/* Letter avatar: one letter on the app's or maker's brand tone. */
+.disc-letter { flex: none; display: flex; align-items: center; justify-content: center; color: var(--on-accent-aa); font-family: var(--font-display); font-weight: 700; line-height: 1; letter-spacing: -0.04em; }
+.disc-letter--tile { width: 56px; height: 56px; border-radius: 14px; font-size: 25px; }
+.disc-letter--page { width: 72px; height: 72px; border-radius: 18px; font-size: 32px; }
+.disc-letter--row { width: 48px; height: 48px; border-radius: 12px; font-size: 21px; }
+.disc-letter--person { width: 64px; height: 64px; border-radius: 50%; font-family: inherit; font-weight: 600; font-size: 27px; letter-spacing: 0; }
+.disc-letter--chip { width: 40px; height: 40px; border-radius: 10px; font-size: 18px; }
+
+/* Tiles share the Library's card skeleton, so the two home tabs read as one
+   surface. */
+.disc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+.disc-card {
+  display: flex; flex-direction: column; gap: 8px; min-height: 0; padding: 13px 14px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+  transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+}
+.disc-card:hover { border-color: var(--border-strong); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); transform: translateY(-1px); }
+.disc-card.disc-tile { position: relative; padding: 18px; gap: 14px; border-radius: var(--r4); }
+.disc-tile-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.disc-tile-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.disc-tile-meta { color: var(--secondary); }
+.disc-home .disc-maker-key { font-size: 12px; }
+.disc-tile-desc { margin: 0; overflow-wrap: anywhere; }
+.disc-tile-desc.is-missing { color: var(--secondary); }
+.disc-tile-status { color: var(--secondary); }
+.disc-tile-action { min-height: 36px; padding: 0 16px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.disc-actions { position: relative; z-index: 1; align-self: flex-start; display: flex; align-items: center; gap: 6px; margin-top: auto; }
+/* why a stretched name button: a tile with no action ("Can’t run") must
+   still open its page from the keyboard, and the whole tile stays a target.
+   The action sits above the stretched area. */
+button.disc-tile-open { display: block; max-width: 100%; padding: 0; border: 0; border-radius: 0; background: none; color: inherit; text-align: left; }
+.disc-tile-open::after { content: ''; position: absolute; inset: 0; border-radius: var(--r4); }
+.disc-tile-open:focus-visible { outline: none; }
+.disc-tile-open:focus-visible::after { outline: 2px solid var(--fg); outline-offset: 2px; }
+.disc-refresh.is-spinning { animation: library-spin 0.85s linear infinite; }
+
+.disc-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.disc-status-live { display: inline-flex; align-items: center; gap: 8px; }
+.disc-status-count { color: var(--secondary); }
+.disc-status .spacer { flex: 1; }
+.disc-status button.secondary { min-height: 34px; }
+.disc-status .disc-refresh { width: 34px; height: 34px; }
+
+.disc-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.disc-pill { font: inherit; font-size: 13px; min-height: 34px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg); color: var(--secondary); white-space: nowrap; cursor: pointer; transition: background 120ms ease, color 120ms ease, border-color 120ms ease; }
+.disc-pill:hover { color: var(--text); border-color: var(--border-strong); }
+.disc-pill[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.disc-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* why: the shared label style is an upper-case caption; Discover's labels are plain words. */
+.disc-home label { text-transform: none; letter-spacing: normal; color: var(--text); }
+.disc-search-field { display: flex; flex-direction: column; gap: 8px; }
+.disc-search { width: 100%; min-height: 44px; margin: 0; font-size: 14px; }
+
+/* Your apps: the Library's apps at the top of the network-on roots, each
+   with Open. Not tiles, so the tile classes stay off it. */
+.disc-yours { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.disc-yours h2 { margin: 0; }
+.disc-yours-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 12px; max-width: 100%; }
+.disc-yours-item { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; max-width: 100%; box-sizing: border-box; padding: 10px 14px 10px 10px; border: 1px solid var(--border); border-radius: var(--r4); background: var(--elev); }
+.disc-home .disc-yours-name { flex: 1 1 auto; min-width: 0; max-width: 24ch; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* why the auto margin: a line about a failed Open widens the item, and Open stays at its end. */
+.disc-yours-open { flex: none; min-height: 36px; padding: 0 12px; font-size: 13px; margin-inline-start: auto; }
+.disc-yours-item > p { flex: 1 1 100%; margin: 0; }
+.disc-yours > button.linklike.disc-link-btn { min-height: 32px; padding: 0; }
+/* why one line that scrolls on a narrow column: six stacked cards push the
+   search far down. The padding keeps focus rings inside the scroll box. */
+@media (max-width: 480px) {
+  .disc-yours-list { flex-wrap: nowrap; overflow-x: auto; padding: 2px 2px 6px; }
+  .disc-yours-item { flex: none; }
+}
+button.linklike.disc-link-btn { min-height: 40px; padding: 0 4px; align-self: auto; }
+
+.disc-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; padding: 40px 16px; }
+.disc-empty--boxed { border: 1px dashed var(--border); border-radius: var(--r4); }
+.disc-empty h2 { margin: 0; }
+.disc-empty-waiting { display: flex; align-items: center; gap: 10px; }
+.disc-empty p { margin: 0; color: var(--secondary); max-width: 40ch; }
+.disc-empty-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+/* App page: back link, header, action panel with the install steps, safety
+   lines and Technical details. */
+button.linklike.disc-back { align-self: flex-start; max-width: 100%; padding: 0; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+/* why an ellipsis: on a maker page Back names the app, which is peer text. */
+.disc-back bdi { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* why an offset ring: these link buttons have little or no padding, so the
+   default ring sits on the text. The page opens with focus on Back. */
+.disc-home button.linklike:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.disc-back .disc-flip { display: inline-flex; transform: rotate(180deg); }
+.disc-app-head { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+/* why a 160px basis: on a narrow column Share wraps under the name, and the
+   name stays beside its letter. */
+.disc-app-id { flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+button.disc-share-open { flex: none; min-height: 40px; padding: 0 14px; display: inline-flex; align-items: center; gap: 8px; }
+.disc-app-title { margin: 0; overflow-wrap: anywhere; }
+.disc-home .disc-app-title { font-size: 22px; }
+button.linklike.disc-app-maker { padding: 0; font-size: 13px; text-align: left; align-self: flex-start; }
+.disc-app-size { color: var(--secondary); }
+.disc-app-desc { margin: 0; max-width: 56ch; overflow-wrap: anywhere; }
+.disc-app-desc.is-missing { color: var(--secondary); }
+
+.disc-panel { padding: 18px; border: 1px solid var(--border); border-radius: var(--r4); background: var(--elev); display: flex; flex-direction: column; gap: 14px; }
+.disc-panel p { margin: 0; }
+.disc-panel .error { font-size: 14px; }
+.disc-panel-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.disc-panel-cta { display: flex; flex-direction: column; gap: 6px; }
+.disc-panel .disc-hint { color: var(--secondary); }
+/* why: after an install, focus moves to this line (never to Open). */
+.disc-installed:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.disc-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
+.disc-step { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; }
+.disc-step-mark { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--border-strong); display: inline-flex; align-items: center; justify-content: center; font: 600 12px/1 var(--font-mono); color: var(--muted); }
+.disc-step-text { display: flex; flex-direction: column; gap: 1px; padding-top: 4px; }
+.disc-step-title { font-size: 14px; font-weight: 400; color: var(--muted); }
+.disc-step-sub { color: var(--secondary); }
+.disc-step.is-current .disc-step-mark { border-color: var(--text); color: var(--text); }
+.disc-step.is-done .disc-step-mark { border-color: var(--text); background: var(--text); color: var(--bg); }
+.disc-step.is-working .disc-step-mark { border: 0; }
+.disc-step.is-failed .disc-step-mark { border-color: var(--danger); color: var(--danger-ink); }
+.disc-step.is-unknown .disc-step-mark { color: var(--text); }
+.disc-step.is-done .disc-step-title { color: var(--text); }
+.disc-step.is-current .disc-step-title,
+.disc-step.is-working .disc-step-title,
+.disc-step.is-failed .disc-step-title,
+.disc-step.is-unknown .disc-step-title { font-weight: 600; color: var(--text); }
+
+.disc-safety { gap: 12px; }
+.disc-safety h3 { margin: 0; }
+.disc-safety-row { display: flex; gap: 12px; align-items: flex-start; }
+.disc-safety-icon { flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--elev2); color: var(--text); display: flex; align-items: center; justify-content: center; }
+.disc-safety-text { padding-top: 6px; min-width: 0; overflow-wrap: anywhere; }
+.disc-chip--strong { align-self: flex-start; margin-top: 4px; padding: 3px 10px; border: 1px solid var(--border-strong); border-radius: 999px; }
+/* The app says it: what the app asks of peerd, as chips that wrap. */
+.disc-says h3, .disc-says p { margin: 0; }
+.disc-says-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.disc-says-chips li { padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--text); }
+.disc-says-chips li.is-strong { border-color: var(--border-strong); font-weight: 600; }
+
+button.linklike.disc-tech-toggle { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; align-self: flex-start; padding: 6px 0; }
+.disc-chevron { display: inline-flex; transition: transform 120ms ease; }
+.disc-tech-toggle[aria-expanded="true"] .disc-chevron { transform: rotate(180deg); }
+.disc-facts { display: grid; grid-template-columns: minmax(0, 110px) minmax(0, 1fr); gap: 0 14px; margin: 0; font-size: 12px; }
+.disc-facts[hidden] { display: none; }
+.disc-facts dt, .disc-facts dd { padding: 7px 0; border-top: 1px solid var(--border); }
+.disc-facts dt { color: var(--fg-muted); }
+.disc-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+
+/* Maker page: a round letter, the saved contact name, and their apps as rows. */
+.disc-person-head { display: flex; gap: 16px; align-items: center; }
+.disc-person-id { flex: 1; min-width: 0; }
+.disc-person-id h2 { margin: 0; overflow-wrap: anywhere; }
+.disc-home .disc-person-id h2 { font-size: 22px; }
+.disc-person-id h2 .type-code { font-size: inherit; }
+.disc-person-id > div { color: var(--secondary); }
+.disc-app-list { list-style: none; margin: 0; padding: 0; }
+.disc-app-row { position: relative; display: flex; align-items: center; gap: 16px; padding: 14px 0; border-top: 1px solid var(--border); }
+.disc-app-row-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.disc-app-row-id > .type-subheading { font-size: 15px; }
+.disc-app-row-id > .type-small { color: var(--secondary); }
+.disc-app-row-id > .type-body-sm { color: var(--text); }
+/* why wrap: peer text (a name, a description with a link) and a long contact
+   name have no space to break at, and content wraps rather than scrolls. */
+.disc-app-row-id > *, .disc-tile-meta, button.linklike.disc-app-maker, .disc-section--tight > .type-label-strong { overflow-wrap: anywhere; }
+button.linklike.disc-app-maker { max-width: 100%; }
+.disc-tile > .error, .disc-app-row-id > .error { margin: 0; }
+.disc-app-row-action { position: relative; z-index: 1; flex: none; }
+.disc-app-row .disc-tile-open::after { border-radius: var(--r2); }
+/* The maker menu: the Library's kebab menu, opening down from the head. */
+.disc-maker-menu { position: relative; flex: none; }
+.disc-person-head button.disc-kebab { width: 40px; height: 40px; }
+.library-menu.disc-menu { top: calc(100% + 4px); bottom: auto; min-width: 200px; }
+.disc-rename { display: flex; flex-direction: column; gap: 8px; }
+.disc-rename p { margin: 0; }
+.disc-rename-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.disc-rename-row input { flex: 1 1 220px; min-width: 0; min-height: 40px; margin: 0; }
+/* why: after a block, focus moves to this line. */
+.disc-blocked:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* why its own rule: button.danger is scoped to Settings (.options-page). */
+button.disc-danger { background: transparent; color: var(--danger-ink); border-color: var(--danger); font-weight: 600; }
+button.disc-danger:hover { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+/* Block confirm: the shared modal shell, sized like the frame. */
+.disc-block.peerd-modal { width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; box-sizing: border-box; padding: 24px; border-radius: var(--r4); display: flex; flex-direction: column; gap: 14px; }
+.disc-block h2, .disc-block p { margin: 0; overflow-wrap: anywhere; }
+.disc-block .peerd-modal-actions { margin: 0; flex-wrap: wrap; }
+.disc-block .disc-btn { min-height: 44px; }
+
+/* Share dialog: the shared modal shell, sized like the frame. */
+.disc-share.peerd-modal { width: min(500px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; box-sizing: border-box; padding: 24px; border-radius: var(--r4); display: flex; flex-direction: column; gap: 14px; }
+.disc-share p { margin: 0; overflow-wrap: anywhere; }
+.disc-share-head { display: flex; align-items: center; gap: 12px; }
+.disc-share-head h2 { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.disc-share button.icon { flex: none; width: 40px; height: 40px; }
+.disc-share-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.disc-share-row input { flex: 1 1 260px; min-width: 0; box-sizing: border-box; min-height: 44px; margin: 0; font: 12px/1.4 var(--font-mono); }
+.disc-share-row .disc-primary { flex: none; min-height: 44px; }
+.disc-share-status { display: inline-flex; align-items: center; gap: 6px; color: var(--text); }
+
+/* ── The Network section (home page, dweb preview only) ──────────────────────
+   The peers/network-info view + the animated radial peer graph. Peer dots carry
+   their per-did brand color (set inline); everything else is monochrome but for
+   the honest path-colored edges + the magenta (d·distributed) "You" hub. */
+.peerd-net { display: flex; flex-direction: column; gap: 14px; }
+
+.peerd-net-facts {
+  display: flex; flex-wrap: wrap; gap: 8px 18px;
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-elev); font-size: 12.5px;
+}
+.peerd-net-fact { display: flex; align-items: baseline; gap: 6px; }
+.peerd-net-fact-k { color: var(--fg-muted); }
+.peerd-net-fact-v { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+.peerd-net-badge {
+  font-size: 11px; padding: 1px 7px; border-radius: 999px;
+  border: 1px solid var(--border); color: var(--fg-muted);
+}
+.peerd-net-badge--up   { color: var(--ok);    border-color: var(--ok); }
+.peerd-net-badge--wait { color: var(--warn);  border-color: var(--warn); }
+.peerd-net-badge--down { color: var(--danger); border-color: var(--danger); }
+
+/* The graph sits directly on the page background — no box. Centered: it's
+   capped at max-width, so `auto` side margins keep the hub mid-column instead
+   of pinned to the left. */
+.peerd-net-graph { display: block; width: 100%; max-width: 560px; height: auto; margin: 4px auto; }
+
+/* The "You" hub — neutral fill, a pulsing distributed-magenta ring. */
+.pn-self { fill: var(--bg); stroke: var(--magenta); stroke-width: 2; }
+.pn-self-ring { fill: none; stroke: var(--magenta); stroke-width: 1.5; opacity: 0.5; animation: pn-pulse 2.4s ease-in-out infinite; }
+.pn-self-label { fill: var(--fg); font-size: 12px; font-weight: 600; }
+@keyframes pn-pulse { 0%, 100% { opacity: 0.18; stroke-width: 1; } 50% { opacity: 0.6; stroke-width: 2.5; } }
+
+/* Peer dots + labels. Dot fill is set inline (per-did brand color). */
+.pn-dot { stroke: var(--bg); stroke-width: 1.5; }
+.pn-dot--faint { opacity: 0.45; }
+.pn-label { fill: var(--fg); font-size: 10px; text-anchor: middle; }
+
+/* Edges colored by the REAL ICE path — the honest-infrastructure beat. */
+.pn-edge { stroke-width: 1.4; opacity: 0.55; fill: none; }
+.pn-edge--direct     { stroke: var(--green); }
+.pn-edge--stun       { stroke: var(--cyan); }
+.pn-edge--relay      { stroke: var(--amber); stroke-dasharray: 5 4; }
+.pn-edge--gossip     { stroke: var(--border); stroke-dasharray: 2 4; opacity: 0.5; }
+.pn-edge--bootstrap  { stroke: var(--fg-muted); opacity: 0.6; }
+.pn-edge--connecting { stroke: var(--fg-muted); stroke-dasharray: 2 4; opacity: 0.4; animation: pn-blink 1.3s ease-in-out infinite; }
+/* The introduction handoff: a flowing line from the introducer to a new peer
+   (its stroke is set inline to the introducer's color), fading as the direct
+   edge forms — the WebRTC signaling story, on screen. */
+.pn-intro-edge { stroke-width: 2; fill: none; stroke-dasharray: 5 6; animation: pn-flow 0.9s linear infinite; }
+@keyframes pn-flow { to { stroke-dashoffset: -11; } }
+@keyframes pn-blink { 0%, 100% { opacity: 0.18; } 50% { opacity: 0.5; } }
+
+.peerd-net-empty {
+  padding: 16px; text-align: center; color: var(--fg-muted); font-size: 13px;
+  border: 1px dashed var(--border); border-radius: var(--radius);
+}
+.peerd-net-offline {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 22px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev);
+}
+.peerd-net-offline p { margin: 0; color: var(--fg-muted); font-size: 13px; }
+.peerd-net-btn {
+  padding: 5px 12px; border-radius: var(--radius); border: 1px solid var(--border);
+  background: transparent; color: var(--fg); font-size: 12.5px; cursor: pointer;
+}
+.peerd-net-btn:hover { background: var(--bg-elev); }
+.peerd-net-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* The peer roster (list mirror of the graph — also the a11y fallback). */
+.peerd-net-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.peerd-net-row {
+  display: grid; grid-template-columns: 14px 1fr auto auto; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: var(--radius); font-size: 13px;
+}
+.peerd-net-row:hover { background: var(--bg-elev); }
+.peerd-net-swatch { width: 10px; height: 10px; border-radius: 50%; }
+.peerd-net-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.peerd-net-did { color: var(--fg-muted); font-family: var(--font-mono); font-size: 11px; }
+.peerd-net-path { font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--fg-muted); white-space: nowrap; }
+.peerd-net-path--direct { color: var(--ok); border-color: var(--ok); }
+.peerd-net-path--stun   { color: var(--cyan); border-color: var(--cyan); }
+.peerd-net-path--relay  { color: var(--warn); border-color: var(--warn); }
+.peerd-net-path--bootstrap { color: var(--fg-muted); border-color: var(--border); }
+
+/* Discover — the dweb app store list (apps peers are sharing). Mirrors the
+   roster's row rhythm: a meta column (name + publisher) + a trailing action. */
+.peerd-disc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.peerd-disc-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 11px; border-radius: var(--radius); border: 1px solid var(--border);
+}
+.peerd-disc-row:hover { background: var(--bg-elev); }
+.peerd-disc-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.peerd-disc-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.peerd-disc-pub { color: var(--fg-muted); font-family: var(--font-mono); font-size: 11px; }
+.peerd-disc-err { color: var(--danger); font-size: 11px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pn-self-ring, .pn-edge--connecting, .pn-intro-edge { animation: none; }
+  .library-card, .disc-card, .disc-pill, .disc-chevron { transition: none; }
+  .library-card:hover, .disc-card:hover { transform: none; }
+  .library-refresh.is-spinning, .disc-refresh.is-spinning { animation: none; }
+}
+@media (forced-colors: active) {
+  .disc-pill[aria-pressed="true"] { outline: 2px solid Highlight; outline-offset: -2px; }
+  .disc-pill:focus-visible { outline: 2px solid Highlight; }
+}
+
+/* --- Local models (WebGPU) — the on-device provider card body ------------- */
+/* The local model now renders INSIDE its provider card: the test/download body
+   sits under the card header (logo + name + badge), separated by a hairline. */
+.provider-card-local .local-models { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.local-models > .muted { max-width: 64ch; margin: 0 0 12px; }
+.lm-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.lm-name-group { display: inline-flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.lm-name { font-weight: 600; font-size: 15px; color: var(--fg); }
+.lm-link { font-size: 11px; color: var(--fg-muted); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.lm-link:hover { color: var(--fg); }
+.lm-meta { font-size: 11px; color: var(--fg-muted); }
+/* why italic and not a color: an unverified size is a caveat on the number next
+   to it, and the brand rule keeps accent color for the wordmark/orb. */
+.lm-caveat { font-style: italic; }
+.lm-state { font-size: 13px; margin: 10px 0; color: var(--fg-muted); }
+.lm-state.ok { color: var(--green); }
+.lm-state.bad { color: var(--danger); }
+.lm-actions { display: flex; gap: 8px; }
+/* One block per on-device model. The hairline separates stacked models without
+   boxing each one - the card already carries the border. */
+.lm-model + .lm-model { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.lm-model:last-child .lm-actions:empty { display: none; }
+
+/* ── settings rows (P1) ─────────────────────────────────────────────────────
+   One setting per row: label + state pill, a present-tense summary of where you
+   stand, the control on the right, and the long rationale collapsed behind "Why
+   this matters". Replaces the h3 + two-paragraph + inverse-labelled-button block
+   that made every setting look equally important and hid its state in prose.
+
+   Everything below is token-driven, so dark is inherited rather than restated —
+   the only literals are geometry. Density is deliberate: this page already runs
+   at 11-13px, so the row buys its clarity by collapsing prose, not by adding
+   whitespace. */
+.set-band { margin: 0 0 14px; }
+.set-band-head {
+  display: flex; align-items: baseline; gap: 7px; padding: 12px 0 5px;
+}
+.set-band-name {
+  font: 600 9.5px/1 var(--mono);
+  letter-spacing: .09em; text-transform: uppercase; color: var(--text);
+}
+.set-band-sub { font-size: 10px; color: var(--fg-muted); }
+/* The safety band is the ONE raised, ruled group — a user skimming for "what can
+   peerd do to me" finds those rows without reading any copy. */
+.set-band.is-safety .set-band-rows {
+  background: var(--elev);
+  border-left: 2px solid var(--text);
+  border-radius: 0 6px 6px 0;
+}
+.set-band.is-safety .set-band-head { padding-top: 11px; }
+
+.set-row { border-top: 1px solid var(--border); }
+.set-band-rows > .set-row:first-child { border-top: 0; }
+.set-row-main {
+  display: flex; align-items: flex-start; gap: 10px; padding: 7px 13px 8px;
+}
+.set-row-text { flex: 1; min-width: 0; }
+.set-row-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.set-row-label { font: 600 12.5px/1.3 var(--sans); }
+/* Non-safety rows sit at weight 500 — the tier difference, without a second colour. */
+.set-band:not(.is-safety) .set-row-label { font-weight: 500; }
+.set-row-summary {
+  margin: 2px 0 0; font: 400 11px/1.45 var(--sans); color: var(--fg-muted);
+}
+.set-row-control { flex: 0 0 auto; padding-top: 1px; }
+.set-row-children { padding: 0 13px 9px 13px; }
+
+.set-pill {
+  font: 600 8.5px/1 var(--mono); letter-spacing: .06em;
+  padding: 2px 5px; border-radius: 4px; color: var(--fg-muted);
+  border: 1px solid var(--border);
+}
+.set-pill.is-on { color: var(--text); border-color: var(--text); }
+.set-badge {
+  font: 600 8.5px/1 var(--mono); letter-spacing: .05em;
+  padding: 2px 5px; border-radius: 4px; color: var(--fg-muted);
+  border: 1px dashed var(--border);
+}
+
+.set-why {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 4px;
+  padding: 0; background: none; border: 0; cursor: pointer;
+  font: 500 10px/1 var(--sans); color: var(--fg-muted);
+}
+.set-why:hover { color: var(--text); }
+.set-why[aria-expanded="true"] { color: var(--text); }
+.set-why:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; border-radius: 3px; }
+.set-why-chev { transition: transform .12s ease; }
+.set-why-chev.is-open { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { .set-why-chev { transition: none; } }
+.set-why-body {
+  margin: 0 13px 9px; padding: 9px 10px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--bg);
+  font: 400 11px/1.5 var(--sans); color: var(--fg-muted);
+}
+
+/* Toggle. A button with role=switch, so state lives on the element the pointer
+   hits rather than in a visual only. */
+.set-toggle {
+  display: inline-flex; align-items: center; width: 30px; height: 17px;
+  padding: 0 2px; border-radius: 9px; cursor: pointer;
+  background: var(--elev2); border: 1px solid var(--border);
+  transition: background .12s ease, border-color .12s ease;
+}
+.set-toggle.is-on {
+  background: var(--text); border-color: var(--text); justify-content: flex-end;
+}
+.set-toggle-knob {
+  width: 11px; height: 11px; border-radius: 50%; background: var(--fg-muted);
+  transition: background .12s ease;
+}
+.set-toggle.is-on .set-toggle-knob { background: var(--bg); }
+.set-toggle.is-busy { opacity: .5; cursor: progress; }
+.set-toggle.is-na { border-style: dashed; cursor: not-allowed; opacity: .55; }
+/* why an outline, not a --border ring: the ring measured 1.2:1 against the
+   page, invisible, and computed to none in forced-colors mode. */
+.set-toggle:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .set-toggle, .set-toggle-knob { transition: none; }
+}
+.set-select {
+  height: 24px; padding: 0 6px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--text); font: 400 11px/1 var(--sans);
+}
+.set-select:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }

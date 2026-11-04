@@ -1,0 +1,77 @@
+// @ts-check
+// Drain the App editor before repository work.
+// why: Taking the repository lock before flushSave would deadlock.
+
+/**
+ * @param {Object} deps
+ * @param {{
+ *   getTabId: (appId:string)=>number|null,
+ *   getOwnerClaim?: (appId:string)=>string|null,
+ *   quiesceTab?: (appId:string)=>Promise<boolean>,
+ *   resumeTab?: (appId:string)=>Promise<boolean>,
+ *   closeTab: (appId:string)=>Promise<boolean>,
+ *   ensureTab: (appId:string, opts?:any)=>Promise<number>,
+ *   withDwebAuthority?: <T>(id:string, op:()=>Promise<T>, options?:{invalidate?:boolean,expectedGeneration?:number})=>Promise<T>,
+ *   reloadTab?: (appId:string)=>Promise<boolean>,
+ * }} deps.tracker
+ * @param {<T>(appId:string, operation:()=>Promise<T>)=>Promise<T>} deps.withLifecycle
+ * @param {()=>Promise<void>} [deps.afterClose]
+ */
+export const createAppQuiescence = ({
+  tracker,
+  withLifecycle,
+  afterClose = () => new Promise((resolve) => setTimeout(resolve, 100)),
+}) => {
+  const resumeOrReload = async (/** @type {string} */ appId) => {
+    try {
+      if (await tracker.resumeTab?.(appId)) return;
+    } catch { /* a reload below is the recovery path */ }
+    await tracker.reloadTab?.(appId).catch(() => {});
+  };
+
+  /** Caller owns the lifecycle lane. @template T @param {string} appId @param {()=>Promise<T>} operation
+   * @param {{close?:boolean,invalidateDweb?:boolean,expectedDwebGeneration?:number}} [options] @returns {Promise<T>} */
+  const runUnlocked = async (appId, operation, { close = false, invalidateDweb = false, expectedDwebGeneration } = {}) => {
+    const trackedLive = tracker.getTabId(appId) != null;
+    let live = trackedLive;
+    if (typeof tracker.quiesceTab === 'function') {
+      live = await tracker.quiesceTab(appId);
+      if (trackedLive && !live) throw new Error('App editor disappeared before its pending save completed');
+    }
+    else if (live) throw new Error('App editor quiesce is unavailable');
+
+    const ownerSessionId = tracker.getOwnerClaim?.(appId) ?? null;
+    let closed = false;
+    try {
+      const execute = async () => {
+        if (close && live) {
+          closed = await tracker.closeTab(appId);
+          if (!closed) throw new Error('App tab could not close after its editor was flushed');
+          await afterClose();
+        }
+        return operation();
+      };
+      return await (invalidateDweb && tracker.withDwebAuthority
+        ? tracker.withDwebAuthority(appId, execute, { invalidate: true, expectedGeneration: expectedDwebGeneration })
+        : execute());
+    } finally {
+      if (closed) {
+        tracker.ensureTab(appId, {
+          active: false, groupTitle: 'peerd',
+          ...(ownerSessionId ? { ownerSessionId } : {}),
+        }).catch(() => {});
+      } else {
+        await resumeOrReload(appId);
+      }
+    }
+  };
+
+  /** @template T @param {string} appId @param {()=>Promise<T>} operation
+   * @param {{close?:boolean,invalidateDweb?:boolean,expectedDwebGeneration?:number}} [options] @returns {Promise<T>} */
+  const run = (appId, operation, options) => withLifecycle(
+    appId,
+    () => runUnlocked(appId, operation, options),
+  );
+
+  return { run, runUnlocked };
+};

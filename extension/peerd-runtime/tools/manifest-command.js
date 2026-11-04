@@ -1,0 +1,169 @@
+// @ts-check
+// /tools — the per-session tool-manifest composer command.
+//
+// SW-handled like /init, /loop and /system (intercepted in agent/send,
+// never sent to the model — it CHANGES what the model is offered
+// instead). Four forms:
+//
+//   /tools             show the active manifest (or "full")
+//   /tools list        list the named presets
+//   /tools <preset>    narrow this chat to a preset's toolset
+//   /tools full        restore full exposure (clear the manifest)
+//
+// Functional core, imperative shell: this module owns the grammar and
+// the store/audit/note choreography with every IO surface injected, so
+// the whole command flow is testable (in-browser suite) without a
+// service worker. The SW binds the real sessions store, session-id
+// cache, chat-note poster and audit log.
+
+import {
+  TOOL_MANIFEST_PRESETS,
+  resolveManifestAllow,
+  resolveManifestStatus,
+  manifestLabel,
+} from './manifests.js';
+
+const USAGE = '"/tools list" shows presets; "/tools <preset>" narrows this chat\'s toolset; "/tools full" restores everything.';
+const REPORT_NAME_LIMIT = 8;
+const visibleToolName = (/** @type {string} */ name) =>
+  /^[a-z][a-z0-9_]{0,127}$/.test(name) ? name : '(invalid entry)';
+const migrationNoteFor = (/** @type {{renamed:string[],unavailable:string[]}} */ status) => [
+  status.renamed.length ? `Using current names: ${status.renamed.join(', ')}.` : '',
+  status.unavailable.length
+    ? `Unavailable saved tools ignored: ${status.unavailable.slice(0, REPORT_NAME_LIMIT)
+      .map(visibleToolName).join(', ')}${status.unavailable.length > REPORT_NAME_LIMIT
+      ? `, +${status.unavailable.length - REPORT_NAME_LIMIT} more` : ''}.`
+    : '',
+].filter(Boolean).join(' ');
+
+/**
+ * Pure command planner used by the sealed controller. The authority host
+ * applies only the returned finite session mutation and audit event.
+ * @param {unknown} rawArg
+ * @param {unknown} currentManifest
+ * @param {Iterable<string>} [knownToolNames]
+ */
+export const planToolsCommand = (rawArg, currentManifest, knownToolNames = undefined) => {
+  const arg = typeof rawArg === 'string' ? rawArg.trim() : '';
+  if (!arg) {
+    const status = knownToolNames
+      ? resolveManifestStatus(currentManifest, knownToolNames)
+      : { allow: resolveManifestAllow(currentManifest), renamed: [], unavailable: [] };
+    const allow = status.allow;
+    const migrationNote = migrationNoteFor(status);
+    return Object.freeze({
+      action: 'note',
+      note: allow
+        ? `Tool manifest active for this chat: ${manifestLabel(currentManifest, knownToolNames ?? undefined)} (${allow.size} tools exposed).${migrationNote ? ` ${migrationNote}` : ''} ${USAGE}`
+       : `No tool manifest set: the default tool surface is exposed. ${USAGE}`,
+    });
+  }
+  if (/^list$/i.test(arg)) {
+    return Object.freeze({ action: 'note', note: `Tool manifest presets:\n${describePresets()}` });
+  }
+  if (/^(full|clear)$/i.test(arg)) {
+    return Object.freeze({
+      action: 'clear',
+      note: 'Tool manifest cleared: the default tool surface is exposed again.',
+      auditType: 'tool_manifest_cleared',
+    });
+  }
+  const name = arg.toLowerCase();
+  const preset = /** @type {Record<string, { description: string, allow: readonly string[] }>} */ (TOOL_MANIFEST_PRESETS)[name];
+  if (!preset) {
+    return Object.freeze({
+      action: 'note',
+      note: `Unknown tool preset '${arg}'.\n${describePresets()}`,
+    });
+  }
+  return Object.freeze({
+    action: 'set', manifest: Object.freeze({ preset: name }),
+    note: `Tool manifest set for this chat: ${name}: ${preset.description} (${preset.allow.length} tools). "/tools full" restores the default surface.`,
+    auditType: 'tool_manifest_set', preset: name,
+  });
+};
+
+/**
+ * One line per preset for the /tools list note. Pure.
+ * @returns {string}
+ */
+export const describePresets = () => {
+  const lines = Object.entries(TOOL_MANIFEST_PRESETS).map(([name, p]) =>
+    `/tools ${name} — ${p.description} (${p.allow.length} tools)`);
+  lines.push('/tools full: the default tool surface');
+  return lines.join('\n');
+};
+
+/**
+ * Build the bound /tools handler.
+ *
+ * @param {Object} deps
+ * @param {{ get: Function, setToolManifest: Function }} deps.sessions
+ * @param {() => Promise<string | undefined>} deps.getCurrentSessionId
+ * @param {() => Promise<string>} deps.ensureSession   lazily create a chat
+ *   session when the user runs a SETTING form before the first message —
+ *   same contract as /system's lazy-create path.
+ * @param {(text: string) => void} deps.postNote       chat system-note
+ * @param {(entry: object) => Promise<unknown>} deps.audit
+ * @param {Iterable<string>} [deps.knownToolNames] current controller catalog
+ * @returns {(arg: string) => Promise<{ session: import('../sessions/types.js').Session | null }>}
+ *   `session` is the updated record when the manifest changed (the SW
+ *   refreshes its cache + pushes state), null for the read-only forms.
+ */
+export const makeToolsCommand = ({ sessions, getCurrentSessionId, ensureSession, postNote, audit, knownToolNames = undefined }) =>
+  async (rawArg) => {
+    const arg = (rawArg ?? '').trim();
+
+    // Show the active state.
+    if (!arg) {
+      const sessionId = await getCurrentSessionId();
+      const s = sessionId ? await sessions.get(sessionId) : null;
+      const status = knownToolNames
+        ? resolveManifestStatus(s?.toolManifest, knownToolNames)
+        : { allow: resolveManifestAllow(s?.toolManifest), renamed: [], unavailable: [] };
+      const allow = status.allow;
+      const migrationNote = migrationNoteFor(status);
+      postNote(allow
+        ? `Tool manifest active for this chat: ${manifestLabel(s.toolManifest, knownToolNames ?? undefined)} (${allow.size} tools exposed).${migrationNote ? ` ${migrationNote}` : ''} ${USAGE}`
+        : `No tool manifest set — every registered tool is exposed. ${USAGE}`);
+      return { session: null };
+    }
+
+    if (/^list$/i.test(arg)) {
+      postNote(`Tool manifest presets:\n${describePresets()}`);
+      return { session: null };
+    }
+
+    // Restore full exposure. 'clear' is accepted as an alias for symmetry
+    // with "/system clear" muscle memory.
+    if (/^(full|clear)$/i.test(arg)) {
+      const sessionId = await getCurrentSessionId();
+      if (!sessionId) {
+        postNote('No active chat — new chats already start with the full toolset.');
+        return { session: null };
+      }
+      const updated = await sessions.setToolManifest(sessionId, null);
+      audit({ type: 'tool_manifest_cleared', sessionId }).catch(() => {});
+      postNote('Tool manifest cleared — every registered tool is exposed again.');
+      return { session: updated };
+    }
+
+    // Set a preset. Strict: an unknown name is an error, never persisted —
+    // the fail-closed resolver would narrow it to ZERO tools, so refusing
+    // here keeps a typo from silently bricking the chat.
+    const name = arg.toLowerCase();
+    // why: `name` is untrusted user input; an unknown key yields undefined,
+    // handled by the guard below (the documented fail-closed path).
+    const preset = /** @type {Record<string, { description: string, allow: readonly string[] }>} */ (TOOL_MANIFEST_PRESETS)[name];
+    if (!preset) {
+      postNote(`Unknown tool preset '${arg}'.\n${describePresets()}`);
+      return { session: null };
+    }
+    const sessionId = await ensureSession();
+    const updated = await sessions.setToolManifest(sessionId, { preset: name });
+    // why: audit the EVENT + preset name only — the preset's contents are
+    // code, not user data, so the name is enough to reconstruct the state.
+    audit({ type: 'tool_manifest_set', sessionId, details: { preset: name } }).catch(() => {});
+    postNote(`Tool manifest set for this chat: ${name} — ${preset.description} (${preset.allow.length} tools). "/tools full" restores everything.`);
+    return { session: updated };
+  };

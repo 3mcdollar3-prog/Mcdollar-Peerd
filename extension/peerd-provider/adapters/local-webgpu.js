@@ -1,0 +1,233 @@
+// @ts-check
+// local-webgpu adapter — the on-device runner endpoint (FEATURE-LOCAL-WEBGPU
+// Deliverable B). Gemma runs in the OFFSCREEN doc via Transformers.js / ORT-Web
+// on WebGPU; THIS module is the thin provider-side shim that re-yields the
+// engine's token stream as the same ProviderEvent stream every other adapter
+// emits, so the agent loop + runner consume it identically.
+//
+// KEYLESS + zero-cost + provider-independent: no vault, no network, no $ — the
+// page content never leaves the device for inference. The runner is the target
+// (resolveRunnerModel step 2): a narrow ~9-tool job a small model can do.
+//
+// THE LOAD-BEARING UNKNOWN (parse, below): Transformers.js templates the `tools`
+// into the prompt but leaves tool-call PARSING to us. We parse the documented
+// `<tool_call>{json}</tool_call>` convention out of the token stream → tool-use
+// events; everything else is prose. Whether Gemma actually emits exactly this
+// is what the eval A/B (M0) measures — if scores are low, the lever is the
+// constrained-output format (§3.3), tuned from real runs. The PARSER itself is
+// pure + Bun-tested here so a format change is a localized edit, not a rewrite.
+//
+// The engine bridge arrives through the same named model-egress capability as
+// every provider. The adapter never imports the engine host or a generic RPC.
+
+import { MODEL_SPECS, DEFAULT_LOCAL_MODEL_ID } from '../local-model-capability.js';
+import { asWindow, readModelWindow } from '../model-window.js';
+
+// The DEFAULT on-device model id (also the adapter's defaultRunnerModel) - not
+// the only one: the engine runs any model in MODEL_SPECS, and a call carries the
+// id it wants. Re-exported from the spec table so the default has ONE home.
+export const LOCAL_MODEL_ID = DEFAULT_LOCAL_MODEL_ID;
+
+/**
+ * @typedef {import('../format/from-anthropic.js').ProviderEvent} ProviderEvent
+ * @typedef {import('../model-egress.js').ModelEgress} ModelEgress
+ */
+
+/**
+ * Live context window for the on-device model, unified with the API
+ * providers' `contextWindow` seam (providerModelContextWindow). Prefers the
+ * engine-reported value when the bridge is wired; the static MODEL_SPECS
+ * value (the engine-ENFORCED window where the spec declares one) is the
+ * bridge-not-wired fallback only.
+ *
+ * why: a failed live read returns null so the next turn can retry.
+ * The trim layer uses its static table until the engine answers.
+ *
+ * @param {{ model?: string, modelEgress?: ModelEgress, signal?: AbortSignal }} args
+ * @returns {Promise<number | null>}
+ */
+export const fetchLocalContextWindow = async ({ model = LOCAL_MODEL_ID, modelEgress, signal } = {}) => {
+  if (modelEgress) {
+    return readModelWindow({
+      readResponse: (requestSignal) => modelEgress.readModelContext({
+        providerId: 'local-webgpu',
+        modelId: model,
+        signal: requestSignal,
+      }),
+      extract: (body) => body?.contextWindow,
+      signal,
+    });
+  }
+  // MODEL_SPECS has no index signature; the cast lets an arbitrary model id
+  // be looked up (?. handles the miss, returning a static-table null).
+  const specs = /** @type {Record<string, import('../local-model-capability.js').ModelSpec | undefined>} */ (MODEL_SPECS);
+  const spec = specs[model];
+  return asWindow(spec?.enforcedContextWindow ?? spec?.contextWindow);
+};
+
+const TOOL_OPEN = '<tool_call>';
+const TOOL_CLOSE = '</tool_call>';
+
+/**
+ * Stream-parse a Gemma token stream into ProviderEvents. Pure (an async-gen
+ * over an async-iterable of token strings). Prose → text-delta; a
+ * `<tool_call>{json}</tool_call>` block → tool-use-start/-delta/-stop with the
+ * JSON's `name`/`arguments`. Tolerant: an unparseable block is surfaced as text
+ * (never throws — a malformed call shouldn't kill the turn).
+ *
+ * @param {AsyncIterable<string>} tokens
+ * @returns {AsyncGenerator<ProviderEvent>}
+ */
+export async function* parseLocalStream(tokens) {
+  let buf = '';
+  let inCall = false;
+  let callJson = '';
+  let callSeq = 0;
+
+  // Emit any complete prose run that precedes the next (possible) tool tag,
+  // but hold back a tail that could be the start of a split-across-tokens tag.
+  /** @returns {Generator<ProviderEvent>} */
+  const flushProse = function* () {
+    // keep the last (TOOL_OPEN.length - 1) chars in case a tag is mid-split
+    const safe = buf.length - (TOOL_OPEN.length - 1);
+    if (safe > 0) {
+      const text = buf.slice(0, safe);
+      buf = buf.slice(safe);
+      if (text) yield { type: 'text-delta', text };
+    }
+  };
+
+  for await (const tok of tokens) {
+    buf += tok;
+    // Drain as many complete tags as the buffer holds this step.
+    for (;;) {
+      if (!inCall) {
+        const open = buf.indexOf(TOOL_OPEN);
+        if (open === -1) { yield* flushProse(); break; }
+        const before = buf.slice(0, open);
+        if (before) yield { type: 'text-delta', text: before };
+        buf = buf.slice(open + TOOL_OPEN.length);
+        inCall = true; callJson = '';
+      } else {
+        const close = buf.indexOf(TOOL_CLOSE);
+        if (close === -1) {
+          // Hold back a tail that could be a close tag split across tokens
+          // (the symmetric guard to flushProse for the open tag).
+          const safe = buf.length - (TOOL_CLOSE.length - 1);
+          if (safe > 0) { callJson += buf.slice(0, safe); buf = buf.slice(safe); }
+          break;
+        }
+        callJson += buf.slice(0, close);
+        buf = buf.slice(close + TOOL_CLOSE.length);
+        inCall = false;
+        yield* emitToolCall(callJson, ++callSeq);
+        callJson = '';
+      }
+    }
+  }
+  // End of stream: flush any remaining prose (and an unterminated call as text).
+  if (inCall && callJson) yield { type: 'text-delta', text: TOOL_OPEN + callJson };
+  if (buf) yield { type: 'text-delta', text: buf };
+}
+
+/**
+ * @param {string} json   the JSON text between the tool tags
+ * @param {number} seq    1-indexed call counter (→ the synthetic id)
+ * @returns {Generator<ProviderEvent>}
+ */
+function* emitToolCall(json, seq) {
+  let parsed;
+  try { parsed = JSON.parse(json.trim()); } catch { parsed = null; }
+  if (!parsed || typeof parsed.name !== 'string') {
+    // Not a usable call — surface verbatim so the model's intent isn't lost.
+    yield { type: 'text-delta', text: TOOL_OPEN + json + TOOL_CLOSE };
+    return;
+  }
+  const id = `local-${seq}`;
+  const args = parsed.arguments ?? parsed.args ?? {};
+  yield { type: 'tool-use-start', id, name: parsed.name };
+  yield { type: 'tool-use-delta', id, partialJson: JSON.stringify(args) };
+  yield { type: 'tool-use-stop', id };
+}
+
+/**
+ * Adapter `call` has the same signature as the cloud adapters. It routes through the
+ * exact local-generation authority operation
+ * and re-yields its stream as ProviderEvents, closing with a synthetic usage +
+ * message-stop.
+ *
+ * @param {Object} args
+ * @param {readonly object[]} args.messages
+ * @param {string} args.system
+ * @param {string} [args.model]
+ * @param {number} [args.maxTokens]
+ * @param {ReadonlyArray<{ name: string, description: string, schema: object }>} [args.tools]
+ * @param {ModelEgress} args.modelEgress
+ * @param {AbortSignal} [args.signal]
+ * @returns {AsyncGenerator<ProviderEvent>}
+ */
+export async function* callLocalWebgpu({
+  messages, system, model = LOCAL_MODEL_ID, maxTokens = 512,
+  tools, modelEgress, signal,
+}) {
+  let outTokens = 0;
+  let emittedToolCall = false;
+  try {
+    // The local-model transport needs only role + content. Project that exact
+    // shape before runtime messaging so host-only custody ids never cross a
+    // provider boundary, even to an on-device provider.
+    const transportMessages = messages.map((/** @type {any} */ message) => ({
+      role: message?.role,
+      content: message?.content,
+    }));
+    const tokenStream = (async function* () {
+      for await (const tok of modelEgress.generateLocal({
+        providerId: 'local-webgpu',
+        modelId: model,
+        messages: transportMessages,
+        system,
+        tools,
+        maxTokens,
+        signal,
+      })) {
+        outTokens += 1; // ~one streamer chunk ≈ one token (good enough for the cost split)
+        yield tok;
+      }
+    })();
+    for await (const event of parseLocalStream(tokenStream)) {
+      if (event.type === 'tool-use-stop') emittedToolCall = true;
+      yield event;
+    }
+  } catch (e) {
+    if (!signal?.aborted) {
+      // why: WebGPU can reject with a DOMException that is not an Error.
+      const msg = /** @type {{ message?: string }} */ (e)?.message ?? String(e);
+      yield { type: 'error', error: `local inference failed: ${msg}` };
+      return;
+    }
+  }
+  // why synthetic usage: on-device generation has no billed token counts, but the
+  // eval scorecard's "runner tokens" split needs a number to stay honest about
+  // where work went (output tokens only; prefill is local + free).
+  if (!signal?.aborted) yield { type: 'usage', usage: { inputTokens: 0, outputTokens: outTokens, cacheReadTokens: 0, cacheWriteTokens: 0 } };
+  // why: the agent loop dispatches calls only when the adapter ends with tool_use.
+  yield { type: 'message-stop', stopReason: signal?.aborted ? 'aborted' : emittedToolCall ? 'tool_use' : 'end_turn' };
+}
+
+/**
+ * Adapter descriptor. keyless + zero-cost; `defaultRunnerModel` = the resident
+ * model so resolveRunnerModel step 2 (local-when-available) resolves to it with
+ * no per-provider key. `available` is flipped by the SW once the engine reports
+ * the model resident (it's NOT a static catalog).
+ */
+export const localWebgpuAdapter = Object.freeze({
+  name: 'local-webgpu',
+  label: 'Local (WebGPU)',
+  defaultModel: LOCAL_MODEL_ID,
+  defaultRunnerModel: LOCAL_MODEL_ID,
+  keyless: true,
+  call: callLocalWebgpu,
+  // unified context-window seam: on-device window via the engine (when wired)
+  // or the static MODEL_SPECS nominal. Same dispatch as the cloud adapters.
+  contextWindow: fetchLocalContextWindow,
+});

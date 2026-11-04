@@ -1,0 +1,67 @@
+tesseract.js — vendored (OCR driver)
+====================================
+Upstream:   https://github.com/naptha/tesseract.js
+Package:    https://www.npmjs.com/package/tesseract.js
+Version:    6.0.1  (driver)
+Runtime:    tesseract.js-core 6.1.2 (core WASM) + @tesseract.js-data/eng 1.0.0
+            (English model) — NOT vendored; opt-in SRI-pinned downloads, see
+            peerd-runtime/pdf/ocr-store.js OCR_ASSETS.
+License:    Apache-2.0
+
+Status: DRIVER VENDORED; OCR DISABLED
+------------------------------------
+The driver files are committed and pinned below, but the runtime asset hashes
+in OCR_ASSETS are intentionally null. Tesseract interprets `corePath` as a
+script/directory and `langPath` as a directory; cached object URLs satisfy
+neither contract under the extension CSP. Production therefore invalidates
+older cached entries, hides the install action, refuses forced OCR, and keeps
+automatic PDF reads on the pdf.js text layer. Re-enable only with an installed-
+extension test that exercises the actual core and language loaders; an injected
+recognizer is not sufficient evidence.
+
+Why vendored
+------------
+tesseract.js is the OCR engine for scanned/image-only PDFs (offscreen/
+pdf-extract.js → extractViaOcr). Like pdf.js, the DRIVER is vendored code (it
+runs as the browser loaded it — no build step). The two heavy assets it would
+load at runtime — the core WASM and the English language model — are not
+vendored. Their disabled, version-pinned definitions remain in
+peerd-runtime/pdf/ocr-store.js for a future loader repair.
+
+Files committed (the npm `dist/` minified ESM build)
+----------------------------------------------------
+  tesseract.esm.min.js  — the main API (createWorker, …). Lazy-imported by
+                          offscreen/pdf-extract.js (loadTesseract); paid once,
+                          on the first scanned PDF.
+  worker.min.js         — the worker script createWorker spawns; loaded via the
+                          workerPath option as an extension URL ('self' under
+                          the offscreen CSP).
+
+The .map files and the CommonJS build are omitted.
+
+Subresource Integrity (SHA-384)
+-------------------------------
+  tesseract.esm.min.js  sha384-C+b3kNXqc/kbk8HRFKxpQIN52IuwyPg1zTyLFtZb3cvnSIRHL6+4p+cwjkQA/jLS
+  worker.min.js         sha384-Xz8ctHtZgH/eWwOqd6igOU/kepnilz4dowW84REE2KL9DtDbxEnd/xxYhzBhNCzd
+
+Re-enable gate
+--------------
+  - Supply same-origin core script/WASM loading and a language URL/cache bridge
+    matching Tesseract's directory contract under the MV3 CSP.
+  - Run forced OCR and automatic fallback on a real scanned fixture in an
+    installed Store artifact. Verify worker, core, language, raster, and cleanup
+    instead of replacing the recognizer.
+
+Update procedure
+----------------
+  1. Pick the target driver version V from https://registry.npmjs.org/tesseract.js
+  2. curl -sSL "https://registry.npmjs.org/tesseract.js/-/tesseract.js-V.tgz" -o tess.tgz
+  3. tar -xzf tess.tgz
+  4. cp package/dist/tesseract.esm.min.js package/dist/worker.min.js \
+       extension/vendor/tesseract/
+  5. Recompute SHA-384 and paste above:
+       openssl dgst -sha384 -binary FILE | openssl base64 -A
+  6. Update the Version line. If the core/lang versions change, update their
+     EXACT-pinned URLs in OCR_ASSETS + compute-ocr-sri.sh and re-run
+     scripts/compute-ocr-sri.sh to repin those SRIs.
+  (scripts/vendor-tesseract.sh automates steps 2-5.)

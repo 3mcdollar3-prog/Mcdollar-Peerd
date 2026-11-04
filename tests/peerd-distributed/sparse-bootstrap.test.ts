@@ -1,0 +1,469 @@
+import { expect, test, spyOn } from 'bun:test';
+import { createPrivateKey, createPublicKey } from 'node:crypto';
+import { signalingStep, initialSignalingState } from '../../extension/peerd-distributed/transport/signaling.js';
+import { SPARSE_PUBLIC_PROFILE, PUBLIC_ROOM } from '../../extension/peerd-distributed/transport/rendezvous-profile.js';
+import { joinRoom } from '../../extension/peerd-distributed/transport/rooms.js';
+import { createAdmissionGovernor } from '../../extension/peerd-distributed/transport/admission.js';
+import { generateIdentity, importIdentity } from '../../extension/peerd-distributed/identity/keypair.js';
+import { memoryPair } from '../../extension/peerd-distributed/transport/channel.js';
+import { ROUTING_WITNESS } from '../../extension/peerd-distributed/transport/capabilities.js';
+import { createPeerNode } from '../../extension/peerd-distributed/peer-node.js';
+
+const deadline = async <T>(promise: Promise<T>, stage: string, ms = 10_000): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout>;
+  try { return await Promise.race([promise, new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error(`fixture ${stage} deadline`)), ms); })]); }
+  finally { clearTimeout(timer!); }
+};
+
+// Real reducer/client/room/admission/HELLO/mesh. Only socket dispatch and the
+// native ICE carrier are replaced. Each browser owns its own governor.
+const fixture = ({ budget, transferSlots = 0, initialSeed = 42 }: { budget?: number; transferSlots?: number; initialSeed?: number } = {}) => {
+  let now = Date.now(), next = 0, seed = initialSeed, nextTimer = 0, online = true, legacyServer = false, sampleRequests = 0;
+  const random = () => { seed = (1664525 * seed + 1013904223) >>> 0; return seed / 2 ** 32; };
+  const peaks = { active: 0, queued: 0, timers: 0, carriers: 0 };
+  let liveCarriers = 0;
+  let teardown: null | { carriers: number; pending: number; timers: number; sockets: number; admission: ReturnType<ReturnType<typeof createAdmissionGovernor>['stats']>[] } = null;
+  const tasks = new Map<number, { at: number; fn: () => void; interval?: number }>();
+  const timers = {
+    setTimeout(fn: () => void, ms: number) { const id = ++nextTimer; tasks.set(id, { at: now + ms, fn }); peaks.timers = Math.max(peaks.timers, tasks.size); return id; },
+    clearTimeout(id: number) { tasks.delete(id); },
+    setInterval(fn: () => void, ms: number) { const id = ++nextTimer; tasks.set(id, { at: now + ms, fn, interval: ms }); peaks.timers = Math.max(peaks.timers, tasks.size); return id; },
+    clearInterval(id: number) { tasks.delete(id); },
+  };
+  const sockets = new Map<string, Socket>();
+  const offerTrace = new Map<string, any>();
+  let holdOffers = false; const held: any[] = [];
+  let state = initialSignalingState();
+  const step = (event: any) => {
+    if (event.t === 'sample') sampleRequests++;
+    const result = signalingStep(state, legacyServer && event.t === 'join' ? { ...event, profile: undefined } : event, { now, random }); state = result.state;
+    for (const action of result.actions) {
+      const ws = sockets.get(action.connId);
+      if (action.t === 'send') queueMicrotask(() => {
+        if (action.msg?.payload?.type === 'offer') offerTrace.set(action.msg.payload.sdp, { target: ws?.owner, stats: ws ? governors[ws.owner]?.stats() : null });
+        ws?.receive(action.msg);
+        if (ws) observe(governors[ws.owner]);
+      }); else ws?.close();
+    }
+  };
+  class Socket {
+    onmessage: any; onclose: any; onerror: any; readyState = 1; id = `member-${++next}`; owner = governors.length - 1;
+    constructor(url: string) {
+      if (!online) { queueMicrotask(() => this.close()); return; }
+      sockets.set(this.id, this); const u = new URL(url);
+      queueMicrotask(() => step({ t: 'join', connId: this.id, key: u.searchParams.get('key'), profile: u.searchParams.get('profile'), kind: u.searchParams.get('kind') }));
+    }
+    receive(message: any) { if (this.readyState === 1) this.onmessage?.({ data: JSON.stringify(message) }); }
+    send(raw: string) {
+      if (this.readyState !== 1) return;
+      const event = { ...JSON.parse(raw), connId: this.id };
+      if (holdOffers && event.t === 'signal' && event.payload?.type === 'offer') held.push(event); else step(event);
+    }
+    close() { if (this.readyState !== 1) return; this.readyState = 3; sockets.delete(this.id); step({ t: 'leave', connId: this.id }); this.onclose?.(); }
+  }
+  const pending = new Map<string, ReturnType<typeof memoryPair>[number]>();
+  const carriers = new Set<ReturnType<typeof memoryPair>[number]>();
+  // Samples at native construction and socket delivery; mutation-by-mutation
+  // governor ceilings are proved separately by admission unit tests.
+  const observe = (governor: ReturnType<typeof createAdmissionGovernor> | undefined) => {
+    if (!governor) return;
+    const stats = governor.stats(); peaks.active = Math.max(peaks.active, stats.active); peaks.queued = Math.max(peaks.queued, stats.queued);
+  };
+  const makeTransport = (governor: ReturnType<typeof createAdmissionGovernor>) => ({
+    async connect(_peer: any, { signaling, signal }: any) {
+      observe(governor);
+      const [local, remote] = memoryPair(); carriers.add(local); carriers.add(remote);
+      liveCarriers += 2; peaks.carriers = Math.max(peaks.carriers, liveCarriers);
+      local.onClose(() => { liveCarriers--; }); remote.onClose(() => { liveCarriers--; });
+      const id = `offer-${++next}`; pending.set(id, remote);
+      const cleanup = () => { pending.delete(id); local.close(); remote.close(); };
+      signal.addEventListener('abort', cleanup, { once: true });
+      await signaling.send({ type: 'offer', sdp: id });
+      // The accepted carrier survives reservation cleanup; abort still closes
+      // abandoned offers. Real transport owns equivalent pre-admission cleanup.
+      local.onClose(() => { signal.removeEventListener('abort', cleanup); pending.delete(id); });
+      signaling.onRemote((m: any) => { if (m.type === 'answer') signal.removeEventListener('abort', cleanup); });
+      return local;
+    },
+    async accept({ offer, signaling }: any) {
+      observe(governor);
+      const channel = pending.get(offer.sdp); if (!channel) throw new Error('unknown offer');
+      pending.delete(offer.sdp); await signaling.send({ type: 'answer', sdp: offer.sdp });
+      return { channel: Promise.resolve(channel) };
+    },
+  });
+  const rooms: Awaited<ReturnType<typeof joinRoom>>[] = [];
+  const governors: ReturnType<typeof createAdmissionGovernor>[] = [];
+  const busyGovernors = new Set<ReturnType<typeof createAdmissionGovernor>>();
+  let admissionChanged = Promise.withResolvers<void>();
+  const notifyAdmissionChange = () => {
+    const previous = admissionChanged;
+    admissionChanged = Promise.withResolvers<void>();
+    previous.resolve();
+  };
+  // Native crypto is the only external asynchronous work in this memory-wire
+  // fixture. Observe completion, without replacing results, before advancing
+  // protocol timers: an admission may itself be awaiting a paced control frame.
+  let pendingCrypto=0;
+  const cryptoSpies=(['sign','verify','digest','importKey','exportKey','generateKey'] as const).map(name=>{
+    const original=(crypto.subtle[name] as (...args:any[])=>Promise<any>).bind(crypto.subtle);
+    return spyOn(crypto.subtle,name).mockImplementation((...args:any[])=>{
+      pendingCrypto++;
+      return original(...args).finally(()=>{pendingCrypto--;notifyAdmissionChange();});
+    });
+  });
+  const trackAdmissions = (governor: ReturnType<typeof createAdmissionGovernor>) => {
+    const createScope = governor.createScope.bind(governor);
+    governor.createScope = () => {
+      const scope = createScope();
+      const run = scope.run.bind(scope);
+      scope.run = (...args) => {
+        busyGovernors.add(governor);
+        const promise = run(...args);
+        notifyAdmissionChange();
+        const settled = () => {
+          const stats = governor.stats();
+          if (!stats.active && !stats.queued) busyGovernors.delete(governor);
+          notifyAdmissionChange();
+        };
+        // Observe settlement without replacing the production promise, limits,
+        // scheduling or cancellation. Wake the fixture only on actual progress.
+        promise.then(settled, settled);
+        return promise;
+      };
+      return scope;
+    };
+    return governor;
+  };
+  const nodes: Awaited<ReturnType<typeof createPeerNode>>[] = [];
+  const add = async ({ sparse = true, kind, identity: suppliedIdentity }: { sparse?: boolean; kind?: string; identity?: Awaited<ReturnType<typeof generateIdentity>> } = {}) => {
+    const identity = suppliedIdentity ?? await generateIdentity();
+    const admission = trackAdmissions(createAdmissionGovernor({ timers })); governors.push(admission);
+    const owner = governors.length - 1;
+    class OwnedSocket extends Socket { constructor(url: string) { super(url); this.owner = owner; } }
+    const room = await joinRoom({ identity, roomId: PUBLIC_ROOM, profile: sparse ? SPARSE_PUBLIC_PROFILE : undefined, kind, url: 'ws://fixture',
+      budget, transferSlots, awaitInitialRendezvous: false, WebSocket: OwnedSocket, transport: makeTransport(admission), admission, now: () => now, random, timers });
+    room.mesh.stop(); // explicit churn below; wall-clock liveness has its own tests
+    rooms.push(room);
+    if (room.rendezvous() !== 'up') {
+      const up = Promise.withResolvers<void>();
+      const off = room.onStatus(({ rendezvous }) => { if (rendezvous === 'up') up.resolve(); });
+      try { await deadline(up.promise, 'join acknowledgment'); } finally { off(); }
+    }
+    await advance(0);
+    const node = await createPeerNode({ identity, mesh: room.mesh, now: () => now }); nodes.push(node);
+    return room;
+  };
+  const tick = (ms: number) => {
+    now += ms;
+    for (const [id, task] of [...tasks]) if (task.at <= now && tasks.has(id)) {
+      if (task.interval) task.at = now + task.interval; else tasks.delete(id);
+      task.fn();
+    }
+  };
+  const settleAdmissions = async () => {
+    const deadlineAt = Date.now() + 3_000;
+    await new Promise<void>(resolve => setImmediate(resolve));
+    while (true) {
+      const changed = admissionChanged.promise;
+      const stats = [...busyGovernors].map(g => g.stats()).filter(s => s.active || s.queued);
+      // Unaccepted offers legitimately remain until protocol deadlines. Wait
+      // only for accepted-channel crypto to settle; tests advance the real
+      // injected deadlines separately and assert those old offers retire.
+      const idle = stats.length === 0;
+      const awaitingDeadline = pending.size > 0 && stats.every(s => !s.inbound && !s.queued)
+        && stats.reduce((n, s) => n + s.active, 0) === pending.size;
+      if (idle || awaitingDeadline) {
+        // The optimization must never skip an unobserved production admission.
+        // Cross-check every governor at each boundary, not on every busy poll.
+        const actual = governors.map(g => g.stats()).filter(s => s.active || s.queued);
+        if (actual.length !== stats.length) throw new Error('fixture admission tracking drift');
+        break;
+      }
+      // A quiescent admission can now wait on protocol timers (paced path
+      // RPC or its deadline). Leave those owners live; advance() alone moves
+      // time to its requested boundary. Draining all future admissions here
+      // would recursively run maintenance forever and jump past that boundary.
+      if(!pendingCrypto && tasks.size){
+        const actual=governors.map(g=>g.stats()).filter(s=>s.active||s.queued);
+        if(actual.length!==stats.length)throw new Error('fixture admission tracking drift');
+        break;
+      }
+      const remaining = deadlineAt - Date.now();
+      if (remaining <= 0) throw new Error('fixture admission did not settle');
+      await deadline(changed, `admission did not settle ${JSON.stringify(stats)} pending:${JSON.stringify([...pending.keys()].map(key => ({ key, ...offerTrace.get(key) })))}`, remaining);
+      // Keep the original phase boundary: drain dial/roster continuations before
+      // deciding it is safe to advance the injected clock.
+      await new Promise<void>(resolve => setImmediate(resolve));
+    }
+  };
+  const advance = async (ms: number) => {
+    const target = now + ms;
+    // why: jumping straight to target collapses distinct reconnect jitter and
+    // maintenance deadlines into one artificial burst. Preserve timer order
+    // and settle native crypto at each simulated timestamp instead.
+    while (true) {
+      const nextAt = Math.min(target, ...[...tasks.values()].map(task => task.at));
+      tick(Math.max(0, nextAt - now));
+      await settleAdmissions();
+      if (now >= target && ![...tasks.values()].some(task => task.at <= target)) return;
+    }
+  };
+  const outage = () => { online = false; for (const ws of [...sockets.values()]) ws.close(); };
+  return { add, rooms, nodes, governors, tasks, pending, sockets, advance, outage,
+    holdOffers: () => { holdOffers = true; }, held,
+    releaseOffers: () => { holdOffers = false; for (const event of held.splice(0)) step(event); },
+    liveCarriers: () => liveCarriers, observedPeaks: peaks, teardown: () => teardown,
+    samples: () => sampleRequests,
+    restore: () => { online = true; }, restoreLegacy: () => { online = true; legacyServer = true; }, membership: () => state.rooms[PUBLIC_ROOM]?.length ?? 0,
+    close() {
+      try { for (const room of rooms) room.leave(); for (const node of nodes) node.close(); }
+      finally {
+        // Capture production ownership before fallback cleanup. The safety net
+        // must not make a leaked carrier look like successful room teardown.
+        teardown = { carriers: liveCarriers, pending: pending.size, timers: tasks.size, sockets: sockets.size,
+          admission: governors.map(governor => governor.stats()) };
+        for (const channel of carriers) channel.close();
+        for(const spy of cryptoSpies)spy.mockRestore();
+      }
+    } };
+};
+
+const assertTeardown = (f: ReturnType<typeof fixture>) => {
+  const receipt = f.teardown();
+  expect(receipt).not.toBeNull();
+  expect(receipt).toMatchObject({ carriers: 0, pending: 0, timers: 0, sockets: 0 });
+  for (const admission of receipt!.admission) expect(admission).toEqual({ active: 0, inbound: 0, queued: 0 });
+};
+
+test('17 clients bootstrap through negotiated production paths, heal churn and exchange multi-hop application traffic', async () => {
+  const f = fixture();
+  try {
+    for (let index = 0; index < 17; index++) await f.add();
+    await f.advance(0);
+    expect(f.membership()).toBe(17);
+    for (const room of f.rooms) { expect(room.peers().length).toBeGreaterThan(0); expect(room.peers().length).toBeLessThanOrEqual(16); }
+    const source = f.nodes[0]!;
+    expect(f.nodes.some(n => n !== source && !source.mesh.hasLink(n.did))).toBe(true);
+    const received = new Set<string>(); const all = Promise.withResolvers<void>();
+    for (const node of f.nodes.slice(1)) node.gossip.subscribe('sparse-test', () => { received.add(node.did); if (received.size === 16) all.resolve(); });
+    source.gossip.subscribe('sparse-test', () => {});
+    await source.gossip.publish('sparse-test', { through: 'real mesh' });
+    await deadline(all.promise, 'multi-hop delivery');
+    expect(received.size).toBe(16);
+    const isolated = f.rooms[16]!;
+    for (const peer of isolated.peers()) isolated.mesh.removeLink(peer.did);
+    await f.advance(20_000);
+    expect(isolated.peers().length).toBeGreaterThan(0);
+    const unanswered = [...f.pending.keys()];
+    await f.advance(15_000);
+    for (const offer of unanswered) expect(f.pending.has(offer)).toBe(false);
+    f.outage();
+    const survivors = f.rooms.reduce((sum, room) => sum + room.peers().length, 0);
+    expect(survivors).toBeGreaterThan(0);
+    f.restore(); await f.advance(30_000);
+    expect(f.membership()).toBe(17);
+    for (const room of f.rooms) expect(room.peers().length).toBeLessThanOrEqual(16);
+    for (const governor of f.governors) { expect(governor.stats().active).toBeLessThanOrEqual(8); expect(governor.stats().queued).toBeLessThanOrEqual(64); }
+  } finally { f.close(); }
+  assertTeardown(f);
+  expect(f.tasks.size).toBe(0); expect(f.sockets.size).toBe(0); expect(f.pending.size).toBe(0);
+  for (const governor of f.governors) expect(governor.stats()).toEqual({ active: 0, inbound: 0, queued: 0 });
+}, 15_000);
+
+
+test('simultaneous resampling resolves crossing offers while preserving both local exploration owners', async () => {
+  const f = fixture();
+  try {
+    const a = await f.add(); const b = await f.add();
+    await f.advance(0);
+    expect(a.peers()).toHaveLength(1); expect(b.peers()).toHaveLength(1);
+    a.mesh.removeLink(b.did);
+    await f.advance(0); // settle peer-loss maintenance before advancing its timer
+    f.holdOffers();
+    await f.advance(20_000);
+    expect(f.held).toHaveLength(2); // explicit transport barrier, no timing guess
+    f.releaseOffers(); await f.advance(0);
+    expect(a.peers().map(peer => peer.did)).toEqual([b.did]);
+    expect(b.peers().map(peer => peer.did)).toEqual([a.did]);
+    expect(a.mesh.locallySelectedCount()).toBe(1); expect(b.mesh.locallySelectedCount()).toBe(1);
+    expect(f.liveCarriers()).toBe(2); expect(f.pending.size).toBe(0);
+  } finally { f.close(); }
+  assertTeardown(f);
+  expect(f.tasks.size).toBe(0);
+});
+
+
+test('old-server reconnect disables sampling but preserves established public reservations', async () => {
+  const f = fixture(); const extra: ReturnType<typeof memoryPair>[] = [];
+  try {
+    const a = await f.add(); await f.add(); await f.advance(0);
+    f.outage(); f.restoreLegacy(); await f.advance(30_000);
+    expect(f.membership()).toBe(2); expect(a.rendezvous()).toBe('up');
+    const inbound = a.peers().length - a.mesh.locallySelectedCount();
+    for (let index = inbound; index < 14; index++) {
+      const pair = memoryPair(); extra.push(pair); expect(a.mesh.addLink(pair[0], (await generateIdentity()).did)).toBe(true);
+    }
+    const overflow = memoryPair(); extra.push(overflow);
+    expect(a.mesh.addLink(overflow[0], (await generateIdentity()).did)).toBe(false);
+    await f.advance(0);
+    expect(a.peers().length).toBeLessThanOrEqual(16);
+    const sampled = f.samples(); await f.advance(20_000); expect(f.samples()).toBe(sampled);
+  } finally { f.close(); for (const pair of extra) for (const channel of pair) channel.close(); }
+  assertTeardown(f);
+  expect(f.tasks.size).toBe(0);
+});
+
+
+for (const count of [100, 1000]) test(`${count} clients use production bootstrap, bounded resources and recover from churn/outage`, async () => {
+  const f = fixture(); const started = performance.now();
+  const bounds = () => {
+    for (const room of f.rooms) expect(room.peers().length).toBeLessThanOrEqual(16);
+    expect(f.observedPeaks.active).toBeLessThanOrEqual(8); expect(f.observedPeaks.queued).toBeLessThanOrEqual(64);
+    // Per room:20 governor entries +4 HELLO timers +join/keepalive/maintenance.
+    expect(f.observedPeaks.timers).toBeLessThanOrEqual(count * 27);
+    // Established ends plus both fake carrier halves for in-flight outbound.
+    expect(f.observedPeaks.carriers).toBeLessThanOrEqual(count * 24);
+  };
+  const deliver = async (topic: string) => {
+    const received = new Set<string>(); const all = Promise.withResolvers<void>();
+    const off = f.nodes.slice(1).map(node => node.gossip.subscribe(topic, () => { received.add(node.did); if (received.size === count - 1) all.resolve(); }));
+    off.push(f.nodes[0]!.gossip.subscribe(topic, () => {}));
+    try { await f.nodes[0]!.gossip.publish(topic, { count }); await deadline(all.promise, 'scaled multi-hop delivery', 20_000); }
+    finally { for (const unsubscribe of off) unsubscribe(); }
+    expect(received.size).toBe(count - 1);
+  };
+  try {
+    for (let index = 0; index < count; index++) await f.add();
+    expect(f.membership()).toBe(count);
+    for (let round = 0; round < 6 && f.rooms.some(room => room.peers().length === 0); round++) await f.advance(20_000);
+    for (const room of f.rooms) expect(room.peers().length).toBeGreaterThan(0);
+    bounds(); await deliver('scale-initial');
+    const isolated = f.rooms[count - 1]!;
+    for (const peer of isolated.peers()) isolated.mesh.removeLink(peer.did);
+    await f.advance(0); await f.advance(20_000);
+    for (let round = 0; round < 5 && !isolated.peers().length; round++) await f.advance(20_000);
+    expect(isolated.peers().length).toBeGreaterThan(0); bounds();
+    f.outage(); expect(f.rooms.some(room => room.peers().length > 0)).toBe(true);
+    f.restore(); await f.advance(30_000);
+    expect(f.membership()).toBe(count); bounds(); await deliver('scale-recovered');
+    console.log(`sparse production path: ${count} clients, ${Math.round(performance.now() - started)}ms, observed peaks ${JSON.stringify(f.observedPeaks)}`);
+  } finally { f.close(); }
+  assertTeardown(f);
+  expect(f.tasks.size).toBe(0); expect(f.pending.size).toBe(0); expect(f.sockets.size).toBe(0); expect(f.liveCarriers()).toBe(0);
+  for (const governor of f.governors) expect(governor.stats()).toEqual({ active: 0, inbound: 0, queued: 0 });
+}, 60_000);
+
+// Server membership is not a bridge through saturated, non-cooperating legacy
+// meshes. This migration boundary requires spare capacity, churn, or upgrade;
+// sampling must never silently change legacy degree/admission policy.
+test('saturated legacy public component needs churn before sparse introductions can bridge it', async () => {
+  const f = fixture();
+  try {
+    for (let index = 0; index < 16; index++) await f.add({ sparse: false });
+    const website = await f.add({ sparse: false, kind: 'website' });
+    for (const room of f.rooms) expect(room.peers().length).toBe(16);
+    const sparse = await f.add();
+    expect(f.membership()).toBe(18);
+    for (let round = 0; round < 6; round++) await f.advance(20_000);
+    expect(f.samples()).toBeGreaterThan(0);
+    expect(sparse.peers()).toHaveLength(0);
+    for (const room of f.rooms.slice(0, 17)) expect(room.peers()).toHaveLength(16);
+
+    website.leave();
+    for (let round = 0; round < 12 && !sparse.peers().length; round++) await f.advance(20_000);
+    expect(f.membership()).toBe(17);
+    expect(sparse.peers().length).toBeGreaterThan(0);
+    const all = Promise.withResolvers<void>(), received = new Set<string>();
+    for (const node of f.nodes.slice(0, 16)) node.gossip.subscribe('migration', () => {
+      received.add(node.did); if (received.size === 16) all.resolve();
+    });
+    await f.nodes[17]!.gossip.publish('migration', { after: 'legacy capacity release' });
+    await deadline(all.promise, 'mixed-version gossip');
+    expect(received.size).toBe(16);
+    for (const room of f.rooms) expect(room.peers().length).toBeLessThanOrEqual(16);
+  } finally { f.close(); }
+  assertTeardown(f);
+}, 20_000);
+
+// why: the native failure occurs after a same-identity restart at degree two,
+// below the existing large-network fixture's default routing budget.
+for (const initialSeed of [1, 42, 100]) test(`low-degree same-identity rejoin keeps five peers connected (seed ${initialSeed})`, async () => {
+  const f = fixture({ budget: 4, transferSlots: 2, initialSeed });
+  const identity = await generateIdentity();
+  try {
+    await f.add({ identity });
+    for (let index = 1; index < 5; index++) await f.add();
+    await f.advance(60_000);
+    f.rooms[0]!.leave();
+    await f.advance(5_000);
+    const replacement = await f.add({ identity });
+    await f.advance(30_000);
+    const live = f.rooms.slice(1);
+    const reached = new Set<string>([identity.did]);
+    const nodes = f.nodes.slice(1);
+    for (let round = 0; round < live.length; round++) {
+      for (let index = 0; index < live.length; index++) {
+        if (reached.has(nodes[index]!.did)) for (const peer of live[index]!.peers()) reached.add(peer.did);
+      }
+    }
+    expect(replacement.peers().length).toBeGreaterThan(0);
+    expect(reached.size).toBe(5);
+    const received = new Set<string>();
+    const delivered = Promise.withResolvers<void>();
+    for (const node of nodes.slice(0, -1)) node.gossip.subscribe('low-degree-rejoin', () => {
+      received.add(node.did);
+      if (received.size === 4) delivered.resolve();
+    });
+    await nodes.at(-1)!.gossip.publish('low-degree-rejoin', { after: 'same-identity restart' });
+    await deadline(delivered.promise, 'low-degree rejoin gossip');
+    expect(received.size).toBe(4);
+    for (const room of live) expect(room.peers().length).toBeLessThanOrEqual(2);
+  } finally { f.close(); }
+  assertTeardown(f);
+}, 30_000);
+
+// Synthetic public test identities; never used outside this fixture.
+const fixedIdentity = async (value: number) => {
+  const seed = new Uint8Array(32).fill(value);
+  const key = createPrivateKey({key: Buffer.concat([Buffer.from('302e020100300506032b657004220420','hex'), seed]), format: 'der', type: 'pkcs8'});
+  const publicKey = new Uint8Array(createPublicKey(key).export({format:'der',type:'spki'}).subarray(-32));
+  return importIdentity({seed,publicKey});
+};
+
+test('low-degree newcomer joins an established four-peer component', async () => {
+  const f = fixture({ budget: 4, transferSlots: 2, initialSeed: 42 });
+  const seeded: Array<ReturnType<typeof memoryPair>[number]> = [];
+  try {
+    // Seed an explicit existing component independently of bootstrap policy.
+    // The newcomer still uses real signaling, admission and signed readiness.
+    f.holdOffers();
+    const identities = await Promise.all([1,2,3,4].map(fixedIdentity));
+    for (const identity of identities) await f.add({identity});
+    for (let index = 0; index < 4; index++) {
+      const other = (index + 1) % 4;
+      const pair = memoryPair();
+      seeded.push(...pair);
+      expect(f.rooms[index]!.mesh.addLink(pair[0], identities[other]!.did, {caps:[ROUTING_WITNESS]}, {locallySelected:true})).toBe(true);
+      expect(f.rooms[other]!.mesh.addLink(pair[1], identities[index]!.did, {caps:[ROUTING_WITNESS]}, {locallySelected:false})).toBe(true);
+    }
+    f.releaseOffers();
+    await f.advance(60_000);
+    expect(f.rooms.map(room => room.peers().length)).toEqual([2,2,2,2]);
+    const newcomer = await f.add({identity: await fixedIdentity(5)});
+    await f.advance(30_000);
+    expect(newcomer.peers().length).toBeGreaterThan(0);
+    const delivered = Promise.withResolvers<void>();
+    const received = new Set<string>();
+    for (const node of f.nodes.slice(0, 4)) node.gossip.subscribe('full-cycle-join', () => {
+      received.add(node.did);
+      if (received.size === 4) delivered.resolve();
+    });
+    await f.nodes[4]!.gossip.publish('full-cycle-join', { after: 'joining a saturated cycle' });
+    await deadline(delivered.promise, 'saturated-cycle gossip');
+    expect(received.size).toBe(4);
+    for (const room of f.rooms) expect(room.peers().length).toBeLessThanOrEqual(2);
+  } finally { f.close(); }
+  expect(seeded.every(channel => channel.isClosed())).toBe(true);
+  assertTeardown(f);
+}, 30_000);

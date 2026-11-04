@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "label": "Red Team",
+  "message": "230/230 probes, 15/15 scenarios",
+  "color": "brightgreen",
+  "namedLogo": "bun",
+  "logoColor": "white"
+}

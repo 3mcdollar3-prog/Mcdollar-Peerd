@@ -1,0 +1,872 @@
+import { describe, test, expect } from 'bun:test';
+import { createDwebBridge } from '../../extension/peerd-distributed/apps/bridge.js';
+
+const tick = (ms = 5) => new Promise((r) => setTimeout(r, ms));
+const deferred = <T>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((r) => { resolve = r; });
+  return { promise, resolve };
+};
+const CLIENT = 'client-epoch-0001';
+const rpc = (id: string, op: string, args: any = {}, clientId = CLIENT) => ({
+  peerd: 'dweb', id, clientId, op, args,
+});
+
+// A mock transport — the seam the iframe-decoupling opened up. `drive` feeds an
+// op in (as the dwapp would); `sent` captures everything the bridge posts back.
+const mockTransport = () => {
+  const sent: any[] = [];
+  let handler: ((m: any) => void) | null = null;
+  return {
+    sent,
+    transport: { send: (m: any) => sent.push(m), onMessage: (h: any) => { handler = h; return () => { handler = null; }; } },
+    drive: (m: any) => handler?.(m),
+    hasHandler: () => handler !== null,
+    results: () => sent.filter((m) => m.peerd === 'dweb:result'),
+    events: () => sent.filter((m) => m.peerd === 'dweb:event'),
+  };
+};
+
+const memoryStorage = () => {
+  const values: Record<string, any> = Object.create(null);
+  return {
+    get: async (key: string) => ({ [key]: structuredClone(values[key]) }),
+    set: async (patch: any) => {
+      for (const [key, value] of Object.entries(patch)) values[key] = structuredClone(value);
+    },
+    values,
+  };
+};
+
+// The bridge now talks to the offscreen base host over swCall('dweb/base/room')
+// and receives pushed room events via onHostEvent — no in-page room host, no
+// identity minting, no signaler. The fakes below stand in for that host.
+const makeBridge = ({ confirm = true, joinHost, leaveHost, roomCall, storage, appDweb = { seed: 'commons' }, currentDweb = appDweb, metadata }: {
+  confirm?: boolean | ((request: any) => boolean | Promise<boolean>),
+  joinHost?: (payload: any) => Promise<any>,
+  leaveHost?: (payload: any) => Promise<any>,
+  roomCall?: (payload: any) => Promise<any>,
+  storage?: { get: (key: string) => Promise<any>, set: (value: any) => Promise<void> },
+  appDweb?: any,
+  currentDweb?: any,
+  metadata?: any,
+} = {}) => {
+  const mt = mockTransport();
+  const calls: any[] = [];
+  const confirmations: any[] = [];
+  let pushEvent: ((m: any) => void) | null = null;
+  const swCall = async (type: string, payload: any = {}) => {
+    if (type === 'app/get-meta') return metadata ?? { ok: true, dweb: currentDweb };
+    if (type !== 'dweb/base/room') return { ok: true };
+    calls.push(payload);
+    if (roomCall) return roomCall(payload);
+    switch (payload.op) {
+      case 'join': {
+        const joined = joinHost
+          ? await joinHost(payload)
+          : {
+              ok: true, did: 'did:key:zME', joined: payload.roomId,
+              hostEpoch: 'host-epoch-0001', present: [],
+            };
+        return { ...joined, admissionToken: joined?.admissionToken ?? payload.roomAdmissionToken };
+      }
+      case 'join-ack': return {
+        ok: true, joined: payload.roomId, admissionToken: payload.roomAdmissionToken,
+      };
+      case 'publish': return { ok: true, id: 'e1', ts: 1 };
+      case 'dm': return { ok: true, id: 'd1', ts: 2 };
+      case 'presence': return { ok: true, present: [{ did: 'did:key:zBOB', meta: { name: 'bob' } }] };
+      case 'history': return { ok: true, items: [] };
+      case 'leave': return leaveHost ? leaveHost(payload) : { ok: true, left: true };
+      case 'publish-app': return { ok: true, uri: 'peerd://bundle', hash: 'hash' };
+      default: return { ok: true };
+    }
+  };
+  const bridge = createDwebBridge({
+    appId: 'commons', appName: 'commons', appDweb, entryFile: 'index.html',
+    transport: mt.transport,
+    swCall,
+    storage: storage ?? memoryStorage(),
+    confirmAction: async (request: any) => {
+      confirmations.push(request);
+      return typeof confirm === 'function' ? confirm(request) : confirm;
+    },
+    onHostEvent: (h: any) => { pushEvent = h; return () => { pushEvent = null; }; },
+    launch: {},
+  });
+  return { mt, bridge, calls, confirmations, push: (m: any) => pushEvent?.(m) };
+};
+
+describe('dwapp bridge (base-network rooms, transport-agnostic)', () => {
+  test.each([
+    { kind: 'fork', identity: { hash: 'releaseHash', forked: true }, key: 'fork:commons:releaseHash' },
+    { kind: 'seed', identity: { seed: 'commons' }, key: 'seed:commons' },
+    { kind: 'local', identity: {}, key: 'commons' },
+  ])('mutable $kind code cannot reuse persisted consent in a successor document', async ({ identity, key }) => {
+    const storage = memoryStorage();
+    const first = makeBridge({ storage, appDweb: { ...identity, generation: 2 } });
+    first.mt.drive(rpc('request-first', 'join', { roomId: 'r' }));
+    await tick();
+    expect(first.confirmations).toHaveLength(1);
+    expect(first.mt.results()[0]).toMatchObject({ ok: true });
+    expect(storage.values['dweb.grants.v1']).toBeUndefined();
+    await first.bridge.dispose();
+    // Old versions stored mutable grants. Ignore those too; merely stopping
+    // future writes would leave already-approved mutable Apps vulnerable.
+    await storage.set({ 'dweb.grants.v1': { [key]: { rooms: { r: true } } } });
+    for (const generation of [2, 3, 0]) {
+      const successor = makeBridge({ storage, appDweb: { ...identity, generation } });
+      successor.mt.drive(rpc(`request-next-${generation}`, 'join', { roomId: 'r' }));
+      await tick();
+      try {
+        expect(successor.confirmations).toHaveLength(1);
+        expect(successor.mt.results()[0]).toMatchObject({ ok: true });
+      } finally { await successor.bridge.dispose(); }
+    }
+    const denied = makeBridge({ storage, appDweb: { ...identity, generation: 0 }, confirm: false });
+    denied.mt.drive(rpc('request-denied', 'join', { roomId: 'r' }));
+    await tick();
+    expect(denied.confirmations).toHaveLength(1);
+    expect(denied.mt.results()[0]).toMatchObject({ ok: false });
+    expect(denied.calls).toHaveLength(0);
+    await denied.bridge.dispose();
+  });
+
+  test('verified immutable release consent remains content-bound across generations and restart', async () => {
+    const storage = memoryStorage();
+    for (const [index, generation] of [2, 3, 0].entries()) {
+      const instance = makeBridge({ storage, appDweb: { hash: 'releaseHash', generation, forked: false } });
+      instance.mt.drive(rpc(`request-release-${index}`, 'join', { roomId: 'r' }));
+      await tick();
+      try {
+        expect(instance.confirmations).toHaveLength(index === 0 ? 1 : 0);
+        expect(instance.mt.results()[0]).toMatchObject({ ok: true });
+      } finally { await instance.bridge.dispose(); }
+    }
+    const changed = makeBridge({ storage, appDweb: { hash: 'differentHash', generation: 0, forked: false } });
+    changed.mt.drive(rpc('request-release-changed', 'join', { roomId: 'r' }));
+    await tick();
+    expect(changed.confirmations).toHaveLength(1);
+    await changed.bridge.dispose();
+  });
+
+  test('a remembered release grant cannot authorize a local fork', async () => {
+    const storage = memoryStorage();
+    await storage.set({ 'dweb.grants.v1': { releaseHash: { rooms: { r: true } } } });
+    const { mt, confirmations, calls, bridge } = makeBridge({
+      storage, appDweb: { hash: 'releaseHash', generation: 2, forked: false },
+      metadata: { ok: true, dweb: { hash: 'releaseHash', generation: 2, forked: true } },
+    });
+    mt.drive(rpc('request-fork', 'join', { roomId: 'r' }));
+    await tick();
+    expect(confirmations).toHaveLength(1);
+    expect(storage.values['dweb.grants.v1']['fork:commons:releaseHash']).toBeUndefined();
+    expect(calls.find((call) => call.op === 'join')).toMatchObject({
+      bridgeAppId: 'commons', bridgeAppHash: 'releaseHash', bridgeAppForked: true,
+      bridgeAppGeneration: 2,
+    });
+    await bridge.dispose();
+  });
+
+  test.each([
+    { hash: 'otherHash', generation: 2, forked: true },
+    { hash: 'releaseHash', generation: 3, forked: true },
+    { hash: 'releaseHash', generation: 2, forked: false },
+  ])('stale or downgraded App identity cannot spend a remembered grant: %j', async (dweb) => {
+    const storage = memoryStorage();
+    await storage.set({ 'dweb.grants.v1': { 'fork:commons:releaseHash': { rooms: { r: true } } } });
+    const { mt, confirmations, calls, bridge } = makeBridge({
+      storage, appDweb: { hash: 'releaseHash', generation: 2, forked: true },
+      metadata: { ok: true, dweb },
+    });
+    mt.drive(rpc('request-stale', 'join', { roomId: 'r' }));
+    await tick();
+    expect(mt.results()[0]).toMatchObject({ ok: false, error: 'App identity changed. Reload the App.' });
+    expect(confirmations).toHaveLength(0);
+    expect(calls).toHaveLength(0);
+    await bridge.dispose();
+  });
+
+  test('generation invalidation retires a delayed join without waiting for the authority lane', async () => {
+    const joining = deferred<any>();
+    const { mt, bridge, calls, push } = makeBridge({ joinHost: () => joining.promise });
+    mt.drive(rpc('request-pending', 'join', { roomId: 'r' }));
+    await tick();
+    expect(calls.map((call) => call.op)).toEqual(['join']);
+    await bridge.invalidate();
+    expect(mt.hasHandler()).toBe(false);
+    push({ type: 'dweb/base-room/event', roomId: 'r', event: 'direct', data: 'retired' });
+    expect(mt.events()).toHaveLength(0);
+    joining.resolve({ ok: true, did: 'did:key:zME', joined: 'r', hostEpoch: 'host-epoch-0001' });
+    await tick();
+    expect(calls.some((call) => call.op === 'join-ack')).toBe(false);
+    expect(calls.filter((call) => call.op === 'leave')).toHaveLength(1);
+    expect(calls.find((call) => call.op === 'leave').roomAdmissionToken)
+      .toBe(calls[0].roomAdmissionToken);
+  });
+  test('hello replies over the injected transport', async () => {
+    const { mt } = makeBridge();
+    mt.drive(rpc('request-0001', 'hello'));
+    await tick();
+    const [r] = mt.results();
+    expect(r).toMatchObject({ peerd: 'dweb:result', id: 'request-0001', clientId: CLIENT, ok: true });
+    expect(r.value).toMatchObject({ available: true, app: 'commons', joined: null });
+  });
+
+  test('join → publish relays room ops over swCall', async () => {
+    const { mt, bridge, calls } = makeBridge({ appDweb: { seed: 'commons', generation: 7 } });
+    mt.drive(rpc('request-0001', 'join', { roomId: 'peerd-global', name: 'ada' }));
+    await tick();
+    expect(mt.results().find((r) => r.id === 'request-0001')).toMatchObject({ ok: true, value: { joined: 'peerd-global', did: 'did:key:zME' } });
+
+    mt.drive(rpc('request-0002', 'publish', { topic: 'feed', data: { text: 'hi' } }));
+    await tick();
+    expect(calls.find((c) => c.op === 'publish')).toMatchObject({ roomId: 'peerd-global', topic: 'feed', data: { text: 'hi' } });
+    expect(calls.every((call) => call.appId === 'commons')).toBe(true);
+    await bridge.dispose();
+    await tick();
+    mt.drive(rpc('request-0003', 'publish', { topic: 'feed', data: { text: 'late' } }));
+    await tick();
+    expect(calls.filter((call) => call.op === 'publish')).toHaveLength(1);
+    expect(calls.filter((call) => call.op === 'leave')).toHaveLength(1);
+    expect(calls.every((call) => call.bridgeAppGeneration === 7)).toBe(true);
+    expect(mt.results().find((r) => r.id === 'request-0002')).toMatchObject({ ok: true, value: { id: 'e1' } });
+  });
+
+  test('cancellation cannot hide completed publish or direct-message effects', async () => {
+    for (const effect of [
+      { publicOp: 'publish', hostOp: 'publish', args: { topic: 'feed', data: { text: 'hi' } } },
+      { publicOp: 'dm-send', hostOp: 'dm', args: { to: 'did:key:zPeer', data: 'hi' } },
+    ]) {
+      const completed = deferred<any>();
+      const { mt } = makeBridge({
+        roomCall: async (payload) => {
+          if (payload.op === 'join') return {
+            ok: true, did: 'did:key:zME', joined: payload.roomId,
+            hostEpoch: 'host-epoch-0001', present: [],
+            admissionToken: payload.roomAdmissionToken,
+          };
+          if (payload.op === 'join-ack') {
+            return { ok: true, admissionToken: payload.roomAdmissionToken };
+          }
+          if (payload.op === effect.hostOp) return completed.promise;
+          return { ok: true };
+        },
+      });
+      mt.drive(rpc('request-join', 'join', { roomId: 'peerd-global' }));
+      await tick();
+      mt.drive(rpc('request-effect', effect.publicOp, effect.args));
+      await tick();
+      mt.drive({ peerd: 'dweb:cancel', clientId: CLIENT, id: 'request-effect' });
+      completed.resolve({ ok: true, id: 'committed-event', ts: 1 });
+      await tick();
+      expect(mt.results().find((result) => result.id === 'request-effect')).toMatchObject({
+        ok: true, value: { id: 'committed-event' },
+      });
+    }
+  });
+
+  test('failed publish and DM replies never become success and preserve unknown custody', async () => {
+    const { mt } = makeBridge({
+      roomCall: async (payload) => payload.op === 'join'
+        ? {
+            ok: true, did: 'did:key:zME', joined: payload.roomId,
+            hostEpoch: 'host-epoch-0001', present: [],
+            admissionToken: payload.roomAdmissionToken,
+          }
+        : payload.op === 'join-ack'
+          ? { ok: true, admissionToken: payload.roomAdmissionToken }
+          : {
+              ok: false, error: 'response lost', performed: true,
+              outcomeKnown: false, outcomeKind: 'transport-lost', retryable: false,
+            },
+    });
+    mt.drive(rpc('request-0001', 'join', { roomId: 'r' }));
+    await tick();
+    mt.drive(rpc('request-0002', 'publish', { topic: 'feed', data: 'x' }));
+    mt.drive(rpc('request-0003', 'dm-send', { to: 'did:key:zPeer', data: 'x' }));
+    await tick();
+    for (const id of ['request-0002', 'request-0003']) {
+      expect(mt.results().find((result) => result.id === id)).toMatchObject({
+        ok: false, error: 'response lost', performed: true,
+        outcomeKnown: false, outcomeKind: 'transport-lost', retryable: false,
+      });
+    }
+  });
+
+  test('publishing the current App sends its trusted id, not page-supplied files', async () => {
+    const { mt, calls, confirmations } = makeBridge();
+    mt.drive(rpc('request-0001', 'join', { roomId: 'r', name: 'ada' }));
+    await tick();
+    mt.drive(rpc('request-0002', 'publish-app', { files: { 'evil.bin': 'ignored' } }));
+    await tick();
+    expect(calls.find((call) => call.op === 'publish-app')).toMatchObject({
+      appId: 'commons', entry: 'index.html', name: 'commons',
+    });
+    expect(calls.find((call) => call.op === 'publish-app').files).toBeUndefined();
+    expect(confirmations.filter((request) => request.kind === 'share')).toHaveLength(1);
+    expect(confirmations.find((request) => request.kind === 'share').detail).toContain('source and binary assets');
+    expect(confirmations.find((request) => request.kind === 'share').approveLabel).toBe('Share app');
+  });
+
+  test('a remembered room join never replaces fresh consent for publishing App files', async () => {
+    const storage = memoryStorage();
+    await storage.set({ 'dweb.grants.v1': { releaseHash: { rooms: { r: true } } } });
+    const { mt, calls, confirmations } = makeBridge({
+      storage, appDweb: { hash: 'releaseHash', generation: 0, forked: false },
+      confirm: (request) => request.kind !== 'share',
+    });
+    mt.drive(rpc('request-0001', 'join', { roomId: 'r', name: 'ada' }));
+    await tick();
+    mt.drive(rpc('request-0002', 'publish-app'));
+    await tick();
+    expect(mt.results().find((result) => result.id === 'request-0002')).toMatchObject({ ok: false });
+    expect(calls.some((call) => call.op === 'publish-app')).toBe(false);
+    expect(confirmations.map((request) => request.kind)).toEqual(['share']);
+  });
+
+  test('pushed host events are emitted to the app — filtered to our room + subscribed topics', async () => {
+    const { mt, push } = makeBridge();
+    mt.drive(rpc('request-0001', 'join', { roomId: 'peerd-global', name: 'ada' }));
+    await tick();
+    mt.drive(rpc('request-0002', 'subscribe', { topic: 'feed' }));
+    await tick();
+
+    push({ type: 'dweb/base-room/event', roomId: 'someone-elses-room', event: 'message', data: { topic: 'feed', from: 'x', data: {} } });
+    push({ type: 'dweb/base-room/event', roomId: 'peerd-global', event: 'direct', data: { from: 'did:key:zBOB', data: { hi: 1 } } });
+    push({ type: 'dweb/base-room/event', roomId: 'peerd-global', event: 'message', data: { topic: 'feed', from: 'did:key:zBOB', data: { text: 'yo' } } });
+    await tick();
+
+    const evs = mt.events();
+    expect(evs.find((e) => e.event === 'direct')?.data).toMatchObject({ from: 'did:key:zBOB' });
+    expect(evs.find((e) => e.event === 'message')?.data).toMatchObject({ from: 'did:key:zBOB', data: { text: 'yo' } });
+    expect(evs.filter((e) => e.event === 'message').length).toBe(1); // the other room never leaked in
+  });
+
+  test('a replacement host rejoins the exact member and restores retained/subscribed topics once', async () => {
+    const members = new Set<string>();
+    const { mt, calls, push } = makeBridge({
+      joinHost: async (payload) => {
+        members.add(payload.roomClientId);
+        return {
+          ok: true,
+          did: 'did:key:zME',
+          joined: payload.roomId,
+          hostEpoch: payload.expectedHostEpoch ?? 'host-epoch-0001',
+          present: [],
+        };
+      },
+    });
+    mt.drive(rpc('request-host-join1', 'join', { roomId: 'durable-room', name: 'ada' }));
+    await tick();
+    mt.drive(rpc('request-host-retain', 'retain', { topic: 'lobby-state' }));
+    mt.drive(rpc('request-host-sub001', 'subscribe', { topic: 'moves' }));
+    await tick();
+    const initialJoin = calls.find((call) => call.op === 'join');
+    calls.length = 0;
+
+    push({
+      type: 'dweb/base-host/generation',
+      hostEpoch: 'host-epoch-0002',
+      meshGeneration: 1,
+      did: 'did:key:zME',
+    });
+    await tick(20);
+    expect(calls.map((call) => call.op)).toEqual(['join', 'join-ack', 'retain', 'subscribe']);
+    expect(calls[0]).toMatchObject({
+      roomId: 'durable-room', name: 'ada', expectedHostEpoch: 'host-epoch-0002',
+      roomClientId: initialJoin.roomClientId,
+      roomAdmissionToken: initialJoin.roomAdmissionToken,
+    });
+    expect(members.size).toBe(1);
+    expect(calls[1]).toMatchObject({
+      roomId: 'durable-room', expectedHostEpoch: 'host-epoch-0002',
+      roomAdmissionToken: initialJoin.roomAdmissionToken,
+    });
+    expect(calls[2]).toMatchObject({
+      roomId: 'durable-room', topic: 'lobby-state', expectedHostEpoch: 'host-epoch-0002',
+    });
+    expect(calls[3]).toMatchObject({
+      roomId: 'durable-room', topic: 'moves', expectedHostEpoch: 'host-epoch-0002',
+    });
+    expect(mt.events().find((event) => event.event === 'host-recovered')).toMatchObject({
+      data: { roomId: 'durable-room', hostEpoch: 'host-epoch-0002' },
+    });
+
+    calls.length = 0;
+    push({ type: 'dweb/base-host/generation', hostEpoch: 'host-epoch-0002', meshGeneration: 1 });
+    push({ type: 'dweb/base-host/generation', hostEpoch: 'host-epoch-0001', meshGeneration: 1 });
+    await tick();
+    expect(calls).toEqual([]);
+  });
+
+  test('join is denied when the user declines consent', async () => {
+    const { mt } = makeBridge({ confirm: false });
+    mt.drive(rpc('request-0001', 'join', { roomId: 'peerd-global', name: 'ada' }));
+    await tick();
+    expect(mt.results().find((r) => r.id === 'request-0001')).toMatchObject({ ok: false });
+  });
+
+  test('a local fork cannot reuse consent granted to the installed bundle', async () => {
+    const stored: Record<string, any> = {
+      'dweb.grants.v1': { 'bundle-v1': { rooms: { 'peerd-global': true } } },
+    };
+    const storage = {
+      get: async () => stored,
+      set: async (value: any) => { Object.assign(stored, value); },
+    };
+    const first = makeBridge({
+      appDweb: { hash: 'bundle-v1', generation: 0 },
+      currentDweb: { hash: 'bundle-v1', forked: true, generation: 0 },
+      storage,
+    });
+    first.mt.drive(rpc('request-0001', 'join', { roomId: 'peerd-global' }));
+    await tick();
+    expect(first.confirmations).toHaveLength(1);
+    expect(stored['dweb.grants.v1']['fork:commons:bundle-v1']).toBeUndefined();
+    await first.bridge.dispose();
+
+    const second = makeBridge({ confirm: false, appDweb: { hash: 'bundle-v1', forked: true, generation: 0 }, storage });
+    second.mt.drive(rpc('request-0002', 'join', { roomId: 'peerd-global' }));
+    await tick();
+    expect(second.confirmations).toHaveLength(1);
+    expect(second.calls.some((call) => call.op === 'join')).toBe(false);
+
+    const nextVersion = makeBridge({
+      confirm: false,
+      appDweb: { hash: 'bundle-v2', forked: true, generation: 0 },
+      storage,
+    });
+    nextVersion.mt.drive(rpc('request-0003', 'join', { roomId: 'peerd-global' }));
+    await tick();
+    expect(nextVersion.confirmations).toHaveLength(1);
+    expect(nextVersion.calls.some((call) => call.op === 'join')).toBe(false);
+
+    const staleVersion = makeBridge({
+      appDweb: { hash: 'bundle-v1', generation: 0 },
+      currentDweb: { hash: 'bundle-v2', generation: 0 },
+      storage,
+    });
+    staleVersion.mt.drive(rpc('request-0004', 'join', { roomId: 'peerd-global' }));
+    await tick();
+    expect(staleVersion.confirmations).toHaveLength(0);
+    expect(staleVersion.calls.some((call) => call.op === 'join')).toBe(false);
+    expect(staleVersion.mt.results().find((result) => result.id === 'request-0004')?.error).toContain('Reload');
+  });
+
+  test('a clean App cannot join after it changes during consent', async () => {
+    const current = { hash: 'bundle-v1', forked: false, generation: 0 };
+    const bridge = makeBridge({
+      appDweb: { hash: 'bundle-v1', generation: 0 },
+      currentDweb: current,
+      confirm: () => { current.forked = true; return true; },
+      joinHost: async (request) => request.bridgeAppForked === current.forked
+        ? { ok: true, did: 'did:key:zME', joined: request.roomId, present: [] }
+        : { ok: false, error: 'app-identity-changed' },
+    });
+    bridge.mt.drive(rpc('request-0005', 'join', { roomId: 'peerd-global' }));
+    await tick();
+    expect(bridge.calls.at(-1)).toMatchObject({ bridgeAppId: 'commons', bridgeAppHash: 'bundle-v1', bridgeAppForked: false, bridgeAppGeneration: 0 });
+    expect(bridge.mt.results().at(-1)).toMatchObject({ ok: false, error: 'app-identity-changed' });
+  });
+
+  test('prototype-shaped room names cannot inherit a remembered grant', async () => {
+    for (const roomId of ['__proto__', 'constructor', 'toString']) {
+      const { mt, calls } = makeBridge();
+      mt.drive(rpc(`request-${roomId}-0001`, 'join', { roomId }));
+      await tick();
+      expect(mt.results().find((r) => r.id === `request-${roomId}-0001`)).toMatchObject({ ok: false });
+      expect(calls.some((call) => call.op === 'join')).toBe(false);
+    }
+  });
+
+  test('cancellation while consent is delayed never reaches the host and a retry succeeds', async () => {
+    const consentGate = deferred<boolean>();
+    let confirmations = 0;
+    const { mt, calls } = makeBridge({
+      confirm: async () => (++confirmations === 1 ? consentGate.promise : true),
+    });
+    mt.drive(rpc('request-join-delayed', 'join', { roomId: 'slow-room' }));
+    await tick();
+    mt.drive({ peerd: 'dweb:cancel', clientId: CLIENT, id: 'request-join-delayed' });
+    consentGate.resolve(true);
+    await tick();
+    expect(calls.filter((call) => call.op === 'join')).toHaveLength(0);
+
+    mt.drive(rpc('request-join-retry01', 'join', { roomId: 'slow-room' }));
+    await tick();
+    expect(calls.filter((call) => call.op === 'join')).toHaveLength(1);
+    expect(mt.results().find((r) => r.id === 'request-join-retry01')).toMatchObject({
+      ok: true, value: { joined: 'slow-room' }, clientId: CLIENT,
+    });
+  });
+
+  test('same-client concurrent joins serialize to one host room', async () => {
+    const { mt, calls } = makeBridge();
+    mt.drive(rpc('request-same-room01', 'join', { roomId: 'same-room' }));
+    mt.drive(rpc('request-same-room02', 'join', { roomId: 'same-room' }));
+    await tick();
+    expect(calls.filter((call) => call.op === 'join')).toHaveLength(1);
+    expect(mt.results().filter((r) => r.ok)).toHaveLength(2);
+  });
+
+  test('replacement client cancels an in-flight different-room join, rolls it back, then joins once', async () => {
+    const firstJoin = deferred<any>();
+    let joins = 0;
+    const { mt, calls } = makeBridge({
+      joinHost: async (payload) => {
+        joins += 1;
+        if (joins === 1) return firstJoin.promise;
+        return { ok: true, did: 'did:key:zME', joined: payload.roomId, present: [] };
+      },
+    });
+    const replacement = 'client-epoch-0002';
+    mt.drive(rpc('request-old-room001', 'join', { roomId: 'old-room' }, CLIENT));
+    await tick();
+    mt.drive(rpc('request-new-room001', 'join', { roomId: 'new-room' }, replacement));
+    firstJoin.resolve({ ok: true, did: 'did:key:zME', joined: 'old-room', present: [] });
+    await tick(20);
+    expect(calls.map((call) => [call.op, call.roomId])).toEqual([
+      ['join', 'old-room'], ['leave', 'old-room'], ['join', 'new-room'],
+      ['join-ack', 'new-room'],
+    ]);
+    expect(mt.results().some((r) => r.clientId === CLIENT)).toBe(false);
+    expect(mt.results().find((r) => r.clientId === replacement)).toMatchObject({
+      ok: true, value: { joined: 'new-room' },
+    });
+  });
+
+  test('cancel after host join rolls back the exact room and retry succeeds without a leaked ref', async () => {
+    const hostJoin = deferred<any>();
+    let joins = 0;
+    const { mt, calls } = makeBridge({
+      joinHost: async (payload) => {
+        joins += 1;
+        if (joins === 1) return hostJoin.promise;
+        return { ok: true, did: 'did:key:zME', joined: payload.roomId, present: [] };
+      },
+    });
+    mt.drive(rpc('request-cancel-host', 'join', { roomId: 'rollback-room' }));
+    await tick();
+    mt.drive({ peerd: 'dweb:cancel', clientId: CLIENT, id: 'request-cancel-host' });
+    hostJoin.resolve({ ok: true, did: 'did:key:zME', joined: 'rollback-room', present: [] });
+    await tick(20);
+    expect(calls.slice(0, 2).map((call) => [call.op, call.roomId])).toEqual([
+      ['join', 'rollback-room'], ['leave', 'rollback-room'],
+    ]);
+
+    mt.drive(rpc('request-after-cancel', 'join', { roomId: 'rollback-room' }));
+    await tick();
+    expect(calls.filter((call) => call.op === 'join')).toHaveLength(2);
+    expect(mt.results().find((r) => r.id === 'request-after-cancel')).toMatchObject({ ok: true });
+  });
+
+  test('host commit followed by SW relay death compensates the exact token before retry', async () => {
+    const members = new Map<string, string>();
+    let failFirstRelay = true;
+    const { mt, calls } = makeBridge({
+      roomCall: async (payload) => {
+        if (payload.op === 'join') {
+          members.set(payload.roomClientId, payload.roomAdmissionToken);
+          if (failFirstRelay) {
+            failFirstRelay = false;
+            throw new Error('service worker died after host commit');
+          }
+          return {
+            ok: true, did: 'did:key:zME', joined: payload.roomId,
+            hostEpoch: 'host-epoch-0001', present: [],
+            admissionToken: payload.roomAdmissionToken,
+          };
+        }
+        if (payload.op === 'join-ack') {
+          return { ok: true, admissionToken: payload.roomAdmissionToken };
+        }
+        if (payload.op === 'leave') {
+          if (members.get(payload.roomClientId) === payload.roomAdmissionToken) {
+            members.delete(payload.roomClientId);
+          }
+          return { ok: true, left: true };
+        }
+        return { ok: true };
+      },
+    });
+    mt.drive(rpc('request-crash-join1', 'join', { roomId: 'crash-room' }));
+    await tick(20);
+    expect(mt.results().find((row) => row.id === 'request-crash-join1'))
+      .toMatchObject({ ok: false });
+    expect(members.size).toBe(0);
+    const firstJoin = calls.find((call) => call.op === 'join');
+    const rollback = calls.find((call) => call.op === 'leave');
+    expect(rollback).toMatchObject({
+      roomId: 'crash-room',
+      roomClientId: firstJoin.roomClientId,
+      roomAdmissionToken: firstJoin.roomAdmissionToken,
+    });
+
+    mt.drive(rpc('request-crash-join2', 'join', { roomId: 'crash-room' }));
+    await tick(20);
+    expect(mt.results().find((row) => row.id === 'request-crash-join2'))
+      .toMatchObject({ ok: true, value: { joined: 'crash-room' } });
+    expect(members.size).toBe(1);
+    expect(members.get(firstJoin.roomClientId)).not.toBe(firstJoin.roomAdmissionToken);
+  });
+
+  test('acknowledged join with a lost reply persists exact cleanup across App reopen', async () => {
+    const storage = memoryStorage();
+    const members = new Map<string, string>();
+    let cold = true;
+    const roomCall = async (payload: any) => {
+      if (payload.op === 'join') {
+        members.set(payload.roomClientId, payload.roomAdmissionToken);
+        return {
+          ok: true, did: 'did:key:zME', joined: payload.roomId,
+          hostEpoch: 'host-epoch-0001', present: [],
+          admissionToken: payload.roomAdmissionToken,
+        };
+      }
+      if (payload.op === 'join-ack') {
+        if (members.get(payload.roomClientId) !== payload.roomAdmissionToken) {
+          return { ok: false, error: 'app-room-admission-mismatch' };
+        }
+        throw new Error('service worker died after admission acknowledgement');
+      }
+      if (payload.op === 'leave') {
+        if (cold) throw new Error('service worker unavailable');
+        if (members.get(payload.roomClientId) === payload.roomAdmissionToken) {
+          members.delete(payload.roomClientId);
+        }
+        return { ok: true, left: true };
+      }
+      return { ok: true };
+    };
+    const first = makeBridge({ roomCall, storage });
+    first.mt.drive(rpc('request-ack-crash1', 'join', { roomId: 'reopen-room' }));
+    await tick(20);
+    expect(first.mt.results().find((row) => row.id === 'request-ack-crash1'))
+      .toMatchObject({ ok: false });
+    expect(members.size).toBe(1);
+    const compensationKey = Object.keys(storage.values)
+      .find((key) => key.startsWith('dweb.room-compensation.v1:'))!;
+    expect(storage.values[compensationKey]).toEqual(
+      expect.objectContaining({ roomId: 'reopen-room' }),
+    );
+    first.bridge.dispose();
+
+    cold = false;
+    const reopened = makeBridge({ roomCall, storage });
+    await tick(20);
+    expect(members.size).toBe(0);
+    expect(storage.values[compensationKey]).toBeNull();
+    reopened.bridge.dispose();
+  });
+
+  test('an already-absent durable compensation clears before a later join', async () => {
+    const storage = memoryStorage();
+    const compensationKey = 'dweb.room-compensation.v1:commons';
+    storage.values[compensationKey] = {
+      schema: 1,
+      appId: 'commons',
+      roomId: 'orphaned-room',
+      clientId: 'room-client-orphaned',
+      admissionToken: 'room-admission-orphaned',
+      hostEpoch: 'host-epoch-orphaned',
+    };
+    const { mt, bridge, calls } = makeBridge({
+      storage,
+      roomCall: async (payload) => {
+        if (payload.op === 'leave') return { ok: false, error: 'not-in-room' };
+        if (payload.op === 'join') return {
+          ok: true, did: 'did:key:zME', joined: payload.roomId,
+          hostEpoch: 'host-epoch-0002', present: [],
+          admissionToken: payload.roomAdmissionToken,
+        };
+        if (payload.op === 'join-ack') {
+          return { ok: true, admissionToken: payload.roomAdmissionToken };
+        }
+        return { ok: true };
+      },
+    });
+    await tick(20);
+    expect(storage.values[compensationKey]).toBeNull();
+
+    mt.drive(rpc('request-after-compensation', 'join', { roomId: 'next-room' }));
+    await tick(20);
+    expect(calls.map((call) => call.op)).toEqual(['leave', 'join', 'join-ack']);
+    expect(mt.results().find((row) => row.id === 'request-after-compensation'))
+      .toMatchObject({ ok: true, value: { joined: 'next-room' } });
+    bridge.dispose();
+  });
+
+  test('a replacement epoch adopts an established room and stale dispose cannot tear it down', async () => {
+    const { mt, calls } = makeBridge();
+    const replacement = 'client-epoch-0002';
+    mt.drive(rpc('request-owner-join1', 'join', { roomId: 'stable-room' }, CLIENT));
+    await tick();
+    mt.drive(rpc('request-new-hello1', 'hello', {}, replacement));
+    await tick();
+    mt.drive({ peerd: 'dweb:dispose', clientId: CLIENT });
+    await tick();
+    expect(calls.filter((call) => call.op === 'leave')).toHaveLength(0);
+    mt.drive({ peerd: 'dweb:dispose', clientId: replacement });
+    await tick();
+    expect(calls.filter((call) => call.op === 'leave')).toHaveLength(1);
+    expect(calls.find((call) => call.op === 'leave').roomId).toBe('stable-room');
+
+    let leaveAttempts = 0;
+    const retry = makeBridge({
+      leaveHost: async () => ++leaveAttempts === 1
+        ? { ok: false, error: 'leave-failed' }
+        : { ok: true, left: true },
+    });
+    retry.mt.drive(rpc('request-owner-join-retry', 'join', { roomId: 'retry-room' }, CLIENT));
+    await tick();
+    retry.mt.drive({ peerd: 'dweb:dispose', clientId: CLIENT });
+    await tick();
+    retry.mt.drive(rpc('request-new-hello-retry', 'hello', {}, replacement));
+    await tick();
+    retry.mt.drive({ peerd: 'dweb:dispose', clientId: replacement });
+    await tick();
+    expect(retry.calls.filter((call) => call.op === 'leave').map((call) => call.roomId))
+      .toEqual(['retry-room', 'retry-room']);
+  });
+
+  test('a retired epoch cannot recapture the bridge with a late RPC or dispose the replacement room', async () => {
+    const { mt, calls } = makeBridge();
+    const replacement = 'client-epoch-0002';
+    mt.drive(rpc('request-owner-join2', 'join', { roomId: 'stable-room' }, CLIENT));
+    await tick();
+    mt.drive(rpc('request-new-hello2', 'hello', {}, replacement));
+    await tick();
+
+    mt.drive(rpc('request-late-hello', 'hello', {}, CLIENT));
+    await tick();
+    expect(mt.results().find((result) => result.id === 'request-late-hello')).toMatchObject({
+      ok: false, clientId: CLIENT, error: 'retired client epoch',
+    });
+    mt.drive({ peerd: 'dweb:dispose', clientId: CLIENT });
+    await tick();
+    expect(calls.filter((call) => call.op === 'leave')).toHaveLength(0);
+
+    mt.drive(rpc('request-new-status', 'status', {}, replacement));
+    await tick();
+    expect(mt.results().find((result) => result.id === 'request-new-status')).toMatchObject({
+      ok: true, clientId: replacement, value: { joined: 'stable-room' },
+    });
+  });
+
+  test('dispose waits for a joined room to leave', async () => {
+    const leaving = deferred<any>();
+    const { mt, bridge, calls } = makeBridge({ leaveHost: async () => leaving.promise });
+    mt.drive(rpc('request-join-dispose', 'join', { roomId: 'stable-room' }));
+    await tick();
+    let settled = false;
+    const disposing = bridge.dispose().then(() => { settled = true; });
+    await tick();
+    expect(calls.filter((call) => call.op === 'leave')).toHaveLength(1);
+    expect(settled).toBe(false);
+    leaving.resolve({ ok: true, left: true });
+    await disposing;
+    expect(settled).toBe(true);
+
+    const failed = makeBridge({ leaveHost: async () => ({ ok: false, error: 'leave-failed' }) });
+    failed.mt.drive(rpc('request-failed-leave', 'join', { roomId: 'failed-room' }));
+    await tick();
+    await expect(failed.bridge.dispose()).rejects.toThrow('leave-failed');
+
+    const explicitLeave = deferred<any>();
+    const concurrent = makeBridge({ leaveHost: async () => explicitLeave.promise });
+    concurrent.mt.drive(rpc('request-concurrent-join', 'join', { roomId: 'concurrent-room' }));
+    await tick();
+    concurrent.mt.drive(rpc('request-concurrent-leave', 'leave'));
+    await tick();
+    const concurrentDispose = concurrent.bridge.dispose();
+    explicitLeave.resolve({ ok: true, left: true });
+    await concurrentDispose;
+    expect(concurrent.calls.filter((call) => call.op === 'leave')).toHaveLength(1);
+  });
+
+  test('dispose waits for a started host join and its exact-room rollback', async () => {
+    const joining = deferred<any>();
+    const leaving = deferred<any>();
+    const { mt, bridge, calls } = makeBridge({
+      joinHost: async () => joining.promise,
+      leaveHost: async () => leaving.promise,
+    });
+    mt.drive(rpc('request-pending-dispose', 'join', { roomId: 'pending-room' }));
+    await tick();
+    let settled = false;
+    const disposing = bridge.dispose().then(() => { settled = true; });
+    await tick();
+    expect(settled).toBe(false);
+    joining.resolve({ ok: true, did: 'did:key:zME', joined: 'pending-room', present: [] });
+    await tick();
+    expect(calls.map((call) => call.op)).toEqual(['join', 'leave']);
+    expect(settled).toBe(false);
+    leaving.resolve({ ok: true, left: true });
+    await disposing;
+    expect(settled).toBe(true);
+  });
+
+  test('authority invalidation does not wait for a join or leave reply', async () => {
+    const joining = deferred<any>();
+    const leaving = deferred<any>();
+    const { mt, bridge, calls } = makeBridge({
+      joinHost: async () => joining.promise,
+      leaveHost: async () => leaving.promise,
+    });
+    mt.drive(rpc('request-pending-invalidate', 'join', { roomId: 'pending-room' }));
+    await tick();
+    let settled = false;
+    await bridge.invalidate().then(() => { settled = true; });
+    expect(settled).toBe(true);
+    expect(mt.hasHandler()).toBe(false);
+    // The authority owner purges the old generation. This bridge must retire
+    // immediately without posting a leave ahead of its still-pending join.
+    expect(calls.map((call) => call.op)).toEqual(['join']);
+    joining.resolve({ ok: true, did: 'did:key:zME', joined: 'pending-room', present: [] });
+    await tick();
+    expect(calls.map((call) => call.op)).toEqual(['join', 'leave']);
+    expect(calls[1].roomAdmissionToken).toBe(calls[0].roomAdmissionToken);
+    leaving.resolve({ ok: true, left: true });
+    await tick();
+  });
+
+  test('dispose removes an exact owner after the host loses its join reply', async () => {
+    const owners = new Set<string>();
+    let leaves = 0;
+    const ownerOf = (payload: any) => `${payload.bridgeAppId}:${payload.bridgeAppGeneration}`;
+    const { mt, bridge, calls } = makeBridge({
+      appDweb: { seed: 'commons', generation: 9 },
+      joinHost: async (payload) => {
+        owners.add(ownerOf(payload));
+        throw new Error('join reply lost');
+      },
+      leaveHost: async (payload) => {
+        leaves += 1;
+        if (leaves === 1) throw new Error('cleanup unavailable');
+        owners.delete(ownerOf(payload));
+        return { ok: true, left: true };
+      },
+    });
+    mt.drive(rpc('request-lost-join', 'join', { roomId: 'lost-room' }));
+    await tick(20);
+    expect(owners).toEqual(new Set(['commons:9']));
+    await bridge.dispose();
+    expect(owners.size).toBe(0);
+    expect(calls.map((call) => [call.op, call.roomId, ownerOf(call)])).toEqual([
+      ['join', 'lost-room', 'commons:9'],
+      ['leave', 'lost-room', 'commons:9'],
+      ['leave', 'lost-room', 'commons:9'],
+    ]);
+  });
+
+  test('unknown op is rejected; dispose unsubscribes transport + host events', async () => {
+    const { mt, bridge } = makeBridge();
+    mt.drive(rpc('request-0007', 'nonsense'));
+    await tick();
+    expect(mt.results().find((r) => r.id === 'request-0007')).toMatchObject({ ok: false });
+    expect(mt.hasHandler()).toBe(true);
+    await bridge.dispose();
+    expect(mt.hasHandler()).toBe(false);
+  });
+});

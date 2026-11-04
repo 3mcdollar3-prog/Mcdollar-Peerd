@@ -1,0 +1,84 @@
+import { describe, expect, test } from 'bun:test';
+import {
+  discoveredAppFromRow,
+  discoveredIdentityError,
+  identityForDiscoveredUri,
+} from '../../extension/offscreen/install-card-identity.js';
+
+describe('discovery-bound install identity', () => {
+  const hash = 'a'.repeat(64);
+  const otherHash = 'b'.repeat(64);
+  const uri = `peerd://did:key:zPeer/${hash}`;
+
+  test('returns the complete identity for the exact heard URI', () => {
+    expect(identityForDiscoveredUri([{
+      dwapp_id: 'dwapp-1', slug: 'notes', seq: 7, publisher: 'did:key:zPeer',
+      head: { version_id: hash, content_addr: uri },
+    }], uri)).toEqual({
+      dwappId: 'dwapp-1', slug: 'notes', seq: 7, publisher: 'did:key:zPeer',
+    });
+  });
+
+  test('does not accept a copied identity for another URI', () => {
+    expect(identityForDiscoveredUri([{
+      dwapp_id: 'dwapp-1', slug: 'notes', seq: 7, publisher: 'did:key:zPeer',
+      head: { version_id: otherHash, content_addr: `peerd://did:key:zPeer/${otherHash}` },
+    }], uri)).toBe(null);
+  });
+
+  test('fails closed when one URI has conflicting discovery identities', () => {
+    expect(identityForDiscoveredUri([
+      { dwapp_id: 'one', slug: 'notes', seq: 7, publisher: 'did:key:zPeer', head: { version_id: hash, content_addr: uri } },
+      { dwapp_id: 'two', slug: 'tasks', seq: 8, publisher: 'did:key:zPeer', head: { version_id: hash, content_addr: uri } },
+    ], uri)).toBe(null);
+  });
+
+  test('omits a signed card whose surfaced version disagrees with its content address', () => {
+    const inconsistent = {
+      dwapp_id: 'dwapp-1', slug: 'notes', seq: 9, publisher: 'did:key:zPeer', name: 'Notes',
+      head: { version_id: otherHash, content_addr: uri, size: 10 },
+    };
+    expect(discoveredAppFromRow(inconsistent)).toBe(null);
+    expect(identityForDiscoveredUri([inconsistent], uri)).toBe(null);
+    expect(discoveredAppFromRow({
+      ...inconsistent,
+      head: { ...inconsistent.head, version_id: hash },
+    })).toMatchObject({ uri, version_id: hash, seq: 9 });
+  });
+
+  test('rejects an update copied from another durable App stream', () => {
+    const identity = {
+      dwappId: 'dwapp-other', slug: 'other', seq: 9, publisher: 'did:key:zOther',
+    };
+    expect(discoveredIdentityError(identity, {
+      expectedDwappId: 'dwapp-installed',
+      expectedPublisher: 'did:key:zInstalled',
+    })).toBe('discovery-stream-mismatch');
+  });
+
+  test('rejects a fetched manifest signed by another publisher', () => {
+    const identity = {
+      dwappId: 'dwapp-1', slug: 'notes', seq: 7, publisher: 'did:key:zPeer',
+    };
+    expect(discoveredIdentityError(identity, {
+      expectedDwappId: 'dwapp-1',
+      expectedPublisher: 'did:key:zPeer',
+      manifestPublisher: 'did:key:zSubstitute',
+    })).toBe('discovery-publisher-mismatch');
+  });
+});
+
+test('verified row projection exposes signed discovery hints and keeps legacy runtime unknown', () => {
+  const head = {version_id:'a'.repeat(64),content_addr:`peerd://did:key:zPeer/${'a'.repeat(64)}`,size:128};
+  expect(discoveredAppFromRow({head,description:'Signed text'})).toMatchObject({description:'Signed text',size:128,includes_wasm:null});
+  for (const includes_wasm of [true,false]) expect(discoveredAppFromRow({head:{...head,includes_wasm}})).toMatchObject({includes_wasm});
+});
+
+
+test('projection exposes only host retrieval history, never signed-head claims', () => {
+  const retrieval = {outcome:'no-provider-found',observedAt:100,expiresAt:200};
+  const head = {version_id:'a'.repeat(64),content_addr:`peerd://did:key:zPeer/${'a'.repeat(64)}`,retrieval};
+  expect(discoveredAppFromRow({head}).retrieval).toBeNull();
+  expect(discoveredAppFromRow({head,retrieval}).retrieval).toEqual(retrieval);
+  expect(discoveredAppFromRow({head,retrieval:{...retrieval,expiresAt:NaN}}).retrieval).toBeNull();
+});

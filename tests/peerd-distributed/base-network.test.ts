@@ -1,0 +1,696 @@
+import { publishedAppHead } from '../../extension/offscreen/published-app-head.js';
+import { describe, test, expect } from 'bun:test';
+import { generateIdentity } from '../../extension/peerd-distributed/identity/keypair.js';
+import { memoryPair } from '../../extension/peerd-distributed/transport/channel.js';
+import { createSession } from '../../extension/peerd-distributed/transport/session.js';
+import { createRoomMesh } from '../../extension/peerd-distributed/transport/mesh.js';
+import { createBaseNetwork } from '../../extension/peerd-distributed/base-network.js';
+
+const tick = (ms = 30) => new Promise((r) => setTimeout(r, ms));
+const waitFor = async (predicate: () => boolean, timeoutMs = 1_000) => {
+  const deadline = Date.now() + timeoutMs;
+  while (!predicate() && Date.now() < deadline) await tick(10);
+};
+
+const link = async (a: any, b: any) => {
+  const [ca, cb] = memoryPair();
+  await Promise.all([
+    createSession({ channel: ca, identity: a.identity }),
+    createSession({ channel: cb, identity: b.identity }),
+  ]);
+  a.mesh.addLink(ca, b.identity.did);
+  b.mesh.addLink(cb, a.identity.did);
+  await a.base.node.dht.learn(b.identity.did);
+  await b.base.node.dht.learn(a.identity.did);
+};
+
+const spawn = async (label: string, options: Record<string, any> = {}) => {
+  const identity = await generateIdentity();
+  const mesh = createRoomMesh({ roomId: 'base', identity });
+  const base = await createBaseNetwork({ identity, mesh, meta: () => ({ name: label }), ...options });
+  return { identity, mesh, base, label };
+};
+
+const clique = async (n: number) => {
+  const peers = [];
+  for (let i = 0; i < n; i++) peers.push(await spawn(`n${i}`));
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) await link(peers[i], peers[j]);
+  return peers;
+};
+
+test('an isolated seeder reads the original publisher bytes locally and honors revocation', async () => {
+  const denied = new Set<string>();
+  const publisher = await spawn('publisher');
+  const seeder = await spawn('isolated-seeder', { userBlocked: (did: string) => denied.has(did) });
+  try {
+    const shared = await publisher.base.publishApp({ name: 'offline seed', entry: 'index.html',
+      files: { 'index.html': '<h1>Original publisher</h1>', 'module.wasm': new Uint8Array([0,97,115,109,1,0,0,0]) } });
+    const original = await publisher.base.fetchApp(shared.uri);
+    await seeder.base.seedApp(original);
+    publisher.base.close(); publisher.mesh.close();
+    expect(seeder.mesh.peers()).toHaveLength(0);
+    const local = await seeder.base.fetchApp(shared.uri);
+    expect(local.payload).toEqual(original.payload);
+    expect(local.manifest.publisher).toBe(publisher.identity.did);
+    expect(local.providers).toEqual([seeder.identity.did]);
+    expect(local.verifiedContributors).toEqual([]);
+    const substituted = shared.uri.replace(publisher.identity.did, seeder.identity.did);
+    await expect(seeder.base.fetchApp(substituted)).rejects.toThrow('publisher');
+    const heldChunk = seeder.base.node.content.getChunk(original.manifest.chunks[0].hash)!;
+    heldChunk[0] ^= 1;
+    await expect(seeder.base.fetchApp(shared.uri)).rejects.toThrow('chunk verification failed');
+    heldChunk[0] ^= 1;
+    denied.add(publisher.identity.did);
+    await expect(seeder.base.fetchApp(shared.uri)).rejects.toThrow('publisher-user-blocked');
+    denied.clear();
+    await seeder.base.unshareApp({ publisher: publisher.identity.did, hash: shared.hash });
+    await expect(seeder.base.fetchApp(shared.uri, { timeoutMs: 100 })).rejects.toThrow();
+  } finally { for (const peer of [publisher, seeder]) { peer.base.close(); peer.mesh.close(); } }
+});
+
+test('local seeded reads reject a forged signature even when the address matches its hash', async () => {
+  const publisher = await spawn('publisher');
+  const seeder = await spawn('seeder');
+  try {
+    const shared = await publisher.base.publishApp({ name: 'signature test', entry: 'index.html', files: { 'index.html': 'test' } });
+    const original = await publisher.base.fetchApp(shared.uri);
+    const forged = structuredClone(original.manifest);
+    forged.sig = (forged.sig[0] === 'A' ? 'B' : 'A') + forged.sig.slice(1);
+    // The low-level content store is not a signature authority. The local read
+    // boundary must verify even when an internal caller supplied the bytes.
+    const hash = await seeder.base.seedApp({ manifest: forged, payload: original.payload });
+    const uri = shared.uri.replace(shared.hash, hash);
+    await expect(seeder.base.fetchApp(uri)).rejects.toThrow('signature invalid');
+  } finally { for (const peer of [publisher, seeder]) { peer.base.close(); peer.mesh.close(); } }
+});
+
+describe('base network — the always-on lobby + sub-protocols', () => {
+  test('unsupported discovery rollout profiles fail before acquiring mesh resources', async () => {
+    const identity = await generateIdentity();
+    let accesses = 0;
+    const mesh = new Proxy({}, { get() { accesses++; throw new Error('mesh acquired'); } });
+    await expect(createBaseNetwork({ identity, mesh, discoveryDisseminationProfile: 'unknown' as any }))
+      .rejects.toThrow('unsupported discovery dissemination profile');
+    expect(accesses).toBe(0);
+  });
+
+  test('global presence: every node sees every other on the lobby', async () => {
+    const peers = await clique(5);
+    for (const p of peers) p.base.presence.announce();
+    await waitFor(() => peers.every((p) => p.base.presence.list().length >= 4));
+    for (const p of peers) expect(p.base.presence.list().length).toBeGreaterThanOrEqual(4);
+    for (const p of peers) p.base.close();
+  });
+
+  test('a sub-protocol broadcasts, direct-messages, and tracks its own members', async () => {
+    const peers = await clique(4);
+    const subs = peers.map((p) => p.base.joinSubProtocol('commons'));
+    const gotMsg: Record<string, any[]> = {}; const gotDirect: Record<string, any[]> = {};
+    subs.forEach((s, i) => { gotMsg[i] = []; gotDirect[i] = []; s.onMessage((m: any) => gotMsg[i].push(m.data)); s.onDirect((m: any) => gotDirect[i].push(m.data)); });
+    await waitFor(() => subs.every((s) => s.peers().length >= 3));
+
+    // membership: everyone sees the other 3 on "commons"
+    for (const s of subs) expect(s.peers().length).toBeGreaterThanOrEqual(3);
+
+    // broadcast from node0 reaches the other members
+    await subs[0].broadcast({ hello: 'commons' });
+    await waitFor(() => [1, 2, 3].every((i) => gotMsg[i]
+      .some((message) => message.hello === 'commons')));
+    for (let i = 1; i < 4; i++) expect(gotMsg[i]).toContainEqual({ hello: 'commons' });
+
+    // a private direct message goes to exactly one member
+    subs[0].send(peers[2].identity.did, { secret: 'for n2' });
+    await waitFor(() => gotDirect[2].some((message) => message.secret === 'for n2'));
+    expect(gotDirect[2]).toContainEqual({ secret: 'for n2' });
+    expect(gotDirect[1]).toHaveLength(0); // not broadcast — only n2 got it
+    for (const p of peers) p.base.close();
+  });
+
+  test('dwapp discovery: a card streams to subscribed peers (default-subscribe on connect)', async () => {
+    const peers = await clique(4);
+    for (const p of peers) p.base.start();   // discovery.subscribeAll() over the clique
+    await tick(60);
+    const heard: Record<string, any[]> = {};
+    peers.forEach((p, i) => { heard[i] = []; p.base.onDwappAnnounce((a: any) => heard[i].push(a)); });
+    const { dwapp_id } = await peers[0].base.publishMeta({
+      slug: 'commons', name: 'commons', head: { version_id: 'v1', content_addr: 'peerd://pub/h', size: 1 },
+    });
+    await waitFor(() => [1, 2, 3].every((i) => heard[i]
+      .some((a) => a.dwapp_id === dwapp_id)));
+    for (let i = 1; i < 4; i++) expect(heard[i].some((a) => a.dwapp_id === dwapp_id)).toBe(true);
+    expect((await peers[1].base.findDwapp(dwapp_id))?.value.name).toBe('commons');
+    for (const p of peers) p.base.close();
+  });
+
+  test('dwapp discovery: a cold late joiner gets the whole Library on connect (no publisher known)', async () => {
+    // The exact bug from the original report: a peer browsing Discover knows
+    // neither publisher nor id, so the DHT can't help. It SUBSCRIBES on connect
+    // and the sharer answers with a snapshot — heardDwapps populates with no
+    // findDwapp(publisher) call at all.
+    const sharer = await spawn('sharer');
+    sharer.base.start();
+    const { dwapp_id } = await sharer.base.publishMeta({
+      slug: 'tictactoe', name: 'tic tac toe', head: { version_id: 'v1', content_addr: 'peerd://pub/t', size: 1 },
+    });
+
+    const late = await spawn('late');
+    late.base.start();
+    expect(late.base.heardDwapps()).toHaveLength(0); // hasn't asked anyone yet
+    await link(sharer, late);                         // newcomer subscribes; sharer snapshots
+    await waitFor(() => late.base.heardDwapps()
+      .some((a: any) => a.dwapp_id === dwapp_id));
+
+    const heard = late.base.heardDwapps();
+    expect(heard.some((a: any) => a.dwapp_id === dwapp_id)).toBe(true);
+    expect(heard.find((a: any) => a.dwapp_id === dwapp_id)?.name).toBe('tic tac toe');
+    [sharer, late].forEach((p) => p.base.close());
+  });
+
+  test('ban: a publisher we ban is dropped, blocklisted, and cannot re-enter our Library', async () => {
+    const a = await spawn('a');
+    const b = await spawn('b');
+    a.base.start(); b.base.start();
+    await link(a, b);
+    await tick(40);
+    const { dwapp_id } = await a.base.publishMeta({
+      slug: 'spammy', name: 'spammy', head: { version_id: 'v1', content_addr: 'peerd://a/x', size: 1 },
+    });
+    await waitFor(() => b.base.heardDwapps()
+      .some((r: any) => r.dwapp_id === dwapp_id));
+    expect(b.base.heardDwapps().some((r: any) => r.dwapp_id === dwapp_id)).toBe(true);
+    b.base.ban(a.identity.did, 'spam');
+    expect(b.base.heardDwapps().some((r: any) => r.dwapp_id === dwapp_id)).toBe(false);
+    [a, b].forEach((p) => p.base.close());
+  });
+});
+
+
+describe('provider reachability and leases', () => {
+  test('an unlinked newcomer fetches from a surviving seeder across publisher lease expiry', async () => {
+    let clock = 1000;
+    const publisher = await spawn('publisher', { now: () => clock });
+    const seeder = await spawn('seeder', { now: () => clock });
+    const index = await spawn('index', { now: () => clock });
+    const readers: Awaited<ReturnType<typeof spawn>>[] = [];
+    try {
+      await link(publisher, seeder);
+      await link(publisher, index);
+      await link(seeder, index);
+      const { uri } = await publisher.base.publishApp({
+        name: 'surviving seed', entry: 'index.html', files: { 'index.html': 'publisher-independent bytes' },
+      });
+      await publisher.base.announceProvider(uri);
+      const original = await seeder.base.fetchApp(uri, { timeoutMs: 500 });
+      await seeder.base.seedApp(original);
+      await seeder.base.announceProvider(uri);
+      publisher.base.close();
+      // why: exercise the signed provider store and renewal owner together,
+      // beyond multiple original leases, without a wall-clock hour-long test.
+      for (let round = 0; round < 6; round++) {
+        clock += 31 * 60_000;
+        await seeder.base.refreshProviders();
+        const providers = await index.base.findProviders(uri);
+        expect(providers).toContain(seeder.identity.did);
+        if (round > 0) expect(providers).not.toContain(publisher.identity.did);
+      }
+      const calls: any[] = [];
+      let reader: Awaited<ReturnType<typeof spawn>>;
+      reader = await spawn('newcomer', { now: () => clock, dial: async (contact: any) => {
+        calls.push(contact);
+        if (contact.did !== seeder.identity.did || contact.hints?.broker !== index.identity.did) return false;
+        await link(reader, seeder);
+        return true;
+      } });
+      readers.push(reader);
+      await link(reader, index);
+      // why: force provider discovery to carry the usable referral rather
+      // than accidentally finding the seeder through FIND_NODE routing.
+      index.base.node.dht.routingTable.remove(seeder.identity.did);
+      expect(reader.mesh.peers().some((peer: any) => peer.did === seeder.identity.did)).toBe(false);
+      const fetched = await reader.base.fetchApp(uri, { timeoutMs: 500 });
+      expect(fetched.manifest).toEqual(original.manifest);
+      expect(fetched.payload).toEqual(original.payload);
+      expect(calls.some(contact => contact.did === seeder.identity.did
+        && contact.hints?.broker === index.identity.did)).toBe(true);
+    } finally {
+      for (const peer of [publisher, seeder, index, ...readers]) peer.base.close();
+    }
+  });
+
+  test('dials a discovered provider through the peer supplying its referral', async () => {
+    const publisher = await spawn('publisher');
+    const broker = await spawn('broker');
+    const calls: any[] = [];
+    let reader: Awaited<ReturnType<typeof spawn>>;
+    reader = await spawn('reader', { dial: async (contact: any) => {
+      calls.push(contact);
+      if (contact.did !== publisher.identity.did || contact.hints?.broker !== broker.identity.did) return false;
+      await link(reader, publisher);
+      return true;
+    } });
+    try {
+      await link(publisher, broker);
+      await link(reader, broker);
+      const { uri } = await publisher.base.publishApp({ name: 'remote', entry: 'index.html', files: { 'index.html': 'hello' } });
+      await publisher.base.announceProvider(uri);
+      // Keep the provider out of FIND_NODE referrals: GET_PROVIDERS must itself
+      // preserve the broker, rather than depending on incidental DHT dialing.
+      broker.base.node.dht.routingTable.remove(publisher.identity.did);
+      const result = await reader.base.fetchApp(uri, { timeoutMs: 500 });
+      expect(result.manifest.publisher).toBe(publisher.identity.did);
+      expect(calls.some((contact) => contact.did === publisher.identity.did && contact.hints?.broker === broker.identity.did)).toBe(true);
+    } finally { publisher.base.close(); broker.base.close(); reader.base.close(); }
+  });
+
+  test('renews shared content before expiry and stops after unshare or close', async () => {
+    let clock = 1000;
+    const publisher = await spawn('publisher', { now: () => clock });
+    const index = await spawn('index', { now: () => clock });
+    try {
+      await link(publisher, index);
+      const { uri, hash } = await publisher.base.publishApp({ name: 'lease', entry: 'index.html', files: { 'index.html': 'hello' } });
+      await publisher.base.announceProvider(uri);
+      clock += 31 * 60_000;
+      await publisher.base.refreshProviders();
+      clock += 31 * 60_000;
+      expect(await index.base.findProviders(uri)).toContain(publisher.identity.did);
+      publisher.base.unserveContent(hash);
+      await publisher.base.refreshProviders();
+      clock += 61 * 60_000;
+      expect(await index.base.findProviders(uri)).not.toContain(publisher.identity.did);
+      publisher.base.close();
+      await publisher.base.refreshProviders();
+    } finally { publisher.base.close(); index.base.close(); }
+  });
+});
+
+  test('retrying unavailable indexes cannot starve later shared apps', async () => {
+    let clock = 1000;
+    const publisher = await spawn('publisher', { now: () => clock });
+    const attempted: string[] = [];
+    publisher.base.node.dht.announceProvider = async (key: string) => {
+      attempted.push(key);
+      return { key, stored: 0 };
+    };
+    try {
+      for (let i = 0; i < 9; i++) {
+        publisher.base.node.content.publish({
+          hash: i.toString(16).padStart(64, '0'),
+          manifest: { publisher: publisher.identity.did, chunks: [] }, chunks: [],
+        });
+      }
+      await publisher.base.refreshProviders();
+      expect(new Set(attempted).size).toBe(8);
+      clock += 30_000;
+      await publisher.base.refreshProviders();
+      expect(new Set(attempted).size).toBe(9);
+    } finally { publisher.base.close(); }
+  });
+
+  test('unshare aborts an in-flight provider announcement', async () => {
+    const publisher = await spawn('publisher');
+    let started!: () => void;
+    const pending = new Promise<void>((resolve) => { started = resolve; });
+    let signal: AbortSignal | undefined;
+    publisher.base.node.dht.announceProvider = async (key: string, _entry: unknown, opts: { signal: AbortSignal }) => {
+      signal = opts.signal;
+      started();
+      await new Promise<void>((resolve) => signal!.addEventListener('abort', () => resolve(), { once: true }));
+      return { key, stored: 0 };
+    };
+    try {
+      const { hash } = await publisher.base.publishApp({ name: 'revoke', entry: 'index.html', files: { 'index.html': 'hello' } });
+      await pending;
+      publisher.base.unserveContent(hash);
+      expect(signal?.aborted).toBe(true);
+      await publisher.base.refreshProviders();
+    } finally { publisher.base.close(); }
+  });
+
+  test('close cancels every provider dial before another candidate starts', async () => {
+    const contacts = await Promise.all(Array.from({ length: 8 }, () => generateIdentity()));
+    const signals: AbortSignal[] = [];
+    let started!: () => void;
+    const dialing = new Promise<void>((resolve) => { started = resolve; });
+    const reader = await spawn('reader', {
+      dial: async (_contact: unknown, { signal }: { signal: AbortSignal }) => {
+        signals.push(signal);
+        if (signals.length === 3) started();
+        await new Promise<void>((resolve) => signal.addEventListener('abort', () => resolve(), { once: true }));
+        return false;
+      },
+    });
+    reader.base.node.dht.findProviderContacts = async () => contacts;
+    try {
+      const result = reader.base.fetchApp(`peerd://${contacts[0].did}/${'0'.repeat(64)}`).catch((error: Error) => error);
+      await dialing;
+      reader.base.close();
+      expect(await result).toBeInstanceOf(Error);
+      expect(signals).toHaveLength(3);
+      expect(signals.every((signal) => signal.aborted)).toBe(true);
+    } finally { reader.base.close(); }
+  });
+
+test('provider deadlines abort transports before reusing a dial slot', async () => {
+  const contacts = await Promise.all(Array.from({ length: 8 }, () => generateIdentity()));
+  let active = 0;
+  let peak = 0;
+  let attempts = 0;
+  const reader = await spawn('reader', {
+    dial: async (_contact: unknown, { signal }: { signal: AbortSignal }) => {
+      attempts++;
+      peak = Math.max(peak, ++active);
+      await new Promise<void>((resolve) => signal.addEventListener('abort', () => { active--; resolve(); }, { once: true }));
+      return false;
+    },
+  });
+  reader.base.node.dht.findProviderContacts = async () => contacts;
+  const original = globalThis.setTimeout;
+  // Compress only the fixed provider deadline; the production cancellation
+  // path, worker accounting and transport abort callbacks remain unchanged.
+  globalThis.setTimeout = ((fn: (...args: any[]) => void, delay?: number, ...args: any[]) =>
+    original(fn, delay === 5_000 ? 5 : delay, ...args)) as typeof setTimeout;
+  try {
+    await expect(reader.base.fetchApp(`peerd://${contacts[0].did}/${'0'.repeat(64)}`)).rejects.toThrow();
+    expect(attempts).toBe(8);
+    expect(peak).toBe(3);
+    expect(active).toBe(0);
+  } finally { globalThis.setTimeout = original; reader.base.close(); }
+});
+
+test('publication classifies exact snapshot bytes and reseeding preserves immutable version identity', async () => {
+  const p = await spawn('classification');
+  try {
+    const options = { name: 'Not a filename guess', entry: 'index.html', created: 123,
+      files: { 'index.html': '<h1>App</h1>', 'opaque.bin': new Uint8Array([0,97,115,109,1,0,0,0]) } };
+    const first = await p.base.publishApp(options);
+    expect(first.includesWasm).toBe(true);
+    const signed = await p.base.publishMeta({slug:'classification',name:'Module App',seq:1,
+      head:publishedAppHead({...first,size:first.packedBytes})});
+    expect(signed.card.value.head).toMatchObject({version_id:first.hash,includes_wasm:true});
+    expect(p.base.heardDwapps()[0]?.head.includes_wasm).toBe(true);
+    const reseed = await p.base.publishApp({...options, expectedHash:first.hash});
+    expect(reseed.hash).toBe(first.hash); expect(reseed.includesWasm).toBe(true);
+    expect(publishedAppHead({...reseed,size:reseed.packedBytes})).toEqual(signed.card.value.head);
+    const changed = {...options,files:{'index.html':'<h1>App</h1>','misleading.wasm':new Uint8Array([1,2,3])}};
+    expect((await p.base.publishApp(changed)).includesWasm).toBe(false);
+    await expect(p.base.publishApp({...changed, expectedHash:first.hash})).rejects.toThrow('changed');
+  } finally { p.base.close(); }
+});
+
+test('user policy refuses an absent publisher via honest seeders and refuses reseeding verified bytes', async () => {
+  const denied = new Set<string>();
+  const publisher = await spawn('publisher'), seeder = await spawn('seeder');
+  const reader = await spawn('reader', { userBlocked: (did: string) => denied.has(did) });
+  try {
+    await link(publisher, seeder);
+    const shared = await publisher.base.publishApp({ name: 'test', files: { 'index.html': '<h1>test</h1>' }, entry: 'index.html' });
+    const verified = await seeder.base.fetchApp(shared.uri);
+    await seeder.base.seedApp(verified);
+    await link(seeder, reader);
+    expect((await reader.base.fetchApp(shared.uri)).manifest.publisher).toBe(publisher.identity.did);
+    denied.add(publisher.identity.did); reader.base.enforceUserPolicy();
+    await expect(reader.base.fetchApp(shared.uri)).rejects.toThrow('publisher-user-blocked');
+    await expect(reader.base.seedApp(verified)).rejects.toThrow('publisher-user-blocked');
+    expect(reader.mesh.hasLink(seeder.identity.did)).toBe(true);
+  } finally { for (const p of [publisher, seeder, reader]) { p.base.close(); p.mesh.close(); } }
+});
+
+describe('verified catalog contribution hints', () => {
+  test('only successful content retrieval credits the exact catalog head; close clears evidence', async () => {
+    const publisher = await spawn('publisher');
+    const reader = await spawn('reader');
+    try {
+      await link(publisher, reader);
+      const shared = await publisher.base.publishApp({ name: 'evidence', entry: 'index.html', files: { 'index.html': 'hello' } });
+      const { card } = await publisher.base.publishMeta({ slug: 'evidence', name: 'evidence', head: {
+        version_id: shared.hash, content_addr: shared.uri, size: shared.packedBytes,
+      } });
+      await reader.base.discovery.ingest(card);
+      const count = () => reader.base.heardDwapps()[0]?.providers;
+      expect(count()).toBe(0);
+      await publisher.base.announceProvider(shared.uri);
+      await reader.base.findProviders(shared.uri);
+      expect(count()).toBe(0); // signed ads are still not successful transfers
+      publisher.base.node.content.unannounce(shared.hash);
+      await expect(reader.base.fetchApp(shared.uri, { timeoutMs: 100 })).rejects.toThrow();
+      expect(count()).toBe(0);
+      // Republish deterministic bytes, then exercise the actual content path.
+      const next = await publisher.base.publishApp({ name: 'evidence', entry: 'index.html', files: { 'index.html': 'hello' }, created: shared.created });
+      expect(next.hash).toBe(shared.hash);
+      const result = await reader.base.fetchApp(shared.uri);
+      expect(result.verifiedContributors).toEqual([publisher.identity.did]);
+      expect(count()).toBe(1);
+      await expect(reader.base.fetchApp(shared.uri, { onProgress: (progress: any) => {
+        if (progress.phase === 'chunk') reader.base.close();
+      } })).rejects.toThrow('base network closed');
+      expect(count()).toBe(0); // late completion cannot restore a closed host's history
+    } finally { publisher.base.close(); reader.base.close(); }
+  });
+
+  test('ban and unban during a verified fetch cannot recreate older contribution evidence', async () => {
+    const publisher = await spawn('publisher');
+    const reader = await spawn('reader');
+    try {
+      await link(publisher, reader);
+      const shared = await publisher.base.publishApp({ name: 'fenced', entry: 'index.html', files: { 'index.html': 'hello' } });
+      const { card } = await publisher.base.publishMeta({ slug: 'fenced', name: 'fenced', head: {
+        version_id: shared.hash, content_addr: shared.uri, size: shared.packedBytes,
+      } });
+      await reader.base.discovery.ingest(card);
+      // An unrelated ban still conservatively fences all older observations;
+      // the fetch itself remains usable and is not reclassified as a failure.
+      const result = await reader.base.fetchApp(shared.uri, { onProgress: (progress: any) => {
+        if (progress.phase === 'chunk') {
+          reader.base.ban('did:key:other', 'test');
+          reader.base.unblock('did:key:other');
+        }
+      } });
+      expect(result.verifiedContributors).toEqual([publisher.identity.did]);
+      expect(reader.base.heardDwapps()[0].providers).toBe(0);
+    } finally { publisher.base.close(); reader.base.close(); }
+  });
+});
+
+
+test('durable policy refresh fences an absent contributor before late verified completion', async () => {
+  const blocked = new Set<string>();
+  const publisher = await spawn('publisher');
+  const seeder = await spawn('seeder');
+  const reader = await spawn('reader', { userBlocked: (did: string) => blocked.has(did) });
+  try {
+    await link(publisher, seeder);
+    const shared = await publisher.base.publishApp({ name: 'policy-fence', entry: 'index.html', files: { 'index.html': 'hello' } });
+    const content = await seeder.base.fetchApp(shared.uri);
+    await seeder.base.seedApp(content);
+    const { card } = await publisher.base.publishMeta({ slug: 'policy-fence', name: 'policy-fence', head: {
+      version_id: shared.hash, content_addr: shared.uri, size: shared.packedBytes,
+    } });
+    await reader.base.discovery.ingest(card);
+    await link(seeder, reader);
+    await reader.base.fetchApp(shared.uri);
+    expect(reader.base.heardDwapps()[0].providers).toBe(1);
+    reader.mesh.removeLink(seeder.identity.did);
+    blocked.add(seeder.identity.did);
+    reader.base.enforceUserPolicy();
+    blocked.delete(seeder.identity.did);
+    reader.base.enforceUserPolicy();
+    // No caller reads the catalog during the blocked interval. The policy
+    // boundary's existing rows projection must itself purge older history.
+    expect(reader.base.heardDwapps()[0].providers).toBe(0);
+    await link(seeder, reader);
+    const result = await reader.base.fetchApp(shared.uri, { onProgress: (progress: any) => {
+      if (progress.phase !== 'chunk') return;
+      reader.mesh.removeLink(seeder.identity.did);
+      expect(reader.base.peers().some((peer: any) => peer.did === seeder.identity.did)).toBe(false);
+      expect(reader.base.heardDwapps().some((row: any) => row.publisher === seeder.identity.did)).toBe(false);
+      blocked.add(seeder.identity.did);
+      reader.base.enforceUserPolicy();
+      blocked.delete(seeder.identity.did);
+      reader.base.enforceUserPolicy();
+    } });
+    expect(result.verifiedContributors).toEqual([seeder.identity.did]);
+    expect(reader.base.heardDwapps()[0].providers).toBe(0);
+  } finally { publisher.base.close(); seeder.base.close(); reader.base.close(); }
+});
+
+test('runtime rejection is terminal before chunks or DHT retries', async () => {
+  const publisher = await spawn('runtime-publisher');
+  const reader = await spawn('runtime-reader');
+  try {
+    await link(publisher, reader);
+    const runtime = { schema: 1, target: 'wasi', requires: ['wasm-core'] };
+    const shared = await publisher.base.publishApp({ name: 'WASI', entry: 'index.html', files: {
+      'index.html': 'unsupported runtime', 'peerd.json': JSON.stringify({ runtime }),
+    } });
+    expect(shared.runtime).toEqual(runtime);
+    let chunks = 0; let lookups = 0;
+    const getChunk = publisher.base.node.content.getChunk;
+    publisher.base.node.content.getChunk = (hash: string) => { chunks++; return getChunk(hash); };
+    reader.base.node.dht.findProviderContacts = async () => { lookups++; return []; };
+    await expect(reader.base.fetchApp(shared.uri)).rejects.toThrow('Unsupported App runtime target');
+    expect(chunks).toBe(0); expect(lookups).toBe(0);
+  } finally { publisher.base.close(); reader.base.close(); }
+});
+
+test('publication binds runtime requirements to version identity and discovery expectation', async () => {
+  const publisher = await spawn('runtime-publisher');
+  const reader = await spawn('runtime-reader');
+  try {
+    await link(publisher, reader);
+    const runtime = { schema: 1, target: 'browser-app', requires: ['wasm-core'] };
+    const fields = { name: 'WASM', entry: 'index.html', created: 1 };
+    const shared = await publisher.base.publishApp({ ...fields, files: {
+      'index.html': 'WASM', 'peerd.json': JSON.stringify({ runtime }),
+    } });
+    const fetched = await reader.base.fetchApp(shared.uri, { expectedRuntime: { value: runtime } });
+    expect(fetched.manifest.meta.runtime).toEqual(runtime);
+    await expect(reader.base.fetchApp(shared.uri, { expectedRuntime: { value: undefined } })).rejects.toThrow('signed version');
+    const changed = await publisher.base.publishApp({ ...fields, files: {
+      'index.html': 'WASM', 'peerd.json': JSON.stringify({ runtime: { ...runtime, requires: [] } }),
+    } });
+    expect(changed.hash).not.toBe(shared.hash);
+  } finally { publisher.base.close(); reader.base.close(); }
+});
+
+test('local recovery yields the publication lane even when unrelated peers are linked', async () => {
+  let recovering = true;
+  const publisher = await spawn('recovering', { localRecoveryPending: () => recovering });
+  const seeder = await spawn('seeder');
+  try {
+    await link(publisher, seeder);
+    const shared = await publisher.base.publishApp({ name: 'recovering', entry: 'index.html', files: { 'index.html': 'retained' } });
+    const verified = await seeder.base.fetchApp(shared.uri);
+    await seeder.base.seedApp(verified);
+    publisher.base.unserveContent(shared.hash);
+    await expect(publisher.base.fetchApp(shared.uri)).rejects.toMatchObject({
+      code: 'dweb-local-content-unavailable', performed: false, outcomeKnown: true,
+      outcomeKind: 'pre-effect-failure', retryable: true,
+    });
+    recovering = false;
+    expect((await publisher.base.fetchApp(shared.uri)).manifest.publisher).toBe(publisher.identity.did);
+  } finally { publisher.base.close(); seeder.base.close(); }
+});
+
+
+test('recent missing-provider evidence excludes lookup errors and clears on retry, policy and close', async () => {
+  let time = 100;
+  const publisher = await spawn('publisher');
+  const reader = await spawn('reader', { now: () => time });
+  try {
+    const shared = await publisher.base.publishApp({ name: 'retry', entry: 'index.html', files: { 'index.html': 'retry' } });
+    const { card } = await publisher.base.publishMeta({ slug: 'retry', name: 'retry', head: {
+      version_id: shared.hash, content_addr: shared.uri, size: shared.packedBytes,
+    } });
+    await reader.base.discovery.ingest(card);
+    const evidence = () => reader.base.heardDwapps()[0]?.retrieval;
+    expect(evidence()).toBeNull();
+    await expect(reader.base.fetchApp(shared.uri)).rejects.toThrow('no peer is serving');
+    expect(evidence()?.outcome).toBe('no-provider-found');
+    time += 30_000;
+    expect(evidence()).toBeNull();
+    reader.base.node.dht.findProviderContacts = async () => { throw new Error('lookup failed'); };
+    await expect(reader.base.fetchApp(shared.uri)).rejects.toThrow();
+    expect(evidence()).toBeNull();
+    reader.base.node.dht.findProviderContacts = async (_key: string, options?: { onQueryFailure?: () => void }) => { options?.onQueryFailure?.(); return []; };
+    await expect(reader.base.fetchApp(shared.uri)).rejects.toThrow();
+    expect(evidence()).toBeNull();
+    reader.base.node.dht.findProviderContacts = async () => [];
+    await expect(reader.base.fetchApp(shared.uri)).rejects.toThrow();
+    expect(evidence()).not.toBeNull();
+    reader.base.enforceUserPolicy();
+    expect(evidence()).toBeNull();
+    await expect(reader.base.fetchApp(shared.uri)).rejects.toThrow();
+    const original = await publisher.base.fetchApp(shared.uri);
+    await reader.base.seedApp(original);
+    expect((await reader.base.fetchApp(shared.uri)).payload).toEqual(original.payload);
+    expect(evidence()).toBeNull();
+    await reader.base.unshareApp({ publisher: publisher.identity.did, hash: shared.hash });
+    await expect(reader.base.fetchApp(shared.uri)).rejects.toThrow();
+    expect(evidence()).not.toBeNull();
+    reader.base.close();
+    expect(evidence()).toBeNull();
+  } finally { publisher.base.close(); reader.base.close(); }
+});
+
+test('caller cancellation aborts lookup without recording missing providers', async () => {
+  const reader = await spawn('cancel lookup'); const publisher = await spawn('publisher');
+  const ac = new AbortController(); let lookupSignal: AbortSignal | undefined;
+  let entered!: () => void; const started = new Promise<void>(resolve => { entered = resolve; });
+  try {
+    const shared = await publisher.base.publishApp({ name: 'cancel lookup', entry: 'index.html', files: { 'index.html': 'test' } });
+    const { card } = await publisher.base.publishMeta({ slug: 'cancel-lookup', name: 'cancel lookup', head: { version_id: shared.hash, content_addr: shared.uri, size: shared.packedBytes } });
+    await reader.base.discovery.ingest(card);
+    reader.base.node.dht.findProviderContacts = async (_key: string, { signal }: any) => {
+      lookupSignal = signal; entered();
+      await new Promise<void>(resolve => signal.addEventListener('abort', () => resolve(), { once: true }));
+      return [];
+    };
+    const outcome = reader.base.fetchApp(shared.uri, { signal: ac.signal }).catch(error => error);
+    await started; ac.abort();
+    expect((await outcome).name).toBe('AbortError');
+    expect(lookupSignal?.aborted).toBe(true);
+    expect(reader.base.heardDwapps()[0]?.retrieval).toBeNull();
+    reader.base.node.dht.findProviderContacts = async () => [];
+    await expect(reader.base.fetchApp(shared.uri)).rejects.toThrow('no peer');
+  } finally { for (const peer of [reader, publisher]) { peer.base.close(); peer.mesh.close(); } }
+});
+
+test('caller cancellation aborts active provider dials without starting queued referrals', async () => {
+  const contacts = await Promise.all(Array.from({ length: 8 }, () => generateIdentity()));
+  const signals: AbortSignal[] = []; const ac = new AbortController();
+  let entered!: () => void; const started = new Promise<void>(resolve => { entered = resolve; });
+  const reader = await spawn('cancel dials', { dial: async (_contact: unknown, { signal }: { signal: AbortSignal }) => {
+    signals.push(signal); if (signals.length === 3) entered();
+    await new Promise<void>(resolve => signal.addEventListener('abort', () => resolve(), { once: true }));
+    return false;
+  } });
+  reader.base.node.dht.findProviderContacts = async () => contacts;
+  try {
+    const outcome = reader.base.fetchApp(`peerd://${contacts[0].did}/${'0'.repeat(64)}`, { signal: ac.signal }).catch(error => error);
+    await started; ac.abort();
+    expect((await outcome).name).toBe('AbortError');
+    expect(signals).toHaveLength(3);
+    expect(signals.every(signal => signal.aborted)).toBe(true);
+  } finally { reader.base.close(); reader.mesh.close(); }
+}, 2000);
+
+test('cancelled linked retrieval does not fall through to DHT and permits a fresh retry', async () => {
+  const publisher = await spawn('publisher'); const reader = await spawn('reader');
+  const ac = new AbortController(); let lookups = 0;
+  try {
+    await link(reader, publisher);
+    const shared = await publisher.base.publishApp({ name: 'cancel transfer', entry: 'index.html', files: { 'index.html': 'retry' } });
+    reader.base.node.dht.findProviderContacts = async () => { lookups++; return []; };
+    await expect(reader.base.fetchApp(shared.uri, { signal: ac.signal,
+      onProgress: () => ac.abort() })).rejects.toMatchObject({ name: 'AbortError' });
+    expect(lookups).toBe(0);
+    const retry = await reader.base.fetchApp(shared.uri);
+    expect(retry.payload.byteLength).toBe(retry.manifest.size);
+    expect(reader.mesh.hasLink(publisher.identity.did)).toBe(true);
+  } finally { for (const peer of [reader, publisher]) { peer.base.close(); peer.mesh.close(); } }
+});
+
+test('provider deadline retains completed referrals while caller cancellation still prevents dialing', async () => {
+  for (const cancelCaller of [false, true]) {
+    const publisher = await spawn('partial-provider');
+    let reader: Awaited<ReturnType<typeof spawn>>;
+    let dials = 0;
+    const caller = new AbortController();
+    reader = await spawn('partial-reader', {dial: async () => { dials++; await link(reader, publisher); return true; }});
+    const app = await publisher.base.publishApp({name:'partial',entry:'index.html',files:{'index.html':'verified partial lookup'}});
+    reader.base.node.dht.findProviderContacts = async (_key: string, {signal}: {signal: AbortSignal}) => {
+      await new Promise<void>(resolve => signal.addEventListener('abort', () => resolve(), {once:true}));
+      if (cancelCaller) caller.abort(new Error('caller cancelled'));
+      return [{did:publisher.identity.did}];
+    };
+    const original = globalThis.setTimeout;
+    globalThis.setTimeout = ((fn: (...args:any[])=>void, delay?:number, ...args:any[]) =>
+      original(fn, delay === 5000 ? 5 : delay, ...args)) as typeof setTimeout;
+    try {
+      const result = await reader.base.fetchApp(app.uri,{signal:caller.signal}).then(value=>({value,error:null}),error=>({value:null,error}));
+      if (cancelCaller) { expect(dials).toBe(0); expect(result.error).toBeTruthy(); }
+      else { expect(result.error).toBeNull(); expect(result.value!.manifest.publisher).toBe(publisher.identity.did); expect(dials).toBe(1); }
+    } finally {globalThis.setTimeout=original;reader.base.close();publisher.base.close();}
+  }
+});

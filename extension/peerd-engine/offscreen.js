@@ -1,0 +1,12 @@
+// @ts-check
+// Offscreen-only engine surface for sealed headless/repository workers. The
+// CodeMirror editor and tab/registry shells are page/background concerns.
+
+export {
+  buildEntry, buildModule, isRemoteSpecifier, makeFetchRemote,
+} from './module-resolver.js';
+export { opfsHelpers } from './opfs.js';
+export {
+  MODULE_SYNTAX_ERROR_CODE, remoteModuleCapabilityBlockedMessage,
+  UnsupportedNativeModuleImportError,
+} from './errors.js';

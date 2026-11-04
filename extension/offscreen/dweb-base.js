@@ -1,0 +1,1510 @@
+// @ts-check
+// Host the preview base network outside tabs.
+// why: The network must survive tab closure. The store build stays inert.
+// Keep detailed logs because WebRTC and offscreen lifecycles require live diagnosis.
+
+import { publishedAppHead } from './published-app-head.js';
+import { createDiscoverySettings } from './discovery-settings.js';
+import { createPeerPolicyView } from './peer-policy.js';
+import { withDeadline } from '/shared/cold-util.js';
+import { createImmutableInstallOwner } from './immutable-install-owner.js';
+import { immutableAppRoot } from '/shared/address/immutable-app-root.js';
+import browser from '/shared/browser-api.js';
+import { DWEB_ENABLED } from '/shared/channel-config.js';
+import { loadDweb } from '/shared/dweb-loader.js';
+import { isServiceWorkerSender } from '/shared/messaging.js';
+import { makeStartStopBarrier } from '/offscreen/start-stop-barrier.js';
+import { makeDwebCustodyHost } from '/offscreen/dweb-custody-host.js';
+import { makeDwebTransferHost } from '/offscreen/dweb-transfer-host.js';
+import { createContentOwnership } from '/offscreen/content-ownership.js';
+import { rollbackSharePublication } from '/offscreen/share-publication.js';
+import { createShareRollbackStore } from '/offscreen/share-rollback-store.js';
+import {
+  discoveredAppFromRow,
+  discoveredIdentityError,
+  identityForDiscoveredUri,
+} from '/offscreen/install-card-identity.js';
+import { base64ByteLength, fromBase64, toBase64 } from '/shared/bundle/bytes.js';
+import { MAX_NETWORK_BUNDLE_BYTES } from '/shared/bundle/bundle.js';
+import { appSeedHandoff } from '/shared/app-seed-handoff.js';
+import { verifiedDeclaration } from '/shared/app-declaration.js';
+import { publishFailureError, runPublishTransaction } from '/shared/publish-transaction.js';
+import { createSelfDeviceHost } from '/offscreen/dweb-self.js';
+import { createAppRoomLiveness } from '/offscreen/app-room-liveness.js';
+import { AppRoomAuthorityChangedError, createAppRoomAuthority } from '/offscreen/app-room-authority.js';
+import { requireAppRoomSnapshot } from '/offscreen/app-room-snapshot.js';
+import { createDwebReseedNotifier } from '/offscreen/dweb-reseed-notifier.js';
+import { runDwebReseedPublication } from '/offscreen/dweb-reseed-publication.js';
+
+/** @param {...any} a */
+const log = (...a) => console.log('[offscreen/dweb]', ...a);
+/** @param {...any} a */
+const warn = (...a) => console.warn('[offscreen/dweb]', ...a);
+
+// why: Keep the larger live surface local instead of widening the shared stub.
+/** @type {any} */
+let handle = null;    // { base, room, close } once the lobby is joined
+const peerPolicy = createPeerPolicyView();
+const discoverySettings = createDiscoverySettings({
+  read: () => withDeadline(() => browser.runtime.sendMessage({ type: 'dweb/peer-policy' }),
+    5_000, () => new Error('discovery-settings-unavailable')),
+  apply: enabled => handle?.base.setDiscovery(enabled),
+});
+/** @type {Set<any>} */ const policyMeshes = new Set();
+const enforcePeerPolicy = () => {
+  for (const mesh of policyMeshes) for (const { did } of mesh.peers()) {
+    if (peerPolicy.isBlocked(did)) mesh.removeLink(did, 'user-policy');
+  }
+  handle?.base.enforceUserPolicy(peerPolicy.isExplicitlyBlocked);
+};
+/** @type {Promise<void>|null} */ let policyRead = null;
+// Coalesce concurrent HELLO reads so a late valid response cannot reopen the
+// view after a later read failed, or multiply kernel storage work per peer.
+const refreshPeerPolicy = () => policyRead ??= (async () => {
+  try {
+    const result = /** @type {any} */ (await withDeadline(() => browser.runtime.sendMessage({ type: 'dweb/peer-policy' }), 5_000, () => new Error('peer-policy-unavailable')));
+    if (!result?.ok) throw new Error('peer-policy-unavailable');
+    peerPolicy.apply(result.policy);
+    enforcePeerPolicy();
+  } catch (error) {
+    peerPolicy.invalidate(); enforcePeerPolicy(); throw error;
+  }
+})().finally(() => { policyRead = null; });
+// Renderer-local mesh generation. It increments only when a newly assembled
+// base handle activates, never when a successor kernel adopts the existing
+// lease. Bound with hostEpoch, this makes a hidden stop/restart observable.
+const manualInstalls = createImmutableInstallOwner();
+/** @param {string} kind @param {string} address @param {unknown} [appId] */
+const installAttemptKey = (kind, address, appId) => {
+  if (!['address', 'install', 'update'].includes(kind)) throw new Error('invalid-install-kind');
+  if (kind === 'update' && (typeof appId !== 'string' || !appId || appId.length > 256)) throw new Error('appId-required');
+  return JSON.stringify([kind, immutableAppRoot(address).address, kind === 'update' ? appId : null]);
+};
+/** @param {any} msg */
+const discoveredAttemptKey = (msg) => installAttemptKey(msg.type === 'dweb/base-host/update-app' ? 'update' : 'install',
+  typeof msg.uri === 'string' ? msg.uri.replace(/^peerd:\/\/did:key:/, 'dwapp://content/') : '', msg.appId);
+
+let meshGeneration = 0;
+/** @type {string | null} */
+let activeFeatureHostEpoch = null;
+/** @type {Map<string,string>} */
+const latestReseedAttempts = new Map();
+const reseedNotifier = createDwebReseedNotifier({
+  send: async (notice, { signal }) => {
+    if (signal.aborted) throw new Error('dweb-generation-retired');
+    const reply = await browser.runtime.sendMessage(notice);
+    if (signal.aborted) throw new Error('dweb-generation-retired');
+    return reply;
+  },
+  current: (notice) => custodyIntended
+    && activeFeatureHostEpoch === notice.hostEpoch
+    && meshGeneration === notice.meshGeneration,
+});
+const contentOwnership = createContentOwnership();
+const shareRollbacks = createShareRollbackStore();
+/** @type {ReturnType<typeof setInterval> | null} */
+let policyTimer = null;
+
+// A publisher-chosen, stable app slug from the app name (the dwapp_id is
+// H(publisher‖slug), so the slug only needs to be stable + ≤64 chars).
+/** @param {unknown} name */
+const slugify = (name) => (String(name || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64) || 'app');
+/** @param {string} ownerId @param {string} hash */
+const trackServedHash = (ownerId, hash) => contentOwnership.acquire(ownerId, hash);
+
+/** @param {any} h @param {string} ownerId @param {string} hash */
+const unserveTrackedHash = (h, ownerId, hash) => {
+  const released = contentOwnership.release(ownerId, hash);
+  if (!released.lastOwner) return false;
+  try { return h.base.unserveContent(hash); }
+  catch (error) {
+    // Keep the final claim when the underlying revoke fails so rollback/delete
+    // can retry instead of losing the only handle to still-served bytes.
+    contentOwnership.acquire(ownerId, hash);
+    throw error;
+  }
+};
+
+const mintAppId = () => `app-${crypto.randomUUID()}`;
+const APP_CONTENT_SLOTS = ['share', 'room', 'seed'];
+/** @param {string} appId @param {string} slot */
+const appContentOwner = (appId, slot) => `app:${appId}:${slot}`;
+/** @param {string} appId */
+const servedHashesForApp = (appId) => [...new Set(
+  APP_CONTENT_SLOTS.flatMap((slot) => contentOwnership.hashesFor(appContentOwner(appId, slot))),
+)];
+
+/** @param {any} h @param {{ appId: string, name: string, entry: string,
+ *   created?: number, expectedHash?: string, release?: any, releaseSnapshot?: any }} msg @param {string} ownerId */
+const publishLocalApp = async (h, msg, ownerId) => {
+  const supplied = msg.releaseSnapshot;
+  if (supplied && (
+    !msg.release
+    || supplied.oid !== msg.release.gitCommitOid
+    || !/^[a-f0-9]{40}$/.test(supplied.oid)
+  )) throw new Error('release snapshot identity mismatch');
+  const snapshot = supplied ?? await swCall('dweb/app-snapshot', { appId: msg.appId });
+  if (supplied && (!snapshot.record || !snapshot.files || typeof snapshot.files !== 'object')) {
+    throw new Error('release snapshot malformed');
+  }
+  return publishAppSnapshot(h, msg, ownerId, snapshot);
+};
+
+/** @param {any} h @param {{release?:any,created?:number,expectedHash?:string}} identity @param {string} ownerId @param {any} snapshot */
+const publishAppSnapshot = async (h, identity, ownerId, snapshot) => {
+  if (!snapshot?.ok) throw new Error(snapshot?.error ?? 'App snapshot failed');
+  const entries = Object.entries(snapshot.files ?? {});
+  if (!entries.length || entries.length > 256) throw new Error('App snapshot file count invalid');
+  /** @type {Record<string, Uint8Array<ArrayBuffer>>} */
+  const files = Object.create(null);
+  let totalBytes = 0;
+  for (const [path, envelope] of entries) {
+    const base64 = /** @type {{ base64?: unknown }} */ (envelope).base64;
+    if (typeof base64 !== 'string') throw new Error('App snapshot file malformed');
+    totalBytes += base64ByteLength(base64);
+    if (totalBytes > 50_000_000) throw new Error('App snapshot exceeds the storage limit');
+    files[path] = fromBase64(base64);
+  }
+  const record = snapshot.record;
+  if (typeof record?.entryFile !== 'string' || !Object.hasOwn(files, record.entryFile)) {
+    throw new Error('App snapshot entry missing');
+  }
+  const published = await h.base.publishApp({
+    name: record.name,
+    entry: record.entryFile,
+    files,
+    fileKinds: record.fileKinds ?? {},
+    release: identity.release,
+    created: identity.created,
+    expectedHash: identity.expectedHash,
+  });
+  const ownershipAdded = trackServedHash(ownerId, published.hash);
+  return { ...published, size: published.packedBytes, storedBytes: snapshot.totalBytes, ownershipAdded };
+};
+// dwapp ROOMS hosted here: each is base.openRoom(id) ONCE, ref-counted across
+// the app-tabs that join it. The room's connectivity IS the base mesh (no second
+// rendezvous): a dwapp is a sub-protocol, not tied to a signaler.
+/** @typedef {{ token: string|null, appId: string }} RoomClient */
+/** @typedef {{ room: any, clients: Map<string, RoomClient>, name: string, topicSubs: Map<string, () => void>, offs: (() => void)[] }} HostedRoom */
+/** @type {Map<string, HostedRoom>} */
+const rooms = new Map();        // roomId -> { room, clients, name, topicSubs:Map, offs:[] }
+/** @param {string} type @param {object} [payload] @returns {Promise<any>} */
+const swCall = (type, payload = {}) => browser.runtime.sendMessage({ type, ...payload });
+/** @param {string} type @param {object} payload @returns {Promise<any>} */
+const swEffectCall = async (type, payload) => {
+  try { return await swCall(type, payload); }
+  catch (cause) {
+    // why: runtime messaging can lose a response after the SW committed. The
+    // offscreen host cannot turn that transport ambiguity into a safe retry.
+    throw Object.assign(publishFailureError({
+      error: /** @type {{message?:string}} */ (cause)?.message ?? 'service worker response lost',
+      code: 'dweb-sw-response-lost', performed: true, outcomeKnown: false,
+      outcomeKind: 'transport-lost', retryable: false,
+    }, 'service worker response lost'), { cause });
+  }
+};
+
+// why: Permanent identity secrets use a worker-verified custody channel.
+const CUSTODY_PORT_NAME = 'dweb-custody';
+const CUSTODY_RECONNECT_MS = 500;
+const CUSTODY_TIMEOUT_MS = 60_000;
+/** @type {import('webextension-polyfill').Runtime.Port | null} */
+let custodyPort = null;
+let custodyIntended = false;
+/** @type {ReturnType<typeof setTimeout> | null} */
+let custodyReconnectTimer = null;
+/** @type {Set<{ resolve: (port: import('webextension-polyfill').Runtime.Port) => void, reject: (reason: any) => void, timer: ReturnType<typeof setTimeout> }>} */
+const custodyWaiters = new Set();
+/** @type {Map<string, { type:string, resolve: (value: any) => void, reject: (reason: any) => void, timer: ReturnType<typeof setTimeout> }>} */
+const custodyKernelPending = new Map();
+
+const rejectCustodyKernelPending = () => {
+  for (const entry of custodyKernelPending.values()) {
+    clearTimeout(entry.timer);
+    entry.reject(new Error('identity custody port disconnected'));
+  }
+  custodyKernelPending.clear();
+};
+
+/** @param {string} reason */
+const rejectCustodyWaiters = (reason) => {
+  for (const waiter of custodyWaiters) {
+    clearTimeout(waiter.timer);
+    waiter.reject(new Error(reason));
+  }
+  custodyWaiters.clear();
+};
+
+const waitForCustodyPort = async () => {
+  if (custodyPort) return custodyPort;
+  if (!custodyIntended) throw new Error('dweb feature lease is not active');
+  return new Promise((resolve, reject) => {
+    const waiter = {
+      resolve,
+      reject,
+      timer: setTimeout(() => {
+        custodyWaiters.delete(waiter);
+        reject(new Error('identity custody port timed out'));
+      }, CUSTODY_TIMEOUT_MS),
+    };
+    custodyWaiters.add(waiter);
+  });
+};
+
+/** @param {string} operation @param {any} [args] @param {{parentOperationId?:string,onDispatched?:()=>void}} [context] */
+const callKernelEffect = async (operation, args = {}, context = {}) => {
+  const port = await waitForCustodyPort();
+  if (custodyPort !== port) throw new Error('identity custody port disconnected');
+  const requestId = crypto.randomUUID();
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      custodyKernelPending.delete(requestId);
+      reject(new Error(`identity custody ${operation} timed out`));
+    }, CUSTODY_TIMEOUT_MS);
+    custodyKernelPending.set(requestId, {
+      type: 'custody/effect-response', resolve, reject, timer,
+    });
+    try {
+      const { onDispatched, ...wireContext } = context;
+      port.postMessage({
+        type: 'custody/effect-request', requestId, operation, args, ...wireContext,
+      });
+      onDispatched?.();
+    } catch (cause) {
+      custodyKernelPending.delete(requestId);
+      clearTimeout(timer);
+      reject(cause);
+    }
+  });
+};
+
+// The self-device stack gets only its fixed vault capabilities on the same
+// verified custody port. The device key never leaves here except as signatures.
+const selfSecretIo = {
+  /** @param {string} name */
+  getSecret: async (name) => {
+    const r = await callKernelEffect('self/read', { name });
+    if (!r?.ok) throw new Error(r?.error ?? 'self secret unavailable');
+    return r.value ?? null;
+  },
+  /** @param {string} name @param {string} value */
+  setSecret: async (name, value) => {
+    const r = await callKernelEffect('self/write', { name, value });
+    if (!r?.ok) throw new Error(r?.error ?? 'self secret store failed');
+    if (name === 'distributed/self-records/v1' || name === 'distributed/self-discovery/v1') {
+      // Do not await here: coordinator roster persistence itself uses this
+      // write seam. The next task observes the completed write and avoids a
+      // recursive update while still refreshing before the next user action.
+      setTimeout(() => {
+        selfHost.refreshCustody(name)
+          .catch((/** @type {any} */ e) => warn('self custody refresh failed:', e?.message ?? e));
+      }, 0);
+    }
+  },
+};
+
+const selfHost = createSelfDeviceHost({
+  secretIo: selfSecretIo,
+  swCall,
+  getSignalingUrl: () => handle?.url ?? null,
+});
+
+// peerd notifications: emit a runtime 'dweb/notify' for genuinely-NEW peers and
+// apps so the UI surfaces them (the bell + an in-chat banner), each linking to
+// the Network / Discover view. Deduped; the initial sync burst (peers/apps that
+// were already there when we joined) is recorded-but-suppressed via a short
+// arming delay, so the user only gets pinged about things that arrive live.
+let notifyArmed = false;
+const seenPeers = new Set();
+const seenApps = new Set();
+/** @param {{ kind: string, key: string, title: string, body: string, link: string }} n */
+const emitNotify = (n) => browser.runtime.sendMessage({
+  type: 'dweb/notify',
+  notification: { id: `${n.kind}-${n.key}-${Date.now().toString(36)}`, ts: Date.now(), ...n },
+}).catch(() => {});
+/** @param {any} h */
+const startNotifications = (h) => {
+  setTimeout(() => { notifyArmed = true; }, 8000);
+  h.base.onDwappAnnounce((/** @type {any} */ card) => {
+    if (!card?.dwapp_id || card.publisher === h.base.did || seenApps.has(card.dwapp_id)) return;
+    seenApps.add(card.dwapp_id);
+    if (notifyArmed) emitNotify({ kind: 'app', key: card.dwapp_id, title: 'New app to install', body: card.value?.name || 'an app', link: 'discover' });
+  });
+  h.base.mesh?.onPeer?.((/** @type {{ did: string }} */ { did }) => {
+    if (!did || seenPeers.has(did)) return;
+    seenPeers.add(did);
+    if (!notifyArmed) return;
+    let name = null;
+    try { name = h.base.snapshot().peers.find((/** @type {any} */ p) => p.did === did)?.name ?? null; } catch { /* best-effort name */ }
+    emitNotify({ kind: 'peer', key: did, title: 'New peer connected', body: name || `peer …${did.slice(-8)}`, link: 'network' });
+  });
+};
+
+// Join the lobby once. Identity comes from the vault via the SW (the offscreen
+// doc has no vault access) — so this only succeeds once the vault is unlocked.
+// The barrier makes stop a real lifecycle fence even while this async setup is
+// between reading the old identity and publishing its eventual handle.
+const baseLifecycle = makeStartStopBarrier({
+  getActive: () => handle,
+  create: async () => {
+    log('starting base network…');
+    // why any: the live dweb module's surface exceeds the stub interface (see top).
+    const client = /** @type {any} */ (await loadDweb());
+    if (!client.available || !client.joinBaseNetwork) { warn('dweb module unavailable here — inert'); return null; }
+    let identity;
+    try {
+      const material = await client.identityMaterial({
+        getSecret: async () => {
+          const r = await callKernelEffect('identity/read');
+          if (!r?.ok) throw new Error(r?.error === 'vault-locked' ? 'vault is locked — unlock peerd first' : (r?.error ?? 'identity unavailable'));
+          return r.value;
+        },
+        setSecret: async (/** @type {string} */ _n, /** @type {string} */ value) => {
+          const r = await callKernelEffect('identity/create', { value });
+          if (!r?.ok) throw new Error(r?.error ?? 'identity store failed');
+        },
+      });
+      identity = await client.identityFromMaterial(material);
+    } catch (e) {
+      warn('identity step failed:', /** @type {{ message?: string }} */ (e)?.message ?? e);
+      throw e;
+    }
+    log(`joining lobby "${client.BASE_TOPIC}" as …${identity.did.slice(-8)}`);
+    await refreshPeerPolicy();
+    await discoverySettings.refresh();
+    const joined = await client.joinBaseNetwork({
+      identity,
+      discoveryEnabled: discoverySettings.enabled,
+      localRecoveryPending: reseedNotifier.pending,
+      isBlocked: peerPolicy.isBlocked,
+      onMesh: (/** @type {any} */ mesh) => { policyMeshes.add(mesh); return () => policyMeshes.delete(mesh); },
+      admitPeer: async (/** @type {string} */ did) => { await refreshPeerPolicy(); return !peerPolicy.isBlocked(did); },
+      // Signature/shape/derived-id verification happens in discovery before
+      // this callback. The SW persists the monotonic decision; fail closed if
+      // that authority is unavailable so an offscreen restart cannot reset it.
+      admitDwappMeta: async (/** @type {{ dwappId: string, publisher: string, seq: number, versionId: string }} */ candidate) => {
+        try {
+          const result = await swCall('dweb/meta-admit', candidate);
+          if (result?.accepted === true) return true;
+          warn('discovery card refused by durable version gate:', result?.error ?? 'unknown refusal');
+        } catch (error) {
+          warn('durable discovery version gate unavailable:', /** @type {{ message?: string }} */ (error)?.message ?? error);
+        }
+        return false;
+      },
+    });
+    return joined;
+  },
+  activate: (candidate) => {
+    candidate.base.start();
+    meshGeneration += 1;
+    handle = candidate;
+    startNotifications(candidate);
+    // Late joiners discover through the sovereign subscription plane.
+    candidate.base.onDwappAnnounce((/** @type {any} */ a) => log('discovery card:', a?.dwapp_id?.slice(0, 12), `from …${String(a?.publisher).slice(-8)}`));
+    if (!policyTimer) policyTimer = setInterval(() => { refreshPeerPolicy().catch(() => {}); }, 12_000);
+    // Same-user device discovery rides the mesh that just came up. It stays
+    // INERT on an install that has not been enrolled into a person's device
+    // set, so this is safe to attempt unconditionally.
+    selfHost.start()
+      .then((r) => log(r.running ? 'self-device coordinator started' : `self-device inert: ${r.reason}`))
+      .catch((e) => warn('self-device start failed:', /** @type {{ message?: string }} */ (e)?.message ?? e));
+    log('✅ base network ONLINE — lobby joined, presence beaconing');
+  },
+  close: async (candidate) => {
+    discoverySettings.invalidate();
+    // The self-device coordinator rides this mesh; it must let go of its
+    // rooms before the network under it disappears.
+    try { await selfHost.stop(); } catch { /* best-effort teardown */ }
+    candidate.close();
+    if (handle !== candidate) return;
+    // Once close succeeds the identity is no longer live. Listener cleanup is
+    // best-effort so a stale unsubscribe cannot turn a successful stop into a
+    // false failure that blocks identity recovery.
+    for (const entry of rooms.values()) {
+      for (const off of entry.offs) { try { off(); } catch { /* already closed */ } }
+      for (const off of entry.topicSubs.values()) { try { off(); } catch { /* already closed */ } }
+    }
+    rooms.clear();
+    roomLiveness.clear();
+    contentOwnership.clear();
+    shareRollbacks.clear();
+    if (policyTimer) { clearInterval(policyTimer); policyTimer = null; }
+    handle = null;
+    log('base network stopped');
+  },
+});
+
+const start = () => baseLifecycle.start();
+
+/** @param {'export'|'adopt'} operation @param {any} args */
+const runIdentityCrypto = async (operation, args) => {
+  const client = await loadDweb();
+  if (operation === 'export') {
+    if (!client.identityRecordExport) throw new Error('portable-identity-export-unsupported');
+    return client.identityRecordExport(args);
+  }
+  if (!client.identityRecordAdopt) throw new Error('portable-identity-restore-unsupported');
+  return client.identityRecordAdopt(args);
+};
+
+const stopIdentityRuntime = async (/** @type {string} */ leaseId) => {
+  await selfHost.stop({ suspend: true });
+  await baseLifecycle.stop({ suspensionOwner: leaseId });
+};
+
+const resumeIdentityRuntime = async (/** @type {string} */ leaseId) => {
+  if (!baseLifecycle.resume(leaseId)) throw new Error('identity-runtime-lease-conflict');
+  selfHost.resume();
+  await start();
+};
+
+const startIdentityRuntime = async (/** @type {string} */ leaseId) => {
+  await resumeIdentityRuntime(leaseId);
+};
+
+const recoverIdentityRuntime = (/** @type {string} */ leaseId) => {
+  if (!baseLifecycle.resume(leaseId)) throw new Error('identity-runtime-lease-conflict');
+  selfHost.resume();
+  void start().catch((error) => warn('identity runtime recovery failed:', error));
+  return baseLifecycle.snapshot();
+};
+
+const transferHost = makeDwebTransferHost({
+  callEffect: callKernelEffect,
+  runCrypto: runIdentityCrypto,
+  stopIdentityRuntime,
+  startIdentityRuntime,
+});
+
+/** @param {'export'|'prepare'|'adopt'} operation @param {any} args @param {{operationId:string,signal:AbortSignal,deadline:number}} context */
+const runCustodyOperation = (operation, args, context) => {
+  if (operation === 'export') return transferHost.exportRecord(args?.passphrase, context);
+  if (operation === 'prepare') {
+    return transferHost.prepareRecord(
+      args?.record, args?.passphrase, args?.options ?? {}, context,
+    );
+  }
+  if (operation === 'adopt') {
+    return transferHost.adoptRecord(
+      args?.record, args?.passphrase, args?.options ?? {}, context,
+    );
+  }
+  throw new Error('unknown-identity-custody-operation');
+};
+
+const custodyHost = makeDwebCustodyHost({
+  runOperation: runCustodyOperation,
+  readState: baseLifecycle.snapshot,
+  recoverOperation: recoverIdentityRuntime,
+  operationTimeoutMs: CUSTODY_TIMEOUT_MS - 5_000,
+});
+
+const scheduleCustodyReconnect = () => {
+  if (!custodyIntended || custodyReconnectTimer !== null) return;
+  custodyReconnectTimer = setTimeout(() => {
+    custodyReconnectTimer = null;
+    connectCustodyPort();
+  }, CUSTODY_RECONNECT_MS);
+};
+
+const connectCustodyPort = () => {
+  if (!DWEB_ENABLED || !custodyIntended || custodyPort) return;
+  try {
+    const port = browser.runtime.connect({ name: CUSTODY_PORT_NAME });
+    custodyPort = port;
+    for (const waiter of custodyWaiters) {
+      clearTimeout(waiter.timer);
+      waiter.resolve(port);
+    }
+    custodyWaiters.clear();
+    port.onMessage.addListener((/** @type {any} */ message) => {
+      if (message?.type === 'custody/effect-response'
+          && typeof message.requestId === 'string') {
+        const entry = custodyKernelPending.get(message.requestId);
+        if (!entry || entry.type !== message.type) return;
+        custodyKernelPending.delete(message.requestId);
+        clearTimeout(entry.timer);
+        if (message.ok) entry.resolve(message.result);
+        else entry.reject(new Error(message.error ?? 'identity secret operation failed'));
+        return;
+      }
+    });
+    custodyHost.attach(port);
+    port.onDisconnect.addListener(() => {
+      if (custodyPort === port) {
+        custodyPort = null;
+        rejectCustodyKernelPending();
+      }
+      scheduleCustodyReconnect();
+    });
+    // Certificate-only installs cannot start the public person-root base.
+    // Connecting the verified custody channel is their boot signal for the
+    // private self-device host, including after offscreen eviction/restart.
+    // Start only after the response listener exists: custody reads can reply
+    // immediately on a warm service worker.
+    void selfHost.start().catch((/** @type {any} */ e) => warn('self-device auto-start failed:', e?.message ?? e));
+  } catch {
+    scheduleCustodyReconnect();
+  }
+};
+
+const disconnectCustodyPort = () => {
+  custodyIntended = false;
+  if (custodyReconnectTimer !== null) clearTimeout(custodyReconnectTimer);
+  custodyReconnectTimer = null;
+  rejectCustodyWaiters('dweb feature lease ended');
+  rejectCustodyKernelPending();
+  const previous = custodyPort;
+  custodyPort = null;
+  try { previous?.disconnect(); } catch { /* already disconnected */ }
+};
+
+const status = () => (handle
+  ? {
+      running: true, meshGeneration, recovering: reseedNotifier.pending(), did: handle.base.did,
+      peers: handle.base.peers().length, present: handle.base.presence.list().length,
+    }
+  : { running: false, meshGeneration });
+
+// The read surface behind peerd.distributed.* AND the home-page Network view.
+// A DISTINCT shape from status() above (ops/debug counts): it carries the live
+// rosters with per-peer ICE path + the rendezvous state, for visualization.
+// Side-effect-free: it reports the CURRENT state and never starts the lobby
+// (reading status must not join a network — maybeStartBaseNetwork on unlock
+// does that). Tolerates a cold node: every field has a running:false default.
+const info = () => {
+  if (!handle) return { running: false, did: null, rendezvous: 'none', bootstrapUrl: null, lobby: null, peers: [], peerCount: 0, linkedCount: 0, presentCount: 0, dhtSize: 0 };
+  const snap = handle.base.snapshot();
+  return { running: true, did: handle.base.did, rendezvous: handle.room?.rendezvous?.() ?? 'none', bootstrapUrl: handle.url ?? null, ...snap };
+};
+
+// The feature host is the only lifecycle owner. Importing this module is inert:
+// it neither opens the custody channel nor joins the mesh until an exact dweb
+// lease has crossed the service-worker coordinator's dispatch boundary.
+const activateDwebFeatureLease = async (/** @type {{hostEpoch?:unknown}} */ lease = {}) => {
+  if (!DWEB_ENABLED) throw new Error('dweb-disabled');
+  if (typeof lease.hostEpoch !== 'string' || lease.hostEpoch.length < 8) {
+    throw new Error('dweb-feature-host-epoch-invalid');
+  }
+  const previousHostEpoch = activeFeatureHostEpoch;
+  const previousMeshGeneration = meshGeneration;
+  custodyIntended = true;
+  connectCustodyPort();
+  try {
+    await start();
+    activeFeatureHostEpoch = lease.hostEpoch;
+    const current = { ...status(), hostEpoch: activeFeatureHostEpoch };
+    // App tabs authenticate the sender as the exact offscreen document, then
+    // use this generation to rejoin their stable room member after a renderer
+    // replacement. A successor service worker adopts the same hostEpoch, so it
+    // does not trigger a duplicate room join.
+    // Do not hold the feature-host start receipt behind reseeding. The kernel
+    // finishes the dweb lease transition first, then keeps this exact runtime
+    // message alive while it rebuilds durable shares.
+    // why: recovery must never become an in-lane install barrier. A transient
+    // reseed refusal retries in the background while local self-fetch reports
+    // its exact pre-effect unavailability until the bytes are announced.
+    // why: adoption preserves bytes and the running recovery loop. Restarting
+    // a completed pass arms a needless write-ahead retirement marker while
+    // the successor kernel is also reacquiring its other shared host leases.
+    if (previousHostEpoch !== activeFeatureHostEpoch || previousMeshGeneration !== meshGeneration) {
+      void reseedNotifier.notify({
+        type: 'dweb/base-host/generation',
+        hostEpoch: activeFeatureHostEpoch,
+        meshGeneration,
+        did: current.did ?? null,
+      }).catch((cause) => ({
+        ok: false,
+        error: /** @type {{message?:unknown}} */ (cause)?.message ?? String(cause),
+      }));
+    }
+    return current;
+  } catch (cause) {
+    activeFeatureHostEpoch = null;
+    disconnectCustodyPort();
+    throw cause;
+  }
+};
+
+export const startDwebFeatureLease = activateDwebFeatureLease;
+
+// A successor service worker adopts the same offscreen realm after its old
+// keepalive port disappears. The base handle remains live, so adoption only
+// reasserts the custody intent and reconnects the private channel if needed.
+export const adoptDwebFeatureLease = activateDwebFeatureLease;
+
+export const stopDwebFeatureLease = async () => {
+  reseedNotifier.cancel();
+  // why: retire in-flight generation-bound publications before awaiting host
+  // close. Their next async boundary compensates against the retiring handle.
+  activeFeatureHostEpoch = null;
+  try {
+    await selfHost.stop();
+    await baseLifecycle.stop();
+  } finally {
+    latestReseedAttempts.clear();
+    disconnectCustodyPort();
+  }
+  return status();
+};
+
+// --- dwapp room hosting (sub-protocols on the shared base mesh) ---------------
+// Events (feed message / direct / presence / status) are PUSHED to the dwapp's
+// app-tab as a `dweb/base-room/event` runtime message it filters by roomId. Every
+// extension context receives a runtime.sendMessage, so the app-tab gets it
+// directly, with no SW forwarding bus. (The SW + offscreen ignore it: wrong prefix.)
+/** @param {string} roomId @param {string} event @param {any} data */
+const pushRoomEvent = (roomId, event, data) =>
+  browser.runtime.sendMessage({ type: 'dweb/base-room/event', roomId, event, data }).catch(() => {});
+
+/** @param {unknown} value */
+const roomClientId = (value) => typeof value === 'string'
+  && value.length >= 8 && value.length <= 160
+  && !/[\u0000-\u001f\u007f]/.test(value)
+  ? value : null;
+
+/** @param {unknown} value */
+const appRoomAdmissionToken = (value) => typeof value === 'string'
+  && value.length >= 16 && value.length <= 192
+  && !/[\u0000-\u001f\u007f]/.test(value)
+  ? value : null;
+
+/** @param {string} roomId @param {string|undefined} name @param {string} clientId @param {{appId?:unknown,appDocumentId?:unknown,appTabId?:unknown,roomAdmissionToken?:unknown}} [owner] @param {()=>boolean} [currentAuthority] */
+const ensureRoom = async (roomId, name, clientId, owner = {}, currentAuthority = () => true) => {
+  const appId = typeof owner.appId === 'string' ? owner.appId : '';
+  const appDocumentId = typeof owner.appDocumentId === 'string' ? owner.appDocumentId : '';
+  const appTabId = Number.isInteger(owner.appTabId) ? Number(owner.appTabId) : -1;
+  const admissionToken = appRoomAdmissionToken(owner.roomAdmissionToken);
+  if (appId && !admissionToken) throw new Error('app-room-admission-token-invalid');
+  const h = await start();
+  // Starting the mesh can yield across a generation rotation. Never join it
+  // with retired authority, even if the caller would later compensate.
+  if (!currentAuthority()) throw new AppRoomAuthorityChangedError();
+  let entry = rooms.get(roomId);
+  if (!entry) {
+    /** @type {HostedRoom} */
+    const e = { room: null, clients: new Map(), name: name ?? '', topicSubs: new Map(), offs: [] };
+    entry = e;
+    const room = h.base.openRoom(roomId, { meta: () => ({ name: e.name }) }); // meta reads the latest name
+    entry.room = room;
+    rooms.set(roomId, entry);
+    // why: Presence events are the room liveness source.
+    entry.offs.push(room.presence.onJoin((/** @type {any} */ j) => pushRoomEvent(roomId, 'presence-join', j)));
+    entry.offs.push(room.presence.onLeave((/** @type {any} */ l) => pushRoomEvent(roomId, 'presence-leave', l)));
+    entry.offs.push(room.direct.onMessage((/** @type {any} */ { from, data, ts, id }) => pushRoomEvent(roomId, 'direct', { from, data, ts, id })));
+    log(`room "${roomId}" opened on the base mesh`);
+  }
+  if (name) entry.name = name;     // latest joiner's name wins (one identity per browser)
+  const current = entry.clients.get(clientId);
+  if (current && (current.token !== admissionToken || current.appId !== appId)) {
+    throw new Error('app-room-admission-conflict');
+  }
+  entry.clients.set(clientId, { token: admissionToken, appId });
+  if (appId) {
+    if (!roomLiveness.track({
+      roomId,
+      clientId,
+      appId,
+      documentId: appDocumentId,
+      tabId: appTabId,
+      admissionToken: /** @type {string} */ (admissionToken),
+    })) {
+      if (!current) closeRoom(entry, roomId, clientId, admissionToken, appId);
+      throw new Error('app-room-owner-invalid');
+    }
+  }
+  return entry;
+};
+
+/** @param {HostedRoom} entry @param {string} roomId @param {string} clientId @param {string|null} [admissionToken] @param {string} [appId] @param {boolean} [livenessExpired] */
+const closeRoom = (entry, roomId, clientId, admissionToken = null, appId = '', livenessExpired = false) => {
+  const current = entry.clients.get(clientId);
+  if (!current || (admissionToken && current.token !== admissionToken)
+      || (appId && current.appId !== appId)) return false;
+  if (!livenessExpired) roomLiveness.untrack(roomId, clientId, admissionToken);
+  entry.clients.delete(clientId);
+  if (entry.clients.size > 0) return true;
+  for (const off of entry.offs) off();
+  for (const off of entry.topicSubs.values()) off();
+  entry.room.leave();
+  rooms.delete(roomId);
+  log(`room "${roomId}" closed (no app-tabs left)`);
+  return true;
+};
+
+const roomLiveness = createAppRoomLiveness({
+  appTabUrl: browser.runtime.getURL('engine-tabs/app-tab/index.html'),
+  getContexts: typeof browser.runtime.getContexts === 'function'
+    ? /** @type {any} */ (browser.runtime.getContexts.bind(browser.runtime)) : null,
+  onExpired: ({ roomId, clientId, admissionToken, appId }) => {
+    const entry = rooms.get(roomId);
+    if (entry) closeRoom(entry, roomId, clientId, admissionToken ?? null, appId, true);
+  },
+});
+
+// why: hydrate lazily so importing this feature cannot start a host lease or
+// create a reverse kernel request before its own admission has completed.
+/** @type {ReturnType<typeof createAppRoomAuthority>|null} */
+let appRoomAuthority = null;
+const roomAuthority = () => appRoomAuthority ??= createAppRoomAuthority({ get: async () => {
+  const response = await swCall('dweb/app-authority-generations');
+  if (!response?.ok) throw new Error(response?.error ?? 'App room authority unavailable');
+  return response.generations ?? {};
+} });
+const purgeAppRoomOwners = (/** @type {string} */ appId) => {
+  let left = 0;
+  for (const [roomId, entry] of rooms) {
+    for (const [clientId, owner] of entry.clients) {
+      if (owner.appId === appId && closeRoom(entry, roomId, clientId, owner.token, appId)) left += 1;
+    }
+  }
+  return { ok: true, left };
+};
+
+/** @param {any} msg */
+const handleRoomOp = async (msg) => {
+  if (!msg.appId || msg.op === 'leave') return handleRoomOpUnlocked(msg);
+  return roomAuthority().run(msg.appId, msg.appGeneration, async (current, advanced) => {
+    if (advanced) purgeAppRoomOwners(msg.appId);
+    return handleRoomOpUnlocked(msg, current);
+  });
+};
+
+// One relayed op from the dwapp bridge (app-tab -> SW -> here). Returns the reply.
+/** @param {any} msg @param {()=>boolean} [current] */
+const handleRoomOpUnlocked = async (msg, current = () => true) => {
+  const { op, roomId } = msg;
+  if (typeof msg.expectedHostEpoch === 'string'
+      && msg.expectedHostEpoch !== activeFeatureHostEpoch) {
+    return { ok: false, error: 'dweb-host-generation-changed' };
+  }
+  const clientId = roomClientId(msg.roomClientId);
+  if (!clientId) return { ok: false, error: 'dweb-room-client-invalid' };
+  const admissionToken = appRoomAdmissionToken(msg.roomAdmissionToken);
+  if (op === 'join') {
+    const entry = await ensureRoom(roomId, msg.name, clientId, msg, current);
+    if (!current()) {
+      closeRoom(entry, roomId, clientId, admissionToken, msg.appId);
+      return { ok: false, error: 'app-identity-changed' };
+    }
+    return {
+      ok: true, did: entry.room.did, joined: roomId,
+      hostEpoch: activeFeatureHostEpoch,
+      ...(admissionToken ? { admissionToken } : {}),
+      ...entry.room.status(),
+    };
+  }
+  // why: The bridge confirms the bounded publisher identity before this fetch.
+  if (op === 'install-app') {
+    const h = await start();
+    const { manifest, payload } = await h.base.fetchApp(msg.uri);
+    const client = /** @type {any} */ (await loadDweb());
+    const prepared = await client.prepareAppBundle({ uri: msg.uri, manifest, payload, name: msg.name });
+    // why: Seed first so deletion can revoke bytes as soon as the App is visible.
+    const appId = mintAppId();
+    const ownerId = appContentOwner(appId, 'seed');
+    const { announced: installed } = await runPublishTransaction({
+      publish: async () => {
+        const hash = await h.base.seedApp({ manifest, payload });
+        return { hash, ownershipAdded: trackServedHash(ownerId, hash) };
+      },
+      announce: async () => {
+        const a = prepared;
+        const r = await swEffectCall('dweb/app-install', {
+          appId, ...appSeedHandoff(a, manifest, payload),
+          publicationGeneration: msg.publicationGeneration,
+        });
+        if (!r?.ok) throw publishFailureError(r, 'install failed');
+        return { app: r.app, warning: r.warning };
+      },
+      rollback: ({ hash, ownershipAdded }) => {
+        if (ownershipAdded) unserveTrackedHash(h, ownerId, hash);
+      },
+    });
+    return {
+      ok: true,
+      appId: installed.app?.id,
+      name: installed.app?.name,
+      ...(installed.warning ? { warning: installed.warning } : {}),
+    };
+  }
+  const entry = rooms.get(roomId);
+  if (!entry) return { ok: false, error: 'not-in-room' };
+  if (op === 'join-ack') {
+    if (!admissionToken || typeof msg.appId !== 'string'
+        || !roomLiveness.owns(roomId, clientId, admissionToken, msg.appId)
+        || !roomLiveness.finalize(roomId, clientId, admissionToken)) {
+      return { ok: false, error: 'app-room-admission-mismatch' };
+    }
+    return { ok: true, joined: roomId, admissionToken };
+  }
+  if (typeof msg.appId === 'string' && msg.appId
+      && (!admissionToken
+        || !roomLiveness.owns(roomId, clientId, admissionToken, msg.appId))) {
+    return { ok: false, error: 'app-room-admission-mismatch' };
+  }
+  const { room } = entry;
+  switch (op) {
+    case 'leave': return closeRoom(
+      entry, roomId, clientId, admissionToken, msg.appId,
+    ) ? { ok: true, left: true } : { ok: false, error: 'app-room-admission-mismatch' };
+    case 'status': return { ok: true, hostEpoch: activeFeatureHostEpoch, ...room.status() };
+    case 'presence': return { ok: true, present: room.presence.list() };
+    case 'announce': { if (typeof msg.name === 'string') entry.name = msg.name.slice(0, 40); await room.presence.announce(); return { ok: true }; }
+    case 'publish': { const env = msg.retain ? await room.sync.publish(msg.topic, msg.data) : await room.gossip.publish(msg.topic, msg.data); return { ok: true, id: env.id, ts: env.ts }; }
+    case 'subscribe': {
+      if (!entry.topicSubs.has(msg.topic)) {
+        entry.topicSubs.set(msg.topic, room.gossip.subscribe(msg.topic,
+          (/** @type {any} */ { from, data, ts, id }) => pushRoomEvent(roomId, 'message', { topic: msg.topic, from, data, ts, id })));
+      }
+      return { ok: true };
+    }
+    case 'retain': room.sync.retain(msg.topic); return { ok: true };
+    case 'history': return {
+      ok: true,
+      items: room.sync.history(msg.topic).map((/** @type {any} */ env) => ({ topic: msg.topic, from: env.from, data: env.body.data, ts: env.ts, id: env.id })),
+    };
+    case 'dm': { const { id, ts } = await room.direct.send(msg.to, msg.data); return { ok: true, id, ts }; }
+    // Agent cards use the retained '~card' topic for late joiners.
+    case 'card-set': {
+      // why: Validate before retention can amplify a card to late joiners.
+      const client = /** @type {any} */ (await loadDweb());
+      let clean;
+      try { clean = client.validateCard(msg.card).card; }
+      catch (e) {
+        return {
+          ok: false,
+          error: /** @type {{ message?: string }} */ (e)?.message ?? 'agent card rejected',
+          performed: false, outcomeKnown: true,
+          outcomeKind: 'pre-effect-failure', retryable: false,
+        };
+      }
+      const card = { ...clean, did: room.did };
+      room.sync.retain('~card');
+      const env = await room.sync.publish('~card', card);
+      return { ok: true, did: room.did, id: env.id };
+    }
+    case 'card-get': {
+      room.sync.retain('~card');
+      // why: A late backfill can append an older card, so select by timestamp.
+      const mine = room.sync.history('~card').filter((/** @type {any} */ e) => e.from === msg.did);
+      const latest = mine.reduce((/** @type {any} */ best, /** @type {any} */ e) => (!best || (e.ts ?? 0) >= (best.ts ?? 0) ? e : best), null);
+      // why: Parse and cap an untrusted card before it reaches the actor.
+      const client = /** @type {any} */ (await loadDweb());
+      return { ok: true, card: latest ? client.parsePeerCard(latest.body.data) : null };
+    }
+    case 'mute': room.gossip.mute(msg.did); return { ok: true };
+    case 'publish-app': {
+      requireAppRoomSnapshot(msg, roomLiveness.snapshot(), current);
+      const h = await start();
+      const ownerId = appContentOwner(msg.appId, 'room');
+      const { published, announced: recorded } = await runPublishTransaction({
+        // why: recheck after asynchronous startup. Room publication cannot
+        // borrow the release path or flush an editor under the authority lock.
+        publish: () => publishAppSnapshot(
+          h, {}, ownerId, requireAppRoomSnapshot(msg, roomLiveness.snapshot(), current),
+        ),
+        announce: async ({ uri, hash }) => {
+          const result = await swEffectCall('dweb/app-record-served', {
+            appId: msg.appId, uri, hash,
+            publicationGeneration: msg.publicationGeneration,
+          });
+          if (!result?.ok) {
+            throw publishFailureError(result, 'shared App version could not be recorded');
+          }
+          return result;
+        },
+        rollback: ({ hash, ownershipAdded }) => {
+          if (ownershipAdded) unserveTrackedHash(h, ownerId, hash);
+        },
+      });
+      const { uri, hash } = published;
+      const pendingRoomUnserveHashes = [];
+      for (const staleHash of recorded.pendingUnserveHashes ?? []) {
+        try { unserveTrackedHash(h, ownerId, staleHash); }
+        catch { pendingRoomUnserveHashes.push(staleHash); }
+      }
+      return {
+        ok: true, uri, hash, pendingRoomUnserveHashes,
+        ...(pendingRoomUnserveHashes.length
+          ? { warning: 'previous-version-cleanup-pending' } : {}),
+      };
+    }
+    default: return { ok: false, error: `unknown room op: ${op}` };
+  }
+};
+
+/**
+ * @param {any} msg
+ * @param {import('webextension-polyfill').Runtime.MessageSender} sender
+ * @param {(response: any) => void} sendResponse
+ */
+export const handleDwebBaseMessage = (msg, sender, sendResponse) => {
+  if (!msg?.type?.startsWith?.('dweb/base-host/')) return undefined;
+  if (!isServiceWorkerSender(sender)) {
+    sendResponse({ ok: false, error: 'unauthorized-command-sender' });
+    return true;
+  }
+  if (!DWEB_ENABLED) { sendResponse({ ok: false, error: 'dweb-disabled' }); return true; }
+  (async () => {
+    try {
+      switch (msg.type) {
+        // These host controls never wait on the operation they need to cancel.
+        case 'dweb/base-host/install-status': {
+          const target = immutableAppRoot(msg.address);
+          sendResponse({ ok: true, attempt: manualInstalls.status(installAttemptKey(msg.kind ?? 'address', target.address, msg.appId)) });
+          return;
+        }
+        case 'dweb/base-host/cancel-install': {
+          const target = immutableAppRoot(msg.address);
+          if (typeof msg.attemptId !== 'string' || msg.attemptId.length > 64) {
+            sendResponse({ ok: false, error: 'install-attempt-required' }); return;
+          }
+          sendResponse(manualInstalls.cancel(installAttemptKey(msg.kind ?? 'address', target.address, msg.appId), msg.attemptId));
+          return;
+        }
+        // Parsing uses this existing privileged host, never the mesh start path.
+        case 'dweb/base-host/parse-address': {
+          sendResponse({ ok: true, address: immutableAppRoot(msg.address).address });
+          return;
+        }
+        case 'dweb/base-host/inspect-address':
+        case 'dweb/base-host/install-address': {
+          const target = immutableAppRoot(msg.address);
+          /** @param {{signal?:AbortSignal,beginCommit?:()=>void,progress?:(value:any)=>void}} [control] */
+          const execute = async (control = {}) => {
+            const h = await start();
+            const client = /** @type {any} */ (await loadDweb());
+            const verified = await client.fetchImmutableApp({ address: target.address,
+              fetchApp: (/** @type {string} */ uri) => h.base.fetchApp(uri, { signal: control.signal, onProgress: control.progress }) });
+            control.signal?.throwIfAborted();
+            if (handle !== h) throw new Error('dweb-generation-retired');
+            if (msg.type === 'dweb/base-host/inspect-address') {
+              return { ok: true, summary: { ...client.immutableAppSummary(verified), declared: verifiedDeclaration(verified.app) } };
+            }
+            // why: a manual immutable install has no mutable discovery lineage.
+            // Revalidation above pins the same signer/revision the user inspected.
+            control.beginCommit?.();
+            const appId = mintAppId();
+            const ownerId = appContentOwner(appId, 'seed');
+            const { announced: installed } = await runPublishTransaction({
+              publish: async () => {
+                const hash = await h.base.seedApp(verified);
+                return { hash, ownershipAdded: trackServedHash(ownerId, hash) };
+              },
+              announce: async () => {
+                const summary = client.immutableAppSummary(verified);
+                const a = verified.app;
+                const result = await swEffectCall('dweb/app-install', {
+                  appId, ...appSeedHandoff(a, verified.manifest, verified.payload), name: summary.name ?? a.name,
+                  publicationGeneration: msg.publicationGeneration,
+                });
+                if (!result?.ok) throw publishFailureError(result, 'install failed');
+                return { app: result.app, warning: result.warning };
+              },
+              rollback: ({ hash, ownershipAdded }) => {
+                if (ownershipAdded) unserveTrackedHash(h, ownerId, hash);
+              },
+            });
+            return { ok: true, ...installed };
+          };
+          sendResponse(await (msg.type === 'dweb/base-host/install-address'
+            ? manualInstalls.run(installAttemptKey('address', target.address), msg.existing, execute) : execute()));
+          return;
+        }
+        case 'dweb/base-host/start': { await start(); sendResponse({ ok: true, ...status() }); return; }
+        case 'dweb/base-host/status': { sendResponse({ ok: true, ...status() }); return; }
+        case 'dweb/base-host/info': { sendResponse({ ok: true, ...info() }); return; }
+        case 'dweb/base-host/find': {
+          const h = await start();
+          const card = await h.base.findDwapp(msg.dwappId, msg.publisherDid, msg.slug);
+          sendResponse({ ok: true, record: card ? discoveredAppFromRow({ dwapp_id: msg.dwappId, publisher: card.publisher, ...card.value }) : null });
+          return;
+        }
+        // --- same-user devices (portable identity) -----------------------------
+        // The coordinator is started by the base-network lifecycle; these
+        // routes are the SW's read window and the two transfer verbs.
+        case 'dweb/base-host/self-status': { sendResponse({ ok: true, ...selfHost.status() }); return; }
+        case 'dweb/base-host/self-start': {
+          sendResponse({ ok: true, ...await selfHost.start() });
+          return;
+        }
+        case 'dweb/base-host/self-offer': {
+          sendResponse({
+            ok: true,
+            ...await selfHost.offerSnapshot({
+              manifest: msg.manifest,
+              targetDeviceDid: msg.targetDeviceDid,
+            }),
+          });
+          return;
+        }
+        case 'dweb/base-host/self-restore': {
+          const result = await selfHost.restoreFrom({ deviceDid: msg.deviceDid, surfaces: msg.surfaces });
+          sendResponse({ ...result, result });
+          return;
+        }
+        case 'dweb/base-host/peer-policy': {
+          try { peerPolicy.apply(msg.policy); } finally { enforcePeerPolicy(); }
+          sendResponse({ ok: true, revision: peerPolicy.revision() }); return;
+        }
+        case 'dweb/base-host/ban':
+        case 'dweb/base-host/unblock': {
+          sendResponse({ ok: false, error: 'durable-peer-policy-required' }); return;
+        }
+        case 'dweb/base-host/set-discovery': { sendResponse(await discoverySettings.refresh()); return; }
+        // The agent's peer/discovery read window: who we're linked to + the
+        // sovereign discovery state (on/off, subscribers, blocked dids).
+        case 'dweb/base-host/peers': {
+          if (!handle) { sendResponse({ ok: true, peers: [], discovery: { enabled: false, subscribers: 0, library: 0, blocked: [] }, running: false }); return; }
+          const snap = handle.base.snapshot();
+          sendResponse({ ok: true, running: true, did: handle.base.did, peers: snap.peers, discovery: handle.base.discoveryState() });
+          return;
+        }
+        // --- app store ---------------------------------------------------------
+        // Share: publish the app's files as a signed bundle the base mesh serves,
+        // then announce it (gossip + DHT). dwapp_id = content hash.
+        case 'dweb/base-host/share-app': {
+          const reseed = msg.reseed === true;
+          const transactionId = !reseed && typeof msg.transactionId === 'string'
+            && /^[a-f0-9-]{36}$/i.test(msg.transactionId)
+            ? msg.transactionId : null;
+          if (!reseed && !transactionId) {
+            sendResponse({ ok: false, error: 'share-transaction-id-required' });
+            return;
+          }
+          const reseedAttemptId = typeof msg.reseedAttemptId === 'string'
+            && msg.reseedAttemptId.length >= 8 && msg.reseedAttemptId.length <= 128
+            && !/[\u0000-\u001f\u007f]/.test(msg.reseedAttemptId)
+            ? msg.reseedAttemptId : null;
+          if (reseed && (!reseedAttemptId
+            || typeof msg.appId !== 'string'
+            || msg.expectedHostEpoch !== activeFeatureHostEpoch
+            || msg.expectedMeshGeneration !== meshGeneration
+          )) {
+            sendResponse({ ok: false, error: 'dweb-generation-retired' });
+            return;
+          }
+          if (reseed) latestReseedAttempts.set(msg.appId, reseedAttemptId);
+          const h = await start();
+          const reseedCurrent = () => !reseed || (
+            handle === h
+            && msg.expectedHostEpoch === activeFeatureHostEpoch
+            && msg.expectedMeshGeneration === meshGeneration
+            && latestReseedAttempts.get(msg.appId) === reseedAttemptId
+          );
+          if (!reseedCurrent()) {
+            sendResponse({ ok: false, error: 'dweb-generation-retired' });
+            return;
+          }
+          if (reseed && msg.seedBundle) {
+            // why: Edited App files cannot reproduce the original signed bytes.
+            const client = /** @type {any} */ (await loadDweb());
+            const { manifest, payload: encodedPayload } = msg.seedBundle;
+            if (typeof encodedPayload !== 'string'
+                || encodedPayload.length > 4 * Math.ceil(MAX_NETWORK_BUNDLE_BYTES / 3)
+                || base64ByteLength(encodedPayload) > MAX_NETWORK_BUNDLE_BYTES) {
+              throw new Error('dweb-seed-payload-invalid');
+            }
+            const payload = fromBase64(encodedPayload);
+            const verified = await client.installAppBundle({
+              uri: msg.seedUri, expectedPublisher: msg.seedPublisher,
+              manifest, payload,
+              install: async (/** @type {any} */ app) => app,
+            });
+            if (verified.dweb.hash !== msg.expectedHash) {
+              throw new Error('dweb-seed-hash-mismatch');
+            }
+            const stableOwnerId = appContentOwner(msg.appId, 'seed');
+            const ownerId = `${stableOwnerId}:reseed:${reseedAttemptId}`;
+            const rollback = (/** @type {{hash:string,ownershipAdded:boolean}} */ published) => {
+              if (published.ownershipAdded) unserveTrackedHash(h, ownerId, published.hash);
+            };
+            await runDwebReseedPublication({
+              current: reseedCurrent,
+              publish: async () => {
+                const hash = await h.base.seedApp({ manifest, payload });
+                return { hash, ownershipAdded: trackServedHash(ownerId, hash) };
+              },
+              // why: Only the original publisher can sign a discovery card.
+              announce: async () => null,
+              rollbackBytes: rollback,
+              compensate: rollback,
+              commit: (published) => {
+                if (published.ownershipAdded
+                    && !contentOwnership.transfer(ownerId, stableOwnerId, published.hash)) {
+                  throw new Error('dweb-reseed-ownership-transfer-failed');
+                }
+              },
+            });
+            sendResponse({ ok: true, hash: verified.dweb.hash, uri: msg.seedUri });
+            return;
+          }
+          // The UI passes an edited namespace on FIRST share (and the stored slug on
+          // reshare); fall back to the name. A RESHARE reuses the same slug → same
+          // dwapp_id → publishMeta amends the existing card (higher seq) instead of
+          // forking a new app. That preserves the version identity.
+          const slug = slugify(msg.slug || msg.name);
+          const previousHash = typeof msg.previousHash === 'string' ? msg.previousHash : null;
+          const previousCard = h.base.heardDwapps().find((/** @type {any} */ row) => (
+            row.publisher === h.base.did && row.slug === slug
+          )) ?? null;
+          const stableOwnerId = appContentOwner(msg.appId, 'share');
+          const publicationOwnerId = reseed
+            ? `${stableOwnerId}:reseed:${reseedAttemptId}` : stableOwnerId;
+          const rollbackPublishedBytes = (/** @type {any} */ published) => {
+            if (published.ownershipAdded) {
+              unserveTrackedHash(h, publicationOwnerId, published.hash);
+            }
+          };
+          const announce = (/** @type {any} */ published) => h.base.publishMeta({
+              slug, name: msg.name, description: msg.description ?? '',
+              head: publishedAppHead(published, msg.release),
+              // why: A reseed reuses its signed version identity.
+              ...(Number.isInteger(msg.seq) ? { seq: msg.seq } : {}),
+            });
+          const publish = () => publishLocalApp(h, msg, publicationOwnerId);
+          const transaction = reseed ? await runDwebReseedPublication({
+            current: reseedCurrent,
+            publish,
+            announce,
+            rollbackBytes: rollbackPublishedBytes,
+            compensate: async (published, announced) => {
+              const newerAttemptOwnsThisHost = handle === h
+                && latestReseedAttempts.get(msg.appId) !== reseedAttemptId;
+              let metadataFailure = null;
+              if (!newerAttemptOwnsThisHost) {
+                try {
+                  await rollbackSharePublication({
+                    base: h.base,
+                    state: {
+                      appId: msg.appId,
+                      ownerId: publicationOwnerId,
+                      slug,
+                      name: msg.name,
+                      newHash: published.hash,
+                      ownershipAdded: false,
+                      previous: previousCard ? {
+                        name: previousCard.name,
+                        description: previousCard.description ?? '',
+                        head: previousCard.head,
+                        seq: previousCard.seq,
+                      } : null,
+                    },
+                    failedSeq: announced?.card?.seq,
+                    release: () => {},
+                  });
+                } catch (cause) { metadataFailure = cause; }
+              }
+              try { rollbackPublishedBytes(published); }
+              catch (cause) {
+                if (metadataFailure) {
+                  throw new AggregateError(
+                    [metadataFailure, cause], 'dweb reseed compensation failed',
+                  );
+                }
+                throw cause;
+              }
+              if (metadataFailure) throw metadataFailure;
+            },
+            commit: (published) => {
+              if (published.ownershipAdded
+                  && !contentOwnership.transfer(
+                    publicationOwnerId, stableOwnerId, published.hash,
+                  )) {
+                throw new Error('dweb-reseed-ownership-transfer-failed');
+              }
+            },
+          }) : await runPublishTransaction({
+            publish,
+            announce,
+            rollback: ({ hash, ownershipAdded }) => {
+              if (ownershipAdded && hash !== previousHash) {
+                unserveTrackedHash(h, stableOwnerId, hash);
+              }
+            },
+          });
+          const { published, announced } = transaction;
+          const { uri, hash, created, size } = published;
+          const { dwapp_id, card, propagated } = announced;
+          if (transactionId) {
+            shareRollbacks.register(transactionId, {
+              appId: msg.appId,
+              ownerId: appContentOwner(msg.appId, 'share'),
+              slug,
+              name: msg.name,
+              newHash: hash,
+              ownershipAdded: published.ownershipAdded,
+              previous: previousCard ? {
+                name: previousCard.name,
+                description: previousCard.description ?? '',
+                head: previousCard.head,
+                seq: previousCard.seq,
+              } : null,
+            });
+          }
+          log(`shared app "${msg.name}" (${slug}) → ${dwapp_id.slice(0, 12)}… seq ${card.seq}`);
+          sendResponse({
+            ok: true, uri, hash, size, created, dwapp_id, slug,
+            seq: card.seq, publisher: h.base.did, transactionId,
+            propagated: propagated !== false,
+          });
+          return;
+        }
+        // Unshare is idempotent so deletion succeeds when the network is off.
+        case 'dweb/base-host/unshare-app': {
+          if (!handle) { sendResponse({ ok: true, unserved: false, removed: false }); return; }
+          /** @type {string[]} */
+          const hashes = Array.isArray(msg.hashes)
+            ? [...new Set(msg.hashes.filter((/** @type {unknown} */ hash) => typeof hash === 'string' && hash))]
+            : [];
+          if (typeof msg.appId === 'string') {
+            for (const hash of servedHashesForApp(msg.appId)) {
+              if (!hashes.includes(hash)) hashes.push(hash);
+            }
+          }
+          const primaryHash = msg.hash || hashes[0] || null;
+          let unserved = false;
+          if (typeof msg.appId === 'string') {
+            for (const slot of APP_CONTENT_SLOTS) {
+              const ownerId = appContentOwner(msg.appId, slot);
+              for (const hash of hashes) {
+                unserved = unserveTrackedHash(handle, ownerId, hash) || unserved;
+              }
+            }
+          }
+          const r = msg.unpublish === false
+            ? { removed: false }
+            : await handle.base.unpublishMeta({
+                slug: slugify(msg.slug || msg.name),
+                publisher: msg.publisher || handle.base.did,
+              });
+          log(`unshared app "${msg.name}"; unserved:${unserved} removed:${r.removed}`);
+          sendResponse({ ok: true, ...r, hash: primaryHash, unserved });
+          return;
+        }
+        case 'dweb/base-host/unserve-content': {
+          if (!handle) { sendResponse({ ok: true, unserved: false }); return; }
+          if (typeof msg.appId !== 'string' || typeof msg.hash !== 'string') {
+            sendResponse({ ok: false, error: 'appId-and-hash-required' });
+            return;
+          }
+          const slot = typeof msg.slot === 'string' ? msg.slot : 'share';
+          sendResponse({
+            ok: true,
+            unserved: unserveTrackedHash(handle, appContentOwner(msg.appId, slot), msg.hash),
+          });
+          return;
+        }
+        case 'dweb/base-host/commit-share': {
+          if (typeof msg.transactionId !== 'string') {
+            sendResponse({ ok: false, error: 'transactionId-required' });
+            return;
+          }
+          sendResponse(shareRollbacks.commit(msg.transactionId));
+          return;
+        }
+        case 'dweb/base-host/rollback-share': {
+          const h = await start();
+          if (typeof msg.transactionId !== 'string') {
+            sendResponse({ ok: false, error: 'transactionId-required', restored: false });
+            return;
+          }
+          const result = await shareRollbacks.rollback(msg.transactionId, async (state) => {
+            const { restored } = await rollbackSharePublication({
+              base: h.base, state, failedSeq: msg.failedSeq,
+              release: (ownerId, hash) => unserveTrackedHash(h, ownerId, hash),
+            });
+            return { restored };
+          });
+          sendResponse(result);
+          return;
+        }
+        // Discover: the bounded discovery Library (filled by the subscription plane).
+        case 'dweb/base-host/heard': {
+          sendResponse({
+            ok: true,
+            apps: handle
+              ? handle.base.heardDwapps().map(discoveredAppFromRow).filter(Boolean)
+              : [],
+          });
+          return;
+        }
+        // A dwapp room op (join/leave/publish/subscribe/dm/presence/…) uses the
+        // bridge's room surface, served over the shared base mesh.
+        case 'dweb/base-host/rotate-app-authority': {
+          if (typeof msg.appId !== 'string' || !msg.appId) throw new Error('appId-required');
+          sendResponse(await roomAuthority().rotate(msg.appId, msg.appGeneration,
+            () => purgeAppRoomOwners(msg.appId)));
+          return;
+        }
+        case 'dweb/base-host/room': { sendResponse(await handleRoomOp(msg)); return; }
+        // Install a verified mesh bundle through the worker.
+        case 'dweb/base-host/install-app': {
+          const h = await start();
+          // why: Rebind identity to the host card before install.
+          const identity = identityForDiscoveredUri(h.base.heardDwapps(), msg.uri);
+          if (!identity) {
+            sendResponse({
+              ok: false, error: 'discovery-card-not-found', outcomeKind: 'pre-effect-failure',
+            });
+            return;
+          }
+          sendResponse(await manualInstalls.run(discoveredAttemptKey(msg), null, async (control) => {
+            const { manifest, payload } = await h.base.fetchApp(msg.uri, { signal: control.signal, onProgress: control.progress, expectedRuntime: { value: identity?.runtime } });
+            const publisherError = discoveredIdentityError(identity, {
+              manifestPublisher: manifest.publisher,
+            });
+            if (publisherError) {
+              return { ok: false, error: publisherError, outcomeKind: 'pre-effect-failure' };
+            }
+            const client = /** @type {any} */ (await loadDweb());
+            control.progress({ phase: 'verifying' });
+            const prepared = await client.prepareAppBundle({ uri: msg.uri, manifest, payload, name: msg.name,
+              dwappId: identity?.dwappId ?? null, slug: identity?.slug ?? null, seq: identity?.seq ?? null });
+            const appId = mintAppId();
+            const ownerId = appContentOwner(appId, 'seed');
+            control.beginCommit();
+            const { announced: installed } = await runPublishTransaction({
+              publish: async () => {
+                const hash = await h.base.seedApp({ manifest, payload });
+                return { hash, ownershipAdded: trackServedHash(ownerId, hash) };
+              },
+              announce: async () => {
+                const a = prepared;
+                const r = await swEffectCall('dweb/app-install', {
+                  appId, ...appSeedHandoff(a, manifest, payload),
+                  publicationGeneration: msg.publicationGeneration,
+                });
+                if (!r?.ok) throw publishFailureError(r, 'install failed');
+                return { app: r.app, warning: r.warning };
+              },
+              rollback: ({ hash, ownershipAdded }) => {
+                if (ownershipAdded) unserveTrackedHash(h, ownerId, hash);
+              },
+            });
+            log(`installed app "${installed.app?.name ?? msg.name}" from the dweb`);
+            return {
+              ok: true,
+              app: installed.app,
+              ...(installed.warning ? { warning: installed.warning } : {}),
+            };
+          }));
+          return;
+        }
+        // Update one installed App through the same verified fetch path as install.
+        case 'dweb/base-host/update-app': {
+          const h = await start();
+          const identity = identityForDiscoveredUri(h.base.heardDwapps(), msg.uri);
+          const streamError = discoveredIdentityError(identity, {
+            expectedDwappId: msg.expectedDwappId,
+            expectedPublisher: msg.expectedPublisher,
+          });
+          if (streamError) {
+            sendResponse({ ok: false, error: streamError, outcomeKind: 'pre-effect-failure' });
+            return;
+          }
+          sendResponse(await manualInstalls.run(discoveredAttemptKey(msg), null, async (control) => {
+            const { manifest, payload } = await h.base.fetchApp(msg.uri, { signal: control.signal, onProgress: control.progress, expectedRuntime: { value: identity?.runtime } });
+            const publisherError = discoveredIdentityError(identity, {
+              manifestPublisher: manifest.publisher,
+            });
+            if (publisherError) {
+              return { ok: false, error: publisherError, outcomeKind: 'pre-effect-failure' };
+            }
+            const client = /** @type {any} */ (await loadDweb());
+            control.progress({ phase: 'verifying' });
+            const prepared = await client.prepareAppBundle({ uri: msg.uri, manifest, payload, name: msg.name,
+              dwappId: identity?.dwappId ?? null, slug: identity?.slug ?? null, seq: identity?.seq ?? null });
+            const ownerId = appContentOwner(msg.appId, 'seed');
+            /** @type {string[]} */
+            let cleanupHashes = [];
+            /** @type {string[]} */
+            const remainingCleanupHashes = [];
+            control.beginCommit();
+            const { announced: updated } = await runPublishTransaction({
+              publish: async () => {
+                const hash = await h.base.seedApp({ manifest, payload });
+                return { hash, ownershipAdded: trackServedHash(ownerId, hash) };
+              },
+              announce: async () => {
+                const a = prepared;
+                const r = await swEffectCall('dweb/app-update', {
+                  appId: msg.appId,
+                  publicationGeneration: msg.publicationGeneration,
+                  ...(msg.strategy === 'replace' || msg.strategy === 'fork'
+                    ? { strategy: msg.strategy, conflictToken: msg.conflictToken }
+                    : {}),
+                  ...appSeedHandoff(a, manifest, payload),
+                });
+                if (!r?.ok) throw Object.assign(publishFailureError(r, 'update failed'), {
+                  conflictToken: r?.conflictToken,
+                  requiresAction: r?.requiresAction,
+                });
+                // Only the committed repository transition knows which old
+                // versions are no longer retained by the resulting App.
+                cleanupHashes = Array.isArray(r.cleanupHashes)
+                  ? [...new Set(r.cleanupHashes.filter((/** @type {unknown} */ hash) => typeof hash === 'string'))]
+                  : [];
+                return { app: r.app, warning: r.warning, fork: r.fork };
+              },
+              rollback: ({ hash, ownershipAdded }) => {
+                if (ownershipAdded) unserveTrackedHash(h, ownerId, hash);
+              },
+              supersede: () => {
+                for (const hash of cleanupHashes) {
+                  try { unserveTrackedHash(h, ownerId, hash); }
+                  catch { remainingCleanupHashes.push(hash); }
+                }
+              },
+            });
+            const warnings = [...new Set([
+              ...(updated.warning ? [updated.warning] : []),
+              ...(remainingCleanupHashes.length ? ['previous-version-cleanup-pending'] : []),
+            ])];
+            log(`updated app "${updated.app?.name ?? msg.name}" to a newer dweb version`);
+            return {
+              ok: true,
+              app: updated.app,
+              ...(updated.fork ? { fork: updated.fork } : {}),
+              cleanupHashes,
+              pendingUnserveHashes: remainingCleanupHashes,
+              ...(remainingCleanupHashes.length ? { cleanupPending: true } : {}),
+              ...(warnings.length ? { warning: warnings[0], warnings } : {}),
+            };
+          }));
+          return;
+        }
+        case 'dweb/base-host/stop': {
+          await selfHost.stop();
+          await baseLifecycle.stop();
+          sendResponse({ ok: true });
+          return;
+        }
+        default: sendResponse({ ok: false, error: `unknown:${msg.type}` }); return;
+      }
+    } catch (e) {
+      warn('handler threw', msg.type, '-', /** @type {{ message?: string }} */ (e)?.message ?? e);
+      const failure = /** @type {any} */ (e);
+      sendResponse({
+        ok: false,
+        error: failure?.message ?? String(e),
+        ...(typeof failure?.code === 'string' ? { code: failure.code } : {}),
+        ...(typeof failure?.performed === 'boolean' ? { performed: failure.performed } : {}),
+        ...(typeof failure?.outcomeKnown === 'boolean'
+          ? { outcomeKnown: failure.outcomeKnown } : {}),
+        ...(typeof failure?.retryable === 'boolean' ? { retryable: failure.retryable } : {}),
+        ...(['pre-effect-failure', 'effect-completed', 'host-lost', 'transport-lost']
+          .includes(failure?.outcomeKind) ? { outcomeKind: failure.outcomeKind } : {}),
+        ...(Number.isSafeInteger(failure?.conflictToken) ? {
+          conflictToken: failure.conflictToken,
+          requiresAction: failure.requiresAction === true,
+        } : {}),
+      });
+    }
+  })();
+  return true; // async sendResponse
+};
+
+log('host loaded');

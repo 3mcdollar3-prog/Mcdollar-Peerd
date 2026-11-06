@@ -13,7 +13,6 @@ export const KEY_PREFIX = Object.freeze({
   anthropic: 'sk-ant-',
   openrouter: 'sk-or-',
   openai: 'sk-',
-  gemini: 'AIzaSy',
 });
 
 /**

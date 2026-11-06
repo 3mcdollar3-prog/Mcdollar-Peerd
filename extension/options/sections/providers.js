@@ -79,7 +79,6 @@ const GEMINI_MARK =
 const providerLogo = (name) => {
   if (name === 'anthropic') return m('span.provider-logo', m.trust(ANTHROPIC_MARK));
   if (name === 'openrouter') return m('span.provider-logo', m.trust(OPENROUTER_MARK));
-  if (name === 'openai') return m('span.provider-logo', m.trust(OPENAI_MARK));
   if (name === 'gemini') return m('span.provider-logo', m.trust(GEMINI_MARK));
   if (name === 'glm') return m('span.provider-logo', m.trust(ZAI_MARK));
   if (name === 'ollama') return m('span.provider-logo', m.trust(OLLAMA_MARK));

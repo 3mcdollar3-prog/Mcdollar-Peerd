@@ -5,16 +5,16 @@
   <br>
 </p>
 
-[![CI](https://github.com/NotASithLord/mcdollar/actions/workflows/package-and-release.yml/badge.svg)](https://github.com/NotASithLord/mcdollar/actions/workflows/package-and-release.yml)
-[![types: ts-check coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/tscheck.json)](packaging/check-tscheck.ts)
-[![Functional Tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/functional-tests.json)](tests)
-[![In-Browser Chrome](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/inbrowser-chrome.json)](scripts/cdp/run-inbrowser-tests.mjs)
-[![In-Browser Gecko](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/inbrowser-gecko.json)](scripts/firefox/run-runtime-tests.mjs)
-[![E2E side panel](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/e2e-chrome.json)](scripts/cdp/run-e2e-verify.mjs)
-[![Red Team](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/red-team.json)](docs/security/RED-TEAM-RESULTS.md)
-[![App source: no development build and unbundled](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/no-build.json)](CONTRIBUTING.md)
-[![Vendored code](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/vendor-integrity.json)](extension/vendor/vendor.lock.json)
-[![Actions pinned](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/actions-pinned.json)](packaging/check-action-pins.ts)
+[![CI](https://github.com/3mcdollar3-prog/Mcdollar-Peerd/actions/workflows/package-and-release.yml/badge.svg)](https://github.com/3mcdollar3-prog/Mcdollar-Peerd/actions/workflows/package-and-release.yml)
+[![types: ts-check coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/3mcdollar3-prog/Mcdollar-Peerd/main/badges/tscheck.json)](packaging/check-tscheck.ts)
+[![Functional Tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/3mcdollar3-prog/Mcdollar-Peerd/main/badges/functional-tests.json)](tests)
+[![In-Browser Chrome](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/3mcdollar3-prog/Mcdollar-Peerd/main/badges/inbrowser-chrome.json)](scripts/cdp/run-inbrowser-tests.mjs)
+[![In-Browser Gecko](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/3mcdollar3-prog/Mcdollar-Peerd/main/badges/inbrowser-gecko.json)](scripts/firefox/run-runtime-tests.mjs)
+[![E2E side panel](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/3mcdollar3-prog/Mcdollar-Peerd/main/badges/e2e-chrome.json)](scripts/cdp/run-e2e-verify.mjs)
+[![Red Team](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/3mcdollar3-prog/Mcdollar-Peerd/main/badges/red-team.json)](docs/security/RED-TEAM-RESULTS.md)
+[![App source: no development build and unbundled](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/3mcdollar3-prog/Mcdollar-Peerd/main/badges/no-build.json)](CONTRIBUTING.md)
+[![Vendored code](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/3mcdollar3-prog/Mcdollar-Peerd/main/badges/vendor-integrity.json)](extension/vendor/vendor.lock.json)
+[![Actions pinned](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/3mcdollar3-prog/Mcdollar-Peerd/main/badges/actions-pinned.json)](packaging/check-action-pins.ts)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Manifest%20V3-Chrome%20%26%20Firefox-informational.svg)](#install)
 [![Security policy](https://img.shields.io/badge/security-policy-blue.svg)](SECURITY.md)
@@ -126,7 +126,7 @@ by the packaging scripts.
 
 ### Release packages
 
-See [GitHub Releases](https://github.com/NotASithLord/mcdollar/releases) for current
+See [GitHub Releases](https://github.com/3mcdollar3-prog/Mcdollar-Peerd/releases) for current
 artifacts. Store and preview builds differ. Store builds omit the dweb. Preview
 builds include it and may enable additional automation features. The packaging
 code is the authority for each browser and channel.

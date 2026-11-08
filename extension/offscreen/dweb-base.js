@@ -82,7 +82,7 @@ const installAttemptKey = (kind, address, appId) => {
 };
 /** @param {any} msg */
 const discoveredAttemptKey = (msg) => installAttemptKey(msg.type === 'dweb/base-host/update-app' ? 'update' : 'install',
-  typeof msg.uri === 'string' ? msg.uri.replace(/^peerd:\/\/did:key:/, 'dwapp://content/') : '', msg.appId);
+  typeof msg.uri === 'string' ? msg.uri.replace(/^mcdollar:\/\/did:key:/, 'dwapp://content/') : '', msg.appId);
 
 let meshGeneration = 0;
 /** @type {string | null} */
@@ -309,7 +309,7 @@ const selfHost = createSelfDeviceHost({
   getSignalingUrl: () => handle?.url ?? null,
 });
 
-// peerd notifications: emit a runtime 'dweb/notify' for genuinely-NEW peers and
+// mcdollar notifications: emit a runtime 'dweb/notify' for genuinely-NEW peers and
 // apps so the UI surfaces them (the bell + an in-chat banner), each linking to
 // the Network / Discover view. Deduped; the initial sync burst (peers/apps that
 // were already there when we joined) is recorded-but-suppressed via a short
@@ -356,7 +356,7 @@ const baseLifecycle = makeStartStopBarrier({
       const material = await client.identityMaterial({
         getSecret: async () => {
           const r = await callKernelEffect('identity/read');
-          if (!r?.ok) throw new Error(r?.error === 'vault-locked' ? 'vault is locked — unlock peerd first' : (r?.error ?? 'identity unavailable'));
+          if (!r?.ok) throw new Error(r?.error === 'vault-locked' ? 'vault is locked — unlock mcdollar first' : (r?.error ?? 'identity unavailable'));
           return r.value;
         },
         setSecret: async (/** @type {string} */ _n, /** @type {string} */ value) => {
@@ -567,7 +567,7 @@ const status = () => (handle
     }
   : { running: false, meshGeneration });
 
-// The read surface behind peerd.distributed.* AND the home-page Network view.
+// The read surface behind mcdollar.distributed.* AND the home-page Network view.
 // A DISTINCT shape from status() above (ops/debug counts): it carries the live
 // rosters with per-peer ICE path + the rendezvous state, for visualization.
 // Side-effect-free: it reports the CURRENT state and never starts the lobby

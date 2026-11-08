@@ -1,10 +1,10 @@
 // @ts-check
 
-import { callModel } from '/peerd-provider/controller.js';
+import { callModel } from '/mcdollar-provider/controller.js';
 import {
   foldProviderEvents,
   validateProviderCallArgs,
-} from '/peerd-runtime/controller-model.js';
+} from '/mcdollar-runtime/controller-model.js';
 import {
   parseRuntimeRichAdmitProjection,
   parseRuntimeRichOpenInferenceValue,

@@ -21,7 +21,7 @@ import {
   readFrameworkStateInjected,
   resolveTargetTab,
   scriptingTarget,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 
 /**
  * The harness ref-registry entry shape (resolve()). Injected onto ctx by the

@@ -4,8 +4,8 @@
 import { describe, expect, test } from 'bun:test';
 import { useFakeIndexedDB } from '../setup.ts';
 import { createKernelSkillPersistence } from '../../extension/background/kernel-skill-persistence.js';
-import { createSkillStore } from '../../extension/peerd-runtime/skills/store.js';
-import { createSkillRegistry } from '../../extension/peerd-runtime/skills/registry.js';
+import { createSkillStore } from '../../extension/mcdollar-runtime/skills/store.js';
+import { createSkillRegistry } from '../../extension/mcdollar-runtime/skills/registry.js';
 
 await useFakeIndexedDB();
 
@@ -17,7 +17,7 @@ const SKILL_MD = (name: string) => [
 let dbSequence = 0;
 const makeLane = async () => {
   // A fresh database name per test keeps fake-indexeddb state isolated.
-  const dbName = `peerd-skills-test-${++dbSequence}`;
+  const dbName = `mcdollar-skills-test-${++dbSequence}`;
   const factory: IDBFactory = new Proxy(indexedDB, {
     get(target, property, receiver) {
       if (property === 'open') {

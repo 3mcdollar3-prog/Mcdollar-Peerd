@@ -5,7 +5,7 @@ import {
 import { makePrivateTransferClient } from '../../extension/options/private-transfer-client.js';
 import {
   applyImport, encryptWithPassphrase, EXPORT_FORMAT, EXPORT_VERSION,
-} from '/peerd-runtime/transfer/transfer.js';
+} from '/mcdollar-runtime/transfer/transfer.js';
 
 describe('private transfer MessageChannel', () => {
   test('offers a channel only to the exact requesting options WindowClient', async () => {
@@ -119,7 +119,7 @@ describe('private transfer MessageChannel', () => {
       'backup-passphrase', { 'provider:test': 'secret' },
     );
     const record = {
-      format: 'peerd-identity-record', version: 1, did: 'did:key:zIncoming',
+      format: 'mcdollar-identity-record', version: 1, did: 'did:key:zIncoming',
       capsule: 'AAAA', wrappers: [{ kind: 'passphrase', wrappedKey: 'BBBB' }], updatedAt: 1,
     };
     const server = makePrivateTransferPort({

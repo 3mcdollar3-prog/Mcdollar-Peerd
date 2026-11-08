@@ -1,5 +1,5 @@
 // @ts-check
-// peerd — the home page. A standalone full-tab SPA (NOT the options page):
+// mcdollar — the home page. A standalone full-tab SPA (NOT the options page):
 // a left rail switches between the agent Chat and the Library / Discover /
 // Network sections. The Chat is an EQUAL live view of the same SW session the
 // side panel shows (DESIGN-12): home connects a 'home' port and folds the SAME
@@ -45,7 +45,7 @@ import { FirstTabHint, FirstTabOffer } from './first-tab-prompts.js';
 
 // why a typed accessor: the Chrome-only sidePanel namespace isn't on the
 // webextension-polyfill `Browser` type (it proxies to chrome.* at runtime, but
-// the type omits it). Same pattern as shared/pull-in-peerd.js.
+// the type omits it). Same pattern as shared/pull-in-mcdollar.js.
 const sidePanelApi = () =>
   /** @type {{ sidePanel?: typeof chrome.sidePanel }} */ (
     /** @type {unknown} */ (browser)
@@ -68,7 +68,7 @@ let currentState = INITIAL_STATE;
 let booted = false;          // first state push arrived — until then, show "Loading…"
 // activeView persists across refreshes (localStorage) so you land on the tab you
 // were on. Dweb views only restore where DWEB_ENABLED; anything unknown → 'chat'.
-const VIEW_KEY = 'peerd.home.activeView';
+const VIEW_KEY = 'mcdollar.home.activeView';
 const DWEB_VIEWS = new Set(['discover', 'contacts', 'network']);
 // The Lab (eval-section.js) is loaded ON DEMAND. why: it statically imports the
 // eval/ dir, which packaging prunes from the store build — a static import at the
@@ -199,15 +199,15 @@ let stashedChatView = null;  // the chat/chats view we auto-left when the panel 
 // that resets on close is gone before you ever return.
 let panelOpenedByCard = false;
 // The recent-chats list column is collapsible (it gets noisy) — persisted.
-let chatListCollapsed = (() => { try { return localStorage.getItem('peerd.home.chatsCollapsed') === '1'; } catch { return false; } })();
+let chatListCollapsed = (() => { try { return localStorage.getItem('mcdollar.home.chatsCollapsed') === '1'; } catch { return false; } })();
 const toggleChatList = () => {
   chatListCollapsed = !chatListCollapsed;
-  try { localStorage.setItem('peerd.home.chatsCollapsed', chatListCollapsed ? '1' : '0'); } catch { /* private mode */ }
+  try { localStorage.setItem('mcdollar.home.chatsCollapsed', chatListCollapsed ? '1' : '0'); } catch { /* private mode */ }
   m.redraw();
 };
 
-// ---- "Keep peerd as the first tab" (rules: ./first-tab.js) -----------------
-// A pinned tab shows only its icon, so Home's icon and title show what peerd
+// ---- "Keep mcdollar as the first tab" (rules: ./first-tab.js) -----------------
+// A pinned tab shows only its icon, so Home's icon and title show what mcdollar
 // is doing. why outside Mithril: a hidden tab gets no animation frame, so a
 // view hook would not run until the user came back.
 let sawSetup = false;        // this document showed the first-run gate
@@ -216,8 +216,8 @@ let presenceState = INITIAL_PRESENCE;
 let shownPresence = INITIAL_PRESENCE.presence;
 const idleTitle = document.title;
 // One origin, so every open Home tab shares these two keys.
-const LOOKED_KEY = 'peerd.home.lookedAt';
-const HINT_KEY = 'peerd.home.firstTabHintSeen';
+const LOOKED_KEY = 'mcdollar.home.lookedAt';
+const HINT_KEY = 'mcdollar.home.firstTabHintSeen';
 const readHintSeen = () => { try { return localStorage.getItem(HINT_KEY) === '1'; } catch { return false; } };
 let hintSeen = readHintSeen();
 // why redraw first, then focus the content: the prompt that had focus must
@@ -411,7 +411,7 @@ const requestDebugger = async (noticeId) => {
   m.redraw();
   return ok;
 };
-// "Open ↗" on a "peerd opened a tab" card: focus the agent's background tab AND
+// "Open ↗" on a "mcdollar opened a tab" card: focus the agent's background tab AND
 // open the side panel — BOTH inside this click gesture, the only moment Chrome
 // lets us open the panel (DESIGN-12). A card-opened panel follows you to that
 // tab and auto-closes when you come back to home (onVisibility). The card itself
@@ -552,7 +552,7 @@ const Wordmark = () => {
   return {
     oncreate: (/** @type {{ dom: HTMLElement }} */ v) => { el = v.dom; document.addEventListener('visibilitychange', replay); },
     onremove: () => document.removeEventListener('visibilitychange', replay),
-    view: () => m('.wordmark.wordmark--intro', { 'aria-label': 'peerd', role: 'img' }, [
+    view: () => m('.wordmark.wordmark--intro', { 'aria-label': 'mcdollar', role: 'img' }, [
       m('.block.b-p', 'p'), m('.block.b-e', 'e'), m('.block.b-e2', 'e'),
       m('.block.b-r', 'r'), m('.block.b-d', 'd'),
       m('.wordmark-cursor', { 'aria-hidden': 'true' }),
@@ -799,7 +799,7 @@ const ChatListPanel = () => {
   };
 };
 
-// peerd notifications bell (rail): unseen count + a dropdown of new peers / apps,
+// mcdollar notifications bell (rail): unseen count + a dropdown of new peers / apps,
 // each linking to Network / Discover. Subscribes to the shared feed so a live
 // event redraws the badge wherever you are.
 const NotificationsBell = () => {
@@ -820,7 +820,7 @@ const NotificationsBell = () => {
       const unseen = peerNotifications.unseen();
       return m('.notif', {
         // why Escape + focusout: the menu is a disclosure, so it closes the way
-        // every other peerd popup does (Escape, focus leaving it), not only on
+        // every other mcdollar popup does (Escape, focus leaving it), not only on
         // an outside mousedown. A null relatedTarget is a click on the menu's
         // own padding (or a window blur), which stays with that mousedown rule.
         onkeydown: (/** @type {KeyboardEvent} */ e) => {
@@ -868,7 +868,7 @@ const content = (showDweb, holdNudges) => {
   // Defensive: if a panel opened while the chat view was somehow still active, say
   // where the chat went rather than render a second live chat (single-homed).
   if (activeView === 'chat' && sidePanelOpen) {
-    return m('.home-chat', m('.peerd-net-empty', { style: 'margin:48px 16px;' },
+    return m('.home-chat', m('.mcdollar-net-empty', { style: 'margin:48px 16px;' },
       'Chat is open in the side panel. Close the panel to bring it back here.'));
   }
   if (activeView === 'chat') {
@@ -893,7 +893,7 @@ const content = (showDweb, holdNudges) => {
             onclick: popToSide,
           }, 'Pop to side ⇥') : null,
         ]),
-        // Newest peerd notification, surfaced in the chat.
+        // Newest mcdollar notification, surfaced in the chat.
         peerNotifications.list()[0] ? notifBanner(peerNotifications.list()[0]) : null,
         m(ChatView, { state: currentState, send, voiceManager: undefined, uiActions, surface: 'home', holdNudges }),
       ]),
@@ -975,7 +975,7 @@ const HomeApp = {
       m('.home-rail-mark', [
         m(Wordmark),
         CHANNEL === 'preview'
-          ? m('span.channel-badge.channel-badge--in', { title: 'peerd preview — dweb preview package' }, 'preview')
+          ? m('span.channel-badge.channel-badge--in', { title: 'mcdollar preview — dweb preview package' }, 'preview')
           : null,
       ]),
       m('.home-nav', groupedNavItems(items).map((group) =>
@@ -999,7 +999,7 @@ const HomeApp = {
             ]))),
         ]))),
       m('.spacer', { style: 'flex:1;' }),
-      // peerd notifications — new peers / apps on the dweb (preview only).
+      // mcdollar notifications — new peers / apps on the dweb (preview only).
       showDweb ? m(NotificationsBell) : null,
       // Manual lock — for stepping away. The SW pushes the locked state, which
       // flips home back to the vault gate.
@@ -1067,7 +1067,7 @@ if (!root) throw new Error('home: #app missing from HTML');
 let started = false;
 export const startHome = () => {
   if (started) return;
-  if (document.documentElement.dataset.peerdBootStage === 'failed') return;
+  if (document.documentElement.dataset.mcdollarBootStage === 'failed') return;
   started = true;
   statePort.start();
   document.addEventListener('visibilitychange', onVisibility);

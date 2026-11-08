@@ -12,7 +12,7 @@ import { createDwebPublicationFence } from '../../extension/background/dweb-publ
 // base-network kick) fires where it should. Behavior must match the inline
 // originals exactly.
 
-// Stand-in typed errors (the real ones live in peerd-egress; routes only need
+// Stand-in typed errors (the real ones live in mcdollar-egress; routes only need
 // `instanceof` to work).
 class VaultAlreadyInitializedError extends Error {}
 class WrongPassphraseError extends Error {}

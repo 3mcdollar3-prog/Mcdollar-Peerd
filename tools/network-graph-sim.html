@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>peerd — network graph sim</title>
+<title>mcdollar — network graph sim</title>
 <style>
   :root { color-scheme: dark; }
   body {
@@ -39,7 +39,7 @@
 </style>
 </head>
 <body>
-  <h1>peerd — network graph sim</h1>
+  <h1>mcdollar — network graph sim</h1>
   <p class="note">Standalone test rig for the home-page radial peer graph. The physics block below is the
   exact code ported into extension/home/network-section.js. Use the controls to stress it: 0, 1, many peers;
   joins/leaves; reduced motion.</p>
@@ -197,7 +197,7 @@
       linked: linked, path: linked ? rnd(PATHS) : null };
   }
   // The bootstrap node rides the graph as a normal node, labelled by domain.
-  var BOOTSTRAP = { did: '__bootstrap__', name: 'bootstrap.peerd.ai', color: '#D946EF', linked: true, kind: 'bootstrap' };
+  var BOOTSTRAP = { did: '__bootstrap__', name: 'bootstrap.mcdollar.ai', color: '#D946EF', linked: true, kind: 'bootstrap' };
   function render() {
     sync([BOOTSTRAP].concat(pool));
     document.getElementById('count').textContent = pool.length + ' peer' + (pool.length === 1 ? '' : 's');

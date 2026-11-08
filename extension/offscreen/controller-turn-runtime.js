@@ -45,9 +45,9 @@ import {
   reasoningForTurn,
   runUserTurn,
   semanticHooksFor,
-} from '/peerd-runtime/controller-turn.js';
-import { hydrateToolDescriptors } from '/peerd-runtime/semantic.js';
-import { buildTemporalBlock, buildTemporalContext } from '/peerd-runtime/controller.js';
+} from '/mcdollar-runtime/controller-turn.js';
+import { hydrateToolDescriptors } from '/mcdollar-runtime/semantic.js';
+import { buildTemporalBlock, buildTemporalContext } from '/mcdollar-runtime/controller.js';
 import {
   callModel as callProviderModel,
   costOf,
@@ -58,7 +58,7 @@ import {
   providerMetadata,
   providerModelContextWindow,
   shouldFailover,
-} from '/peerd-provider/controller.js';
+} from '/mcdollar-provider/controller.js';
 import { createControllerModelEgress } from './model-egress-client.js';
 import {
   mainModelContextLabel,

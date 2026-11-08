@@ -1,5 +1,5 @@
 // Update-feed freshness check — compares the LIVE feeds at
-// peerd.ai/updates/ against the latest GitHub Release tag. A stale feed
+// mcdollar.ai/updates/ against the latest GitHub Release tag. A stale feed
 // silently strands every preview install, so this is the check to run
 // (from anywhere: laptop, cron, a CF worker) whenever the Actions
 // monitor (update-feed-monitor.yml) isn't running.
@@ -13,8 +13,8 @@
 import { execFileSync } from 'node:child_process';
 import { REPO_ROOT } from './lib.ts';
 
-const CHROME_FEED = 'https://peerd.ai/updates/chrome-preview.xml';
-const FIREFOX_FEED = 'https://peerd.ai/updates/firefox-preview.json';
+const CHROME_FEED = 'https://mcdollar.ai/updates/chrome-preview.xml';
+const FIREFOX_FEED = 'https://mcdollar.ai/updates/firefox-preview.json';
 
 /** gh failed for a reason OTHER than "no releases exist" — the caller
  *  must not treat this as the benign no-releases case. */
@@ -86,8 +86,8 @@ const main = async () => {
   if (stale) {
     console.error(
       '\nFEEDS OUT OF SYNC — preview installs are not seeing the latest '
-      + 'release. Re-run peerd-site\'s sync-update-feeds workflow or check '
-      + 'peerd.ai hosting.',
+      + 'release. Re-run mcdollar-site\'s sync-update-feeds workflow or check '
+      + 'mcdollar.ai hosting.',
     );
     process.exit(1);
   }

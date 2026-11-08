@@ -102,8 +102,8 @@ export const makeEngineRoutes = (deps) => {
       outcomeKnown,
       retryable: outcomeKnown,
       error: outcomeKnown
-        ? `Peerd could not ${action}. Try again.`
-        : `Peerd could not confirm the result of trying to ${action}. Refresh Git history to reconcile before trying again.`,
+        ? `Mcdollar could not ${action}. Try again.`
+        : `Mcdollar could not confirm the result of trying to ${action}. Refresh Git history to reconcile before trying again.`,
     };
   };
   /** @param {unknown} appId @param {any} sender */
@@ -207,7 +207,7 @@ export const makeEngineRoutes = (deps) => {
       let result;
       if (command === 'init') {
         const oid = await repositories.init(ref);
-        result = { stdout: shellLine(oid ? 'Initialized Peerd Pod repository' : 'Initialized empty Peerd Pod repository'), stderr: '', exitCode: 0 };
+        result = { stdout: shellLine(oid ? 'Initialized Mcdollar Pod repository' : 'Initialized empty Mcdollar Pod repository'), stderr: '', exitCode: 0 };
       } else if (command === 'status') {
         const state = await repositories.status(ref);
         const changed = state.changed.map((/** @type {{status:string,path:string}} */ entry) => `${entry.status.padEnd(8)} ${entry.path}`);
@@ -283,7 +283,7 @@ export const makeEngineRoutes = (deps) => {
       if (/** @type {{outcomeKnown?:unknown}} */ (error)?.outcomeKnown === false) {
         return {
           ok: false,
-          error: 'Git may have completed, but Peerd could not confirm the result. Refresh Git history before trying again.',
+          error: 'Git may have completed, but Mcdollar could not confirm the result. Refresh Git history before trying again.',
           code: /** @type {{code?:string}} */ (error)?.code ?? 'pod-git-outcome-unknown',
           outcomeKnown: false,
           outcomeKind: 'unknown',
@@ -480,9 +480,9 @@ export const makeEngineRoutes = (deps) => {
         let runtimeDweb = meta.dweb ?? null;
         let runtimeAgent = { kind: 'bound-app', profile: 'developer', surface: 'code' };
         try {
-          const contract = parseAppManifest(await appClient.readFile({ appId, path: 'peerd.json' }));
+          const contract = parseAppManifest(await appClient.readFile({ appId, path: 'mcdollar.json' }));
           const paths = new Set((await appClient.listFiles({ appId })).map((/** @type {{path:string}} */ file) => file.path.replace(/^\/+/, '')));
-          if (!paths.has(contract.entry)) return { ok: false, error: `peerd.json entry is missing: ${contract.entry}` };
+          if (!paths.has(contract.entry)) return { ok: false, error: `mcdollar.json entry is missing: ${contract.entry}` };
           runtimeDweb = contract.capabilities.includes('dweb') && DWEB_ENABLED
             ? (meta.dweb ?? { uri: null, publisher: null, hash: null, local: true })
             : null;
@@ -579,7 +579,7 @@ export const makeEngineRoutes = (deps) => {
             code: /** @type {{code?:string}} */ (e)?.code ?? 'repository-operation-failed',
             outcomeKnown: false,
             retryable: false,
-            error: 'Peerd could not confirm whether the Git import finished. Refresh and inspect the Library before trying again.',
+            error: 'Mcdollar could not confirm whether the Git import finished. Refresh and inspect the Library before trying again.',
           };
         }
         return { ok: false, error: /** @type {{message?:string}} */ (e)?.message ?? String(e) };

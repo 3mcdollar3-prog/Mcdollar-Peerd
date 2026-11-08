@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { createKernelProfileAuthority } from '../../extension/background/vault-kernel-core.js';
-import { normalizeBody } from '../../extension/peerd-runtime/memory/memory.js';
-import { seedUserDocBody } from '../../extension/peerd-runtime/memory/user-doc.js';
+import { normalizeBody } from '../../extension/mcdollar-runtime/memory/memory.js';
+import { seedUserDocBody } from '../../extension/mcdollar-runtime/memory/user-doc.js';
 
 const makeIdb = () => {
   const data = new Map<string, Map<string, any>>([
@@ -47,11 +47,11 @@ describe('native onboarding/profile authority', () => {
       idb, sessions: { hasChat: async () => chat }, now: () => 10,
     });
     expect(await authority.reconcile()).toEqual({
-      id: 'default', peerName: 'peerd', createdAt: 10, onboardingComplete: false,
+      id: 'default', peerName: 'mcdollar', createdAt: 10, onboardingComplete: false,
     });
     chat = true;
     expect(await authority.reconcile()).toMatchObject({
-      id: 'default', peerName: 'peerd', onboardingComplete: true, onboardedAt: 10,
+      id: 'default', peerName: 'mcdollar', onboardingComplete: true, onboardedAt: 10,
     });
     expect(idb.data.get('agents_memory')!.size).toBe(0);
   });

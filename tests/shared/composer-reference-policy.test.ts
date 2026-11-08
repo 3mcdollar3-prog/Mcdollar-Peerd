@@ -9,7 +9,7 @@ import {
   truncateComposerUtf8,
 } from '../../extension/shared/composer-reference-policy.js';
 import { parseComposer } from '../../extension/shared/composer-parser.js';
-import { parseComposer as parseRuntimeComposer } from '../../extension/peerd-runtime/composer/parse.js';
+import { parseComposer as parseRuntimeComposer } from '../../extension/mcdollar-runtime/composer/parse.js';
 
 describe('composer reference policy', () => {
   test('caps mixed references before any host preparation', () => {

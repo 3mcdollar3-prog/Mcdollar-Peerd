@@ -33,11 +33,11 @@ import {
   LOCAL_MODEL_CHANNEL_PROTOCOL, LOCAL_MODEL_CHANNEL_RESULT,
   parseLocalModelChannelOffer,
 } from '/shared/feature-lease-protocol.js';
-import { DEFAULT_LOCAL_MODEL_ID, listLocalModelSpecs, localModelSpec } from '/peerd-provider/offscreen.js';
+import { DEFAULT_LOCAL_MODEL_ID, listLocalModelSpecs, localModelSpec } from '/mcdollar-provider/offscreen.js';
 import { makeMuseChannelSplitter } from './muse-glimmer-stream.js';
 
 // The load recipe per model (repo / Transformers.js class / dtype) lives in
-// peerd-provider's MODEL_SPECS, not here: adding an on-device model must be a
+// mcdollar-provider's MODEL_SPECS, not here: adding an on-device model must be a
 // registry entry, not engine surgery. This module owns residency, download
 // bookkeeping and streaming generate for WHICHEVER spec it is handed.
 //
@@ -76,14 +76,14 @@ export const generationInFlight = () => activeGenerations > 0;
  * spec's `enforcedContextWindow` cap where one exists (muse: the KV-cache
  * budget), else the nominal window. This is the number the trim layer must
  * see; the nominal alone would let sessions run into "context window is full".
- * @param {import('/peerd-provider/local-model-capability.js').ModelSpec} spec
+ * @param {import('/mcdollar-provider/local-model-capability.js').ModelSpec} spec
  */
 const effectiveWindow = (spec) =>
   Math.min(spec.enforcedContextWindow ?? spec.contextWindow, spec.contextWindow);
 
 /**
  * Is this spec's engine state loaded in memory right now?
- * @param {import('/peerd-provider/local-model-capability.js').ModelSpec} spec
+ * @param {import('/mcdollar-provider/local-model-capability.js').ModelSpec} spec
  */
 const residentReady = (spec) => residentId === spec.id
   && (spec.engine === 'muse-glimmer' ? !!museInstance : (!!model && !!tokenizer));
@@ -115,7 +115,7 @@ const readDownloadedIds = async () => {
 const persistDownloadedIds = () => {
   browser.storage?.local?.set?.({ [DOWNLOADED_KEY]: [...downloadedIds] }).catch(() => {});
 };
-/** @param {import('/peerd-provider/local-model-capability.js').ModelSpec} spec */
+/** @param {import('/mcdollar-provider/local-model-capability.js').ModelSpec} spec */
 const probeCachedWeights = async (spec) => {
   try {
     if (typeof caches === 'undefined') return false;
@@ -212,7 +212,7 @@ export const probeWebgpu = async ({ requireF16 = true } = {}) => {
  */
 const supportCache = new Map();
 /**
- * @param {import('/peerd-provider/local-model-capability.js').ModelSpec} spec
+ * @param {import('/mcdollar-provider/local-model-capability.js').ModelSpec} spec
  * @returns {Promise<SupportVerdict>}
  */
 const engineSupportsSpec = async (spec) => {
@@ -436,7 +436,7 @@ export const initLocalModel = async ({ model: modelId = DEFAULT_LOCAL_MODEL_ID }
   if (loading) return loading.promise;
   if (residentReady(spec)) return { available: true };
   // why narrate: a stall is otherwise invisible (the offscreen doc has no UI).
-  // These log to the offscreen console (chrome://extensions → peerd → Inspect
+  // These log to the offscreen console (chrome://extensions → mcdollar → Inspect
   // views: offscreen.html) AND emit a 'phase' progress event the eval surfaces,
   // so we can see exactly which step hangs — tokenizer vs the ~3.1 GB weights.
   /** @param {string} phase @param {object} [extra] */
@@ -585,7 +585,7 @@ export const teardownLocalModel = async () => {
   model = null; tokenizer = null; museInstance = null; residentId = null;
 };
 
-// Flatten a peerd InternalMessage[] to the chat-template's {role, content}
+// Flatten a mcdollar InternalMessage[] to the chat-template's {role, content}
 // shape. Gemma has no system role, so the system framing is folded into the
 // first user turn - chat templates that DO carry one still render this
 // correctly, it just costs a line of user-turn preamble. Content blocks

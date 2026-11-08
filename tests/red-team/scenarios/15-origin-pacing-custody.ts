@@ -1,12 +1,12 @@
 // Scenario 15: a page, or the model reading it, tries to move the pause a site
 // asked for (issue #234, INV-21).
 //
-// The interesting direction is DOWN. Raising a rule only slows peerd on the site
-// that raised it; lowering one makes peerd hammer a site under the user's own
+// The interesting direction is DOWN. Raising a rule only slows mcdollar on the site
+// that raised it; lowering one makes mcdollar hammer a site under the user's own
 // logged-in session, so every probe here is about a lever that would lower a
 // rule, shorten a deadline, or make an unreadable record read as "no limits".
 //
-// WHAT THIS SCENARIO DOES NOT CLAIM. Pacing meters the ACTIONS peerd takes, never
+// WHAT THIS SCENARIO DOES NOT CLAIM. Pacing meters the ACTIONS mcdollar takes, never
 // the requests those actions cause a page to make. Each exact page operation,
 // including operations nested in a page program, crosses the host authority.
 // The site's own reaction to an admitted click can still fan out into many
@@ -17,10 +17,10 @@ import {
 } from '../harness.ts';
 import {
   PACE_TUNABLES, isRateLimitSignal, nextRuleOnBlock, newRule, planRequest,
-} from '../../../extension/peerd-runtime/pacing/pacing-core.js';
+} from '../../../extension/mcdollar-runtime/pacing/pacing-core.js';
 import {
   createOriginPacingStore, normalizePacingState, PACING_KEY,
-} from '../../../extension/peerd-runtime/pacing/origin-pacing-store.js';
+} from '../../../extension/mcdollar-runtime/pacing/origin-pacing-store.js';
 import { createPageToolAuthority } from '../../../extension/background/page-tool-authority.js';
 import { makePacedOriginRoutes } from '../../../extension/background/routes/paced-origins.js';
 import { makeKernelRouteProvenance, makeVaultKernelMessageHandler } from '../../../extension/background/vault-kernel-core.js';
@@ -133,7 +133,7 @@ export const scenario: Scenario = {
     // 3. No exported symbol lowers a rule. A setter would be reachable the day
     //    someone wired it into a tool "for convenience".
     {
-      const core = await import('../../../extension/peerd-runtime/pacing/pacing-core.js');
+      const core = await import('../../../extension/mcdollar-runtime/pacing/pacing-core.js');
       const lowering = Object.keys(core).filter((name) => /^(clear|reset|set|lower|relax|allow)/i.test(name));
       probes.push(lowering.length === 0
         ? blocked('[policy core] a direct setter exists for the model to be wired into',

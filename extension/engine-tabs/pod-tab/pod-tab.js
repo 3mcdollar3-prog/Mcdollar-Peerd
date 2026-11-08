@@ -8,8 +8,8 @@
 // second filesystem, Node/POSIX compatibility layer, or browser Linux runtime.
 
 import browser from '/shared/browser-api.js';
-import { buildModule, createEditor, opfsHelpers, podGitRemoteOperation, POD_OPFS_ROOT } from '/peerd-engine/index.js';
-import { mountPullInPeerd } from '/shared/pull-in-peerd.js';
+import { buildModule, createEditor, opfsHelpers, podGitRemoteOperation, POD_OPFS_ROOT } from '/mcdollar-engine/index.js';
+import { mountPullInMcdollar } from '/shared/pull-in-mcdollar.js';
 import { isServiceWorkerSender } from '/shared/messaging.js';
 import { buildWorkerSource, mapWorkerError, NOTEBOOK_BUILTINS } from '../notebook-tab/worker-source.js';
 import { createExternalWorkspaceLockManager } from './external-workspace-lock.js';
@@ -39,10 +39,10 @@ let workspaceTail = Promise.resolve();
 /** @type {string|null} */ let activeForegroundJobId = null;
 let podRecord = { id: podId, name: podId, persistent: true };
 let cwd = '/';
-/** @type {Record<string,string>} */ let environment = { HOME: '/', PATH: '/.peerd/tools:/bin' };
+/** @type {Record<string,string>} */ let environment = { HOME: '/', PATH: '/.mcdollar/tools:/bin' };
 /** @type {Awaited<ReturnType<typeof createEditor>>} */ let editor;
 
-mountPullInPeerd();
+mountPullInMcdollar();
 
 /** @param {string} id */
 const element = (id) => /** @type {HTMLElement} */ (document.getElementById(id));
@@ -207,7 +207,7 @@ const checkedFileContent = (args) => {
 /** @param {PodJob} job @param {any} args */
 const runPodJavaScript = async (job, args) => {
   if (await firefoxRuntime) {
-    throw new Error('Web-standard JS is unavailable in Firefox Pods: Peerd disables dynamic blob Workers pending Firefox MV3 compatibility and policy validation. Use WASI or a WebVM for this command.');
+    throw new Error('Web-standard JS is unavailable in Firefox Pods: Mcdollar disables dynamic blob Workers pending Firefox MV3 compatibility and policy validation. Use WASI or a WebVM for this command.');
   }
   const entryPath = String(args.entryPath || 'pod-command.js');
   const resolverDeps = makePodResolverDeps();
@@ -224,7 +224,7 @@ const runPodJavaScript = async (job, args) => {
     },
   }));
   const workerUrl = URL.createObjectURL(new Blob([built.source], { type: 'application/javascript' }));
-  const worker = new Worker(workerUrl, { type: 'module', name: `peerd-pod-js-${job.id}` });
+  const worker = new Worker(workerUrl, { type: 'module', name: `mcdollar-pod-js-${job.id}` });
   job.children.add(worker);
   /** @type {string[]} */ const stdout = [];
   /** @type {string[]} */ const stderr = [];
@@ -397,7 +397,7 @@ const startJob = (command, { jobId, timeoutMs = 30_000, background = false, rend
   const id = typeof jobId === 'string' && /^job-[a-z0-9-]{1,100}$/i.test(jobId)
     ? jobId : `job-${Date.now().toString(36)}-${(++jobSequence).toString(36)}`;
   if (jobs.has(id)) throw new Error(`duplicate Pod job id: ${id}`);
-  const worker = new Worker('/engine-tabs/pod-tab/pod-job-worker.js', { type: 'module', name: `peerd-pod-${id}` });
+  const worker = new Worker('/engine-tabs/pod-tab/pod-job-worker.js', { type: 'module', name: `mcdollar-pod-${id}` });
   /** @type {(value:any)=>void} */ let resolve = () => {};
   const completion = new Promise((done) => { resolve = done; });
   const restoreTerminalFocus = !background && source === 'user' && document.activeElement === input;
@@ -636,9 +636,9 @@ runFileButton.addEventListener('click', runFile);
   }
   element('pod-boot').hidden = true;
   element('pod-app').hidden = false;
-  document.title = `peerd · pod ${podRecord.name}`;
+  document.title = `mcdollar · pod ${podRecord.name}`;
   promptLabel.textContent = `${cwd} $`;
-  append('entry-meta', `Peerd Pod ready in ${Math.round(performance.now() - bootStarted)}ms. Run help.\n`);
+  append('entry-meta', `Mcdollar Pod ready in ${Math.round(performance.now() - bootStarted)}ms. Run help.\n`);
   if (!wasmerAvailable) append('entry-meta', `${wasmerAvailability.title}\n`);
   input.focus();
   browser.runtime.sendMessage({ type: 'pod/tab-ready', podId, bootMs: performance.now() - bootStarted }).catch(() => {});

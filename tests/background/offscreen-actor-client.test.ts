@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { makeOffscreenActorClient } from '../../extension/background/offscreen-actor-client.js';
-import { DWEB_INBOUND_TOOL_NAMES } from '../../extension/peerd-runtime/actor/capability-manifest.js';
+import { DWEB_INBOUND_TOOL_NAMES } from '../../extension/mcdollar-runtime/actor/capability-manifest.js';
 import { nestedActorProgramCallId } from '../../extension/shared/actor-channel-protocol.js';
 import { createReadOnlyOperationGrant } from '../../extension/background/controller-turn-authority-scope.js';
 
@@ -2229,7 +2229,7 @@ describe('exact semantic effect claim atomicity', () => {
           operation: 'turn.notebook.run', callId: 'notebook-run-call',
           effectId: 'notebook-run-call:1', effectSequence: 1,
           turnGeneration: job.turnGeneration,
-          code: 'await peerd.self.writeFile("done", "1"); return {ok:false}',
+          code: 'await mcdollar.self.writeFile("done", "1"); return {ok:false}',
           timeoutMs: 1_000, notebookId: 'nb-1',
         });
         const completion = await relay('actor/call-complete', {

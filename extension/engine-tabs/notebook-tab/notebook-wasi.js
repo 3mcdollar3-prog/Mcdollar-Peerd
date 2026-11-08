@@ -1,8 +1,8 @@
 // @ts-check
-// notebook-tab/notebook-wasi.js — `peerd:wasi`, WASI modules in the sealed worker.
+// notebook-tab/notebook-wasi.js — `mcdollar:wasi`, WASI modules in the sealed worker.
 //
 // Imported EXPLICITLY in Notebook/script code — `import { runWasi } from
-// 'peerd:wasi'` (same builtin pattern as peerd:std; the resolver maps the bare
+// 'mcdollar:wasi'` (same builtin pattern as mcdollar:std; the resolver maps the bare
 // specifier to this file). It runs a wasm32-wasi COMMAND module — a compiled
 // binary that reads stdin/files, computes, writes stdout/files, exits — against
 // a virtual, IN-MEMORY filesystem, entirely inside the already-sealed worker
@@ -19,7 +19,7 @@
 //     caller's `files`. No OPFS handle, no bridge, no clock beyond what the
 //     shim computes locally. Egress from wasm is not reduced-to-JS-parity; it
 //     is STRUCTURALLY ABSENT.
-//   • Module bytes are DATA (fetched via audited peerd.egress.fetch, read from
+//   • Module bytes are DATA (fetched via audited mcdollar.egress.fetch, read from
 //     OPFS, or inlined) — running them adds no authority the sealed realm
 //     didn't already have. CPU is bounded by the host's existing wall-clock
 //     (the worker is terminated at timeout); memory by the module's own
@@ -209,7 +209,7 @@ export const runWasi = async (module, { args = [], env = {}, stdin = '', files =
     if (entry.module !== 'wasi_snapshot_preview1' || entry.kind !== 'function'
         || !Object.hasOwn(wasiHost.wasiImport, entry.name)
         || typeof wasiHost.wasiImport[entry.name] !== 'function') {
-      throw new WasiRunError(`unsupported import ${entry.module}.${entry.name}: peerd:wasi provides only WASI preview1 syscall functions`);
+      throw new WasiRunError(`unsupported import ${entry.module}.${entry.name}: mcdollar:wasi provides only WASI preview1 syscall functions`);
     }
   }
 
@@ -221,7 +221,7 @@ export const runWasi = async (module, { args = [], env = {}, stdin = '', files =
   } catch (e) {
     // The one link failure worth translating: the module wants imports beyond
     // the WASI preview1 surface (emscripten env.*, wasi_unstable, …).
-    throw new WasiRunError(`module instantiation failed — peerd:wasi provides the WASI preview1 syscalls and nothing else: ${/** @type {{ message?: string }} */ (e)?.message ?? String(e)}`);
+    throw new WasiRunError(`module instantiation failed — mcdollar:wasi provides the WASI preview1 syscalls and nothing else: ${/** @type {{ message?: string }} */ (e)?.message ?? String(e)}`);
   }
   const exports = /** @type {{ memory?: WebAssembly.Memory, _start?: () => unknown }} */ (instance.exports);
   if (typeof exports._start !== 'function' || !(exports.memory instanceof WebAssembly.Memory)) {

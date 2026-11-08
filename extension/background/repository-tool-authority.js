@@ -5,7 +5,7 @@
 // every method rechecks semantic arguments before touching a registry, tab,
 // workspace, repository, confirmation surface, credential, or network.
 
-import { normalizeGitRemote } from '/peerd-engine/authority.js';
+import { normalizeGitRemote } from '/mcdollar-engine/authority.js';
 
 const sameRemote = (/** @type {any} */ left, /** @type {any} */ right) =>
   left?.url === right?.url && left?.host === right?.host;

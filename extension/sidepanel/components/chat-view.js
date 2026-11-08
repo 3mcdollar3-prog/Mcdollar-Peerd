@@ -9,7 +9,7 @@
 
 import m from '/vendor/mithril/mithril.js';
 import { LINUX_PATH, HTML5_PATH } from '/vendor/simple-icons/brand-paths.js';
-import { manifestLabel, bundleToOtlp, detectVoiceCapability } from '/peerd-runtime/ui.js';
+import { manifestLabel, bundleToOtlp, detectVoiceCapability } from '/mcdollar-runtime/ui.js';
 import { openOptions } from '/shared/open-options.js';
 import { settleUiEffect } from '/shared/ui-effects.js';
 import { mapError, errorSettingsTarget } from '../error-display.js';
@@ -213,7 +213,7 @@ export const ChatView = {
             // watches while a script fans work out to actors.
             scriptOps: state.scriptOps,
             loadActor: uiActions?.loadActor,
-            // "peerd opened a tab" notices render INLINE in the transcript at the
+            // "mcdollar opened a tab" notices render INLINE in the transcript at the
             // turn they happened (and fade into the backlog as the chat continues)
             // — not a bright sticky footer. Filtered to this session.
             tabEvents: (state.agentTabEvents ?? []).filter((e) => e.sessionId === state.session?.sessionId),
@@ -301,7 +301,7 @@ export const ChatView = {
                 const sessionId = state.session?.sessionId;
                 const reply = await send({ type: 'session/debugBundle', sessionId });
                 if (!reply?.ok) return;
-                saveJsonFile(reply.bundle, `peerd-debug-${String(sessionId).slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.json`);
+                saveJsonFile(reply.bundle, `mcdollar-debug-${String(sessionId).slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.json`);
               },
             }, 'export debug bundle (.json)'),
             m('button.debug-menu-item', {
@@ -312,7 +312,7 @@ export const ChatView = {
                 if (!reply?.ok) return;
                 // why converted HERE: bundleToOtlp is pure, so the second
                 // format costs no second route and no SW round trip.
-                saveJsonFile(bundleToOtlp(reply.bundle), `peerd-trace-${String(sessionId).slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.json`);
+                saveJsonFile(bundleToOtlp(reply.bundle), `mcdollar-trace-${String(sessionId).slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.json`);
               },
             }, 'export OTel trace (.json)'),
             state.settings?.devMode ? m('button.debug-menu-item', {
@@ -521,7 +521,7 @@ const VoiceOnboardingCard = {
   view: ({ attrs: { send } }) => m('.onboarding-card', [
     m('h3', 'Try voice input'),
     m('p.muted',
-      'Talk to peerd instead of typing. The Settings page lists what\'s '
+      'Talk to mcdollar instead of typing. The Settings page lists what\'s '
       + 'available in this browser — fully-local Moonshine when vendored, '
       + 'or the browser\'s built-in Web Speech API as a fallback.'),
     m('.onboarding-actions', [
@@ -541,7 +541,7 @@ const VoiceOnboardingCard = {
 };
 
 // Starter "path" menu for a fresh chat — NOT a generic chat box but a
-// "select your path" grid: a fast way to show what peerd can do (ask about
+// "select your path" grid: a fast way to show what mcdollar can do (ask about
 // itself, drive the live page, crunch numbers in a notebook, run a real
 // shell, build an app). Each entry carries an action TYPE that picks a
 // uniform glyph (PATH_ICONS) + a module accent (.path-card in styles.css).
@@ -560,7 +560,7 @@ const STARTER_PROMPTS = [
 ];
 
 // The starter set is page-aware in the SIDE PANEL: when the panel sits next to
-// a real web page (an http(s) tab, not peerd's own home/options page), the
+// a real web page (an http(s) tab, not mcdollar's own home/options page), the
 // Browse path offers to summarize THAT page — the thing you're looking at —
 // instead of the generic Hacker News demo. On the home full-tab surface (no
 // "page next to you") it always shows the Hacker News prompt. Kept a pure fn of
@@ -574,9 +574,9 @@ export const promptsFor = (attrs) => {
       : prompt));
   }
   const protectedCopy = attrs.activeTabStatus === 'protected_private'
-    ? 'This private-network page is protected. peerd will not read or automate it.'
+    ? 'This private-network page is protected. mcdollar will not read or automate it.'
     : attrs.activeTabStatus === 'protected_sensitive'
-      ? 'This sensitive page is protected. peerd will not read or automate it.'
+      ? 'This sensitive page is protected. mcdollar will not read or automate it.'
       : null;
   if (!protectedCopy) return STARTER_PROMPTS;
   return STARTER_PROMPTS.map((prompt) => (prompt.type === 'web'
@@ -611,7 +611,7 @@ const logoIcon = (d) => m('svg', {
 
 /** @type {Record<string, () => any>} */
 const PATH_ICONS = {
-  // ask — a sparkle: "what can peerd do?" (capability / identity)
+  // ask — a sparkle: "what can mcdollar do?" (capability / identity)
   ask: () => pathIcon(m('path', {
     d: 'M12 3.5 13.4 10.6 20.5 12 13.4 13.4 12 20.5 10.6 13.4 3.5 12 10.6 10.6 Z',
   })),
@@ -741,7 +741,7 @@ export const EmptyState = {
       class: isHome ? 'empty-state--home' : '',
       'data-active-tab-status': attrs.activeTabStatus ?? 'none',
     }, [
-    m('p', canSend ? 'peerd is ready.' : 'Provider setup needed.'),
+    m('p', canSend ? 'mcdollar is ready.' : 'Provider setup needed.'),
     m('p.muted', canSend
       ? 'Ask anything — or pick a path:'
       : composerUnavailableCopy(composer)),

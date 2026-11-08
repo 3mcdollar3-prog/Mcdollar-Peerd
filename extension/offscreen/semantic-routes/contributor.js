@@ -5,7 +5,7 @@
 import {
   contributorFeedbackTargets, contributorModelFamilyFromCode,
   contributorProviderFromCode, makeContributorStore,
-} from '/peerd-runtime/controller-contributor.js';
+} from '/mcdollar-runtime/controller-contributor.js';
 import {
   CONTRIBUTOR_CHANNEL_CALL, contributorPayloadFits,
   CONTRIBUTOR_CHANNEL_PROTOCOL,

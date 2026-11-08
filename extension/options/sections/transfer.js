@@ -1,6 +1,6 @@
 // @ts-check
 // Options → Backup & restore — the explicit migration path between
-// installs, including between peerd (store) and peerd preview, which
+// installs, including between mcdollar (store) and mcdollar preview, which
 // are separate extensions with isolated storage by design. Backed by the
 // existing guarded transfer routes:
 // transfer/export + transfer/inspectImport + transfer/import.
@@ -8,7 +8,7 @@
 import m from '/vendor/mithril/mithril.js';
 import { StarterReview } from './starter-review.js';
 import { CHANNEL } from '/shared/channel-config.js';
-import { bundleToOtlp } from '/peerd-runtime/options.js';
+import { bundleToOtlp } from '/mcdollar-runtime/options.js';
 import { PrivateTransferPortError } from '../private-transfer-client.js';
 import {
   isUnknownMutationOutcome, mutationFailureCopy, unknownMutationCopy,
@@ -46,24 +46,24 @@ const describeImportFailure = (failure) => (/** @type {Record<string, string>} *
 /** @param {string | null | undefined} error */
 const describeImportError = (error) => {
   if (error?.startsWith('unsupported-export-version-')) {
-    return 'This backup was created by an incompatible peerd version. Update peerd and try again.';
+    return 'This backup was created by an incompatible mcdollar version. Update mcdollar and try again.';
   }
   return (/** @type {Record<string, string>} */ ({
     'wrong-passphrase': 'Wrong passphrase for this backup’s encrypted credentials or peer identity.',
-    'vault-locked': 'Vault is locked. Unlock it in the peerd panel, then try again.',
+    'vault-locked': 'Vault is locked. Unlock it in the mcdollar panel, then try again.',
     'dweb-identity-in-use': 'This identity cannot be replaced while locally authored apps are shared. Unshare them first, then try again.',
-    'dweb-identity-unavailable': 'Peer identity restore is unavailable in this build. Update peerd preview, then try again.',
+    'dweb-identity-unavailable': 'Peer identity restore is unavailable in this build. Update mcdollar preview, then try again.',
     'dweb-identity-dweb-disabled': 'Peer identity restore is unavailable because the peer network is disabled in this build.',
-    'dweb-identity-vault-locked': 'Vault is locked. Unlock it in the peerd panel, then try again.',
+    'dweb-identity-vault-locked': 'Vault is locked. Unlock it in the mcdollar panel, then try again.',
     'dweb-identity-identity-changed': 'The local peer identity changed after review. Inspect the backup again before choosing whether to replace it.',
     'dweb-identity-no-openable-wrapper': 'The peer identity could not be unlocked with that passphrase.',
     'dweb-identity-invalid-local-identity': 'The local peer identity is damaged. Stop and restore it from a known-good backup before importing other state.',
-    'dweb-identity-unsupported': 'This backup uses a peer identity format this build cannot restore. Update peerd preview and try again.',
-    'dweb-identity-adopt-failed': 'The peer identity could not be restored. Reopen peerd and try again.',
+    'dweb-identity-unsupported': 'This backup uses a peer identity format this build cannot restore. Update mcdollar preview and try again.',
+    'dweb-identity-adopt-failed': 'The peer identity could not be restored. Reopen mcdollar and try again.',
     'dweb-identity-approval-required': 'Identity replacement approval expired. Inspect the backup and review both identities again.',
-    'not-a-peerd-export': 'That file is not a peerd export.',
-    'invalid-export-sections': 'That peerd export has malformed or oversized sections and was refused.',
-  }))[error ?? ''] ?? 'Import failed. Reopen peerd, inspect the backup again, and retry.';
+    'not-a-mcdollar-export': 'That file is not a mcdollar export.',
+    'invalid-export-sections': 'That mcdollar export has malformed or oversized sections and was refused.',
+  }))[error ?? ''] ?? 'Import failed. Reopen mcdollar, inspect the backup again, and retry.';
 };
 /** @param {unknown} value */
 const describeSettingValue = (value) => {
@@ -95,10 +95,10 @@ export const TransferSection = {
     vnode.state.restoreFocusToReview = false;
     vnode.state.focusImportFileOnUpdate = false;
     vnode.state.focusImportStatusOnUpdate = false;
-    // Artifacts (.peerd app/notebook/vm files — DESIGN-10). Same
+    // Artifacts (.mcdollar app/notebook/vm files — DESIGN-10). Same
     // inspect-then-apply shape as the settings import above, but a
     // separate state island: artifacts and settings never mix.
-    vnode.state.artifactEnvelope = null;      // parsed .peerd envelope
+    vnode.state.artifactEnvelope = null;      // parsed .mcdollar envelope
     vnode.state.artifactSummary = null;       // import/inspect summary
     vnode.state.artifactInspectGeneration = 0;
     vnode.state.artifactBusy = false;
@@ -149,13 +149,13 @@ export const TransferSection = {
           ui.debugMsg = {
             ok: false,
             text: reply?.error === 'locked'
-              ? 'Vault is locked; unlock in the peerd panel first.'
+              ? 'Vault is locked; unlock in the mcdollar panel first.'
               : 'The debug bundle could not be created.',
           };
           return;
         }
         const payload = format === 'otlp' ? bundleToOtlp(reply.bundle) : reply.bundle;
-        const stem = format === 'otlp' ? 'peerd-trace' : 'peerd-debug';
+        const stem = format === 'otlp' ? 'mcdollar-trace' : 'mcdollar-debug';
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -193,7 +193,7 @@ export const TransferSection = {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `peerd-export-${new Date().toISOString().slice(0, 10)}.json`;
+          a.download = `mcdollar-export-${new Date().toISOString().slice(0, 10)}.json`;
           a.click();
           URL.revokeObjectURL(url);
           ui.exportPass = '';
@@ -209,15 +209,15 @@ export const TransferSection = {
         } else {
           ui.exportMsg = {
             ok: false,
-            text: reply?.error === 'vault-locked' ? 'Vault is locked — unlock in the peerd panel first.'
+            text: reply?.error === 'vault-locked' ? 'Vault is locked — unlock in the mcdollar panel first.'
               : reply?.error === 'passphrase-required' ? `A long passphrase (${EXPORT_PASSPHRASE_MIN_LENGTH}+ characters) is required to protect credentials and peer identity.`
               : reply?.error === 'identity-export-network-off' ? 'Backup stopped because your peer identity can only be included while the peer network is on. Nothing was downloaded. Turn it on in Settings > Decentralized web, then try again.'
-              : reply?.error === 'identity-export-failed' ? 'Backup stopped because your peer identity could not be protected. Nothing was downloaded; retry after reopening peerd.'
+              : reply?.error === 'identity-export-failed' ? 'Backup stopped because your peer identity could not be protected. Nothing was downloaded; retry after reopening mcdollar.'
               : 'The backup could not be created.',
           };
         }
       } catch {
-        ui.exportMsg = { ok: false, text: 'peerd became unavailable while creating the backup. Reopen peerd and retry.' };
+        ui.exportMsg = { ok: false, text: 'mcdollar became unavailable while creating the backup. Reopen mcdollar and retry.' };
       } finally {
         ui.exportBusy = false;
         m.redraw();
@@ -270,7 +270,7 @@ export const TransferSection = {
         }
       } catch {
         if (generation !== ui.importInspectGeneration) return;
-        ui.importMsg = { ok: false, text: 'peerd became unavailable while inspecting the backup. Reopen peerd and retry.' };
+        ui.importMsg = { ok: false, text: 'mcdollar became unavailable while inspecting the backup. Reopen mcdollar and retry.' };
         e.target.value = '';
       }
       if (generation === ui.importInspectGeneration) ui.importInspectBusy = false;
@@ -286,7 +286,7 @@ export const TransferSection = {
       if (!file) return;
       let exportFileLimitBytes;
       try {
-        ({ EXPORT_FILE_LIMIT_BYTES: exportFileLimitBytes } = await import('/peerd-engine/artifact.js'));
+        ({ EXPORT_FILE_LIMIT_BYTES: exportFileLimitBytes } = await import('/mcdollar-engine/artifact.js'));
       } catch {
         if (generation !== ui.artifactInspectGeneration) return;
         ui.artifactMsg = { ok: false, text: 'Artifact import is unavailable in this build.' };
@@ -311,7 +311,7 @@ export const TransferSection = {
         envelope = JSON.parse(text);
       } catch {
         if (generation !== ui.artifactInspectGeneration) return;
-        ui.artifactMsg = { ok: false, text: 'Could not parse that file as a .peerd envelope.' };
+        ui.artifactMsg = { ok: false, text: 'Could not parse that file as a .mcdollar envelope.' };
         m.redraw();
         return;
       }
@@ -326,7 +326,7 @@ export const TransferSection = {
         }
       } catch {
         if (generation !== ui.artifactInspectGeneration) return;
-        ui.artifactMsg = { ok: false, text: 'peerd became unavailable while inspecting the artifact. Reopen peerd and retry.' };
+        ui.artifactMsg = { ok: false, text: 'mcdollar became unavailable while inspecting the artifact. Reopen mcdollar and retry.' };
       }
       if (generation === ui.artifactInspectGeneration) m.redraw();
     };
@@ -428,7 +428,7 @@ export const TransferSection = {
         } else if (isUnknownMutationOutcome(reply)) {
           ui.importMsg = {
             ok: false,
-            text: 'Peerd could not confirm the restore’s final state. Inspect local state, then choose the backup file again.',
+            text: 'Mcdollar could not confirm the restore’s final state. Inspect local state, then choose the backup file again.',
           };
           clearImportSelection(true);
         } else if (reply?.partial) {
@@ -456,13 +456,13 @@ export const TransferSection = {
             && IMPORT_NOT_STARTED_CODES.has(error.code)) {
           ui.importMsg = {
             ok: false,
-            text: 'Restore did not start because the private connection was unavailable. Close any other peerd Settings tabs, then try again.',
+            text: 'Restore did not start because the private connection was unavailable. Close any other mcdollar Settings tabs, then try again.',
           };
           ui.focusImportStatusOnUpdate = true;
         } else {
           ui.importMsg = {
             ok: false,
-            text: 'The connection to peerd was lost during the import, so its final state is unknown. Reopen peerd, inspect local state, then choose the backup file again.',
+            text: 'The connection to mcdollar was lost during the import, so its final state is unknown. Reopen mcdollar, inspect local state, then choose the backup file again.',
           };
           clearImportSelection(true);
         }
@@ -473,13 +473,13 @@ export const TransferSection = {
     };
 
     return m('.transfer-section', [
-      m('h3', 'Back up peerd'),
+      m('h3', 'Back up mcdollar'),
       m('p', 'Download a JSON file with your settings, memory, hooks, '
         + 'skill list, provider endpoints, encrypted credentials, and, in '
         + 'preview builds, your encrypted peer identity. Most settings remain '
         + 'readable in the file; the passphrase protects credentials and identity. '
         + 'Use this to back up, or to move state '
-        + 'between peerd and peerd preview (separate installs that never '
+        + 'between mcdollar and mcdollar preview (separate installs that never '
         + 'share storage automatically).'),
       m('.input-row', [
         m('label', { for: 'exppass' }, 'Export passphrase'),
@@ -510,12 +510,12 @@ export const TransferSection = {
 
       m('.settings-divider'),
       m('h3', 'Restore from backup'),
-      m('p', 'Pick a peerd export file. You will see exactly what it '
+      m('p', 'Pick a mcdollar export file. You will see exactly what it '
         + 'contains — and what will be overwritten — before anything is '
         + 'applied.'),
-      m('label', { for: 'peerd-backup-file' }, 'Backup file'),
+      m('label', { for: 'mcdollar-backup-file' }, 'Backup file'),
       m('input', {
-        id: 'peerd-backup-file', type: 'file', accept: 'application/json,.json',
+        id: 'mcdollar-backup-file', type: 'file', accept: 'application/json,.json',
         disabled: ui.importBusy,
         oncreate: (/** @type {{ dom: HTMLInputElement }} */ vnode) => { ui.importFileInput = vnode.dom; },
         onupdate: (/** @type {{ dom: HTMLInputElement }} */ vnode) => {
@@ -671,7 +671,7 @@ export const TransferSection = {
         },
         ui.importMsg.text) : null,
 
-      // --- Artifacts (.peerd files) — separate from settings & data ----
+      // --- Artifacts (.mcdollar files) — separate from settings & data ----
       // Apps, Notebooks, and VM recipes exported from their tabs.
       // Same inspect-then-apply contract: nothing is written until the
       // file's hashes verify AND the user clicks Apply; imports always
@@ -710,15 +710,15 @@ export const TransferSection = {
       ui.debugMsg ? m(ui.debugMsg.ok ? 'p.ok-msg' : 'p.err-msg', ui.debugMsg.text) : null,
 
       m('h3', 'Artifacts'),
-      m('p', 'Import an app, Notebook, or VM recipe from a .peerd file '
+      m('p', 'Import an app, Notebook, or VM recipe from a .mcdollar file '
         + '(exported via the Export button in the artifact’s own tab). '
-        + 'This is separate from the settings export above: a .peerd file '
+        + 'This is separate from the settings export above: a .mcdollar file '
         + 'carries one artifact, verified against its content hashes, and '
         + 'importing always creates a new copy — nothing you have is '
         + 'overwritten.'),
-      m('label', { for: 'peerd-artifact-file' }, 'Artifact file'),
+      m('label', { for: 'mcdollar-artifact-file' }, 'Artifact file'),
       m('input', {
-        id: 'peerd-artifact-file', type: 'file', accept: '.peerd',
+        id: 'mcdollar-artifact-file', type: 'file', accept: '.mcdollar',
         disabled: ui.artifactBusy,
         onchange: onArtifactFile,
       }),

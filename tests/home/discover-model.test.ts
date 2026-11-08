@@ -115,7 +115,7 @@ describe('network and root state', () => {
     expect(rootView({ ...base, net: { kind: 'looking', linked: 0 } })).toBe('looking');
   });
 
-  test('the Comes with peerd pill needs no peer: it lists apps with no heard app, but never with the network off', () => {
+  test('the Comes with mcdollar pill needs no peer: it lists apps with no heard app, but never with the network off', () => {
     const included = { enabled: true, net: null, heardCount: 0, loading: true, failed: false, included: true };
     expect(rootView(included)).toBe('grid');
     expect(rootView({ ...included, net: { kind: 'connected', linked: 2 }, loading: false })).toBe('grid');
@@ -128,15 +128,15 @@ describe('network and root state', () => {
     // An error says what failed, then what to do: the poll reads the Library again.
     expect(libraryStatus({ ready: false, failed: false })).toBe('Checking your Library…');
     expect(libraryStatus({ ready: false, failed: true }))
-      .toBe('peerd could not read your Library. Install stays off until peerd can read it. Try again in a moment.');
+      .toBe('mcdollar could not read your Library. Install stays off until mcdollar can read it. Try again in a moment.');
     expect(libraryStatus({ ready: true, failed: true }))
-      .toBe('peerd could not refresh your Library. Surprise me stays off until peerd can read it. Try again in a moment.');
+      .toBe('mcdollar could not refresh your Library. Surprise me stays off until mcdollar can read it. Try again in a moment.');
     expect(libraryStatus({ ready: true, failed: false })).toBe(null);
     // The offline root offers neither Install nor Surprise me, so its lines name what it shows. Its one
-    // button starts the peer network, so the line says that peerd reads the Library again by itself.
-    expect(libraryStatus({ ready: false, failed: true, offline: true })).toBe('peerd could not read your Library. peerd tries again by itself.');
+    // button starts the peer network, so the line says that mcdollar reads the Library again by itself.
+    expect(libraryStatus({ ready: false, failed: true, offline: true })).toBe('mcdollar could not read your Library. mcdollar tries again by itself.');
     expect(libraryStatus({ ready: true, failed: true, offline: true }))
-      .toBe('peerd could not refresh your Library. This list may be out of date. peerd tries again by itself.');
+      .toBe('mcdollar could not refresh your Library. This list may be out of date. mcdollar tries again by itself.');
     expect(libraryStatus({ ready: false, failed: false, offline: true })).toBe('Checking your Library…');
     expect(libraryStatus({ ready: true, failed: false, offline: true })).toBe(null);
   });
@@ -180,10 +180,10 @@ describe('tile and page states', () => {
       .toEqual({ kind: 'status', text: 'This browser cannot run it' });
     expect(tileAction({ ...card, busy: 'installing' })).toEqual({ kind: 'status', text: 'Installing…' });
     expect(tileAction({ ...card, busy: 'updating', installed: true })).toEqual({ kind: 'status', text: 'Updating…' });
-    expect(tileAction({ ...card, busy: 'peerd could not install this app. Try again.' })).toEqual({ kind: 'review' });
+    expect(tileAction({ ...card, busy: 'mcdollar could not install this app. Try again.' })).toEqual({ kind: 'review' });
     // A failure is stale once the Library holds this exact version (a share link, another tab); another version keeps it.
-    expect(tileAction({ ...card, busy: 'peerd could not install this app. Try again.', installed: true, sameVersion: true })).toEqual({ kind: 'open' });
-    expect(tileAction({ ...card, busy: 'peerd could not update this app. Try again.', installed: true })).toEqual({ kind: 'review' });
+    expect(tileAction({ ...card, busy: 'mcdollar could not install this app. Try again.', installed: true, sameVersion: true })).toEqual({ kind: 'open' });
+    expect(tileAction({ ...card, busy: 'mcdollar could not update this app. Try again.', installed: true })).toEqual({ kind: 'review' });
     expect(tileAction({ ...card, uncertain: true, installed: true, updatable: true })).toEqual({ kind: 'review' });
     expect(tileAction({ ...card, installed: true, updatable: true })).toEqual({ kind: 'update' });
     expect(tileAction({ ...card, installed: true, updatable: true, mine: true })).toEqual({ kind: 'open' });
@@ -201,8 +201,8 @@ describe('tile and page states', () => {
     expect(pageState({ ...page, busy: 'updating' })).toBe('installing');
     expect(pageState({ ...page, uncertain: true, conflict: true, busy: 'text' })).toBe('unknown');
     expect(pageState({ ...page, conflict: true, installed: true })).toBe('conflict');
-    expect(pageState({ ...page, busy: 'peerd could not update this app. Try again.', installed: true })).toBe('failed');
-    expect(pageState({ ...page, busy: 'peerd could not install this app. Try again.', installed: true, sameVersion: true })).toBe('installed');
+    expect(pageState({ ...page, busy: 'mcdollar could not update this app. Try again.', installed: true })).toBe('failed');
+    expect(pageState({ ...page, busy: 'mcdollar could not install this app. Try again.', installed: true, sameVersion: true })).toBe('installed');
     expect(pageState({ ...page, installed: true })).toBe('installed');
     expect(pageState({ ...page, busy: 'installed' })).toBe('installed');
     expect(pageState(page)).toBe('review');
@@ -220,7 +220,7 @@ describe('tile and page states', () => {
   test('failure text is any busy value that is not a state word', () => {
     expect(isFailure(undefined)).toBe(false);
     for (const word of ['installing', 'updating', 'installed']) expect(isFailure(word)).toBe(false);
-    expect(isFailure('peerd could not install this app. Try again.')).toBe(true);
+    expect(isFailure('mcdollar could not install this app. Try again.')).toBe(true);
     expect(isFailure(FAILED)).toBe(true);
     expect(isFailure(UNKNOWN)).toBe(true);
   });
@@ -241,18 +241,18 @@ describe('tile and page states', () => {
 
   test('an unknown outcome stays neutral and says what to do next', () => {
     expect(unknownLines('install')).toEqual({
-      status: 'peerd is not sure the install finished. It may still finish by itself.',
+      status: 'mcdollar is not sure the install finished. It may still finish by itself.',
       hint: 'Check again before you try to install it again.',
     });
     expect(unknownLines('update')).toEqual({
-      status: 'peerd is not sure the update finished. It may still finish by itself.',
+      status: 'mcdollar is not sure the update finished. It may still finish by itself.',
       hint: 'Check again before you try to update it again.',
     });
   });
 
   test('install steps for every state; a done step is a check and a title only', () => {
     const table = (state: Parameters<typeof installSteps>[0]) => installSteps(state).map(step => [step.state, step.sub]);
-    const install = 'peerd checks every file, then adds the app to your Library';
+    const install = 'mcdollar checks every file, then adds the app to your Library';
     const open = 'It opens in its own tab';
     expect(installSteps('review').map(step => step.title)).toEqual(['Look at it', 'Install', 'Open']);
     expect(table('review')).toEqual([['current', 'You are here'], ['pending', install], ['pending', open]]);
@@ -263,7 +263,7 @@ describe('tile and page states', () => {
   });
 
   test('an update names its own step: the page says update throughout', () => {
-    const update = 'peerd checks every file, then updates the app in your Library';
+    const update = 'mcdollar checks every file, then updates the app in your Library';
     for (const state of ['installing', 'failed', 'unknown'] as const) {
       expect(installSteps(state, 'update').map(step => [step.title, step.sub])).toEqual([
         ['Look at it', null], ['Update', update], ['Open', 'It opens in its own tab'],
@@ -276,7 +276,7 @@ describe('tile and page states', () => {
     const one = createEffects();
     const two = createEffects();
     one.busy.a = 'installing';
-    one.running.set('a', { action: 'install', uri: 'peerd://a' });
+    one.running.set('a', { action: 'install', uri: 'mcdollar://a' });
     one.conflicts.set('a', { token: 1, versionId: 'a-v2' });
     one.commons = 'unknown';
     one.link = { address: 'dwapp://content/a', outcome: Promise.resolve({}) };
@@ -298,7 +298,7 @@ describe('tile and page states', () => {
 describe('the app says it', () => {
   const version = 'a'.repeat(64);
   const flags = { hash: version, dweb: true, instructions: false, observeAct: true };
-  const NOT_KNOWN = 'Not known yet. peerd reads this from the app itself when it checks it.';
+  const NOT_KNOWN = 'Not known yet. mcdollar reads this from the app itself when it checks it.';
 
   test('only facts a host bound to the version on the page count, in their exact shape', () => {
     expect(verifiedDeclared(flags, version)).toEqual({ dweb: true, instructions: false, observeAct: true });
@@ -312,15 +312,15 @@ describe('the app says it', () => {
     for (const [value, page] of unknown) expect(verifiedDeclared(value, page)).toBe(null);
   });
 
-  test('unchecked: how peerd finds out, never a claim, in the words of the page action', () => {
+  test('unchecked: how mcdollar finds out, never a claim, in the words of the page action', () => {
     for (const declared of [null, { dweb: true, instructions: true, observeAct: true }]) {
       expect(saysIt({ declared, checked: null })).toEqual({
         kind: 'unknown', chips: [], note: null,
-        line: `${NOT_KNOWN} Paste its link or install it, and peerd checks every file first.`,
+        line: `${NOT_KNOWN} Paste its link or install it, and mcdollar checks every file first.`,
       });
     }
     expect(saysIt({ declared: null, checked: null, action: 'update' })?.line)
-      .toBe(`${NOT_KNOWN} Paste its link or update it, and peerd checks every file first.`);
+      .toBe(`${NOT_KNOWN} Paste its link or update it, and mcdollar checks every file first.`);
   });
 
   test('checked: a chip per fact, the agent one strong; none says so; nothing recorded is no section', () => {
@@ -328,35 +328,35 @@ describe('the app says it', () => {
       kind: 'checked', line: null,
       chips: [
         { text: 'Uses the peer network', strong: false },
-        { text: 'Comes with instructions for peerd', strong: false },
-        { text: 'Lets peerd see and use it', strong: true },
+        { text: 'Comes with instructions for mcdollar', strong: false },
+        { text: 'Lets mcdollar see and use it', strong: true },
       ],
-      note: 'From the app’s own files, checked when peerd looked at it.',
+      note: 'From the app’s own files, checked when mcdollar looked at it.',
     });
     expect(saysIt({ declared: { dweb: false, instructions: true, observeAct: false }, checked: 'installed', changed: false })).toMatchObject({
-      chips: [{ text: 'Comes with instructions for peerd', strong: false }],
-      note: 'From the app’s own files, checked when peerd installed it.',
+      chips: [{ text: 'Comes with instructions for mcdollar', strong: false }],
+      note: 'From the app’s own files, checked when mcdollar installed it.',
     });
-    // Nothing to show still says when peerd read it: an edit on this device can change the files later.
+    // Nothing to show still says when mcdollar read it: an edit on this device can change the files later.
     expect(saysIt({ declared: { dweb: false, instructions: false, observeAct: false }, checked: 'installed', changed: false })).toEqual({
-      kind: 'nothing', chips: [], note: 'From the app’s own files, checked when peerd installed it.',
-      line: 'It does not use the peer network and has no instructions for peerd.',
+      kind: 'nothing', chips: [], note: 'From the app’s own files, checked when mcdollar installed it.',
+      line: 'It does not use the peer network and has no instructions for mcdollar.',
     });
     expect(saysIt({ declared: { dweb: false, instructions: false, observeAct: false }, checked: 'link' })?.note)
-      .toBe('From the app’s own files, checked when peerd looked at it.');
+      .toBe('From the app’s own files, checked when mcdollar looked at it.');
     for (const checked of ['link', 'installed'] as const) expect(saysIt({ declared: null, checked })).toBe(null);
   });
 
   test('the Library copy shows its facts only while the service worker says it is unchanged', () => {
     const declared = { dweb: true, instructions: true, observeAct: true };
-    // Changed on this device, or not known yet: the facts peerd checked no longer stand for it.
+    // Changed on this device, or not known yet: the facts mcdollar checked no longer stand for it.
     for (const changed of [true, null, undefined]) expect(saysIt({ declared, checked: 'installed', changed })).toBe(null);
     expect(saysIt({ declared, checked: 'installed', changed: false })?.chips).toHaveLength(3);
     // A share link's facts are its own files: no copy here to change.
     for (const changed of [true, null]) expect(saysIt({ declared, checked: 'link', changed })?.chips).toHaveLength(3);
-    // A copy this visit updated keeps the same rule, and its note says when peerd read the files.
+    // A copy this visit updated keeps the same rule, and its note says when mcdollar read the files.
     for (const changed of [true, null]) expect(saysIt({ declared, checked: 'updated', changed })).toBe(null);
-    expect(saysIt({ declared, checked: 'updated', changed: false })?.note).toBe('From the app’s own files, checked when peerd updated it.');
+    expect(saysIt({ declared, checked: 'updated', changed: false })?.note).toBe('From the app’s own files, checked when mcdollar updated it.');
   });
 });
 
@@ -374,7 +374,7 @@ describe('filters and contacts', () => {
     contacts: new Map([[ana, 'Ana']]),
   };
 
-  test('pills: All keeps every app, Updates and From people you know keep pending apps, Comes with peerd is not a heard filter', () => {
+  test('pills: All keeps every app, Updates and From people you know keep pending apps, Comes with mcdollar is not a heard filter', () => {
     expect(pillFilter(apps, 'all', facts)).toEqual(apps);
     expect(pillFilter(apps, 'updates', facts).map(app => app.dwapp_id)).toEqual(['b', 'c']);
     expect(pillFilter(apps, 'contacts', facts).map(app => app.dwapp_id)).toEqual(['a', 'c']);
@@ -390,7 +390,7 @@ describe('filters and contacts', () => {
   test('maker menu: Rename a saved maker, name an unsaved one, and Block only someone else known not to be you', () => {
     expect(makerMenu({ did: ana, myDid: bob, saved: true, blocked: false })).toEqual({ rename: 'Rename', block: true });
     expect(makerMenu({ did: ana, myDid: bob, saved: false, blocked: false })).toEqual({ rename: 'Add a name', block: true });
-    // Your own page, and a page while peerd has not read your key.
+    // Your own page, and a page while mcdollar has not read your key.
     expect(makerMenu({ did: ana, myDid: ana, saved: false, blocked: false })).toEqual({ rename: 'Add a name', block: false });
     for (const myDid of [null, '']) expect(makerMenu({ did: ana, myDid, saved: true, blocked: false }).block).toBe(false);
     // Already blocked: Contacts undoes it, so no second block.
@@ -418,20 +418,20 @@ describe('filters and contacts', () => {
 
   test('offline grid: Library peer apps, filled from cards heard earlier', () => {
     const records = [
-      { id: 'local-a', name: 'Expense splitter', dweb: { uri: 'peerd://a/1', dwapp_id: 'a', publisher: ana, version_id: '1' } },
-      { id: 'local-link', name: 'Linked app', dweb: { uri: 'peerd://l/2', publisher: bob } },
+      { id: 'local-a', name: 'Expense splitter', dweb: { uri: 'mcdollar://a/1', dwapp_id: 'a', publisher: ana, version_id: '1' } },
+      { id: 'local-link', name: 'Linked app', dweb: { uri: 'mcdollar://l/2', publisher: bob } },
       { id: 'local-only', name: 'Made here' },
-      { name: 'No id', dweb: { uri: 'peerd://x/3' } },
+      { name: 'No id', dweb: { uri: 'mcdollar://x/3' } },
     ];
     const heard = new Map([['a', { dwapp_id: 'a', version_id: '1', description: 'Split costs.', size: 48213, name: 'Card name' }]]);
     expect(libraryPeerApps(records, heard)).toEqual([
-      { dwapp_id: 'a', uri: 'peerd://a/1', name: 'Expense splitter', publisher: ana, version_id: '1', description: 'Split costs.', size: 48213 },
-      { dwapp_id: 'peerd://l/2', uri: 'peerd://l/2', name: 'Linked app', publisher: bob, version_id: undefined, description: undefined, size: undefined },
+      { dwapp_id: 'a', uri: 'mcdollar://a/1', name: 'Expense splitter', publisher: ana, version_id: '1', description: 'Split costs.', size: 48213 },
+      { dwapp_id: 'mcdollar://l/2', uri: 'mcdollar://l/2', name: 'Linked app', publisher: bob, version_id: undefined, description: undefined, size: undefined },
     ]);
     // A newer card describes a version the Library does not hold: nothing is borrowed from it.
     const newer = new Map([['a', { dwapp_id: 'a', version_id: '2', description: 'Adds cloud sync.', size: 900000 }]]);
     expect(libraryPeerApps(records.slice(0, 1), newer)).toEqual([
-      { dwapp_id: 'a', uri: 'peerd://a/1', name: 'Expense splitter', publisher: ana, version_id: '1', description: undefined, size: undefined },
+      { dwapp_id: 'a', uri: 'mcdollar://a/1', name: 'Expense splitter', publisher: ana, version_id: '1', description: undefined, size: undefined },
     ]);
   });
 
@@ -439,7 +439,7 @@ describe('filters and contacts', () => {
     expect(descriptionLine('Split costs.')).toEqual({ text: 'Split costs.', missing: false });
     // A heard card always carries the maker's text, so an empty one is the maker's own "none".
     expect(descriptionLine('')).toEqual({ text: 'No description from the maker.', missing: true });
-    // No card: peerd does not know what the maker said, so it claims nothing.
+    // No card: mcdollar does not know what the maker said, so it claims nothing.
     for (const unknown of [undefined, null, 42]) expect(descriptionLine(unknown)).toBe(null);
   });
 
@@ -476,9 +476,9 @@ describe('filters and contacts', () => {
       { id: 'old', name: 'Old app', createdAt: 100 },
       { id: 'undated', name: 'Undated app' },
       { id: 'new', name: 'New app', createdAt: 300 },
-      { id: 'peer', name: 'Peer app', createdAt: 200, dweb: { uri: 'peerd://p/1', dwapp_id: 'peer-app' } },
+      { id: 'peer', name: 'Peer app', createdAt: 200, dweb: { uri: 'mcdollar://p/1', dwapp_id: 'peer-app' } },
       { id: 'commons', name: 'Chat rooms', createdAt: 50, dweb: { seed: 'commons' } },
-      { id: 'linked', name: '  ', dweb: { uri: 'peerd://l/2' } },
+      { id: 'linked', name: '  ', dweb: { uri: 'mcdollar://l/2' } },
       { name: 'No id', createdAt: 999 },
       { id: 'bad-time', name: 'Bad time', createdAt: Number.NaN },
     ];
@@ -486,21 +486,21 @@ describe('filters and contacts', () => {
     expect(all.total).toBe(8);
     expect(all.apps.map(app => app.id)).toEqual(['new', 'peer', 'tie', 'old', 'commons', 'undated', 'linked', 'bad-time']);
     // The tone key matches the app's tile: Commons by its seed, a peer app by its dwapp_id.
-    expect(all.apps.map(app => app.toneKey)).toEqual(['new', 'peer-app', 'tie', 'old', 'commons', 'undated', 'peerd://l/2', 'bad-time']);
+    expect(all.apps.map(app => app.toneKey)).toEqual(['new', 'peer-app', 'tie', 'old', 'commons', 'undated', 'mcdollar://l/2', 'bad-time']);
     expect(all.apps.find(app => app.id === 'linked')?.name).toBe('Unnamed app');
     const few = yourApps(records, 2);
     expect([few.apps.map(app => app.id), few.total]).toEqual([['new', 'peer'], 8]);
     expect(yourApps([], 6)).toEqual({ apps: [], total: 0 });
   });
 
-  test('Chat rooms under a name that peerd gave it before shows its name now; a name the user gave it stays', () => {
+  test('Chat rooms under a name that mcdollar gave it before shows its name now; a name the user gave it stays', () => {
     const seed = { seed: 'commons' };
-    expect(['commons', 'Peerd-to-Peerd Commons', ' ', 'Team chat'].map(name => libraryName({ id: 'c', name, dweb: seed })))
+    expect(['commons', 'Mcdollar-to-Mcdollar Commons', ' ', 'Team chat'].map(name => libraryName({ id: 'c', name, dweb: seed })))
       .toEqual(['Chat rooms', 'Chat rooms', 'Chat rooms', 'Team chat']);
     // Another app keeps its own name, whatever it is.
-    expect(libraryName({ id: 'p', name: 'Peerd-to-Peerd Commons' })).toBe('Peerd-to-Peerd Commons');
+    expect(libraryName({ id: 'p', name: 'Mcdollar-to-Mcdollar Commons' })).toBe('Mcdollar-to-Mcdollar Commons');
     expect(libraryName(undefined)).toBe('');
-    expect(yourApps([{ id: 'c', name: 'Peerd-to-Peerd Commons', dweb: seed }], 6).apps.map(app => app.name)).toEqual(['Chat rooms']);
+    expect(yourApps([{ id: 'c', name: 'Mcdollar-to-Mcdollar Commons', dweb: seed }], 6).apps.map(app => app.name)).toEqual(['Chat rooms']);
   });
 });
 

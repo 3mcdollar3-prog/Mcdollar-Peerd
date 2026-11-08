@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { createWasmerWorkerProxy, wasmerThreadPayload } from '../../../extension/engine-tabs/pod-tab/wasmer-worker-proxy.js';
 
-const workerUrl = 'chrome-extension://peerd/vendor/wasmer/dist/browser-worker.js';
+const workerUrl = 'chrome-extension://mcdollar/vendor/wasmer/dist/browser-worker.js';
 
 describe('Wasmer thread relay', () => {
   test('exposes an init inside the SDK dispatch envelope to admission checks', () => {

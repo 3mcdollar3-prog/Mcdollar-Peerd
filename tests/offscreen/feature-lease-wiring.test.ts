@@ -172,7 +172,7 @@ describe('offscreen production feature-lease wiring', () => {
       },
     });
     channels.onMessage({
-      data: { type: 'peerd/controller-channel', lease: oldLease },
+      data: { type: 'mcdollar/controller-channel', lease: oldLease },
       ports: [{ close: () => { closes += 1; } }],
     } as unknown as MessageEvent);
     for (let attempt = 0; attempt < 5 && loads === 0; attempt += 1) await Promise.resolve();
@@ -207,7 +207,7 @@ describe('offscreen production feature-lease wiring', () => {
     const offer = (lease: unknown) => ({
       isTrusted: true,
       source: { scriptURL: backgroundScriptUrl },
-      data: { type: 'peerd/actor-channel', protocol: 1, channelId: 'actor-channel-one', lease },
+      data: { type: 'mcdollar/actor-channel', protocol: 1, channelId: 'actor-channel-one', lease },
       ports: [{
         close: () => { closes += 1; },
         addEventListener: () => {},
@@ -270,7 +270,7 @@ describe('offscreen production feature-lease wiring', () => {
     };
     const controllerOffer = (channelPort: any, channelId: string) => ({
       data: {
-        type: 'peerd/controller-channel', protocol: 2, channelId,
+        type: 'mcdollar/controller-channel', protocol: 2, channelId,
         buildDigest: 'digest', kernelEpoch: 'kernel', lease,
       },
       ports: [channelPort],
@@ -278,7 +278,7 @@ describe('offscreen production feature-lease wiring', () => {
     const actorOffer = (channelPort: any, channelId: string) => ({
       isTrusted: true,
       source: { scriptURL: backgroundScriptUrl },
-      data: { type: 'peerd/actor-channel', protocol: 1, channelId, lease },
+      data: { type: 'mcdollar/actor-channel', protocol: 1, channelId, lease },
       ports: [channelPort],
     } as unknown as MessageEvent);
 
@@ -342,7 +342,7 @@ describe('offscreen production feature-lease wiring', () => {
       isTrusted: true,
       source: { scriptURL: backgroundScriptUrl },
       data: {
-        type: 'peerd/vault-authority-channel', protocol: 1,
+        type: 'mcdollar/vault-authority-channel', protocol: 1,
         channelId: 'vault-channel-one', lease,
       },
       ports: [{ close: () => { closes += 1; }, postMessage: () => {} }],

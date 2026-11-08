@@ -32,7 +32,7 @@ import {
   VMNetworkDeniedError,
   VMTabClosedError,
   createKeyedQueue,
-} from '/peerd-engine/background.js';
+} from '/mcdollar-engine/background.js';
 
 // why ...any[]: these classes have genuinely different constructor arities
 // (VMRunTimeoutError(cmd, timeoutMs) vs VMNotReadyError(reason)); reviveError
@@ -78,7 +78,7 @@ const IDLE_REUSE_PROBE_MS = 60_000;
 const READY_PROBE_TIMEOUT_MS = 700;
 
 /** Group title used when auto-grouping VM tabs in the tab strip. */
-export const VM_TAB_GROUP_TITLE = 'peerd';
+export const VM_TAB_GROUP_TITLE = 'mcdollar';
 
 /**
  * Reply shape from the VM tab's vm/* handlers. Dynamic over the message
@@ -88,7 +88,7 @@ export const VM_TAB_GROUP_TITLE = 'peerd';
 
 /**
  * @param {Object} deps
- * @param {ReturnType<typeof import('/peerd-engine/background.js').createVmRegistry>} deps.registry
+ * @param {ReturnType<typeof import('/mcdollar-engine/background.js').createVmRegistry>} deps.registry
  * @param {ReturnType<typeof import('./vm-tab-tracker.js').createVmTabTracker>} deps.tracker
  * @param {(tabId: number, message: object) => Promise<any>} [deps.sendTabMessage]
  *   Injected message IO (defaults to browser.tabs.sendMessage) so the

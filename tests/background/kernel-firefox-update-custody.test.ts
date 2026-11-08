@@ -8,22 +8,22 @@ import {
 const manifest = {
   version: '0.9.0',
   browser_specific_settings: { gecko: {
-    id: 'peerd-preview@example.invalid',
-    update_url: 'https://peerd.ai/updates/firefox-preview.json',
+    id: 'mcdollar-preview@example.invalid',
+    update_url: 'https://mcdollar.ai/updates/firefox-preview.json',
   } },
 };
 const candidate = {
   version: '0.10.0',
-  update_link: 'https://github.com/NotASithLord/peerd/releases/download/v0.10.0/peerd-preview-firefox.xpi',
+  update_link: 'https://github.com/NotASithLord/mcdollar/releases/download/v0.10.0/mcdollar-preview-firefox.xpi',
 };
 
 describe('Firefox preview update custody', () => {
   test('accepts only the exact repository XPI path with a matching version', () => {
     expect(selectFirefoxPreviewUpdate({ addons: {
       [manifest.browser_specific_settings.gecko.id]: { updates: [
-        { ...candidate, update_link: 'https://github.com/other/repo/releases/download/v0.10.0/peerd-preview-firefox.xpi' },
-        { ...candidate, update_link: 'https://github.com/NotASithLord/peerd/releases/download/v9.0.0/peerd-preview-firefox.xpi' },
-        { ...candidate, update_link: 'https://github.com:444/NotASithLord/peerd/releases/download/v0.10.0/peerd-preview-firefox.xpi' },
+        { ...candidate, update_link: 'https://github.com/other/repo/releases/download/v0.10.0/mcdollar-preview-firefox.xpi' },
+        { ...candidate, update_link: 'https://github.com/NotASithLord/mcdollar/releases/download/v9.0.0/mcdollar-preview-firefox.xpi' },
+        { ...candidate, update_link: 'https://github.com:444/NotASithLord/mcdollar/releases/download/v0.10.0/mcdollar-preview-firefox.xpi' },
         candidate,
       ] },
     } }, manifest.browser_specific_settings.gecko.id)).toEqual({
@@ -38,7 +38,7 @@ describe('Firefox preview update custody', () => {
         ...manifest,
         browser_specific_settings: { gecko: {
           ...manifest.browser_specific_settings.gecko,
-          update_url: 'https://peerd.ai:444/updates/firefox-preview.json',
+          update_url: 'https://mcdollar.ai:444/updates/firefox-preview.json',
         } },
       }) },
       session: { get: async () => null, set: async () => {} },
@@ -54,7 +54,7 @@ describe('Firefox preview update custody', () => {
     const custody = createKernelFirefoxUpdateCustody({
       runtime: { getManifest: () => ({
         version: manifest.version,
-        browser_specific_settings: { gecko: { id: 'peerd@example.invalid' } },
+        browser_specific_settings: { gecko: { id: 'mcdollar@example.invalid' } },
       }) },
       session: { get: async () => null, set: async () => {} },
       fetchFn: async () => { fetches += 1; return { ok: false }; },
@@ -262,7 +262,7 @@ describe('Firefox preview update custody', () => {
     }]]);
     const equal = {
       version: manifest.version,
-      update_link: 'https://github.com/NotASithLord/peerd/releases/download/v0.9.0/peerd-preview-firefox.xpi',
+      update_link: 'https://github.com/NotASithLord/mcdollar/releases/download/v0.9.0/mcdollar-preview-firefox.xpi',
     };
     const custody = createKernelFirefoxUpdateCustody({
       runtime: { getManifest: () => manifest },

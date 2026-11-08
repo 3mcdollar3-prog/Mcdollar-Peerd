@@ -30,7 +30,7 @@ import {
 } from '../acceptance/git-smart-http-fixture.mjs';
 import {
   rpc, evalIn, waitFor, sseText, sseToolCall, sseToolCalls, openExtPage, openWidePage, attach,
-  reloadReadyPanel, resetSession, launchPeerd, unlockAndReady, freezeAnimations,
+  reloadReadyPanel, resetSession, launchMcdollar, unlockAndReady, freezeAnimations,
   sleep, setEmulatedTheme, PASSPHRASE, PANEL_METRICS, NARROW_PANEL_METRICS,
   NETWORK_GUARD_CONTROLLER_PORT, NETWORK_GUARD_OWNED_HOST,
   NETWORK_GUARD_UNRELATED_HOST, SITE_CLIENT_FIXTURE_TLS_PORT,
@@ -124,7 +124,7 @@ const releasePanelDocument = async (ctx) => {
 };
 const awaitLivePanel = async (ctx) => {
   const restored = await waitFor(() => evalIn(ctx.page,
-    `document.documentElement.dataset.peerdBootStage === 'app-ready' && !!document.querySelector('.input-bar textarea')`).catch(() => false),
+    `document.documentElement.dataset.mcdollarBootStage === 'app-ready' && !!document.querySelector('.input-bar textarea')`).catch(() => false),
   { budgetMs: 20_000, pollMs: 80 });
   if (!restored) throw new Error('the live side panel did not restore');
 };
@@ -144,7 +144,7 @@ const checkAccessibleNames = async (page, rec, label, expected) => {
     const { nodes } = await page.send('Accessibility.getPartialAXTree', { nodeId, fetchRelatives: false });
     controls.push({ selector, expected: name, expectedRole: role, name: nodes?.[0]?.name?.value, role: nodes?.[0]?.role?.value });
   }
-  if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe(`base ${label}`, controls);
+  if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe(`base ${label}`, controls);
   else rec.check(label, controls.every((control) => control.name === control.expected && control.role === control.expectedRole), JSON.stringify(controls));
 };
 
@@ -158,7 +158,7 @@ const pressNativeKey = async (page, key, shiftKey = false) => {
 // reports, so a check is the gate. On the merge base a failed check is a
 // note, because that render only supplies the "before" picture.
 const checkGateLayout = (rec, name, pass, detail) => {
-  if (process.env.PEERD_VISUAL_BASE_RENDER === '1' && !pass) rec.observe(`merge-base: ${name}`, detail);
+  if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' && !pass) rec.observe(`merge-base: ${name}`, detail);
   else rec.check(name, pass, JSON.stringify(detail));
 };
 const gateBox = (page) => evalIn(page, `(() => {
@@ -223,12 +223,12 @@ const submitActorStopMessage = async (page, text) => {
 // fixture's own texts so a later state starts with an empty composer.
 const clearActorStopDraft = (page, texts) => evalIn(page, `(() => {
   'use strict';
-  if (${JSON.stringify(texts)}.includes(localStorage.getItem('peerd.draft.new'))) localStorage.removeItem('peerd.draft.new');
+  if (${JSON.stringify(texts)}.includes(localStorage.getItem('mcdollar.draft.new'))) localStorage.removeItem('mcdollar.draft.new');
 })()`).catch(() => {});
 
 const SMOKE_TEXT = 'e2e-smoke-ok';
 const TRANSFER_EXPORT_VERSION = 2;
-const REQUIRE_SITE_CAPTURE_TAP = process.env.PEERD_REQUIRE_SITE_CAPTURE_TAP === '1';
+const REQUIRE_SITE_CAPTURE_TAP = process.env.MCDOLLAR_REQUIRE_SITE_CAPTURE_TAP === '1';
 
 const auditEntries = async (ctx, limit = 800) => {
   const audit = await rpc(ctx.page, { type: 'audit/list', limit });
@@ -351,8 +351,8 @@ const records = [
   { id: 'amazon:o2', date: '2025-06-20', merchant: 'Amazon', amount: 7.5 },
   { id: 'amazon:o3', date: '2025-11-03', merchant: 'Amazon', amount: 30 },
 ];
-await peerd.self.writeFile('records/orders.jsonl', records.map((r) => JSON.stringify(r)).join('\\n'));
-const text = await peerd.self.readFile('records/orders.jsonl');
+await mcdollar.self.writeFile('records/orders.jsonl', records.map((r) => JSON.stringify(r)).join('\\n'));
+const text = await mcdollar.self.readFile('records/orders.jsonl');
 const rows = text.split('\\n').filter(Boolean).map((l) => JSON.parse(l));
 const total = rows.reduce((a, r) => a + r.amount, 0);
 return { total, count: rows.length, source: 'on-device OPFS index' };
@@ -435,8 +435,8 @@ const records = [
   { id: 'order:1002', item: 'Notebook', amount: 8.5 },
   { id: 'order:1003', item: 'Pen Set', amount: 15 },
 ];
-await peerd.self.writeFile('records/orders.jsonl', records.map((r) => JSON.stringify(r)).join('\\n'));
-const rows = (await peerd.self.readFile('records/orders.jsonl')).split('\\n').filter(Boolean).map((l) => JSON.parse(l));
+await mcdollar.self.writeFile('records/orders.jsonl', records.map((r) => JSON.stringify(r)).join('\\n'));
+const rows = (await mcdollar.self.readFile('records/orders.jsonl')).split('\\n').filter(Boolean).map((l) => JSON.parse(l));
 return { total: rows.reduce((a, r) => a + r.amount, 0), count: rows.length, source: 'harvested on-device index' };
 `;
 
@@ -487,7 +487,7 @@ let networkGuardWakeSettled = false;
 // landing check hands off. So this state exercises the learned signal and the
 // enforcement together — which is the only way to find out whether they agree.
 //
-// The harness maps reserved `*.peerd.test` names to loopback. This keeps the
+// The harness maps reserved `*.mcdollar.test` names to loopback. This keeps the
 // fixture public under the product's lexical host policy while remaining local.
 const LOGIN_HTML = `<!doctype html><html><head><title>Acme — Sign in</title></head><body>
 <h1>Sign in to Acme</h1>
@@ -528,7 +528,7 @@ const captureHomeLibraryGit = async (ctx, rec, { visualName, metrics, revealPane
   let imported;
   try {
     imported = await evalIn(options, `(async () => {
-      const { buildAppExport } = await import('/peerd-engine/index.js');
+      const { buildAppExport } = await import('/mcdollar-engine/index.js');
       const envelope = await buildAppExport({
         record: { name: 'Versioned App', entryFile: 'index.html', tags: ['visual-fixture'] },
         files: { 'index.html': '<!doctype html><title>Versioned App</title><main>Hello</main>' },
@@ -571,7 +571,7 @@ const captureHomeLibraryGit = async (ctx, rec, { visualName, metrics, revealPane
           value: input.value, focused: document.activeElement === input } : null;
       })()`), { budgetMs: 5_000, pollMs: 50 });
       rec.check('Library opens the real rename field', field?.focused === true && field.value === 'Versioned App');
-      if (process.env.PEERD_VISUAL_BASE_RENDER !== '1') {
+      if (process.env.MCDOLLAR_VISUAL_BASE_RENDER !== '1') {
         rec.check('the rename field has a name and selects the current App name',
           field?.label === 'Rename Versioned App' && field.selected === field.value.length, JSON.stringify(field));
       }
@@ -580,7 +580,7 @@ const captureHomeLibraryGit = async (ctx, rec, { visualName, metrics, revealPane
         if (meta?.nodeType === 3) meta.nodeValue = 'just now';
       })()`) });
       await pressKey(page, 'Escape');
-      if (process.env.PEERD_VISUAL_BASE_RENDER !== '1') {
+      if (process.env.MCDOLLAR_VISUAL_BASE_RENDER !== '1') {
         const restored = await waitFor(() => evalIn(page,
           `document.activeElement === document.querySelector(${JSON.stringify(`${cardSelector} .library-kebab`)})`),
         { budgetMs: 3_000, pollMs: 50 });
@@ -865,7 +865,7 @@ export const STATES = [
           const { OnboardingGate } = await import('/sidepanel/components/onboarding-view.js');
           const state = {
             vault: { initialized: true, locked: false },
-            profile: { onboardingComplete: false, peerName: 'peerd' },
+            profile: { onboardingComplete: false, peerName: 'mcdollar' },
             settings: { dwebChoiceMade: true },
           };
           window.__onboardingSends = [];
@@ -965,7 +965,7 @@ export const STATES = [
   {
     name: 'composer-file-references', kind: 'visual', phase: 'post-unlock', responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const files = { 'index.html': '<!doctype html><title>Notes</title><main>Notes</main>',
         'plain.md': 'Plain document body.', 'my notes.md': 'Document body with spaces.', 'docs/guide.md': 'Nested document body.' };
       const requests = [];
@@ -1007,7 +1007,7 @@ export const STATES = [
         const durable = state?.session?.messages?.filter((message) => message.role === 'user').at(-1)?.content;
         rec.check(`${path} has a durable user message`, typeof durable === 'string');
         if (baseRender) rec.observe(`merge-base ${path} expansion`, { wire, durable });
-        else rec.check(`${path} reaches the model and durable history as the exact file`, wire.includes(`<peerd_file path="${path}">`)
+        else rec.check(`${path} reaches the model and durable history as the exact file`, wire.includes(`<mcdollar_file path="${path}">`)
           && wire.includes(files[path]) && !wire.includes('could not resolve') && durable.includes(files[path]), JSON.stringify({ wire, durable }));
         if (path === 'my notes.md') await rec.visual('composer-file-expanded');
       }
@@ -1036,7 +1036,7 @@ export const STATES = [
     responder: null,
     async run(ctx, rec) {
       const result = await evalIn(ctx.page, `(async () => {
-          const rules = await import(chrome.runtime.getURL('peerd-egress/denylist/dnr-rules.js'));
+          const rules = await import(chrome.runtime.getURL('mcdollar-egress/denylist/dnr-rules.js'));
           const validations = await Promise.all(
             rules.PRIVATE_NETWORK_REGEX_RULES.map(async ({ id, regex }) => ({
               id,
@@ -1236,13 +1236,13 @@ export const STATES = [
                   };
                   timer = setTimeout(release, 15_000);
                   monitorReleases.set(monitorToken, release);
-                  event.source?.postMessage({ peerdNetworkMonitorToken: monitorToken });
+                  event.source?.postMessage({ mcdollarNetworkMonitorToken: monitorToken });
                 }));
                 return;
               }
               if (monitorReleaseToken) {
                 monitorReleases.get(monitorReleaseToken)?.();
-                event.source?.postMessage({ peerdNetworkMonitorReleaseToken: monitorReleaseToken });
+                event.source?.postMessage({ mcdollarNetworkMonitorReleaseToken: monitorReleaseToken });
                 return;
               }
               event.waitUntil((async () => {
@@ -1260,7 +1260,7 @@ export const STATES = [
                   } catch { finish(); }
                 });
                 await Promise.all([fetchDone, socketDone]);
-                event.source?.postMessage({ peerdNetworkGuardToken: token });
+                event.source?.postMessage({ mcdollarNetworkGuardToken: token });
               })());
             });`);
           return;
@@ -1362,7 +1362,7 @@ export const STATES = [
       const probePort = /** @type {{ port: number }} */ (probeServer.address()).port;
       networkGuardFixtureUrl = `http://${NETWORK_GUARD_OWNED_HOST}:${NETWORK_GUARD_CONTROLLER_PORT}/`;
       const initialWorkerDomains = await evalIn(ctx.page, `(async () => {
-        const policy = await import(chrome.runtime.getURL('peerd-egress/index.js'));
+        const policy = await import(chrome.runtime.getURL('mcdollar-egress/index.js'));
         const rules = await chrome.declarativeNetRequest.getSessionRules();
         const workerRule = rules.find((rule) =>
           policy.PRIVATE_NETWORK_INITIATOR_RULE_IDS.includes(rule.id));
@@ -1424,7 +1424,7 @@ export const STATES = [
         const networkGuardDiagnostics = typeof drivenTab?.id === 'number'
           ? null
           : await evalIn(ctx.page, `(async () => {
-            const definitions = await import(chrome.runtime.getURL('peerd-egress/denylist/dnr-rules.js'));
+            const definitions = await import(chrome.runtime.getURL('mcdollar-egress/denylist/dnr-rules.js'));
             const rules = (await chrome.declarativeNetRequest.getSessionRules())
               .filter((rule) => definitions.PRIVATE_NETWORK_RULE_IDS.includes(rule.id));
             const guardedTabIds = [...new Set(rules.flatMap((rule) => rule.condition?.tabIds ?? []))];
@@ -1445,7 +1445,7 @@ export const STATES = [
           typeof drivenTab?.id === 'number', JSON.stringify({ tabs, networkGuardDiagnostics }));
         if (typeof drivenTab?.id !== 'number') throw new Error('driven controller tab not found');
         const productionRules = await evalIn(ctx.page, `(async () => {
-          const rules = await import(chrome.runtime.getURL('peerd-egress/denylist/dnr-rules.js'));
+          const rules = await import(chrome.runtime.getURL('mcdollar-egress/denylist/dnr-rules.js'));
           const installed = await chrome.declarativeNetRequest.getSessionRules();
           return {
             expected: rules.PRIVATE_NETWORK_RULE_IDS,
@@ -1609,7 +1609,7 @@ export const STATES = [
           await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
           const privatePort = /** @type {{ port: number }} */ (server.address()).port;
           const target = `${vector === 'websocket' ? 'ws' : 'http'}://127.0.0.1:${privatePort}/probe?vector=${vector}`;
-          const marker = `peerd-network-vector-${vector}`;
+          const marker = `mcdollar-network-vector-${vector}`;
           try {
             await evalIn(ctx.page, `(async () => chrome.scripting.executeScript({
               target: { tabId: ${drivenTab.id} },
@@ -1618,7 +1618,7 @@ export const STATES = [
                 const recordAttempt = () => navigator.sendBeacon(
                   '/attempt?vector=' + encodeURIComponent(kind));
                 const mark = (node) => {
-                  node.dataset.peerdNetworkProbe = marker;
+                  node.dataset.mcdollarNetworkProbe = marker;
                   return node;
                 };
                 const frame = (url, name = '') => {
@@ -1646,8 +1646,8 @@ export const STATES = [
                   recordAttempt();
                   const socket = new WebSocket(privateTarget);
                   socket.addEventListener('error', () => {}, { once: true });
-                  globalThis.__peerdNetworkProbeSockets ??= new Map();
-                  globalThis.__peerdNetworkProbeSockets.set(marker, socket);
+                  globalThis.__mcdollarNetworkProbeSockets ??= new Map();
+                  globalThis.__mcdollarNetworkProbeSockets.set(marker, socket);
                 }
                 if (kind === 'image') {
                   recordAttempt();
@@ -1684,7 +1684,7 @@ export const STATES = [
                 if (kind === 'cross-frame-blank') {
                   const node = frame(publicRoute(kind, true));
                   node.hidden = false;
-                  node.dataset.peerdCrossFrameBlank = '';
+                  node.dataset.mcdollarCrossFrameBlank = '';
                   node.style.cssText = 'position:fixed;top:20px;left:20px;width:200px;height:100px;z-index:2147483647;border:0';
                 }
                 if (kind === 'location') {
@@ -1708,7 +1708,7 @@ export const STATES = [
               const source = await attach(target.webSocketDebuggerUrl);
               try {
                 const point = await evalIn(source, `(() => {
-                  const rect = document.querySelector('[data-peerd-cross-frame-blank]').getBoundingClientRect();
+                  const rect = document.querySelector('[data-mcdollar-cross-frame-blank]').getBoundingClientRect();
                   return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
                 })()`);
                 await source.send('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, ...point });
@@ -1738,10 +1738,10 @@ export const STATES = [
               world: 'MAIN',
               func: (marker) => {
                 for (const node of document.querySelectorAll(
-                  '[data-peerd-network-probe="' + marker + '"]')) node.remove();
-                const socket = globalThis.__peerdNetworkProbeSockets?.get(marker);
+                  '[data-mcdollar-network-probe="' + marker + '"]')) node.remove();
+                const socket = globalThis.__mcdollarNetworkProbeSockets?.get(marker);
                 try { socket?.close(); } catch {}
-                globalThis.__peerdNetworkProbeSockets?.delete(marker);
+                globalThis.__mcdollarNetworkProbeSockets?.delete(marker);
               },
               args: [${JSON.stringify(marker)}],
             })`, true).catch(() => {});
@@ -1775,7 +1775,7 @@ export const STATES = [
         });
 
         const workerRuleShape = await evalIn(ctx.page, `(async () => {
-          const policy = await import(chrome.runtime.getURL('peerd-egress/index.js'));
+          const policy = await import(chrome.runtime.getURL('mcdollar-egress/index.js'));
           const rules = await chrome.declarativeNetRequest.getSessionRules();
           return rules.filter((rule) => policy.PRIVATE_NETWORK_INITIATOR_RULE_IDS.includes(rule.id));
         })()`, true);
@@ -1855,7 +1855,7 @@ export const STATES = [
                   resolve(value);
                 };
                 const onMessage = (event) => {
-                  if (event.data?.peerdNetworkMonitorToken === monitorToken) finish(true);
+                  if (event.data?.mcdollarNetworkMonitorToken === monitorToken) finish(true);
                 };
                 const timer = setTimeout(() => finish(false), 5_000);
                 navigator.serviceWorker.addEventListener('message', onMessage);
@@ -1878,7 +1878,7 @@ export const STATES = [
                   resolve(value);
                 };
                 const onMessage = (event) => {
-                  if (event.data?.peerdNetworkMonitorReleaseToken === token) finish(true);
+                  if (event.data?.mcdollarNetworkMonitorReleaseToken === token) finish(true);
                 };
                 const timer = setTimeout(() => finish(false), 5_000);
                 navigator.serviceWorker.addEventListener('message', onMessage);
@@ -1928,7 +1928,7 @@ export const STATES = [
                   resolve(value);
                 };
                 const onMessage = (event) => {
-                  if (event.data?.peerdNetworkGuardToken === workerToken) finish(true);
+                  if (event.data?.mcdollarNetworkGuardToken === workerToken) finish(true);
                 };
                 const timer = setTimeout(() => finish(false), 6_000);
                 navigator.serviceWorker.addEventListener('message', onMessage);
@@ -1976,7 +1976,7 @@ export const STATES = [
         });
 
         // Characterize the browser boundary directly. If even an unscoped
-        // WebSocket rule does not see this request, adding wider peerd custody
+        // WebSocket rule does not see this request, adding wider mcdollar custody
         // cannot close the gap and would only disrupt unrelated browsing.
         await evalIn(ctx.page, `chrome.declarativeNetRequest.updateSessionRules({
           removeRuleIds: [4999],
@@ -2001,7 +2001,7 @@ export const STATES = [
           .some((request) => request.includes('worker-websocket-unscoped-diagnostic')), {
           budgetMs: 5_000, pollMs: 25,
         });
-        // This is a browser-characterization probe, not a peerd invariant.
+        // This is a browser-characterization probe, not a mcdollar invariant.
         // Chrome 151 defers this service-worker socket until the unscoped rule
         // is removed; older lanes let it through. The strict product assertions
         // above and below remain scoped-rule isolation and unrelated browsing.
@@ -2046,7 +2046,7 @@ export const STATES = [
           && probeRequests.some((request) => request.includes('worker-websocket-unrelated')),
         { budgetMs: 10_000, pollMs: 25 });
         const unrelatedNetworkFailure = networkFailureFor(unrelatedWorkerMonitor, 'worker-fetch-unrelated');
-        rec.check('a different-origin user service worker remains outside peerd DNR custody',
+        rec.check('a different-origin user service worker remains outside mcdollar DNR custody',
           unrelatedWorker?.secure === true && unrelatedWorker?.completed === true
             && probeRequests.some((request) => request.includes('worker-fetch-unrelated'))
             && probeRequests.some((request) => request.includes('worker-websocket-unrelated')),
@@ -2057,7 +2057,7 @@ export const STATES = [
         await evalIn(ctx.page,
           `chrome.tabs.update(${drivenTab.id}, { url: ${JSON.stringify(unrelatedUrl)} })`, true);
         const retainedScope = await waitFor(() => evalIn(ctx.page, `(async () => {
-          const policy = await import(chrome.runtime.getURL('peerd-egress/index.js'));
+          const policy = await import(chrome.runtime.getURL('mcdollar-egress/index.js'));
           const rules = await chrome.declarativeNetRequest.getSessionRules();
           const workerRules = rules.filter((rule) => policy.PRIVATE_NETWORK_INITIATOR_RULE_IDS.includes(rule.id));
           return workerRules.length > 0
@@ -2096,7 +2096,7 @@ export const STATES = [
 
         await evalIn(ctx.page, `chrome.tabs.remove(${drivenTab.id})`, true).catch(() => {});
         const releasedScope = await waitFor(() => evalIn(ctx.page, `(async () => {
-          const policy = await import(chrome.runtime.getURL('peerd-egress/index.js'));
+          const policy = await import(chrome.runtime.getURL('mcdollar-egress/index.js'));
           const rules = await chrome.declarativeNetRequest.getSessionRules();
           const workerRules = rules.filter((rule) =>
             policy.PRIVATE_NETWORK_INITIATOR_RULE_IDS.includes(rule.id));
@@ -2164,7 +2164,7 @@ export const STATES = [
         // Seed through the shipped encrypted restore surface. No raw root uses
         // the generic runtime-message dispatcher.
         const bootstrap = await evalIn(ctx.page, `(async () => {
-          const dweb = await import('/peerd-distributed/index.js');
+          const dweb = await import('/mcdollar-distributed/index.js');
           let value = null;
           await dweb.createPersistentIdentity({
             getSecret: async () => null,
@@ -2178,7 +2178,7 @@ export const STATES = [
         const seeded = await privateTransferRpc(transferPage, {
           type: 'transfer/import', passphrase: PASSPHRASE,
           payload: {
-            format: 'peerd-export', version: TRANSFER_EXPORT_VERSION, exportedAt: new Date(0).toISOString(), channel: 'preview',
+            format: 'mcdollar-export', version: TRANSFER_EXPORT_VERSION, exportedAt: new Date(0).toISOString(), channel: 'preview',
             settings: {}, providerEndpoints: null, secrets: null, memory: null,
             hooks: [], skills: [], dweb: { identityRecord: bootstrap },
           },
@@ -2218,7 +2218,7 @@ export const STATES = [
         JSON.stringify({ restored, beforeDid, afterDid }));
 
       const incoming = await evalIn(ctx.page, `(async () => {
-        const dweb = await import('/peerd-distributed/index.js');
+        const dweb = await import('/mcdollar-distributed/index.js');
         let value = null;
         await dweb.createPersistentIdentity({
           getSecret: async () => null,
@@ -2296,7 +2296,7 @@ export const STATES = [
       let localReady = !!localDid;
       if (!localReady) {
         const record = await evalIn(ctx.page, `(async () => {
-          const dweb = await import('/peerd-distributed/index.js');
+          const dweb = await import('/mcdollar-distributed/index.js');
           let value = null;
           await dweb.createPersistentIdentity({ getSecret: async () => null, setSecret: async (_name, next) => { value = next; } });
           return dweb.createDwebClient().identityRecordExport({
@@ -2306,7 +2306,7 @@ export const STATES = [
         await privateTransferRpc(seedPage, {
           type: 'transfer/import', passphrase: PASSPHRASE,
           payload: {
-            format: 'peerd-export', version: TRANSFER_EXPORT_VERSION, exportedAt: new Date(0).toISOString(), channel: 'preview',
+            format: 'mcdollar-export', version: TRANSFER_EXPORT_VERSION, exportedAt: new Date(0).toISOString(), channel: 'preview',
             settings: {}, providerEndpoints: null, secrets: null, memory: null,
             hooks: [], skills: [], dweb: { identityRecord: record },
           },
@@ -2319,7 +2319,7 @@ export const STATES = [
       }
       await retirePrivateTransferPage(seedPage);
       const incoming = await evalIn(ctx.page, `(async () => {
-        const dweb = await import('/peerd-distributed/index.js');
+        const dweb = await import('/mcdollar-distributed/index.js');
         let value = null;
         await dweb.createPersistentIdentity({ getSecret: async () => null, setSecret: async (_name, next) => { value = next; } });
         const material = JSON.parse(value);
@@ -2329,7 +2329,7 @@ export const STATES = [
         return { material, record };
       })()`, true);
       const payload = {
-        format: 'peerd-export', version: TRANSFER_EXPORT_VERSION, exportedAt: new Date(0).toISOString(), channel: 'preview',
+        format: 'mcdollar-export', version: TRANSFER_EXPORT_VERSION, exportedAt: new Date(0).toISOString(), channel: 'preview',
         // why: keep the complete-value disclosure in the same visual contract
         // as the destructive conflict. A long recognized array catches both
         // accidental truncation and wrapping regressions before the user acts.
@@ -2342,13 +2342,13 @@ export const STATES = [
         providerEndpoints: null, secrets: null, memory: null, hooks: [], skills: [],
         dweb: { identityRecord: incoming?.record },
       };
-      const page = await openWidePage(ctx, 'options/options.html#!/transfer', { ready: '#peerd-backup-file' });
+      const page = await openWidePage(ctx, 'options/options.html#!/transfer', { ready: '#mcdollar-backup-file' });
       try {
         await evalIn(page, `(() => {
           const file = new File([${JSON.stringify(JSON.stringify(payload))}], 'identity-backup.json', { type: 'application/json' });
           const transfer = new DataTransfer();
           transfer.items.add(file);
-          const input = document.querySelector('#peerd-backup-file');
+          const input = document.querySelector('#mcdollar-backup-file');
           input.files = transfer.files;
           input.dispatchEvent(new Event('change', { bubbles: true }));
         })()`);
@@ -2357,7 +2357,7 @@ export const STATES = [
         if (!importReady) {
           const importState = await evalIn(page, `(() => ({
             alerts: [...document.querySelectorAll('[role="alert"]')].map((node) => node.textContent),
-            fileCount: document.querySelector('#peerd-backup-file')?.files?.length ?? 0,
+            fileCount: document.querySelector('#mcdollar-backup-file')?.files?.length ?? 0,
           }))()`);
           throw new Error(`backup inspection did not settle: ${JSON.stringify(importState)}`);
         }
@@ -2468,7 +2468,7 @@ export const STATES = [
       const createFixture = async (initialMode = 'valid') => {
         let mode = initialMode, actorStarted = false, phase = 'chat';
         const catalogs = [], requests = [], errors = [], workers = new Map();
-        const child = await launchPeerd({ extensionDir: ctx.extensionDir, resumeAuxiliaryWorkers: false, modelResponder: (_index, request) => {
+        const child = await launchMcdollar({ extensionDir: ctx.extensionDir, resumeAuxiliaryWorkers: false, modelResponder: (_index, request) => {
           requests.push({ at: performance.now(), url: request.url, body: JSON.parse(request.postData) });
           if (request.postData.includes('<actor_agent>')) return { sse: sseText('CATALOG-ACTOR-DONE') };
           if (phase === 'actor' && !actorStarted) { actorStarted = true; return { sse: sseToolCall('actor_create', { task: 'Return the catalog worker control.', tools: [] }) }; }
@@ -2541,7 +2541,7 @@ export const STATES = [
             worker.parentTargetId === parent.target.targetId && worker.targetInfo.parentId === parent.target.targetId
             && worker.parentSessionId === parent.parentSessionId && worker.targetInfo.type === 'worker'
             && worker.native?.href === `chrome-extension://${fixture.child.sw.id}/offscreen/${role}-worker.js`
-            && worker.native.name === (role === 'controller' ? 'peerd-controller' : '')
+            && worker.native.name === (role === 'controller' ? 'mcdollar-controller' : '')
             && worker.native.constructorName === 'DedicatedWorkerGlobalScope' && !worker.error && worker.released
             && (!retired || worker.destroyed === true)));
         return { ok, parent, workers: workers.flat() };
@@ -2587,14 +2587,14 @@ export const STATES = [
         JSON.stringify({ sessions, controllerHeaps, actorHeaps, isolation }));
         rec.check('all inference stays on the intercepted OpenRouter wire', warm.requests.length >= 6
           && warm.requests.every((request) => request.url === 'https://openrouter.ai/api/v1/chat/completions' && request.body.model === model));
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base catalog GETs across real chats and the actor', warm.catalogs);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base catalog GETs across real chats and the actor', warm.catalogs);
         else rec.check('all real chats and the isolated actor share one valid host catalog', warm.catalogs.length === 1 && warm.catalogs[0].method === 'GET');
         await rec.visualPage('openrouter-host-catalog', warm.child.page);
         warm.setMode('hold'); warm.setPhase('chat');
         const before = warm.catalogs.length;
         await send(warm, 'Reuse the warm model catalog while its endpoint is held.');
         const reused = await settled(warm, 'CATALOG-REPLY', 3_000);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base warm catalog hold', { reused, requests: warm.catalogs.length - before });
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base warm catalog hold', { reused, requests: warm.catalogs.length - before });
         else rec.check('the warm cache avoids the held endpoint and completes the model turn', reused === true && warm.catalogs.length === before);
         await rec.visualPage('openrouter-warm-held', warm.child.page);
         if (!reused && !(await rpc(warm.child.page, { type: 'agent/stop' }))?.ok) throw new Error('held catalog Stop refused');
@@ -2606,7 +2606,7 @@ export const STATES = [
           await send(fresh, `Use the static fallback after the first ${mode} metadata read.`);
           const completed = await settled(fresh, 'CATALOG-REPLY', mode === 'hold' ? 12_000 : 5_000);
           const elapsedMs = fresh.requests[0] && fresh.catalogs[0] ? fresh.requests[0].at - fresh.catalogs[0].at : null;
-          if (process.env.PEERD_VISUAL_BASE_RENDER === '1' && mode === 'hold') rec.observe('base stalled first catalog', { completed, elapsedMs });
+          if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' && mode === 'hold') rec.observe('base stalled first catalog', { completed, elapsedMs });
           else rec.check(`${mode} first metadata leaves inference available within its bounded deadline`, completed === true
             && fresh.catalogs.length === 1 && fresh.requests.length === 1
             && elapsedMs !== null && elapsedMs < (mode === 'hold' ? 11_000 : 5_000), JSON.stringify({ elapsedMs, catalogs: fresh.catalogs }));
@@ -2623,7 +2623,7 @@ export const STATES = [
     async run(ctx, rec) {
       const requests = [];
       const ids = ['runtime-broken-json', 'runtime-null-json', 'runtime-valid-object'];
-      const child = await launchPeerd({ extensionDir: ctx.extensionDir, modelResponder: (index, request) => {
+      const child = await launchMcdollar({ extensionDir: ctx.extensionDir, modelResponder: (index, request) => {
         requests.push({ url: request.url, body: JSON.parse(request.postData) });
         if (index > 0) return { sse: sseText('ARGUMENTS-CHECKED') };
         const calls = ['{"url":"unterminated', 'null', '{}'].map((argumentsText, offset) => ({
@@ -2670,7 +2670,7 @@ export const STATES = [
         const audit = await rpc(child.page, { type: 'audit/list', limit: 800 });
         if (!audit?.ok || !Array.isArray(audit.entries)) throw new Error('settled audit read refused');
         const entries = audit.entries.filter((entry) => !priorIds.has(entry.id));
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base invalid effects', { added, results, entries });
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base invalid effects', { added, results, entries });
         else {
           rec.check('both invalid calls have known error results and no target effect', added.length === 1 && ids.slice(0, 2).every((id) => {
             const result = results.find((candidate) => candidate.tool_use_id === id);
@@ -2704,7 +2704,7 @@ export const STATES = [
       const pages = { load_skill: [], read_memory: [] };
       let stage = 'load_skill';
       let modelCalls = 0;
-      const child = await launchPeerd({ extensionDir: ctx.extensionDir, modelResponder: (_index, request) => {
+      const child = await launchMcdollar({ extensionDir: ctx.extensionDir, modelResponder: (_index, request) => {
         if (++modelCalls > 10) return { sse: sseText('PAGING-PROBE-FAILED') };
         const body = JSON.parse(request.postData);
         const previous = body.messages.filter((message) => message.role === 'tool').at(-1);
@@ -2768,7 +2768,7 @@ export const STATES = [
         }, { budgetMs: 45_000, pollMs: 80 });
         if (!finished) throw new Error(`instruction paging did not settle: ${modelCalls} calls`);
         rec.check('both reads return real nonempty model tool bytes', pages.load_skill.length > 0 && pages.read_memory.length > 0);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base instruction pages', pages);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base instruction pages', pages);
         else {
           rec.check('every skill byte reaches the model through intact bounded pages', pages.load_skill.length > 1
             && pages.load_skill.every((page) => page.length <= 18_000 && !page.includes(' chars elided '))
@@ -2803,7 +2803,7 @@ export const STATES = [
       let spawned = false;
       let parentWaiting = false;
       const tasks = [1, 2, 3].map((index) => `Stop transcript fixture ${index}: retain this task after reload.`);
-      const child = await launchPeerd({ extensionDir: ctx.extensionDir, modelResponder: async (_index, request) => {
+      const child = await launchMcdollar({ extensionDir: ctx.extensionDir, modelResponder: async (_index, request) => {
         if (request.postData.includes('<actor_agent>')) { childCalls++; await gate; return { sse: sseText('LATE-CHILD-REPLY') }; }
         if (!spawned) { spawned = true; return { sse: sseToolCalls(tasks.map((task) => ({ name: 'actor_create', args: { task, tools: [] } }))) }; }
         parentWaiting = true; await gate; return { sse: sseText('LATE-PARENT-REPLY') };
@@ -2837,7 +2837,7 @@ export const STATES = [
           return reply.session;
         }));
         const messageIds = sessions.flatMap((session) => session.messages.map((message) => message.id));
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base stopped transcripts', { sessions, entries: evidence.entries });
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base stopped transcripts', { sessions, entries: evidence.entries });
         else rec.check('all three Stop fallbacks persist with six distinct IDs', sessions.every((session) => session.messages.length === 2
           && session.messages[0].content === session.task) && new Set(messageIds).size === 6
           && !evidence.entries.some((entry) => entry.type === 'actor_persistence_failed'), JSON.stringify({ sessions, entries: evidence.entries }));
@@ -2847,7 +2847,7 @@ export const STATES = [
         await evalIn(child.page, `document.querySelectorAll('.tool-call.tool-actor > .tool-call-header').forEach((button) => button.click())`);
         const readable = sessions.filter((session) => session.messages.length > 0).length;
         if (!await waitFor(() => evalIn(child.page, `document.querySelectorAll('.actor-transcript').length === ${readable}`))) throw new Error('actor transcript cards did not load');
-        if (process.env.PEERD_VISUAL_BASE_RENDER !== '1') rec.check('all three saved tasks render after reload', await evalIn(child.page,
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER !== '1') rec.check('all three saved tasks render after reload', await evalIn(child.page,
           `${JSON.stringify(tasks)}.every((task) => [...document.querySelectorAll('.actor-transcript .bubble')].some((element) => element.textContent.trim() === task
             && element.getBoundingClientRect().width > 0 && element.getBoundingClientRect().height > 0 && getComputedStyle(element).visibility === 'visible'))`));
         await rec.visualPage('actor-stop-transcripts', child.page);
@@ -2889,7 +2889,7 @@ export const STATES = [
       server.on('connection', (socket) => { sockets.add(socket); socket.on('close', () => sockets.delete(socket)); });
       await new Promise((resolve, reject) => { server.once('error', reject); server.listen(SITE_CLIENT_FIXTURE_TLS_PORT, '127.0.0.1', resolve); });
       let active = null, actorCalls = 0, delegated = false;
-      const child = await launchPeerd({ extensionDir: ctx.extensionDir, modelResponder: (_index, request) => {
+      const child = await launchMcdollar({ extensionDir: ctx.extensionDir, modelResponder: (_index, request) => {
         if (request.postData.includes('<actor_agent>')) {
           if (actorCalls++ === 0) return { sse: sseToolCall('page_code', { code: `return await page.fetch(${JSON.stringify(active.url)}, ${JSON.stringify(active.init)});` }) };
           return { sse: sseText('RESET-ACTOR-DONE') };
@@ -2979,7 +2979,7 @@ export const STATES = [
             } else {
               await requireNotebookChat();
               operation = command({ type: 'js/eval', timeoutMs: 40_000,
-                code: `try { const response = await peerd.egress.fetch(${JSON.stringify(active.url)}, ${JSON.stringify(init)}); return { ok: response.ok, status: response.status }; }
+                code: `try { const response = await mcdollar.egress.fetch(${JSON.stringify(active.url)}, ${JSON.stringify(init)}); return { ok: response.ok, status: response.status }; }
                   catch (error) { return { unknown: true, name: error.name }; }` }).then((result) => {
                 const value = result?.result?.value;
                 if (!result?.ok || !value || (kind === 'ok' ? value.ok !== true || value.status !== 200 : value.unknown !== true)) throw new Error('Notebook eval did not return its real request outcome');
@@ -2998,11 +2998,11 @@ export const STATES = [
           const audit = await rpc(child.page, { type: 'audit/list', limit: 800 });
           if (!audit?.ok || !Array.isArray(audit.entries)) throw new Error('settled request audit refused');
           const rows = audit.entries.filter((entry) => !priorIds.has(entry.id) && entry.type === 'web_fetch' && entry.details?.origin === origin);
-          return process.env.PEERD_VISUAL_BASE_RENDER === '1' || rows.length >= cases.length ? rows : null;
+          return process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' || rows.length >= cases.length ? rows : null;
         });
         if (!entries) throw new Error('request audit rows did not settle');
         rec.observe('actual HTTPS receipt and audit evidence', { received, entries });
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base unaudited reset requests', cases);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base unaudited reset requests', cases);
         else rec.check('every received request has one safe method and path outcome row', cases.every((item) => {
           const rows = entries.filter((entry) => entry.details.path === item.path);
           return rows.length === 1 && rows[0].details.method === item.method
@@ -3015,7 +3015,7 @@ export const STATES = [
         await rec.visualPage('web-request-audit-all', activity);
         await evalIn(activity, `(() => { 'use strict'; const select = document.querySelector('.log-filter-level');
           select.value = 'warn'; select.dispatchEvent(new Event('change', { bubbles: true })); })()`);
-        if (process.env.PEERD_VISUAL_BASE_RENDER !== '1') {
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER !== '1') {
           const visible = await waitFor(() => evalIn(activity, `[...document.querySelectorAll('.log-row')].filter((row) => row.querySelector('.log-label')?.textContent === 'web request').length === 4`));
           rec.check('real Activity Issues names all four unknown GET and POST destinations', visible === true
             && await evalIn(activity, `[...document.querySelectorAll('.log-row')].filter((row) => row.querySelector('.log-label')?.textContent === 'web request').every((row) => row.textContent.includes('unknown') && /GET|POST/.test(row.textContent))`));
@@ -3034,7 +3034,7 @@ export const STATES = [
     name: 'spend-limit-admission', kind: 'visual', phase: 'post-unlock',
     responder: () => ({ sse: sseText('The first model reply crosses the spend limit.') }),
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const initial = (await rpc(ctx.page, { type: 'state/get' }))?.state?.settings;
       if (!initial?.providerModel) throw new Error('the current model is unavailable');
       const pricingOverrides = { ...initial.pricingOverrides,
@@ -3157,7 +3157,7 @@ export const STATES = [
     responder: () => ({ sse: sseText(Array.from({ length: 10 }, (_, index) =>
       `History paragraph ${index + 1}. Keep this earlier context available while reading.`).join('\n\n')) }),
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const ownText = 'Send from this reading surface.';
       const delayedReply = 'The delayed reply arrived. Keep the earlier reading position.';
       let other, waiting = false, complete = false, releaseReply = () => {};
@@ -3269,7 +3269,7 @@ export const STATES = [
     name: 'actors-stop-hydration', kind: 'visual', phase: 'post-unlock',
     responder: () => ({ sse: sseText('This chat is idle.') }),
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const held = [], requests = [];
       let owner = null;
       const view = () => evalIn(ctx.page, `(async () => {
@@ -3353,7 +3353,7 @@ export const STATES = [
     name: 'actors-incomplete-reply', kind: 'visual', phase: 'post-unlock',
     responder: () => ({ sse: sseText('Ready.') }),
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       let spawned = 0, childCalls = 0, wakeCalls = 0, scriptResult = '';
       const prior = new Set((await auditEntries(ctx)).map((entry) => entry.id));
       ctx.setModelResponder((_index, request) => {
@@ -3420,7 +3420,7 @@ export const STATES = [
   {
     name: 'actor-cold-surfaces', kind: 'visual', phase: 'post-unlock', responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const observer = `(() => {
         'use strict';
         const evidence = globalThis.__actorColdEvidence = { states: [], requests: [] };
@@ -3444,7 +3444,7 @@ export const STATES = [
       })()`;
       for (const surface of ['home', 'sidepanel']) {
         let mainCalls = 0, childCalls = 0;
-        const fresh = await launchPeerd({ extensionDir: ctx.extensionDir,
+        const fresh = await launchMcdollar({ extensionDir: ctx.extensionDir,
           panelPath: surface === 'home' ? 'home/home.html#chat' : 'sidepanel/sidepanel.html',
           beforePanelNavigate: (page) => page.send('Page.addScriptToEvaluateOnNewDocument', { source: observer }),
           modelResponder: (_index, request) => {
@@ -3563,11 +3563,11 @@ export const STATES = [
   {
     name: 'backup-network-policy', kind: 'visual', phase: 'post-unlock', responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const evidence = { schema: 1, phase: 'fresh', events: [], observerErrors: [] };
       const diagnostic = createConsentDiagnostics(evidence, () => {});
-      const fresh = await launchPeerd({ extensionDir: ctx.extensionDir, panelPath: 'home/home.html', resumeAuxiliaryWorkers: false });
-      const directory = await mkdtemp(join(tmpdir(), 'peerd-backup-policy-'));
+      const fresh = await launchMcdollar({ extensionDir: ctx.extensionDir, panelPath: 'home/home.html', resumeAuxiliaryWorkers: false });
+      const directory = await mkdtemp(join(tmpdir(), 'mcdollar-backup-policy-'));
       let observer;
       const click = async (selector) => {
         if (!await waitFor(() => evalIn(fresh.page, `!!document.querySelector(${JSON.stringify(selector)})`),
@@ -3652,7 +3652,7 @@ export const STATES = [
               && files.length === 0 && status.text.includes('Turn it on in Settings > Decentralized web')
               && status.text.includes('Nothing was downloaded'));
           } else {
-            rec.check(`${mode} downloads an inspectable real backup`, status.success && payload?.format === 'peerd-export');
+            rec.check(`${mode} downloads an inspectable real backup`, status.success && payload?.format === 'mcdollar-export');
             if (!status.success || inspected?.ok !== true) throw new Error(`backup ${mode} refused; see settled backup receipt for result codes`);
             rec.check(`${mode} includes only the expected identity`, expectedDid
               ? identity?.did === expectedDid && typeof identity.capsule === 'string' && identity.capsule.length > 0
@@ -3900,7 +3900,7 @@ export const STATES = [
       });
       await new Promise((r) => server.listen(0, '127.0.0.1', r));
       const fxPort = /** @type {{ port: number }} */ (server.address()).port;
-      harvestFixtureUrl = `http://orders.peerd.test:${fxPort}/`;
+      harvestFixtureUrl = `http://orders.mcdollar.test:${fxPort}/`;
       try {
         const sent = await rpc(ctx.page, { type: 'agent/send', text: 'Index my orders from my orders page and tell me what I spent.' });
         rec.check('agent/send accepted', !!sent?.ok, JSON.stringify(sent));
@@ -3989,7 +3989,7 @@ export const STATES = [
       const tabsBefore = await evalIn(ctx.page, `(async () =>
         (await chrome.tabs.query({})).map((tab) => tab.id).filter(Number.isInteger))()`, true);
       const fixture = await startWebFixtureServer();
-      storeScriptingFixtureUrl = `${fixture.url.replace('127.0.0.1', 'orders.peerd.test')}/contact`;
+      storeScriptingFixtureUrl = `${fixture.url.replace('127.0.0.1', 'orders.mcdollar.test')}/contact`;
       try {
         const settings = await rpc(ctx.page, {
           type: 'settings/update',
@@ -4122,8 +4122,8 @@ export const STATES = [
       });
       await new Promise((r) => server.listen(0, '127.0.0.1', r));
       const port = /** @type {{ port: number }} */ (server.address()).port;
-      lockFixtureUrl = `http://acme.peerd.test:${port}/`;
-      const fixtureOrigin = `http://acme.peerd.test:${port}`;
+      lockFixtureUrl = `http://acme.mcdollar.test:${port}/`;
+      const fixtureOrigin = `http://acme.mcdollar.test:${port}`;
       try {
         const sent = await rpc(ctx.page, { type: 'agent/send', text: 'Look at the Acme sign-in page for me.' });
         rec.check('agent/send accepted', !!sent?.ok, JSON.stringify(sent));
@@ -4131,7 +4131,7 @@ export const STATES = [
         await ctx.page.send('Page.bringToFront').catch(() => {});
 
         // THE LOAD-BEARING ASSERTION: the actor was stopped, and what reached the
-        // orchestrator is peerd's report — not the actor's own account of the page.
+        // orchestrator is mcdollar's report — not the actor's own account of the page.
         // Requiring the body to be NON-EMPTY matters: an earlier version of this
         // check passed while nothing had arrived at all, which is the failure mode
         // a security test can least afford.
@@ -4161,7 +4161,7 @@ export const STATES = [
         const reportOnly = leadAt >= 0 ? lockReportBody.slice(leadAt, leadAt + 4000) : '';
         rec.check('the report itself was located in the reply', reportOnly.length > 0);
         rec.check('the report carries the ORIGIN only — no path from the refused page',
-          reportOnly.length > 0 && !/acme\.peerd\.test:\\?\/*\d*\/?login/.test(reportOnly) && !reportOnly.includes('/login'),
+          reportOnly.length > 0 && !/acme\.mcdollar\.test:\\?\/*\d*\/?login/.test(reportOnly) && !reportOnly.includes('/login'),
           reportOnly.slice(0, 600));
 
         // RECOVERY: the stop released the tab, so the same web actor still works.
@@ -4213,24 +4213,24 @@ export const STATES = [
       let authenticatedInboxRequests = 0;
       const server = createServer((req, res) => {
         const host = String(req.headers.host || '').split(':')[0];
-        if (host === 'acme.peerd.test' && req.url === '/redirect') {
+        if (host === 'acme.mcdollar.test' && req.url === '/redirect') {
           redirectRequests++;
           const port = /** @type {{ port: number }} */ (server.address()).port;
-          res.writeHead(302, { location: `http://acct.peerd.test:${port}/inbox` });
+          res.writeHead(302, { location: `http://acct.mcdollar.test:${port}/inbox` });
           res.end();
           return;
         }
-        if (host === 'acct.peerd.test' && req.url === '/login') {
+        if (host === 'acct.mcdollar.test' && req.url === '/login') {
           loginRequests++;
           res.writeHead(200, {
             'content-type': 'text/html',
-            'set-cookie': 'peerd263=authenticated; Path=/; SameSite=Lax',
+            'set-cookie': 'mcdollar263=authenticated; Path=/; SameSite=Lax',
           });
           res.end(LOGIN_HTML);
           return;
         }
-        if (host === 'acct.peerd.test' && req.url === '/inbox'
-            && String(req.headers.cookie || '').includes('peerd263=authenticated')) {
+        if (host === 'acct.mcdollar.test' && req.url === '/inbox'
+            && String(req.headers.cookie || '').includes('mcdollar263=authenticated')) {
           authenticatedInboxRequests++;
           res.writeHead(200, { 'content-type': 'text/html' });
           res.end('<!doctype html><title>Account inbox</title><p>NUMERIC-SECRET-263</p>');
@@ -4241,8 +4241,8 @@ export const STATES = [
       });
       await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
       const port = /** @type {{ port: number }} */ (server.address()).port;
-      numericTabAuthorityRedirectUrl = `http://acme.peerd.test:${port}/redirect`;
-      const accountOrigin = `http://acct.peerd.test:${port}`;
+      numericTabAuthorityRedirectUrl = `http://acme.mcdollar.test:${port}/redirect`;
+      const accountOrigin = `http://acct.mcdollar.test:${port}`;
       numericTabAuthorityRequestBodies = [];
       try {
         await rpc(ctx.page, { type: 'settings/update', patch: { devMode: true } });
@@ -4252,13 +4252,13 @@ export const STATES = [
         rec.check('the browser probe seeded the production learned-origin policy',
           seeded?.learned === true, JSON.stringify(seeded));
         const alternatePort = await rpc(ctx.page, {
-          type: 'debug/originLock', origin: 'https://acct.peerd.test:9443',
+          type: 'debug/originLock', origin: 'https://acct.mcdollar.test:9443',
         });
         const descendant = await rpc(ctx.page, {
-          type: 'debug/originLock', origin: 'https://child.acct.peerd.test',
+          type: 'debug/originLock', origin: 'https://child.acct.mcdollar.test',
         });
         const sibling = await rpc(ctx.page, {
-          type: 'debug/originLock', origin: 'https://other.peerd.test',
+          type: 'debug/originLock', origin: 'https://other.mcdollar.test',
         });
         rec.check('Chrome applies a learned host across schemes and ports',
           alternatePort?.learned === true, JSON.stringify(alternatePort));
@@ -4535,8 +4535,8 @@ export const STATES = [
       });
       await new Promise((r) => server.listen(0, '127.0.0.1', r));
       const port = /** @type {{ port: number }} */ (server.address()).port;
-      siteFixtureUrl = `http://acct.peerd.test:${port}/`;
-      siteFixtureOrigin = `http://acct.peerd.test:${port}`;
+      siteFixtureUrl = `http://acct.mcdollar.test:${port}/`;
+      siteFixtureOrigin = `http://acct.mcdollar.test:${port}`;
       try {
         const sent = await rpc(ctx.page, { type: 'agent/send', text: 'What is my Acme balance?' });
         rec.check('agent/send accepted', !!sent?.ok, JSON.stringify(sent));
@@ -4731,7 +4731,7 @@ export const STATES = [
         await evalIn(ctx.page, `document.querySelector('[aria-label="Proposed site-client contracts"]').closest('details').open = false`);
 
         rec.check('the live consent dialog keeps its title and safe initial focus', confirmation?.role === 'dialog'
-          && confirmation?.titleId === 'peerd-confirm-title' && confirmation?.rejectFocused === true, JSON.stringify(confirmation));
+          && confirmation?.titleId === 'mcdollar-confirm-title' && confirmation?.rejectFocused === true, JSON.stringify(confirmation));
         const callsAtConfirmation = siteClientVertical.actorCalls;
         await sleep(500);
         const stillBlocked = await evalIn(ctx.page,
@@ -4952,7 +4952,7 @@ export const STATES = [
       ? { sse: sseToolCall('script', { code: 'await new Promise((resolve) => setTimeout(resolve, 12000)); return 42;' }) }
       : { sse: sseText('this-should-never-render') },
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const cardProbe = `(() => ({
         busy: !!document.querySelector('form.input-bar button.stop'),
         running: document.querySelector('.tool-call .tool-pending')?.textContent ?? null,
@@ -5016,7 +5016,7 @@ export const STATES = [
       'data: [DONE]', '',
     ].join('\n\n') + '\n\n' }),
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       await evalIn(ctx.page, `chrome.tabs.query({ currentWindow: true }).then(tabs => { const tab = tabs.find(tab => tab.url === 'about:blank'); return tab && !tab.active ? chrome.tabs.update(tab.id, { active: true }) : null; })`, true);
       const sent = await rpc(ctx.page, { type: 'agent/send', text: 'Build a budget tracker App.' });
       rec.check('the App request is accepted', sent?.ok === true);
@@ -5096,9 +5096,9 @@ export const STATES = [
           'use strict';
           const { default: m } = await import('/vendor/mithril/mithril.js');
           const { default: browser } = await import('/shared/browser-api.js');
-          const { idb } = await import('/peerd-egress/index.js');
-          const { createSessionStore, makeTurnSlots, makeTurnAuthorityDriver, SessionNotFoundError } = await import('/peerd-runtime/index.js');
-          const { listProviderModels, listProviders, providerFailureCode, UnknownProviderError } = await import('/peerd-provider/controller.js');
+          const { idb } = await import('/mcdollar-egress/index.js');
+          const { createSessionStore, makeTurnSlots, makeTurnAuthorityDriver, SessionNotFoundError } = await import('/mcdollar-runtime/index.js');
+          const { listProviderModels, listProviders, providerFailureCode, UnknownProviderError } = await import('/mcdollar-provider/controller.js');
           const { INITIAL_STATE, reduceChat } = await import('/sidepanel/chat-reducer.js');
           const { ChatView } = await import('/sidepanel/components/chat-view.js');
           const sessions = createSessionStore({ idb });
@@ -5186,7 +5186,7 @@ export const STATES = [
         rec.check('registry and durable chat stay intact; missing chat stays absent', result.registryIntact && result.survivorIntact && result.missingAbsent);
         rec.check('error production invokes no model or tool effect', result.attempts.model === 0 && result.attempts.tool === 0 && ctx.modelCallCount() === callsBefore);
         rec.check('only the existing provider Settings action renders', JSON.stringify(result.settingsActions) === JSON.stringify(['Open settings']));
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('merge-base error text', result.text);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('merge-base error text', result.text);
         else rec.check('both banners state only what their actual causes prove', JSON.stringify(result.text) === JSON.stringify([
           'The selected provider is unavailable. Choose another provider in Settings.',
           'This chat is unavailable. Open another chat or start a new one.',
@@ -5232,7 +5232,7 @@ export const STATES = [
       rec.check('session/debugBundle returns ok', reply?.ok === true, JSON.stringify(reply?.error));
       const bundle = reply?.bundle ?? {};
       rec.check('the bundle carries the format stamp + the transcript',
-        bundle.format === 'peerd-debug-bundle' && (bundle.session?.messages?.length ?? 0) >= 2,
+        bundle.format === 'mcdollar-debug-bundle' && (bundle.session?.messages?.length ?? 0) >= 2,
         `format=${bundle.format} messages=${bundle.session?.messages?.length}`);
       rec.check('the ORCHESTRATOR model call was captured into the context ring (live capture proof)',
         (bundle.contextSnapshots ?? []).some((s) => s.label === 'main'),
@@ -5355,8 +5355,8 @@ export const STATES = [
       };
       const inspect = (session) => evalIn(ctx.page, `(() => ({
         draft: document.querySelector('form.input-bar textarea')?.value,
-        savedDraft: localStorage.getItem('peerd.draft.' + ${JSON.stringify(session.id)}),
-        pending: JSON.parse(localStorage.getItem('peerd.unconfirmed-send.' + ${JSON.stringify(session.id)}) || 'null'),
+        savedDraft: localStorage.getItem('mcdollar.draft.' + ${JSON.stringify(session.id)}),
+        pending: JSON.parse(localStorage.getItem('mcdollar.unconfirmed-send.' + ${JSON.stringify(session.id)}) || 'null'),
         canCheck: [...document.querySelectorAll('form.input-bar button')]
           .some((button) => button.textContent === 'Check delivery' && !button.disabled),
         sendDisabled: document.querySelector('form.input-bar .send-btn')?.disabled,
@@ -5373,12 +5373,12 @@ export const STATES = [
         try {
           await switchTo(sessions[0]);
           await evalIn(ctx.page, `(async () => {
-            localStorage.setItem('peerd.draft.' + ${JSON.stringify(sessions[1].id)}, ${JSON.stringify(draftB)});
-            localStorage.setItem('peerd.unconfirmed-send.' + ${JSON.stringify(sessions[1].id)}, ${JSON.stringify(JSON.stringify(pendingB))});
+            localStorage.setItem('mcdollar.draft.' + ${JSON.stringify(sessions[1].id)}, ${JSON.stringify(draftB)});
+            localStorage.setItem('mcdollar.unconfirmed-send.' + ${JSON.stringify(sessions[1].id)}, ${JSON.stringify(JSON.stringify(pendingB))});
             const browser = (await import('/shared/browser-api.js')).default;
             const runtime = browser.runtime;
             const original = runtime.sendMessage;
-            const fixture = globalThis.__peerdGoalReceipt = {
+            const fixture = globalThis.__mcdollarGoalReceipt = {
               calls: [], finish: () => {}, restore: () => { runtime.sendMessage = original; },
             };
             // Hold only the first send; every session/read route stays real.
@@ -5405,14 +5405,14 @@ export const STATES = [
             document.querySelector('form.input-bar').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
             m.redraw.sync();
           })()`, true);
-          const sent = await waitFor(() => evalIn(ctx.page, 'globalThis.__peerdGoalReceipt.calls[0] ?? null'),
+          const sent = await waitFor(() => evalIn(ctx.page, 'globalThis.__mcdollarGoalReceipt.calls[0] ?? null'),
             { budgetMs: 5_000, pollMs: 50 });
           if (!sent?.operationId) throw new Error('The mounted composer did not send a goal');
           rec.check(`${outcome}: the pending goal names its original chat`,
             sent.goal === true && sent.sessionId === sessions[0].id && sent.text === goal, JSON.stringify(sent));
           await switchTo(sessions[1]);
           rec.check(`${outcome}: B displays its own draft while A waits`, (await inspect(sessions[1])).draft === draftB);
-          await evalIn(ctx.page, 'globalThis.__peerdGoalReceipt.finish()');
+          await evalIn(ctx.page, 'globalThis.__mcdollarGoalReceipt.finish()');
           const other = await waitFor(async () => {
             const view = await inspect(sessions[1]);
             return view.canCheck ? view : null;
@@ -5427,17 +5427,17 @@ export const STATES = [
               && origin.pending?.operationId === sent.operationId && origin.pending?.sessionId === sessions[0].id,
             JSON.stringify(origin));
           rec.check(`${outcome}: switching and recovery never replay the send`,
-            await evalIn(ctx.page, 'globalThis.__peerdGoalReceipt.calls.length === 1')
+            await evalIn(ctx.page, 'globalThis.__mcdollarGoalReceipt.calls.length === 1')
               && ctx.modelCallCount() === modelCalls);
           await rec.shot(outcome);
         } finally {
           await evalIn(ctx.page, `(async () => {
-            globalThis.__peerdGoalReceipt?.finish();
-            globalThis.__peerdGoalReceipt?.restore();
-            delete globalThis.__peerdGoalReceipt;
+            globalThis.__mcdollarGoalReceipt?.finish();
+            globalThis.__mcdollarGoalReceipt?.restore();
+            delete globalThis.__mcdollarGoalReceipt;
             for (const id of ${JSON.stringify(sessions.map((session) => session.id))}) {
-              localStorage.removeItem('peerd.unconfirmed-send.' + id);
-              localStorage.removeItem('peerd.draft.' + id);
+              localStorage.removeItem('mcdollar.unconfirmed-send.' + id);
+              localStorage.removeItem('mcdollar.draft.' + id);
             }
             const { default: m } = await import('/vendor/mithril/mithril.js');
             m.redraw.sync();
@@ -5470,11 +5470,11 @@ export const STATES = [
     name: 'pending-chat-permissions', kind: 'functional', phase: 'post-unlock',
     responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const extension = process.argv.find(argument => argument.startsWith('--extension='))?.slice('--extension='.length);
       const files = Object.fromEntries(await Promise.all(['index.html', 'app.js'].map(async name => [name,
-        await readFile(extension ? join(extension, 'peerd-engine/starters/csv-lab', name)
-          : new URL(`../../extension/peerd-engine/starters/csv-lab/${name}`, import.meta.url), 'utf8'),
+        await readFile(extension ? join(extension, 'mcdollar-engine/starters/csv-lab', name)
+          : new URL(`../../extension/mcdollar-engine/starters/csv-lab/${name}`, import.meta.url), 'utf8'),
       ])));
       const inspect = async () => {
         const current = await rpc(ctx.page, { type: 'state/get' });
@@ -5720,7 +5720,7 @@ export const STATES = [
     name: 'vault-passphrase-error', kind: 'functional', phase: 'post-unlock',
     responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const readGate = () => evalIn(ctx.page, `(() => {
         'use strict';
         const field = document.querySelector('#pass');
@@ -5906,13 +5906,13 @@ export const STATES = [
     name: 'protected-page-starter', kind: 'functional', phase: 'post-unlock',
     responder: () => ({ sse: sseText('Starter custody settled.') }),
     async run(ctx, rec) {
-      const callLogKey = 'peerd.e2e.protected-starter-calls';
+      const callLogKey = 'mcdollar.e2e.protected-starter-calls';
       const interceptorSource = `(() => {
-        if (globalThis.__peerdProtectedStarterOriginal) return true;
+        if (globalThis.__mcdollarProtectedStarterOriginal) return true;
         const runtime = globalThis.chrome?.runtime;
         if (!runtime?.sendMessage) return false;
         const original = runtime.sendMessage.bind(runtime);
-        globalThis.__peerdProtectedStarterOriginal = original;
+        globalThis.__mcdollarProtectedStarterOriginal = original;
         runtime.sendMessage = async (message, ...args) => {
           const calls = JSON.parse(localStorage.getItem(${JSON.stringify(callLogKey)}) || '[]');
           const loseReceipt = message?.type === 'agent/send' && message?.checkOnly !== true
@@ -5981,7 +5981,7 @@ export const STATES = [
         rec.check('the protected starter remains readable and names the policy',
           starter?.opacity === '1'
             && starter?.filter === 'none'
-            && starter?.label.includes('peerd will not read or automate it'),
+            && starter?.label.includes('mcdollar will not read or automate it'),
           JSON.stringify(diagnostics));
         // The harness hosts the side panel in a tab. Bringing that tab to the
         // foreground would correctly replace the private-page receipt before
@@ -6001,7 +6001,7 @@ export const STATES = [
           if (!send?.operationId) return null;
           const stored = [...Array(localStorage.length).keys()]
             .map((index) => localStorage.key(index))
-            .filter((key) => key?.startsWith('peerd.unconfirmed-send.'))
+            .filter((key) => key?.startsWith('mcdollar.unconfirmed-send.'))
             .map((key) => JSON.parse(localStorage.getItem(key) || 'null'))
             .find((value) => value?.operationId === send.operationId);
           return stored ? { operationId: send.operationId } : null;
@@ -6034,12 +6034,12 @@ export const STATES = [
         })()`), { budgetMs: 15_000, pollMs: 50 });
         const reloadDiagnostics = checkReady ?? await evalIn(ctx.page, `(() => ({
           readyState: document.readyState,
-          bootStage: document.documentElement.dataset.peerdBootStage ?? null,
+          bootStage: document.documentElement.dataset.mcdollarBootStage ?? null,
           text: document.body.innerText.slice(0, 500),
           calls: JSON.parse(localStorage.getItem(${JSON.stringify(callLogKey)}) || '[]'),
           pending: [...Array(localStorage.length).keys()]
             .map((index) => localStorage.key(index))
-            .filter((key) => key?.startsWith('peerd.unconfirmed-send.')),
+            .filter((key) => key?.startsWith('mcdollar.unconfirmed-send.')),
         }))()`);
         rec.check('the reloaded panel offers Check delivery for the same operation',
           checkReady?.operationId === pending?.operationId, JSON.stringify(reloadDiagnostics));
@@ -6049,7 +6049,7 @@ export const STATES = [
           const calls = JSON.parse(localStorage.getItem(${JSON.stringify(callLogKey)}) || '[]');
           const stillPending = [...Array(localStorage.length).keys()]
             .map((index) => localStorage.key(index))
-            .filter((key) => key?.startsWith('peerd.unconfirmed-send.'))
+            .filter((key) => key?.startsWith('mcdollar.unconfirmed-send.'))
             .map((key) => JSON.parse(localStorage.getItem(key) || 'null'))
             .some((value) => value?.operationId === calls[0]?.operationId);
           return calls.length >= 2 && !stillPending ? calls : null;
@@ -6071,13 +6071,13 @@ export const STATES = [
           }).catch(() => {});
         }
         await evalIn(ctx.page, `(() => {
-          const original = globalThis.__peerdProtectedStarterOriginal;
+          const original = globalThis.__mcdollarProtectedStarterOriginal;
           if (original) chrome.runtime.sendMessage = original;
-          delete globalThis.__peerdProtectedStarterOriginal;
+          delete globalThis.__mcdollarProtectedStarterOriginal;
           const calls = JSON.parse(localStorage.getItem(${JSON.stringify(callLogKey)}) || '[]');
           const operationId = calls[0]?.operationId;
           for (const key of [...Array(localStorage.length).keys()].map((index) => localStorage.key(index))) {
-            if (!key?.startsWith('peerd.unconfirmed-send.')) continue;
+            if (!key?.startsWith('mcdollar.unconfirmed-send.')) continue;
             const value = JSON.parse(localStorage.getItem(key) || 'null');
             if (value?.operationId === operationId) localStorage.removeItem(key);
           }
@@ -6225,7 +6225,7 @@ export const STATES = [
           return claim ? {
             labels: [...claim.querySelectorAll('span')].map((node) => node.textContent),
             values: [...claim.querySelectorAll('code')].map((node) => node.textContent),
-            buttons: [...document.querySelectorAll('#e2e-unknown-outcome-confirm .peerd-modal-actions button')]
+            buttons: [...document.querySelectorAll('#e2e-unknown-outcome-confirm .mcdollar-modal-actions button')]
               .map((node) => node.textContent),
             foreground: style?.color ?? null,
             background: style?.backgroundColor ?? null,
@@ -6319,7 +6319,7 @@ export const STATES = [
           details.open = true;
           return true;
         })()`);
-        if (!contractsExpanded && process.env.PEERD_VISUAL_BASE_RENDER !== '1') {
+        if (!contractsExpanded && process.env.MCDOLLAR_VISUAL_BASE_RENDER !== '1') {
           throw new Error('The proposed site-client contracts are unavailable for visual review');
         }
         await rec.visual('site-client-contract-details');
@@ -6350,7 +6350,7 @@ export const STATES = [
           } }));
           await new Promise((resolve) => requestAnimationFrame(resolve));
           const modal = host.querySelector('.confirm-modal');
-          const actions = host.querySelector('.peerd-modal-actions');
+          const actions = host.querySelector('.mcdollar-modal-actions');
           const modalRect = modal.getBoundingClientRect();
           const actionRect = actions.getBoundingClientRect();
           return {
@@ -6399,7 +6399,7 @@ export const STATES = [
         })()`, true);
         const rendered = await waitFor(() => evalIn(ctx.page, `(() => ({
           title: document.querySelector('#e2e-sidepanel-confirm h3')?.textContent,
-          buttons: [...document.querySelectorAll('#e2e-sidepanel-confirm .peerd-modal-actions button')]
+          buttons: [...document.querySelectorAll('#e2e-sidepanel-confirm .mcdollar-modal-actions button')]
             .map((b) => b.textContent.trim().replace(/\\s+/g, ' ')),
           scope: document.querySelector('#e2e-sidepanel-confirm .confirm-grant-scope')?.textContent,
         }))()`), { budgetMs: 5_000, pollMs: 50 });
@@ -6425,7 +6425,7 @@ export const STATES = [
             origins: ['https://rooms.example.com'],
           } }));
           return {
-            buttons: [...document.querySelectorAll('#e2e-sidepanel-confirm .peerd-modal-actions button')]
+            buttons: [...document.querySelectorAll('#e2e-sidepanel-confirm .mcdollar-modal-actions button')]
               .map((b) => b.textContent.trim()),
             note: document.querySelector('#e2e-sidepanel-confirm .confirm-ephemeral-note')?.textContent ?? null,
           };
@@ -6455,7 +6455,7 @@ export const STATES = [
         await evalIn(ctx.page, `(async () => {
           const m = (await import('/vendor/mithril/mithril.js')).default;
           const { MessageList } = await import('/sidepanel/components/message-list.js');
-          const { landingStopCard } = await import('/peerd-runtime/index.js');
+          const { landingStopCard } = await import('/mcdollar-runtime/index.js');
           const host = document.createElement('div');
           host.id = 'e2e-stop-card';
           // why fixed over the viewport: an appended host lands below the home
@@ -6487,7 +6487,7 @@ export const STATES = [
             && rendered?.group === 'HANDOFF'
             && rendered?.headline === 'The web helper was stopped when the tab arrived at https://mail.example.com'
             && !String(rendered?.headline).includes('/inbox')
-            && rendered?.unknownLabel === 'WHAT PEERD DOESN’T KNOW'
+            && rendered?.unknownLabel === 'WHAT MCDOLLAR DOESN’T KNOW'
             && rendered?.action === 'Try reading it without signing in'
             && rendered?.proseHidden === true,
           JSON.stringify(rendered));
@@ -6502,7 +6502,7 @@ export const STATES = [
     name: 'onboarding-network', kind: 'visual', phase: 'pre-unlock',
     responder: null,
     async run(ctx, rec) {
-      if (process.env.PEERD_VISUAL_BASE_RENDER === '1') {
+      if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') {
         const extension = process.argv.find(arg => arg.startsWith('--extension='))?.slice('--extension='.length);
         if (!extension) throw new Error('base visual render requires an explicit extension tree');
         if (!existsSync(join(extension, 'sidepanel/components/onboarding-network-step.js'))) {
@@ -6625,14 +6625,14 @@ export const STATES = [
             && reloaded.state.settings.dwebAgentEnabled === false, JSON.stringify(reloaded?.state?.settings));
         // Discover only enables. Turning off lives in Settings and the Network view.
         await evalIn(page, `location.hash = 'network'`);
-        const stopOffered = await waitFor(() => evalIn(page, `[...document.querySelectorAll('button.peerd-net-btn')]
+        const stopOffered = await waitFor(() => evalIn(page, `[...document.querySelectorAll('button.mcdollar-net-btn')]
           .some(button => button.textContent === 'Stop the network' && !button.disabled)`),
         { budgetMs: 30_000, pollMs: 50 });
         rec.check('the Network view offers Stop the network while on', !!stopOffered);
         // why replace confirm: Stop first asks in a blocking dialog. Answer yes, as the user would.
         await evalIn(page, `(() => {
           window.confirm = () => true;
-          [...document.querySelectorAll('button.peerd-net-btn')].find(button => button.textContent === 'Stop the network')?.click();
+          [...document.querySelectorAll('button.mcdollar-net-btn')].find(button => button.textContent === 'Stop the network')?.click();
         })()`);
         const disabled = await waitFor(async () => {
           const r = await rpc(page, { type: 'state/get' });
@@ -6807,12 +6807,12 @@ export const STATES = [
     name: 'starter-unknown-warning', kind: 'visual', phase: 'post-unlock',
     responder: null,
     async run(ctx, rec) {
-      const base = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const base = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const phase2 = discoverSurface().phase2;
       const applyLabel = phase2 ? 'Add to Library' : 'Apply: add local copy';
       const warning = phase2
-        ? 'peerd is not sure the app was added. Check your Library before you add it again.'
-        : 'peerd could not confirm whether the starter was added. Check your Library before reviewing another copy.';
+        ? 'mcdollar is not sure the app was added. Check your Library before you add it again.'
+        : 'mcdollar could not confirm whether the starter was added. Check your Library before reviewing another copy.';
       const title = 'Confirm actions: ON - asks when required. Reads and quick compute can run without asking.';
       const modelCallsBefore = ctx.modelCallCount();
       await chooseFixtureNetwork(ctx, false);
@@ -6920,7 +6920,7 @@ export const STATES = [
     async run(ctx, rec) {
       let release;
       const held = new Promise((resolve) => { release = resolve; });
-      const child = await launchPeerd({ extensionDir: ctx.extensionDir, modelResponder: () => ({ sse: sseText('Other chat ready.') }) });
+      const child = await launchMcdollar({ extensionDir: ctx.extensionDir, modelResponder: () => ({ sse: sseText('Other chat ready.') }) });
       try {
         await unlockAndReady(child.page);
         const settings = await rpc(child.page, { type: 'settings/update', patch: { autoMemoryEnabled: false } });
@@ -6976,15 +6976,15 @@ export const STATES = [
           return { note: result.state.session.goalStopNote ?? null,
             notices: await evalIn(child.page, `[...document.querySelectorAll('.notice-text')].map((node) => node.textContent).filter((text) => text.startsWith('Goal run stopped'))`) };
         };
-        const returned = process.env.PEERD_VISUAL_BASE_RENDER === '1' ? await readReason()
+        const returned = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' ? await readReason()
           : await waitFor(async () => { const value = await readReason(); return value?.note && value.notices.length === 1 ? value : null; });
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base Goal end after close and switch', returned);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base Goal end after close and switch', returned);
         else rec.check('the returned Goal chat shows its exact durable reason once', returned?.notices.length === 1
           && returned.note.text === `Goal run stopped after reaching the ${limit}-turn limit.`);
         await rec.visualPage('goal-ended-returned', child.page);
         await reloadReadyPanel(child, { expectedSessionId: goalId });
         const reopened = await readReason();
-        if (process.env.PEERD_VISUAL_BASE_RENDER !== '1') rec.check('a new panel document replays the same reason once', reopened?.note?.id === returned?.note?.id && reopened?.notices.length === 1);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER !== '1') rec.check('a new panel document replays the same reason once', reopened?.note?.id === returned?.note?.id && reopened?.notices.length === 1);
         const [otherSession, goalSession] = await Promise.all([otherId, goalId].map((sessionId) =>
           rpc(child.page, { type: 'session/get', sessionId })));
         if (otherSession?.session?.sessionId !== otherId || goalSession?.session?.sessionId !== goalId
@@ -7022,18 +7022,18 @@ export const STATES = [
           && isolated.state.composer.provider === warm.composer.provider
           && isolated.state.composer.model === warm.composer.model
           && isolated.state.composer.canSend === true
-          && (process.env.PEERD_VISUAL_BASE_RENDER === '1' || isolated.state.session.goalStopNote?.id === returned?.note?.id)
+          && (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' || isolated.state.session.goalStopNote?.id === returned?.note?.id)
           && after?.ok === true && after.featureLeases?.schema === 1
           && after.featureLeases.kernelEpoch === leases.kernelEpoch
           && controller?.generation === baseline.generation && controller?.status === baseline.status,
         JSON.stringify({ before: before?.featureLeases, after: after?.featureLeases }));
         await reloadReadyPanel(child, { expectedSessionId: goalId });
-        const restarted = process.env.PEERD_VISUAL_BASE_RENDER === '1' ? await readReason()
+        const restarted = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' ? await readReason()
           : await waitFor(async () => { const value = await readReason(); return value?.notices.length === 1 ? value : null; });
         rec.check('worker restart preserves chat ownership without another model call',
           newWorker.targetId !== oldWorker.targetId && child.modelCallCount() === completedModelCalls,
           JSON.stringify({ completedModelCalls, afterRestartModelCalls: child.modelCallCount() }));
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base Goal end after worker restart', restarted);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base Goal end after worker restart', restarted);
         else rec.check('worker restart replays the durable reason once', restarted?.note?.id === returned?.note?.id && restarted?.notices.length === 1);
         await rec.visualPage('goal-ended-recovery', child.page);
         child.setModelResponder(() => ({ sse: sseText('The new user turn is complete.') }));
@@ -7086,7 +7086,7 @@ export const STATES = [
     name: 'composer-palette', kind: 'visual', phase: 'post-unlock',
     responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       try {
         await evalIn(ctx.page, `(() => {
           const input = document.querySelector('form.input-bar textarea');
@@ -7136,7 +7136,7 @@ export const STATES = [
     name: 'reasoning-disclosure', kind: 'visual', phase: 'post-unlock',
     responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       try {
         await evalIn(ctx.page, `(async () => {
           const m = (await import('/vendor/mithril/mithril.js')).default;
@@ -7254,7 +7254,7 @@ export const STATES = [
           return { role: dialog.getAttribute('role'), modal: dialog.getAttribute('aria-modal'), title: dialog.getAttribute('aria-labelledby'),
             closeFocused: document.activeElement === dialog.querySelector('.ctx-close'), menuClosed: !document.querySelector('.debug-menu') }; })()`);
         rec.check('Context opens its real snapshot with the debug menu closed', dialog.menuClosed);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base Context dialog focus and name', dialog);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base Context dialog focus and name', dialog);
         else rec.check('Context opens a named modal with Close focused', dialog.role === 'dialog' && dialog.modal === 'true'
           && dialog.title === 'context-inspector-title' && dialog.closeFocused, JSON.stringify(dialog));
         await checkAccessibleNames(ctx.page, rec, 'Context and Close expose their accessible names', [
@@ -7267,14 +7267,14 @@ export const STATES = [
         const reverse = await evalIn(ctx.page, `document.activeElement === [...document.querySelectorAll('.context-inspector summary')].filter((node) => node.getClientRects().length).at(-1)`);
         await pressNativeKey(ctx.page, 'Tab');
         const forward = await evalIn(ctx.page, `document.activeElement === document.querySelector('.context-inspector .ctx-close')`);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base Context native Tab', { reverse, forward });
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base Context native Tab', { reverse, forward });
         else rec.check('native Tab includes expanded summaries and stays in Context', reverse && forward);
         await rec.visualPage('context-inspector-keyboard', ctx.page, { beforeShot: () => evalIn(ctx.page, `(() => { 'use strict';
           for (const meta of document.querySelectorAll('.ctx-snap-meta')) meta.textContent = meta.textContent.replace(/ · [^·]+$/, ' · 12:00:00'); })()`) });
         await pressNativeKey(ctx.page, 'Escape');
         const escaped = await waitFor(() => evalIn(ctx.page, `!document.querySelector('.context-inspector')`), { budgetMs: 1_000, pollMs: 40 });
         const returned = await evalIn(ctx.page, `document.activeElement === document.querySelector('.debug-export-btn')`);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base Context native Escape', { escaped, returned });
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base Context native Escape', { escaped, returned });
         else rec.check('Escape closes Context and returns focus to the persistent debug button', escaped && returned);
         if (!escaped) await evalIn(ctx.page, `document.querySelector('.ctx-close').click()`);
         rec.check('Context inspection makes no extra model call and leaves its menu closed', ctx.modelCallCount() === calls
@@ -7441,7 +7441,7 @@ export const STATES = [
         const composerAfterSend = await evalIn(page, `(() => ({
           value: document.querySelector('.home-chat form.input-bar textarea')?.value,
           sendDisabled: document.querySelector('.home-chat form.input-bar .send-btn')?.disabled,
-          leakedDrafts: Object.keys(localStorage).filter((key) => key.startsWith('peerd.draft.')
+          leakedDrafts: Object.keys(localStorage).filter((key) => key.startsWith('mcdollar.draft.')
             && (localStorage.getItem(key) ?? '').includes('HOME-COMPOSER-MESSAGE')),
         }))()`);
         rec.check('a confirmed Home send leaves the composer and its saved draft empty',
@@ -7452,7 +7452,7 @@ export const STATES = [
         requireCheck('Home observes the bound live session', typeof sessionId === 'string' && sessionId.length > 0);
         const diagnostic = await rpc(page, { type: 'session/debugBundle', sessionId });
         requireCheck('Home exports the actual chat diagnostic transcript', diagnostic?.ok === true
-          && diagnostic.bundle?.format === 'peerd-debug-bundle'
+          && diagnostic.bundle?.format === 'mcdollar-debug-bundle'
           && JSON.stringify(diagnostic.bundle?.session?.messages).includes('HOME-COMPOSER-REPLY'),
         JSON.stringify({ ok: diagnostic?.ok, error: diagnostic?.error, format: diagnostic?.bundle?.format }));
         const callsBeforeProbe = ctx.modelCallCount();
@@ -7509,7 +7509,7 @@ export const STATES = [
         await ctx.page.send('Page.navigate', { url: panelUrl });
         await ctx.page.send('Emulation.setDeviceMetricsOverride', PANEL_METRICS);
         const restored = await waitFor(() => evalIn(ctx.page,
-          `document.documentElement.dataset.peerdBootStage === 'app-ready' && !!document.querySelector('.input-bar textarea')`).catch(() => false),
+          `document.documentElement.dataset.mcdollarBootStage === 'app-ready' && !!document.querySelector('.input-bar textarea')`).catch(() => false),
         { budgetMs: 20_000, pollMs: 80 });
         if (!restored) throw new Error('Home fixture did not restore the live side panel');
       }
@@ -7634,7 +7634,7 @@ export const STATES = [
   },
 
   // --- functional: a card-opened side panel closes when you return to Home ---
-  // "Go ↗" on a "peerd opened a tab" card opens the side panel to follow the
+  // "Go ↗" on a "mcdollar opened a tab" card opens the side panel to follow the
   // agent's tab. Coming back to Home must close that panel and hand Chat back,
   // while a panel the user opened stays (home-panel-navigation). The close is
   // the real one, which destroys the browser-owned panel document, so the
@@ -7910,11 +7910,11 @@ export const STATES = [
         const saved = await rpc(page, { type: 'contacts/set', did, name: 'Rename review' });
         rec.check('the contact is saved through the real route', saved?.ok === true, JSON.stringify(saved));
         const ready = await waitFor(() => evalIn(page, `[...document.querySelectorAll('.contact-row')]
-          .some((row) => row.querySelector('.peerd-disc-name')?.textContent === 'Rename review')`),
+          .some((row) => row.querySelector('.mcdollar-disc-name')?.textContent === 'Rename review')`),
         { budgetMs: 15_000, pollMs: 80 });
         if (!ready) throw new Error('the saved contact did not render');
         await evalIn(page, `[...document.querySelectorAll('.contact-row')]
-          .find((row) => row.querySelector('.peerd-disc-name')?.textContent === 'Rename review')
+          .find((row) => row.querySelector('.mcdollar-disc-name')?.textContent === 'Rename review')
           .querySelector('[title="Edit name"]').click()`);
         const editing = await waitFor(() => evalIn(page,
           `document.querySelector('.contact-name-input')?.value === 'Rename review'
@@ -7999,10 +7999,10 @@ export const STATES = [
             JSON.stringify(await pick(phase2 ? 'From people you know' : 'From contacts')) === JSON.stringify(['Field notes']));
           rec.check('Updates is empty while every installed app is current', (await pick('Updates')).length === 0
             && await evalIn(page, `document.body.textContent.includes(${JSON.stringify(plain ? 'No updates right now' : 'No matching apps')})`));
-          const included = await pick(phase2 ? 'Comes with peerd' : 'Included');
-          rec.check('Comes with peerd lists both packaged starters and Chat rooms', names
+          const included = await pick(phase2 ? 'Comes with mcdollar' : 'Included');
+          rec.check('Comes with mcdollar lists both packaged starters and Chat rooms', names
             ? JSON.stringify(included) === JSON.stringify(['Tables and charts', 'Desaturator', 'Chat rooms'])
-            : included.length === 3 && included.includes('Peerd-to-Peerd Commons'));
+            : included.length === 3 && included.includes('Mcdollar-to-Mcdollar Commons'));
           rec.check('All restores every shared app', (await pick('All')).length === 3);
           rec.check('Explore controls and cards fit the viewport',
             await evalIn(page, `document.documentElement.scrollWidth <= innerWidth`));
@@ -8015,7 +8015,7 @@ export const STATES = [
         // The head harness also captures older merge-base extension surfaces.
         // Only that explicit baseline run may lack the newly added control.
         const libraryPresent = await evalIn(page, `!!document.querySelector('[aria-label="Library filter"]')`);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1' && !libraryPresent) {
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' && !libraryPresent) {
           rec.check('Merge-base Explore predates the Library filter', true);
         } else {
           const libraryReady = await waitFor(() => evalIn(page,
@@ -8041,7 +8041,7 @@ export const STATES = [
       } finally { try {page.close();} catch { /* */ } }
     },
   })),
-  // The Comes with peerd pill: both packaged starters and Commons as tiles, read only.
+  // The Comes with mcdollar pill: both packaged starters and Commons as tiles, read only.
   {
     name: 'home-explore-included', kind: 'visual', phase: 'post-unlock',
     responder: () => ({ sse: sseText('noted') }),
@@ -8057,7 +8057,7 @@ export const STATES = [
           throw new Error('Explore did not render');
         }
         // why the tree's own label: the merge-base tree renders its own words.
-        const label = discoverSurface().phase2 ? 'Comes with peerd' : 'Included';
+        const label = discoverSurface().phase2 ? 'Comes with mcdollar' : 'Included';
         await evalIn(page, `(async () => {
           [...document.querySelectorAll('.disc-pill')].find(pill => pill.textContent === ${JSON.stringify(label)}).click();
           (await import('/vendor/mithril/mithril.js')).default.redraw.sync();
@@ -8066,10 +8066,10 @@ export const STATES = [
         const add = discoverSurface().names ? 'Add and open Chat rooms' : 'Add and open Commons';
         const included = await waitFor(() => evalIn(page, `(() => {
           const metas = [...document.querySelectorAll('.disc-tile-meta')].map(node => node.textContent);
-          return metas.length === 3 && metas.every(text => text === 'Comes with peerd')
+          return metas.length === 3 && metas.every(text => text === 'Comes with mcdollar')
             && [...document.querySelectorAll('.disc-tile-action')].some(button => button.textContent === ${JSON.stringify(add)} && !button.disabled);
         })()`), {budgetMs:4000,pollMs:50});
-        rec.check('Comes with peerd lists both packaged starters and Chat rooms and sends only reads', !!included
+        rec.check('Comes with mcdollar lists both packaged starters and Chat rooms and sends only reads', !!included
           && await evalIn(page, `window.__exploreFixtureCalls.every(type =>
             ['apps/list', 'dweb/base/heard', 'bootstrap/ready', 'dweb/distributed/info', 'contacts/list', 'dweb/blocked-peers'].includes(type))`));
         rec.check('Explore controls and cards fit the viewport', await evalIn(page, `document.documentElement.scrollWidth <= innerWidth`));
@@ -8121,7 +8121,7 @@ export const STATES = [
           const publisher = encodeDidKey(new Uint8Array(32).fill(5));
           const version_id = '5'.repeat(64);
           const card = { dwapp_id: ${JSON.stringify(key)}, name: 'Notified app', slug: 'notified', seq: 1, version_id, publisher,
-            uri: 'peerd://' + publisher + '/' + version_id };
+            uri: 'mcdollar://' + publisher + '/' + version_id };
           const heard = window.__e2eHeard = { card, apps: [card], hold: null, release: () => {} };
           const api = globalThis.browser ?? globalThis.chrome;
           const real = api.runtime.sendMessage.bind(api.runtime);
@@ -8214,7 +8214,7 @@ export const STATES = [
           await ctx.page.send('Page.navigate', { url: panelUrl });
           await ctx.page.send('Emulation.setDeviceMetricsOverride', PANEL_METRICS);
           if (!await waitFor(() => evalIn(ctx.page,
-            `document.documentElement.dataset.peerdBootStage === 'app-ready' && !!document.querySelector('.input-bar textarea')`).catch(() => false),
+            `document.documentElement.dataset.mcdollarBootStage === 'app-ready' && !!document.querySelector('.input-bar textarea')`).catch(() => false),
           { budgetMs: 20_000, pollMs: 80 })) throw new Error('notification fixture did not restore the side panel');
         }
         if (!wasOn) await chooseFixtureNetwork(ctx, false);
@@ -8260,7 +8260,7 @@ export const STATES = [
           button?.focus(); button?.click();
         })()`);
         const unblocked = await waitFor(() => evalIn(page, `document.querySelector('.contacts-unblocked')?.textContent
-          === 'After you unblock someone, their apps show up again the next time peerd hears from them.'`), { budgetMs: 10_000, pollMs: 100 });
+          === 'After you unblock someone, their apps show up again the next time mcdollar hears from them.'`), { budgetMs: 10_000, pollMs: 100 });
         rec.check('Unblock in Contacts says when their apps come back', !!unblocked);
         rec.check('the stored list no longer names them',
           (await rpc(page, { type: 'dweb/blocked-peers' }))?.blocked?.includes(maker) === false);
@@ -8328,11 +8328,11 @@ export const STATES = [
         rec.check('Library and Discover render both committed warning details',
           warningText.includes('security audit entry could not be written')
             && (warningLayout?.texts?.[0] ?? '').includes('Older shared bytes will be cleaned up')
-            && (warningLayout?.texts?.[1] ?? '').includes('peerd still shares the old version.'),
+            && (warningLayout?.texts?.[1] ?? '').includes('mcdollar still shares the old version.'),
           JSON.stringify({ discoverWarning, warningLayout }));
         // why its own check: only the Library says the words above.
         rec.check('Discover says in plain words that the security log missed the update',
-          (warningLayout?.texts?.[1] ?? '').includes('peerd could not add it to the security log.'),
+          (warningLayout?.texts?.[1] ?? '').includes('mcdollar could not add it to the security log.'),
           JSON.stringify({ discoverWarning, warningLayout }));
         rec.check('combined warning statuses fit the narrow viewport',
           warningLayout?.documentWidth <= warningLayout?.viewportWidth
@@ -8403,7 +8403,7 @@ export const STATES = [
           features: document.body.dataset.openedFeatures,
         })`);
         rec.check('the explicit action opens only the expected HTTPS release asset',
-          opened?.url === 'https://github.com/NotASithLord/peerd/releases/download/v0.7.0/peerd-preview-firefox.xpi'
+          opened?.url === 'https://github.com/NotASithLord/mcdollar/releases/download/v0.7.0/mcdollar-preview-firefox.xpi'
             && opened?.target === '_blank'
             && opened?.features === 'noopener',
           JSON.stringify(opened));
@@ -8553,7 +8553,7 @@ export const STATES = [
             && !unknownOutcome?.card.includes('done'),
           JSON.stringify(unknownOutcome));
         rec.check('unknown-outcome recovery guidance remains visible to the user',
-          unknownOutcome?.body.includes('peerd cannot confirm whether the actor ran or completed')
+          unknownOutcome?.body.includes('mcdollar cannot confirm whether the actor ran or completed')
             && unknownOutcome?.body.includes('Check the target before trying again')
             && !unknownOutcome?.body.includes('Do not retry automatically'),
           JSON.stringify(unknownOutcome));
@@ -8697,7 +8697,7 @@ export const STATES = [
         const message = await waitFor(() => evalIn(page, `document.querySelector('.provider-card .key-msg')?.textContent`),
           { budgetMs: 5_000, pollMs: 50 });
         rec.check('the provider test shows a settled result', clicked && !!message, message);
-        if (process.env.PEERD_VISUAL_BASE_RENDER !== '1') {
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER !== '1') {
           rec.check('the refused test names its status and recovery step',
             message?.includes('(429)') && message.includes('Check your plan, credit or rate limit')
               && !message.includes('reach the provider'), message);
@@ -8792,7 +8792,7 @@ export const STATES = [
     name: 'options-voice-ready', kind: 'visual', phase: 'post-unlock',
     responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const page = await openWidePage(ctx, 'options/options.html#!/voice');
       try {
         const loaded = await waitFor(() => evalIn(page, `[...document.querySelectorAll('.voice-section button')]
@@ -8834,7 +8834,7 @@ export const STATES = [
     name: 'options-key-forms', kind: 'visual', phase: 'post-unlock',
     responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       let page = await openWidePage(ctx, 'options/options.html#!/api-integrations');
       try {
         const loaded = await waitFor(() => evalIn(page,
@@ -8898,28 +8898,28 @@ export const STATES = [
         await page.send('Network.enable');
         if (!await waitFor(() => evalIn(page, `[...document.querySelectorAll('.voice-section button')].some((button) => button.textContent === 'Upgrade to on-device (Moonshine)' && !button.disabled)`))) throw new Error('real Voice upgrade trigger is missing');
         await evalIn(page, `(() => { 'use strict'; const trigger = [...document.querySelectorAll('.voice-section button')].find((button) => button.textContent === 'Upgrade to on-device (Moonshine)'); trigger.focus(); trigger.click(); })()`);
-        if (!await waitFor(() => evalIn(page, `!!document.querySelector('.voice-section .peerd-modal')`))) throw new Error('real Voice confirmation did not open');
-        const dialog = await evalIn(page, `(() => { 'use strict'; const dialog = document.querySelector('.voice-section .peerd-modal');
+        if (!await waitFor(() => evalIn(page, `!!document.querySelector('.voice-section .mcdollar-modal')`))) throw new Error('real Voice confirmation did not open');
+        const dialog = await evalIn(page, `(() => { 'use strict'; const dialog = document.querySelector('.voice-section .mcdollar-modal');
           return { role: dialog.getAttribute('role'), modal: dialog.getAttribute('aria-modal'), title: dialog.getAttribute('aria-labelledby'),
             cancelFocused: document.activeElement === dialog.querySelector('button.secondary'), text: dialog.textContent }; })()`);
         rec.check('Voice states download facts before any approval', dialog.text.includes('250 MB') && dialog.text.includes('Download & enable'));
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base Voice dialog focus and name', dialog);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base Voice dialog focus and name', dialog);
         else rec.check('Voice opens a named modal with Cancel focused', dialog.role === 'dialog' && dialog.modal === 'true'
           && dialog.title === 'voice-confirm-title' && dialog.cancelFocused, JSON.stringify(dialog));
-        await checkAccessibleNames(page, rec, 'Voice exposes its named download dialog', [['.voice-section .peerd-modal', 'Download on-device voice model?', 'dialog']]);
+        await checkAccessibleNames(page, rec, 'Voice exposes its named download dialog', [['.voice-section .mcdollar-modal', 'Download on-device voice model?', 'dialog']]);
         await rec.visualPage('options-voice-confirm', page);
-        await evalIn(page, `document.querySelector('.voice-section .peerd-modal a').focus()`);
+        await evalIn(page, `document.querySelector('.voice-section .mcdollar-modal a').focus()`);
         await pressNativeKey(page, 'Tab', true);
         const reverse = await evalIn(page, `document.activeElement?.textContent === 'Download & enable'`);
         await pressNativeKey(page, 'Tab');
-        const forward = await evalIn(page, `document.activeElement === document.querySelector('.voice-section .peerd-modal a')`);
+        const forward = await evalIn(page, `document.activeElement === document.querySelector('.voice-section .mcdollar-modal a')`);
         await pressNativeKey(page, 'Escape');
-        const escaped = await waitFor(() => evalIn(page, `!document.querySelector('.voice-section .peerd-modal')`), { budgetMs: 1_000, pollMs: 40 });
+        const escaped = await waitFor(() => evalIn(page, `!document.querySelector('.voice-section .mcdollar-modal')`), { budgetMs: 1_000, pollMs: 40 });
         const returned = await evalIn(page, `document.activeElement?.textContent === 'Upgrade to on-device (Moonshine)'`);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base Voice native keys', { reverse, forward, escaped, returned });
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base Voice native keys', { reverse, forward, escaped, returned });
         else rec.check('native Tab wraps and Escape returns focus to the Voice trigger', reverse && forward && escaped && returned);
-        if (!escaped) await evalIn(page, `document.querySelector('.voice-section .peerd-modal button.secondary').click()`);
-        if (!await waitFor(() => evalIn(page, `!document.querySelector('.voice-section .peerd-modal')`))) throw new Error('Voice Cancel did not close');
+        if (!escaped) await evalIn(page, `document.querySelector('.voice-section .mcdollar-modal button.secondary').click()`);
+        if (!await waitFor(() => evalIn(page, `!document.querySelector('.voice-section .mcdollar-modal')`))) throw new Error('Voice Cancel did not close');
         rec.check('the real OCR trigger stays disabled while integrity is unpinned', await evalIn(page,
           `[...document.querySelectorAll('.ocr-section button')].some((button) => button.disabled && button.textContent === 'OCR not available in this build yet')`));
         const after = await rpc(page, { type: 'state/get' });
@@ -8951,7 +8951,7 @@ export const STATES = [
     name: 'options-behavior', kind: 'visual', phase: 'post-unlock',
     responder: () => ({ sse: sseText('noted') }),
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const page = await openWidePage(ctx, 'options/options.html#!/behavior');
       try {
         await waitFor(() => evalIn(page, `document.querySelectorAll('.set-row').length >= 11`),
@@ -8960,10 +8960,10 @@ export const STATES = [
         await rec.visualPage('options-behavior', page);
         const firstTabRow = await evalIn(page, `(() => {
           const labels = [...document.querySelectorAll('.set-row-label')].map((label) => label.textContent);
-          return labels.indexOf('Keep peerd as the first tab') - labels.indexOf('Toolbar button');
+          return labels.indexOf('Keep mcdollar as the first tab') - labels.indexOf('Toolbar button');
         })()`);
         if (baseRender) rec.observe('merge-base first tab row', { offset: firstTabRow });
-        else rec.check('"Keep peerd as the first tab" sits under the toolbar button', firstTabRow === 1, String(firstTabRow));
+        else rec.check('"Keep mcdollar as the first tab" sits under the toolbar button', firstTabRow === 1, String(firstTabRow));
         await evalIn(page, `(() => {
           const button = [...document.querySelectorAll('button')]
             .find((el) => el.textContent === 'Reset section to defaults');
@@ -9051,7 +9051,7 @@ export const STATES = [
     name: 'options-memory-safety', kind: 'visual', phase: 'post-unlock',
     responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const scope = { kind: 'project', workspace: 'settings-safety' };
       const body = '# Project memory\n\n- Keep the saved files.';
       const draft = `${body}\n- Keep this unsaved edit too.`;
@@ -9116,7 +9116,7 @@ export const STATES = [
     name: 'options-activity-history', kind: 'visual', phase: 'post-unlock',
     responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const marker = 'settings-history-e2e.test';
       const page = await openWidePage(ctx, 'options/options.html#!/activity');
       let added = false;
@@ -9177,7 +9177,7 @@ export const STATES = [
     responder: () => ({ sse: sseText('noted') }),
     async run(ctx, rec) {
       const page = await openWidePage(ctx, 'options/options.html#!/denylist');
-      const pattern = 'visual-options-denylist.peerd.test';
+      const pattern = 'visual-options-denylist.mcdollar.test';
       let fixtureAttempted = false;
       try {
         // why: a permission refusal also renders a page; require the real seed
@@ -9240,7 +9240,7 @@ export const STATES = [
         await rpc(ctx.page, { type: 'settings/update', patch: { devMode: true } });
         // Two different shapes, so the row copy is exercised both ways: a site
         // that stated a wait and was refused twice (a compounded interval), and
-        // one that only answered "unavailable" (peerd's own backoff).
+        // one that only answered "unavailable" (mcdollar's own backoff).
         await rpc(ctx.page, {
           type: 'debug/pacing', origin: 'https://api.acme.test', status: 429, retryAfter: '1',
         });
@@ -9347,7 +9347,7 @@ export const STATES = [
         await seed('https://later.example');
         const afterLearn = await rpc(page, { type: 'learned/list' });
         if (!afterLearn?.ok || !Array.isArray(afterLearn.origins)) throw new Error('post-learn list refused');
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base removal and later learn', { forgotten, afterLearn });
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base removal and later learn', { forgotten, afterLearn });
         else rec.check('Remove changes the live classifier and a later learn cannot restore the host', forgotten === false
           && afterLearn.origins.map((entry) => entry.host).sort().join(',') === 'later.example,portal.globex.test');
         await page.send('Page.reload', { ignoreCache: true });
@@ -9362,7 +9362,7 @@ export const STATES = [
         const protectedAfterRace = await inspect('https://concurrent.example');
         if (!raced?.ok || !Array.isArray(raced.origins)) throw new Error('raced list refused');
         rec.check('a concurrent learn remains protected', protectedAfterRace === true);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base Remove and learn overlap', raced);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base Remove and learn overlap', raced);
         else rec.check('Remove and learn share one ordered durable set', raced.origins.map((entry) => entry.host).sort().join(',') === 'concurrent.example,later.example'
           && await inspect('https://portal.globex.test') === false);
         await page.send('Page.reload', { ignoreCache: true });
@@ -9386,7 +9386,7 @@ export const STATES = [
         await seed('https://after-clear.example');
         const afterClear = await rpc(page, { type: 'learned/list' });
         if (!afterClear?.ok || !Array.isArray(afterClear.origins)) throw new Error('post-clear list refused');
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base clear and later learn', { clearedClassifier, afterClear });
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base clear and later learn', { clearedClassifier, afterClear });
         else rec.check('Forget all changes the classifier and stays cleared after another learn', clearedClassifier === false
           && afterClear.origins.length === 1 && afterClear.origins[0].host === 'after-clear.example');
         await page.send('Page.reload', { ignoreCache: true });
@@ -9521,7 +9521,7 @@ export const STATES = [
     name: 'administrative-validation', kind: 'visual', phase: 'post-unlock',
     responder: null,
     async run(ctx, rec) {
-      const base = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const base = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const modelCallsBefore = ctx.modelCallCount();
       const skillName = 'e2e-folded-description';
       const description = 'Read the full skill description. Use this fixture to check line folding.';
@@ -9595,10 +9595,10 @@ export const STATES = [
     name: 'shared-chat-title', kind: 'visual', phase: 'post-unlock',
     responder: null,
     async run(ctx, rec) {
-      const fileBytes = await readFile(new URL('../../extension/peerd-runtime/tools/prompt-wrap.js', import.meta.url));
+      const fileBytes = await readFile(new URL('../../extension/mcdollar-runtime/tools/prompt-wrap.js', import.meta.url));
       const fileText = fileBytes.toString('utf8');
       const priorSettings = await evalIn(ctx.page, `(async () => { 'use strict';
-        return (await (await import('/peerd-egress/kernel-storage.js')).kv.get('settings.v1')) ?? {};
+        return (await (await import('/mcdollar-egress/kernel-storage.js')).kv.get('settings.v1')) ?? {};
       })()`, true);
       if (!priorSettings || typeof priorSettings !== 'object' || Array.isArray(priorSettings)) throw new Error('saved provider settings are unavailable');
       const status = await rpc(ctx.page, { type: 'provider/status' });
@@ -9612,7 +9612,7 @@ export const STATES = [
         if (keyed?.ok !== true || selected?.ok !== true) throw new Error('the real Anthropic fixture setup refused');
         if (!await waitFor(() => evalIn(ctx.page, `!!document.querySelector('.input-bar input[type="file"]') && !!document.querySelector('.input-bar textarea')`))) throw new Error('the Anthropic composer did not become ready');
         tab = await evalIn(ctx.page, `(async () => { 'use strict';
-          return (await chrome.tabs.create({ url: ${JSON.stringify(`${fixture.url.replace('127.0.0.1', 'orders.peerd.test')}/products`)}, active: false })).id;
+          return (await chrome.tabs.create({ url: ${JSON.stringify(`${fixture.url.replace('127.0.0.1', 'orders.mcdollar.test')}/products`)}, active: false })).id;
         })()`, true);
         if (!Number.isInteger(tab)) throw new Error('shared web tab did not open');
         const loaded = await waitFor(() => evalIn(ctx.page, `chrome.tabs.get(${tab}).then((tab) => tab.status === 'complete')`, true));
@@ -9655,18 +9655,18 @@ export const STATES = [
         const content = session.messages.find((message) => message.role === 'user')?.content;
         rec.check('the durable message keeps real page and file context', typeof content === 'string'
           && content.includes('<untrusted_web_content ')
-          && content.includes('Coffee Mug') && content.endsWith(`\n\n<peerd_file name="prompt-wrap.js">\n${fileText}\n</peerd_file>`), content?.slice(0, 250));
+          && content.includes('Coffee Mug') && content.endsWith(`\n\n<mcdollar_file name="prompt-wrap.js">\n${fileText}\n</mcdollar_file>`), content?.slice(0, 250));
         const modelMessages = requests.length === 1 ? JSON.parse(requests[0].body).messages : [];
         const modelText = modelMessages.flatMap((message) => typeof message.content === 'string'
           ? [message.content] : (message.content ?? []).filter((block) => block.type === 'text').map((block) => block.text)).join('\n');
         rec.check('the model gets the same fenced context', requests.length === 1
           && modelText.includes('untrusted_web_content') && modelText.includes('Coffee Mug')
-          && modelText.includes(`<peerd_file name="prompt-wrap.js">\n${fileText}\n</peerd_file>`));
+          && modelText.includes(`<mcdollar_file name="prompt-wrap.js">\n${fileText}\n</mcdollar_file>`));
         const listed = await rpc(ctx.page, { type: 'session/list' });
         const title = listed?.ok === true && Array.isArray(listed.sessions)
           ? listed.sessions.find((row) => row.sessionId === session.sessionId)?.title : null;
         if (typeof title !== 'string' || !title.trim()) throw new Error(`real chat title metadata is missing: ${JSON.stringify({ sessionId: session.sessionId, listed })}`);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base shared title', title);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base shared title', title);
         else rec.check('only the user question becomes the new title', title === question, title);
         await clickAndSyncRedraw(ctx.page, '[aria-label="Chats"]');
         if (!await waitFor(() => evalIn(ctx.page, `(() => { 'use strict';
@@ -9684,7 +9684,7 @@ export const STATES = [
           if (reset.length && (await rpc(ctx.page, { type: 'settings/reset', keys: reset }))?.ok !== true) throw new Error('unset provider settings did not restore');
           if (Object.keys(patch).length && (await rpc(ctx.page, { type: 'settings/update', patch }))?.ok !== true) throw new Error('saved provider settings did not restore');
           const restored = await evalIn(ctx.page, `(async () => { 'use strict';
-            return (await (await import('/peerd-egress/kernel-storage.js')).kv.get('settings.v1')) ?? {};
+            return (await (await import('/mcdollar-egress/kernel-storage.js')).kv.get('settings.v1')) ?? {};
           })()`, true);
           rec.check('provider settings restore with exact saved field presence', keys.every((key) =>
             Object.hasOwn(restored, key) === Object.hasOwn(priorSettings, key) && restored[key] === priorSettings[key]));
@@ -9698,7 +9698,7 @@ export const STATES = [
   {
     name: 'document-attachment-refusals', kind: 'visual', phase: 'post-unlock', responder: null,
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const initial = (await rpc(ctx.page, { type: 'state/get' }))?.state?.settings;
       if (!initial) throw new Error('the provider state is unavailable');
       try {
@@ -9757,7 +9757,7 @@ export const STATES = [
     async run(ctx, rec) {
       // why: a fresh Home host leaves the real native panel closed. The shared
       // harness panel must stay alive for the next state.
-      const child = await launchPeerd({ extensionDir: ctx.extensionDir, panelPath: 'home/home.html',
+      const child = await launchMcdollar({ extensionDir: ctx.extensionDir, panelPath: 'home/home.html',
         modelResponder: (index) => ({ sse: index === 0 ? sseToolCall('sandbox_create', { kind: 'notebook', name: 'Moved Notebook' }) : sseText('Notebook ready.') }) });
       let browser;
       let notebook;
@@ -9778,14 +9778,14 @@ export const STATES = [
         if (!target) throw new Error('real Notebook target is missing');
         notebook = await attach(target.webSocketDebuggerUrl);
         await notebook.send('Page.enable');
-        if (!await waitFor(() => evalIn(notebook, `!!document.querySelector('.peerd-pull')`))) throw new Error('native pull-in chip did not mount');
+        if (!await waitFor(() => evalIn(notebook, `!!document.querySelector('.mcdollar-pull')`))) throw new Error('native pull-in chip did not mount');
         const before = await evalIn(notebook, `chrome.tabs.getCurrent().then((tab) => ({ id: tab.id, windowId: tab.windowId, document: performance.timeOrigin }))`, true);
         const movedWindow = await evalIn(notebook, `chrome.windows.create({ tabId: ${before.id}, focused: true }).then((window) => window.id)`, true);
         const after = await evalIn(notebook, `chrome.tabs.getCurrent().then((tab) => ({ id: tab.id, windowId: tab.windowId, document: performance.timeOrigin }))`, true);
         rec.check('the real Notebook tab moves without a new document', before.id === after.id && before.document === after.document
           && before.windowId !== after.windowId && after.windowId === movedWindow, JSON.stringify({ before, after }));
         await notebook.send('Page.bringToFront');
-        const button = await evalIn(notebook, `(() => { 'use strict'; const bounds = document.querySelector('.peerd-pull').getBoundingClientRect(); return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }; })()`);
+        const button = await evalIn(notebook, `(() => { 'use strict'; const bounds = document.querySelector('.mcdollar-pull').getBoundingClientRect(); return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }; })()`);
         await notebook.send('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, ...button });
         await notebook.send('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, ...button });
         const version = await fetch(`http://127.0.0.1:${child.port}/json/version`).then((reply) => reply.json());
@@ -9801,7 +9801,7 @@ export const STATES = [
         ({ sessionId: panelSession } = await browser.send('Target.attachToTarget', { targetId: nativeTarget.targetId, flatten: true }));
         panel = { send: (method, parameters = {}) => browser.send(method, parameters, panelSession) };
         const ownerWindow = await evalIn(panel, `chrome.windows.getCurrent().then((window) => window.id)`, true);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('base native panel window', { ownerWindow, after });
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('base native panel window', { ownerWindow, after });
         else rec.check('native pull-in opens in the moved tab window', ownerWindow === after.windowId, JSON.stringify({ ownerWindow, after }));
         if (!await waitFor(() => evalIn(panel, `!!document.querySelector('.input-bar textarea')`))) throw new Error('native panel did not become ready');
         await panel.send('Emulation.setDeviceMetricsOverride', PANEL_METRICS);
@@ -9881,7 +9881,7 @@ export const STATES = [
         rec.check('failed live stop stays visible',
           status?.warning.includes('live network could not be stopped'), status?.warning);
         rec.check('failed live stop remains retryable',
-          status?.retry === true || (process.env.PEERD_VISUAL_BASE_RENDER === '1'
+          status?.retry === true || (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1'
             && status?.legacyRetry === true), JSON.stringify(status));
         rec.check('the row says the network is still running',
           status?.badge === 'STILL RUNNING', status?.badge);
@@ -9948,7 +9948,7 @@ export const STATES = [
               if (n.nodeType === 3) n.textContent = n.textContent.replace(/\\d{2}:\\d{2}:\\d{2}/g, '00:00:00');
             }
           }
-          const pullIn = document.querySelector('.peerd-pull');
+          const pullIn = document.querySelector('.mcdollar-pull');
           if (!pullIn) return false;
           // why: Chrome can omit a fixed backdrop-filter layer while the root
           // compositor pump is active. The failed VM screen is uniform behind
@@ -9996,7 +9996,7 @@ export const STATES = [
   {
     name: 'vm-disk-ownership', kind: 'visual', phase: 'post-unlock', responder: null,
     async run(ctx, rec) {
-      if (process.env.PEERD_VISUAL_BASE_RENDER === '1') {
+      if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') {
         const extension = process.argv.find(arg => arg.startsWith('--extension='))?.slice('--extension='.length);
         if (!extension) throw new Error('base visual render requires an explicit extension tree');
         if (!existsSync(join(extension, 'engine-tabs/vm-tab/disk-lock.js'))) {
@@ -10012,9 +10012,9 @@ export const STATES = [
           const { packBundle } = await import('/shared/bundle/bundle.js');
           const { toBase64 } = await import('/shared/bundle/bytes.js');
           const { manifest, chunks } = await buildManifest({ payload: packBundle({ files: {} }),
-            type: 'vm-recipe', mime: 'application/peerd-vm-recipe', meta: { kind: 'vm', name: 'Disk guard' } });
+            type: 'vm-recipe', mime: 'application/mcdollar-vm-recipe', meta: { kind: 'vm', name: 'Disk guard' } });
           const imported = await chrome.runtime.sendMessage({ type: 'import/apply',
-            envelope: { format: 'peerd-bundle', version: 1, manifest, chunks: chunks.map(toBase64) } });
+            envelope: { format: 'mcdollar-bundle', version: 1, manifest, chunks: chunks.map(toBase64) } });
           if (!imported?.ok) throw new Error(JSON.stringify(imported));
           const reply = await chrome.runtime.sendMessage({ type: 'vm/get-meta', vmId: imported.id });
           const { diskLockName } = await import('/engine-tabs/vm-tab/disk-lock.js');
@@ -10046,7 +10046,7 @@ export const STATES = [
               for (const text of node.childNodes) if (text.nodeType === 3) text.textContent = text.textContent.replace(/\\d{2}:\\d{2}:\\d{2}/g, '00:00:00').replaceAll(${JSON.stringify(vm.id)}, 'vm-disk-guard');
             }
             // why: match the existing VM capture guard for fixed blur layers.
-            const pullIn = document.querySelector('.peerd-pull');
+            const pullIn = document.querySelector('.mcdollar-pull');
             if (pullIn) { pullIn.style.backdropFilter = 'none'; pullIn.style.webkitBackdropFilter = 'none'; pullIn.getBoundingClientRect(); }
           })()`);
           await rec.visualPage(`vm-disk-${failure}`, page, { beforeShot: pinClock });
@@ -10097,10 +10097,10 @@ export const STATES = [
               { type: 'opfs-request', rid: 'forged-opfs', op: 'write', args: { path: 'canary.txt', content: 'changed' } },
               { type: 'distributed-request', rid: 'forged-dweb', method: 'peers' },
             ]) postMessage(envelope);
-            await tryCall('egress', () => peerd.egress.fetch('https://sink.example/'));
-            await tryCall('opfs', () => peerd.self.writeFile('canary.txt', 'changed'));
-            await tryCall('subagent', () => peerd.runtime.runAgent({ task: 'leak' }));
-            await tryCall('dweb', () => peerd.distributed.peers());
+            await tryCall('egress', () => mcdollar.egress.fetch('https://sink.example/'));
+            await tryCall('opfs', () => mcdollar.self.writeFile('canary.txt', 'changed'));
+            await tryCall('subagent', () => mcdollar.runtime.runAgent({ task: 'leak' }));
+            await tryCall('dweb', () => mcdollar.distributed.peers());
             return attempts;
           };
         `;
@@ -10294,7 +10294,7 @@ export const STATES = [
           { budgetMs: 10_000, pollMs: 100 })) throw new Error('Notebook draft did not save');
         const backupDirectory = (create) => evalIn(page, `(async () => {
           let dir = await navigator.storage.getDirectory();
-          dir = await dir.getDirectoryHandle('peerd-notebooks');
+          dir = await dir.getDirectoryHandle('mcdollar-notebooks');
           dir = await dir.getDirectoryHandle(${JSON.stringify(notebookId)});
           await dir.removeEntry('notebook.before-agent.js', { recursive: true }).catch((error) => {
             if (error.name !== 'NotFoundError') throw error;
@@ -10310,7 +10310,7 @@ export const STATES = [
         const recovered = await sendNotebook({ type: 'js/eval', code: 'return 43', timeoutMs: 10_000 });
         if (recovered?.ok !== true) throw new Error('Notebook backup retry failed');
 
-        const custodyPath = `peerd-notebook-custody/${notebookId}/mirror.json`;
+        const custodyPath = `mcdollar-notebook-custody/${notebookId}/mirror.json`;
         const backupAliases = ['notebook.before-agent.js', '/notebook.before-agent.js', 'notebook.before-agent.js/', '///notebook.before-agent.js///'];
         const backupBeforeWrites = await sendNotebook({ type: 'js/read-file', path: backupAliases[0] });
         const boundaryPaths = ['mirror.json', `/${custodyPath}`, `../../${custodyPath}`, `..\\${custodyPath}`, 'bad\0path'];
@@ -10318,8 +10318,8 @@ export const STATES = [
           const paths = ${JSON.stringify([...boundaryPaths, ...backupAliases])};
           const writes = [], deletes = [];
           for (const path of paths) {
-            try { await peerd.self.writeFile(path, '{"pending":true}'); writes.push(true); } catch { writes.push(false); }
-            try { await peerd.self.deleteFile(path); deletes.push(true); } catch { deletes.push(false); }
+            try { await mcdollar.self.writeFile(path, '{"pending":true}'); writes.push(true); } catch { writes.push(false); }
+            try { await mcdollar.self.deleteFile(path); deletes.push(true); } catch { deletes.push(false); }
           }
           let rootBlocked = false;
           try { await navigator.storage.getDirectory(); } catch { rootBlocked = true; }
@@ -10333,7 +10333,7 @@ export const STATES = [
         const backupAfterWrites = await sendNotebook({ type: 'js/read-file', path: backupAliases[0] });
         const markerAfterWrites = await evalIn(page, `(async () => {
           let dir = await navigator.storage.getDirectory();
-          for (const part of ['peerd-notebook-custody', ${JSON.stringify(notebookId)}]) dir = await dir.getDirectoryHandle(part);
+          for (const part of ['mcdollar-notebook-custody', ${JSON.stringify(notebookId)}]) dir = await dir.getDirectoryHandle(part);
           return JSON.parse(await (await (await dir.getFileHandle('mirror.json')).getFile()).text());
         })().catch(() => null)`, true);
         rec.check('agent file writes and deletes cannot forge the host mirror marker',
@@ -10374,10 +10374,10 @@ export const STATES = [
           blocked?.result?.value === 45 && backup?.content === draft && notebook?.content === 'return 45' && visible === true,
           JSON.stringify({ blocked, backup, notebook, visible }));
         const removed = await evalIn(page, `(async () => {
-          const { createRepositoryService } = await import('/peerd-engine/index.js');
+          const { createRepositoryService } = await import('/mcdollar-engine/index.js');
           await createRepositoryService().destroy({ kind: 'notebook', id: ${JSON.stringify(notebookId)} }, { worktree: true });
           const root = await navigator.storage.getDirectory();
-          return Promise.all(['peerd-notebooks', 'peerd-notebook-custody'].map(async (name) => {
+          return Promise.all(['mcdollar-notebooks', 'mcdollar-notebook-custody'].map(async (name) => {
             const parent = await root.getDirectoryHandle(name);
             return parent.getDirectoryHandle(${JSON.stringify(notebookId)}).then(() => false, (error) => error.name === 'NotFoundError');
           }));
@@ -10417,17 +10417,17 @@ export const STATES = [
     responder: call => ({ sse: call === 0 ? sseToolCall('sandbox_create', {
       kind: 'app', name: 'Consent guard', files: { 'index.html': `<!doctype html><title>Consent guard</title>
 <main><h1>External link</h1><p>The trusted bar must confirm this link.</p></main>
-<script>'use strict'; addEventListener('message', event => { if (event.data?.type === 'request-link') parent.postMessage({type:'app-link',href:'https://consent.peerd.test/approved'},'*'); });</script>` },
+<script>'use strict'; addEventListener('message', event => { if (event.data?.type === 'request-link') parent.postMessage({type:'app-link',href:'https://consent.mcdollar.test/approved'},'*'); });</script>` },
     }) : sseText('CONSENT-READY') }),
     async run(ctx, rec) {
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       let page, targetId;
       const targets = () => fetch(`http://127.0.0.1:${ctx.port}/json/list`).then(reply => reply.json());
-      const opened = () => targets().then(all => all.filter(target => target.url.startsWith('https://consent.peerd.test/')));
+      const opened = () => targets().then(all => all.filter(target => target.url.startsWith('https://consent.mcdollar.test/')));
       try {
         const sent = await rpc(ctx.page, { type: 'agent/send', text: 'Create the Consent guard App.' });
         if (!sent?.ok) throw new Error('Consent App creation failed');
-        const target = await waitFor(async () => (await targets()).find(candidate => candidate.title === 'peerd · Consent guard'),
+        const target = await waitFor(async () => (await targets()).find(candidate => candidate.title === 'mcdollar · Consent guard'),
           { budgetMs: 30_000, pollMs: 100 });
         if (!target) throw new Error('Consent App did not open');
         targetId = target.id;
@@ -10478,7 +10478,7 @@ export const STATES = [
         }
         const approved = await waitFor(async () => (await opened())[0], { budgetMs: 5_000, pollMs: 50 });
         rec.check('a deliberate single click opens exactly the confirmed link',
-          approved?.url === 'https://consent.peerd.test/approved'
+          approved?.url === 'https://consent.mcdollar.test/approved'
             && await evalIn(page, `!document.querySelector('[role="alertdialog"]') && !document.getElementById('app-frame').inert`));
       } finally {
         for (const target of await opened()) await fetch(`http://127.0.0.1:${ctx.port}/json/close/${target.id}`);
@@ -10494,18 +10494,18 @@ export const STATES = [
     visualVariants: ['app-full-screen-button', 'app-full-screen-handle-focus', 'app-full-screen-panel-open'],
     responder: null,
     async run(ctx, rec) {
-      const child = await launchPeerd({ extensionDir: ctx.extensionDir, panelPath: 'home/home.html',
+      const child = await launchMcdollar({ extensionDir: ctx.extensionDir, panelPath: 'home/home.html',
         modelResponder: (index) => ({ sse: index === 0 ? sseToolCall('sandbox_create', {
           kind: 'app', name: 'Full screen check', files: { 'index.html': `<!doctype html><title>Full screen check</title>
 <style>body{margin:0;font:16px/1.5 system-ui,sans-serif;background:#f6f6f6;color:#1a1a1a}main{height:100vh;display:grid;place-content:center;text-align:center}</style>
 <main><h1>Full screen check</h1><p>This App fills the whole screen.</p></main>
-<script>'use strict'; addEventListener('message', event => { if (event.data?.type === 'request-link') parent.postMessage({type:'app-link',href:'https://full-screen.peerd.test/'},'*'); });
+<script>'use strict'; addEventListener('message', event => { if (event.data?.type === 'request-link') parent.postMessage({type:'app-link',href:'https://full-screen.mcdollar.test/'},'*'); });
 addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',key:event.key},'*'));</script>` },
         }) : sseText('App ready.') }) });
       let app;
       let browser;
       // why observe on the merge base: its render only supplies the before pictures.
-      const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const verdict = (name, pass, detail) => (baseRender ? rec.observe(`base ${name}`, { pass, detail }) : rec.check(name, pass, detail));
       const center = (selector) => evalIn(app, `(() => { const r = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })()`);
       const click = async (selector) => {
@@ -10516,13 +10516,13 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
       };
       const fullScreenView = () => evalIn(app, `(() => {
         const shown = (selector) => { const node = document.querySelector(selector); return !!node && getComputedStyle(node).display !== 'none'; };
-        const handle = document.getElementById('peerd-handle').getBoundingClientRect();
+        const handle = document.getElementById('mcdollar-handle').getBoundingClientRect();
         return {
           full: document.fullscreenElement === document.documentElement,
-          handle: shown('#peerd-handle'), status: shown('#fullscreen-status'),
+          handle: shown('#mcdollar-handle'), status: shown('#fullscreen-status'),
           statusText: document.getElementById('fullscreen-status').textContent,
           handleBox: { left: handle.left, width: handle.width, height: handle.height, middle: handle.top + handle.height / 2, viewMiddle: innerHeight / 2 },
-          controls: ['#fullscreen-btn', '#actor-chat-toggle', '#export-btn', '#mode-toggle', '.peerd-pull'].filter(shown),
+          controls: ['#fullscreen-btn', '#actor-chat-toggle', '#export-btn', '#mode-toggle', '.mcdollar-pull'].filter(shown),
         };
       })()`);
       // why wait for the status too: Chrome sets fullscreenElement first and fires
@@ -10534,7 +10534,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         const sent = await rpc(child.page, { type: 'agent/send', text: 'Create the Full screen check App.' });
         if (!sent?.ok) throw new Error('real App creation refused');
         const target = await waitFor(async () => (await fetch(`http://127.0.0.1:${child.port}/json/list`).then((reply) => reply.json()))
-          .find((entry) => entry.title === 'peerd · Full screen check'), { budgetMs: 30_000, pollMs: 100 });
+          .find((entry) => entry.title === 'mcdollar · Full screen check'), { budgetMs: 30_000, pollMs: 100 });
         if (!target) throw new Error('the App tab did not open');
         app = await attach(target.webSocketDebuggerUrl);
         await app.send('Runtime.enable');
@@ -10543,10 +10543,10 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         await app.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
         await waitFor(() => evalIn(app, `document.getElementById('boot')?.classList.contains('is-hidden')`), { budgetMs: 10_000, pollMs: 50 });
         // why: the pull-in chip types a short hint in and out after load. Capture after it leaves.
-        await waitFor(() => evalIn(app, `!!document.getElementById('peerd-pull-hint')`), { budgetMs: 3_000, pollMs: 50 });
-        await waitFor(() => evalIn(app, `!document.getElementById('peerd-pull-hint')`), { budgetMs: 15_000, pollMs: 100 });
+        await waitFor(() => evalIn(app, `!!document.getElementById('mcdollar-pull-hint')`), { budgetMs: 3_000, pollMs: 50 });
+        await waitFor(() => evalIn(app, `!document.getElementById('mcdollar-pull-hint')`), { budgetMs: 15_000, pollMs: 100 });
         await rec.visualPage('app-full-screen-button', app);
-        if (process.env.PEERD_BROWSER_WINDOW_EVIDENCE === '1') await rec.browserWindow('app-window', child, app);
+        if (process.env.MCDOLLAR_BROWSER_WINDOW_EVIDENCE === '1') await rec.browserWindow('app-window', child, app);
         // why: a merge base from before full screen has no full-screen view to picture.
         if (baseRender && !await evalIn(app, `!!document.getElementById('fullscreen-btn')`)) return;
         await checkAccessibleNames(app, rec, 'the Full screen button has its visible name', [['#fullscreen-btn', 'Full screen']]);
@@ -10572,29 +10572,29 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
           JSON.stringify({ appFocused, keyReached }));
         const hintHidden = await evalIn(app, `(() => {
           const hint = document.createElement('div');
-          hint.className = 'peerd-pull-hint';
+          hint.className = 'mcdollar-pull-hint';
           document.body.append(hint);
           const display = getComputedStyle(hint).display;
           hint.remove();
           return display === 'none';
         })()`);
         verdict('the pull-in hint stays hidden in full screen', hintHidden === true);
-        await checkAccessibleNames(app, rec, 'the P handle names what it does', [['#peerd-handle', 'Open peerd']]);
+        await checkAccessibleNames(app, rec, 'the P handle names what it does', [['#mcdollar-handle', 'Open mcdollar']]);
         const faded = await waitFor(() => evalIn(app, `document.getElementById('fullscreen-status').hidden`), { budgetMs: 8_000, pollMs: 100 });
         verdict('the Esc status hides on its own after a few seconds', faded === true);
         // why show it again: the capture is the moment of entry. Its timer has already run, so nothing hides it mid-shot.
         await rec.visualPage('app-full-screen', app, { beforeShot: (page) => evalIn(page, `document.getElementById('fullscreen-status').hidden = false`) });
-        if (process.env.PEERD_BROWSER_WINDOW_EVIDENCE === '1') await rec.browserWindow('full-screen', child, app);
+        if (process.env.MCDOLLAR_BROWSER_WINDOW_EVIDENCE === '1') await rec.browserWindow('full-screen', child, app);
         await evalIn(app, `document.getElementById('fullscreen-status').hidden = true`);
         // why Shift+Tab: the handle comes just before the App frame, and a key press shows the focus ring.
         await pressNativeKey(app, 'Tab', true);
         const handleFocus = await evalIn(app, `(() => {
-          const handle = document.getElementById('peerd-handle');
+          const handle = document.getElementById('mcdollar-handle');
           return document.activeElement === handle && handle.matches(':focus-visible');
         })()`);
         verdict('Shift+Tab from the App reaches the P handle and shows its focus ring', handleFocus === true);
         await rec.visualPage('app-full-screen-handle-focus', app);
-        await click('#peerd-handle');
+        await click('#mcdollar-handle');
         const version = await fetch(`http://127.0.0.1:${child.port}/json/version`).then((reply) => reply.json());
         browser = await attach(version.webSocketDebuggerUrl);
         const panel = await waitFor(async () => (await browser.send('Target.getTargets')).targetInfos
@@ -10605,13 +10605,13 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         const beside = !dropped;
         verdict('the P handle opens the side panel beside the App, and full screen stays on', !!panel && beside,
           JSON.stringify({ panel: panel?.url ?? null, beside }));
-        // why: with the panel beside the App, peerd is on screen and the handle has nothing to open.
-        const handleGone = await waitFor(() => evalIn(app, `getComputedStyle(document.getElementById('peerd-handle')).display === 'none'`), { budgetMs: 5_000, pollMs: 50 });
+        // why: with the panel beside the App, mcdollar is on screen and the handle has nothing to open.
+        const handleGone = await waitFor(() => evalIn(app, `getComputedStyle(document.getElementById('mcdollar-handle')).display === 'none'`), { budgetMs: 5_000, pollMs: 50 });
         const frameFocused = await evalIn(app, `document.activeElement === document.getElementById('app-frame')`);
         verdict('once the side panel is open, the P handle hides and its focus goes to the App', handleGone === true && frameFocused === true,
           JSON.stringify({ handleGone, frameFocused }));
         await rec.visualPage('app-full-screen-panel-open', app);
-        if (process.env.PEERD_BROWSER_WINDOW_EVIDENCE === '1') await rec.browserWindow('full-screen-beside-panel', child, app);
+        if (process.env.MCDOLLAR_BROWSER_WINDOW_EVIDENCE === '1') await rec.browserWindow('full-screen-beside-panel', child, app);
         // why a native key code: without one, Chrome gives a DevTools key press to the page only,
         // and the browser's own Esc handling never sees it. On macOS, Chrome builds the key press
         // from the code (53). On Linux, the browser reads windowsVirtualKeyCode. 9 is the Linux code for Esc.
@@ -10680,14 +10680,14 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
           throw new Error(`Keyboard reentry did not deliver a trusted Full screen click: ${JSON.stringify(evidence)}`);
         }
         const again = await waitFor(fullScreenOn, { budgetMs: 5_000, pollMs: 50 });
-        // why: the panel that the handle opened is still open, as when a person asks peerd for an App and then clicks Full screen.
+        // why: the panel that the handle opened is still open, as when a person asks mcdollar for an App and then clicks Full screen.
         const reentry = await evalIn(app, `({
-          chip: document.querySelector('.peerd-pull').getAttribute('aria-label'),
-          handle: getComputedStyle(document.getElementById('peerd-handle')).display,
+          chip: document.querySelector('.mcdollar-pull').getAttribute('aria-label'),
+          handle: getComputedStyle(document.getElementById('mcdollar-handle')).display,
           events: window.__fullScreenReentry,
         })`);
         verdict('full screen with the side panel already open shows no P handle', again === true
-          && reentry.chip === 'Close the peerd side panel' && reentry.handle === 'none', JSON.stringify({ again, ...reentry, windowRestored, errors: app.events.slice(-12) }));
+          && reentry.chip === 'Close the mcdollar side panel' && reentry.handle === 'none', JSON.stringify({ again, ...reentry, windowRestored, errors: app.events.slice(-12) }));
         const consent = await evalIn(app, `(async () => {
           const { bar, fullAtPrompt } = await new Promise((resolve, reject) => {
             const observer = new MutationObserver(() => {
@@ -10729,7 +10729,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
     responder: () => ({ sse: sseText('No model call is needed to open a local App.') }),
     async run(ctx, rec) {
       await chooseFixtureNetwork(ctx, false);
-      const base = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+      const base = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
       const appPage = `chrome-extension://${ctx.sw.id}/engine-tabs/app-tab/index.html`;
       const targets = async () => fetch(`http://127.0.0.1:${ctx.port}/json/list`).then((reply) => reply.json());
       const beforeApps = await rpc(ctx.page, { type: 'apps/list' });
@@ -10809,7 +10809,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         runner = await attach(sandbox.webSocketDebuggerUrl);
         const sealed = await waitFor(() => evalIn(runner, `(() => {
           'use strict';
-          const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'peerd');
+          const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'mcdollar');
           return globalThis.origin === 'null' && document.title === ${JSON.stringify(starterName)}
             && !!document.querySelector('#csv') && typeof document.querySelector('#analyze')?.onclick === 'function'
             && descriptor?.writable === false && descriptor.configurable === false && Object.isFrozen(descriptor.value);
@@ -10914,11 +10914,11 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
     responder: (callIndex) => ({ sse: callIndex === 0
       ? sseToolCall('sandbox_create', {
         kind: 'app', name: 'Editor recovery', files: {
-          'index.html': '<!doctype html><title>Editor recovery</title><h1>Draft recovery</h1><script>peerd.data.set("first", {saved:true})</script>',
+          'index.html': '<!doctype html><title>Editor recovery</title><h1>Draft recovery</h1><script>mcdollar.data.set("first", {saved:true})</script>',
         },
       }) : sseText('EDITOR-RECOVERY-READY') }),
     async run(ctx, rec) {
-      const directory = await mkdtemp(join(tmpdir(), 'peerd-editor-recovery-'));
+      const directory = await mkdtemp(join(tmpdir(), 'mcdollar-editor-recovery-'));
       const priorTargets = new Set((await fetch(`http://127.0.0.1:${ctx.port}/json/list`).then((reply) => reply.json())).map((target) => target.id));
       let page;
       let vaultLocked = false;
@@ -10928,7 +10928,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         const target = await waitFor(async () => {
           const targets = await fetch(`http://127.0.0.1:${ctx.port}/json/list`).then((reply) => reply.json());
           return targets.find((candidate) => candidate.type === 'page'
-            && candidate.title === 'peerd · Editor recovery' && !priorTargets.has(candidate.id)) ?? null;
+            && candidate.title === 'mcdollar · Editor recovery' && !priorTargets.has(candidate.id)) ?? null;
         }, { budgetMs: 30_000, pollMs: 100 });
         if (!target) throw new Error('The created App did not render');
         page = await attach(target.webSocketDebuggerUrl);
@@ -10939,10 +10939,10 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         await page.send('Emulation.setDeviceMetricsOverride', { width: 900, height: 620, deviceScaleFactor: 1, mobile: false });
         const appId = new URL(target.url).hash.slice(1).split('?')[0];
         const firstData = await waitFor(() => evalIn(page, `(async () => {
-          const { opfsHelpers } = await import('/peerd-engine/opfs.js');
-          return opfsHelpers(['peerd-apps', ${JSON.stringify(appId)}]).read('data/first.json').catch(() => null);
+          const { opfsHelpers } = await import('/mcdollar-engine/opfs.js');
+          return opfsHelpers(['mcdollar-apps', ${JSON.stringify(appId)}]).read('data/first.json').catch(() => null);
         })()`, true), { budgetMs: 10_000, pollMs: 100 });
-        rec.check('the first peerd.data.set creates a real absent OPFS path', firstData === '{"saved":true}', firstData);
+        rec.check('the first mcdollar.data.set creates a real absent OPFS path', firstData === '{"saved":true}', firstData);
         await evalIn(page, `document.getElementById('mode-toggle').click()`);
         await waitFor(() => evalIn(page, `!!document.querySelector('#editor-panel:not([hidden]) .cm-content')`),
           { budgetMs: 10_000, pollMs: 100 });
@@ -10959,9 +10959,9 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         await sleep(600);
         const afterUndo = await evalIn(page, `(async () => {
           const { EditorView } = await import('/vendor/codemirror/cm.js');
-          const { opfsHelpers } = await import('/peerd-engine/index.js');
+          const { opfsHelpers } = await import('/mcdollar-engine/index.js');
           return { buffer: EditorView.findFromDOM(document.querySelector('.cm-editor')).state.doc.toString(),
-            saved: await opfsHelpers(['peerd-apps', ${JSON.stringify(appId)}]).read('index.html') };
+            saved: await opfsHelpers(['mcdollar-apps', ${JSON.stringify(appId)}]).read('index.html') };
         })()`, true);
         rec.check('Undo after loading leaves the App source and saved file intact',
           !!loaded && afterUndo?.buffer === loaded && afterUndo.saved === loaded, JSON.stringify(afterUndo));
@@ -11011,7 +11011,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
             files: [...document.querySelectorAll('.pe-node[data-path]')].map((node) => node.dataset.path),
           })`);
           rec.observe('renewed App editor runtime errors', page.events.slice(-12));
-          if (process.env.PEERD_VISUAL_BASE_RENDER === '1' && diagnostic.boot?.includes('is-failed') && diagnostic.bootMessage) {
+          if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' && diagnostic.boot?.includes('is-failed') && diagnostic.bootMessage) {
             rec.observe('merge-base App editor', diagnostic);
             await rec.visualPage('app-editor-recovery', page);
             return;
@@ -11022,7 +11022,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         await waitFor(() => evalIn(page,
           `document.querySelector('.pe-node.is-active')?.dataset.path === 'notes.txt'`),
         { budgetMs: 10_000, pollMs: 100 });
-        const baseRender = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+        const baseRender = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
         const selectFile = async (path) => {
           const opened = await evalIn(page, `(() => {
             const directory = document.querySelector('.pe-node[data-kind="dir"][data-path="data"]');
@@ -11045,8 +11045,8 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
           await page.send('Input.insertText', { text: content });
         };
         const savedText = (path) => evalIn(page, `(async () => {
-          const { opfsHelpers } = await import('/peerd-engine/opfs.js');
-          return opfsHelpers(['peerd-apps', ${JSON.stringify(appId)}]).read(${JSON.stringify(path)});
+          const { opfsHelpers } = await import('/mcdollar-engine/opfs.js');
+          return opfsHelpers(['mcdollar-apps', ${JSON.stringify(appId)}]).read(${JSON.stringify(path)});
         })()`, true);
         // why: this records real replies. It never replaces a route result.
         await evalIn(page, `(async () => {
@@ -11140,7 +11140,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
           && await evalIn(page, `document.getElementById('app-save-retry').textContent === 'Retry'`), JSON.stringify({ lockNotice, lockedReply }));
         if (baseRender) rec.observe('merge-base locked save guidance', lockNotice);
         else rec.check('the Save banner directs the user to unlock',
-          lockNotice?.includes('Unlock it in the peerd panel, then retry.') && !lockNotice.includes('free browser storage'), lockNotice);
+          lockNotice?.includes('Unlock it in the mcdollar panel, then retry.') && !lockNotice.includes('free browser storage'), lockNotice);
         await rec.visualPage('app-editor-locked-save', page);
         const beforeLockedChat = ctx.modelCallCount();
         const lockedChat = await chat('Keep this prompt while the vault is locked.');
@@ -11148,7 +11148,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         if (baseRender) rec.observe('merge-base locked actor guidance', lockedChat);
         else rec.check('the drawer names a real known locked refusal and keeps its prompt',
           lockedChat.reply?.error === 'vault-locked' && lockedChat.reply?.outcomeKnown === true
-          && lockedChat.text === 'Vault is locked. Unlock it in the peerd panel, then send again.'
+          && lockedChat.text === 'Vault is locked. Unlock it in the mcdollar panel, then send again.'
           && lockedChat.prompt === 'Keep this prompt while the vault is locked.', JSON.stringify(lockedChat));
         await rec.visualPage('app-actor-chat-locked-refusal', page);
         const unlocked = await rpc(ctx.page, { type: 'vault/unlock', passphrase: PASSPHRASE }, { timeoutMs: 120_000 });
@@ -11217,12 +11217,12 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         const after = await evalIn(page, `(async () => {
           const { EditorView } = await import('/vendor/codemirror/cm.js');
           const view = EditorView.findFromDOM(document.querySelector('.cm-editor'));
-          const { opfsHelpers } = await import('/peerd-engine/opfs.js');
+          const { opfsHelpers } = await import('/mcdollar-engine/opfs.js');
           const event = new Event('beforeunload', { cancelable: true });
           window.dispatchEvent(event);
           return {
             draft: view.state.doc.toString(),
-            saved: await opfsHelpers(['peerd-apps', ${JSON.stringify(appId)}]).read('notes.txt'),
+            saved: await opfsHelpers(['mcdollar-apps', ${JSON.stringify(appId)}]).read('notes.txt'),
             attempts: globalThis.__editorWriteAttempts,
             guard: event.defaultPrevented,
             url: location.href,
@@ -11256,7 +11256,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         // state can leave it over the pull-in chip and capture its hover border.
         await page.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 0, y: 0 });
         return evalIn(page, `(() => {
-          const pullIn = document.querySelector('.peerd-pull');
+          const pullIn = document.querySelector('.mcdollar-pull');
           if (!pullIn) return false;
           // why: Chrome can omit this fixed backdrop-filter layer during a
           // theme compositor repaint. Pinning the blur keeps both shots exact.
@@ -11442,8 +11442,8 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
       // run can finish between CDP polls even when the actor response is held;
       // the page-side observer makes "was rendered" durable for this state.
       await evalIn(ctx.page, `(() => {
-        globalThis.__peerdScriptFanObserver?.disconnect();
-        const state = globalThis.__peerdScriptFanE2e = {
+        globalThis.__mcdollarScriptFanObserver?.disconnect();
+        const state = globalThis.__mcdollarScriptFanE2e = {
           opsSeen: false, finalSeen: false, cardOk: false,
         };
         const sample = () => {
@@ -11453,8 +11453,8 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
           state.cardOk ||= [...document.querySelectorAll('.tool-call.tool-ok')]
             .some((card) => card.querySelector('.tool-name')?.textContent === 'script');
         };
-        globalThis.__peerdScriptFanObserver = new MutationObserver(sample);
-        globalThis.__peerdScriptFanObserver.observe(document.body, { childList: true, subtree: true });
+        globalThis.__mcdollarScriptFanObserver = new MutationObserver(sample);
+        globalThis.__mcdollarScriptFanObserver.observe(document.body, { childList: true, subtree: true });
         sample();
       })()`);
       const sent = await rpc(ctx.page, { type: 'agent/send', text: 'script-check the widget price' });
@@ -11462,7 +11462,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
       // The live delegation feed appears on the pending script card.
       const liveState = await waitFor(
         () => evalIn(ctx.page, `(() => {
-          const state = globalThis.__peerdScriptFanE2e;
+          const state = globalThis.__mcdollarScriptFanE2e;
           return state?.opsSeen || state?.finalSeen ? state : null;
         })()`),
         { budgetMs: 90_000, pollMs: 100 });
@@ -11471,7 +11471,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
       let out = {};
       await waitFor(async () => {
         out = await evalIn(ctx.page, `(() => {
-          const tracked = globalThis.__peerdScriptFanE2e ?? {};
+          const tracked = globalThis.__mcdollarScriptFanE2e ?? {};
           const bubbles = [...document.querySelectorAll('.message-assistant .bubble')].map((b) => b.textContent.trim());
           const busy = !!document.querySelector('form.input-bar button.stop');
           const results = [...document.querySelectorAll('.tool-call .tool-result')].map((r) => r.textContent || '');
@@ -11494,7 +11494,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
       rec.check("the orchestrator read a result whose value was built FROM the actor's reply", resultTurn.length >= 1, `resultTurns=${resultTurn.length}`);
       rec.check('the final orchestrator answer landed', out.finalSeen === true);
       rec.check('the script card settled ok', out.cardOk === true);
-      await evalIn(ctx.page, `globalThis.__peerdScriptFanObserver?.disconnect()`);
+      await evalIn(ctx.page, `globalThis.__mcdollarScriptFanObserver?.disconnect()`);
     },
   },
   // message_actor ends the first turn. Its isolated reply re-enters later as a
@@ -11689,7 +11689,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
       if (body.includes('<actor_agent>')) {
         const error = JSON.stringify({ error: {
           message: 'actor-provider-boundary-blocked: The actor model request was not run. '
-            + 'Do not retry automatically. Ask the user to reload peerd before another actor attempt.',
+            + 'Do not retry automatically. Ask the user to reload mcdollar before another actor attempt.',
         } });
         return { sse: `data: ${error}\n\n${sseText('')}` };
       }
@@ -11727,7 +11727,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         (out?.body || '').includes('No actor work was started. Review the request before trying again.'),
         JSON.stringify(out?.body));
       rec.check('the live card does not trust provider recovery tokens or instructions',
-        !/actor-provider-boundary-blocked|Reload peerd|Do not retry automatically|Ask the user/i
+        !/actor-provider-boundary-blocked|Reload mcdollar|Do not retry automatically|Ask the user/i
           .test(out?.body || ''), JSON.stringify(out?.body));
       const replyReady = await waitFor(
         () => evalIn(ctx.page, `!!document.querySelector('.message-actor-reply')`),
@@ -11744,7 +11744,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         /Not run/.test(reply?.role || ''), JSON.stringify(reply?.role));
       rec.check('the failed actor reply uses the same generic Not run guidance',
         (reply?.body || '') === 'No actor work was started. Review the request before trying again.'
-          && !/actor-provider-boundary-blocked|Reload peerd|Do not retry automatically|Ask the user/i
+          && !/actor-provider-boundary-blocked|Reload mcdollar|Do not retry automatically|Ask the user/i
             .test(reply?.body || ''),
         JSON.stringify(reply?.body));
       await waitFor(async () => { const state = await probe(ctx); return !state.busy; }, { budgetMs: 25_000 });
@@ -11761,7 +11761,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
     name: 'dweb-actor-delegate', kind: 'functional', phase: 'post-unlock',
     responder: (callIndex, request) => {
       const body = (request && request.postData) || '';
-      const isDweb = body.includes("peerd's mesh operator");
+      const isDweb = body.includes("mcdollar's mesh operator");
       if (isDweb) { dwebActorState.actorCalls += 1; return { sse: sseText('MESH_OPERATOR_REPLY') }; }
       if (body.includes('you messaged has replied')) return { sse: sseText('DWEB-FINAL') };
       if (dwebActorState.delegates === 0) {
@@ -11811,7 +11811,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
     name: 'a2a-code-surface', kind: 'functional', phase: 'post-unlock',
     responder: (callIndex, request) => {
       const body = (request && request.postData) || '';
-      const isDweb = body.includes("peerd's mesh operator");
+      const isDweb = body.includes("mcdollar's mesh operator");
       if (isDweb) {
         a2aState.actorCalls += 1;
         // First dweb-actor turn: write + run a mesh script. Second (after the
@@ -12241,7 +12241,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
         response.end('<!doctype html><title>Actor fabric target</title><main>Widget price: 42</main>');
       });
       await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-      const fixtureUrl = `http://orders.peerd.test:${/** @type {{port:number}} */ (server.address()).port}/actor-fabric`;
+      const fixtureUrl = `http://orders.mcdollar.test:${/** @type {{port:number}} */ (server.address()).port}/actor-fabric`;
       let fixtureTabId = null;
       let releaseInspection = () => {};
       const inspectionGate = new Promise((resolve) => {
@@ -12503,7 +12503,7 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
             roots: rooms.map((room) => room.getAttribute('data-root-session')),
             nodes: nodes.length,
             subactors: document.querySelectorAll('.actor-space-node.is-subactor').length,
-            orbs: document.querySelectorAll('.actor-space .peerd-spinner').length,
+            orbs: document.querySelectorAll('.actor-space .mcdollar-spinner').length,
             actorBadge: actorBadge.textContent.trim(),
             navGroups: [...document.querySelectorAll('.home-nav-group-label')]
               .map((label) => label.textContent.trim()),
@@ -12760,10 +12760,10 @@ addEventListener('keydown', event => parent.postMessage({type:'full-screen-key',
 <script>
 Promise.resolve().then(async () => {
   parent.postMessage({ type: 'runner-ready' }, '*');
-  const bytes = window.peerd.assets.bytes('asset.bin');
-  const custom = window.peerd.assets.bytes('model.custom');
-  await WebAssembly.instantiate(window.peerd.assets.bytes('empty.wasm'));
-  const second = window.name === 'peerd-binary-reloaded' || window.name === 'peerd-binary-probed';
+  const bytes = window.mcdollar.assets.bytes('asset.bin');
+  const custom = window.mcdollar.assets.bytes('model.custom');
+  await WebAssembly.instantiate(window.mcdollar.assets.bytes('empty.wasm'));
+  const second = window.name === 'mcdollar-binary-reloaded' || window.name === 'mcdollar-binary-probed';
   const sendProof = () => parent.postMessage({
     type: 'e2e-binary-proof', second, bytes: Array.from(bytes), custom: Array.from(custom), wasm: true,
   }, '*');
@@ -12772,12 +12772,12 @@ Promise.resolve().then(async () => {
   setTimeout(() => clearInterval(proofTimer), 2_000);
   document.body.dataset.webrtc = String(typeof RTCPeerConnection);
   if (!second) {
-    window.name = 'peerd-binary-reloaded';
+    window.name = 'mcdollar-binary-reloaded';
     setTimeout(() => location.reload(), 250);
     return;
   }
-  if (window.name === 'peerd-binary-probed') return;
-  window.name = 'peerd-binary-probed';
+  if (window.name === 'mcdollar-binary-probed') return;
+  window.name = 'mcdollar-binary-probed';
   const egressAttempts = [];
   const attemptEgress = (name, operation) => {
     egressAttempts.push(name);
@@ -12965,7 +12965,7 @@ Promise.resolve().then(async () => {
         ` });
         await appPage.send('Page.reload', { ignoreCache: true });
         const rendered = await waitFor(() => evalIn(appPage, `
-          document.title === 'peerd · Lava'
+          document.title === 'mcdollar · Lava'
           && document.getElementById('boot')?.classList.contains('is-hidden')
           && !document.getElementById('boot')?.classList.contains('is-failed')
         `),
@@ -13024,7 +13024,7 @@ Promise.resolve().then(async () => {
             && editorState.labels?.some((label) => label === 'model.custom, binary asset, read-only'),
           JSON.stringify(editorState));
         rec.check('selecting a binary file explains the safe replacement paths',
-          editorState?.notice?.includes('Ask peerd to replace it') && editorState.notice.includes('import'),
+          editorState?.notice?.includes('Ask mcdollar to replace it') && editorState.notice.includes('import'),
           editorState?.notice ?? '');
         const replacementNoticeFocus = await evalIn(appPage, `(() => {
           const rows = [...document.querySelectorAll('.pe-node.is-readonly')];
@@ -13161,7 +13161,7 @@ Promise.resolve().then(async () => {
         const observations = await evalIn(appPage, `globalThis.__actorChannelObservations`);
         const observedText = JSON.stringify(observations ?? []);
         rec.check('the sibling engine page saw no actor channel, job, relay, or marker',
-          !/peerd\/actor-channel|actor\/(?:open|commit|relay|run)|target-only-marker-308/.test(observedText),
+          !/mcdollar\/actor-channel|actor\/(?:open|commit|relay|run)|target-only-marker-308/.test(observedText),
           observedText.slice(0, 2_000));
       } finally {
         try { appPage?.close(); } catch { /* */ }

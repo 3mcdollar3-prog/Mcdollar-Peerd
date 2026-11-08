@@ -7,7 +7,7 @@ import { formatDwappUri } from '/shared/address/dwapp-uri.js';
 /** @param {{publisher?:unknown, version_id?:unknown, uri?:unknown}} app */
 export const discoveryAddress = (app) => {
   if (typeof app.publisher !== 'string' || typeof app.version_id !== 'string'
-      || app.uri !== `peerd://${app.publisher}/${app.version_id}`) return null;
+      || app.uri !== `mcdollar://${app.publisher}/${app.version_id}`) return null;
   try { return formatDwappUri({ did: app.publisher, hash: app.version_id }); }
   catch { return null; }
 };

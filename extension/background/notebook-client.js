@@ -8,11 +8,11 @@
 // vocabulary.
 
 import browser from '/shared/browser-api.js';
-import { createKeyedQueue } from '/peerd-engine/background.js';
+import { createKeyedQueue } from '/mcdollar-engine/background.js';
 
 const MESSAGE_TIMEOUT_MS = 60_000;
 
-export const JS_TAB_GROUP_TITLE = 'peerd';
+export const JS_TAB_GROUP_TITLE = 'mcdollar';
 
 /**
  * Reply shape from the Notebook tab's js/* handlers. Dynamic over the
@@ -22,7 +22,7 @@ export const JS_TAB_GROUP_TITLE = 'peerd';
 
 /**
  * @param {Object} deps
- * @param {ReturnType<typeof import('/peerd-engine/background.js').createNotebookRegistry>} deps.registry
+ * @param {ReturnType<typeof import('/mcdollar-engine/background.js').createNotebookRegistry>} deps.registry
  * @param {ReturnType<typeof import('./notebook-tab-tracker.js').createJsTabTracker>} deps.tracker
  */
 export const createJsClient = ({ registry, tracker }) => {

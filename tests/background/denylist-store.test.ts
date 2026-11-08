@@ -4,7 +4,7 @@ import {
   makeDenylistStore,
   requireDenylistPolicy,
 } from '../../extension/background/denylist-store.js';
-import { matchesDenylist } from '../../extension/peerd-egress/denylist/denylist.js';
+import { matchesDenylist } from '../../extension/mcdollar-egress/denylist/denylist.js';
 
 // The effective-list math (seed − disabled ∪ added) + the add/remove/re-enable
 // transitions used to live inline in the SW with no coverage. These pin them.

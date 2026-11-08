@@ -1,11 +1,11 @@
-# AGENTS.md — peerd
+# AGENTS.md — mcdollar
 
 > Persistent project context for Codex. Read this first on every
 > session. Equivalent to OpenCode's `AGENTS.md` pattern.
 
 ---
 
-## What peerd is
+## What mcdollar is
 
 A browser-native AI agent harness, shipped as a Chrome/Firefox extension.
 The agent runs entirely in the user's browser. It talks to a model API
@@ -13,7 +13,7 @@ directly (BYOK — bring your own key), drives the browser's tabs and
 DOM, and can run shell commands in a sandboxed Linux VM compiled to
 WebAssembly. No backend, no telemetry, no account.
 
-peerd is **0.x — experimental beta** (breaking changes likely; no "V1"
+mcdollar is **0.x — experimental beta** (breaking changes likely; no "V1"
 commitment — versions stay 0.x until the surface stabilizes). The
 initial feature buildout is complete and integrated; current work is
 store-readiness polish and field hardening. Stack:
@@ -29,16 +29,16 @@ Each maps to one letter and color in the brand wordmark:
 
 | Letter | Color | Module | Role |
 |---|---|---|---|
-| `p` | cyan    | `peerd-provider/`     | Model adapters (Anthropic, OpenRouter, OpenAI, Z.ai GLM keyed; Ollama and the on-device WebGPU runner keyless - `registry.js` is the live list) |
-| `e` | red     | `peerd-egress/`       | Security: vault, allowlist (`safeFetch`), denylist, audit |
-| `e` | amber   | `peerd-engine/`       | Execution instances - Sandboxes. FOUR kinds run in their own visible tab: WebVMs (CheerpX Linux), Notebooks (sealed JS worker + OPFS), Pods, Apps (opaque-origin iframe). A fifth, the **headless worker** (`script`), runs the Notebook's sealed worker offscreen with no tab - the agent's own quick compute, and the only kind with no registry because it persists no instances. Also here: browser-native Git (`repository/`, exported from `index.js`). The sandbox is the isolate; a tab is one way to host it (taxonomy in `registry-factory.js`). |
-| `r` | green   | `peerd-runtime/`      | Agent loop, tools + per-environment actors (`message_actor`), sessions, profiles, skills, memory, permissions (Plan/Act), goal mode (autonomous loop), composer, cost, transfer, voice, clock, web tool policy |
-| `d` | magenta | `peerd-distributed/` | The dweb. An opt-in P2P base network (offscreen mesh + DHT + gossip), did:key identity, signed content addressing, the dwapp bridge, and a peer-to-peer app store that **users AND the agent** build, share, and run dwapps on. Chrome preview only until Firefox has a mesh host. |
+| `p` | cyan    | `mcdollar-provider/`     | Model adapters (Anthropic, OpenRouter, OpenAI, Z.ai GLM keyed; Ollama and the on-device WebGPU runner keyless - `registry.js` is the live list) |
+| `e` | red     | `mcdollar-egress/`       | Security: vault, allowlist (`safeFetch`), denylist, audit |
+| `e` | amber   | `mcdollar-engine/`       | Execution instances - Sandboxes. FOUR kinds run in their own visible tab: WebVMs (CheerpX Linux), Notebooks (sealed JS worker + OPFS), Pods, Apps (opaque-origin iframe). A fifth, the **headless worker** (`script`), runs the Notebook's sealed worker offscreen with no tab - the agent's own quick compute, and the only kind with no registry because it persists no instances. Also here: browser-native Git (`repository/`, exported from `index.js`). The sandbox is the isolate; a tab is one way to host it (taxonomy in `registry-factory.js`). |
+| `r` | green   | `mcdollar-runtime/`      | Agent loop, tools + per-environment actors (`message_actor`), sessions, profiles, skills, memory, permissions (Plan/Act), goal mode (autonomous loop), composer, cost, transfer, voice, clock, web tool policy |
+| `d` | magenta | `mcdollar-distributed/` | The dweb. An opt-in P2P base network (offscreen mesh + DHT + gossip), did:key identity, signed content addressing, the dwapp bridge, and a peer-to-peer app store that **users AND the agent** build, share, and run dwapps on. Chrome preview only until Firefox has a mesh host. |
 
 The extension *chassis* lives outside these modules: `background/`,
 `offscreen/`, `sidepanel/`, `home/`, `options/`, `engine-tabs/`,
 `permissions/`, `eval/`, `shared/`, `tests/`, `vendor/`, `icons/`. Each
-tab-hosted `peerd-engine` execution kind owns a dedicated page under
+tab-hosted `mcdollar-engine` execution kind owns a dedicated page under
 `engine-tabs/` (`vm-tab/`, `notebook-tab/`, `pod-tab/`, `app-tab/`) - grouped so the
 four engine host surfaces sit together; `permissions/` hosts user-gesture surfaces such as
 the mic-permission grant page; `eval/` is the live end-to-end eval
@@ -46,15 +46,15 @@ harness. (There is no `content/` directory - DOM work happens via
 injected functions, not a persistent content script.) Outside
 `extension/`, the repo also carries `signaling-node/` (the dweb
 rendezvous server shells sharing the pure signaling reducer). The
-peerd.ai site lives in its own repo now (`NotASithLord/peerd-site`); it
-vendors snapshots of the VM-demo runtime + the `peerd-distributed`
+mcdollar.ai site lives in its own repo now (`NotASithLord/mcdollar-site`); it
+vendors snapshots of the VM-demo runtime + the `mcdollar-distributed`
 transport. Release packaging generates auto-update feeds as release assets;
 the site repository downloads and deploys them.
 
 The brand IS the architecture: the five letters are the five modules.
-A new top-level peerd-* directory needs a reason the five letters cannot
+A new top-level mcdollar-* directory needs a reason the five letters cannot
 absorb. Stop and reconsider before adding one. The cross-module import
-gate matches on `peerd-[a-z-]+/`, hyphen included; a name that falls
+gate matches on `mcdollar-[a-z-]+/`, hyphen included; a name that falls
 outside that pattern is a name outside the boundary.
 
 ---
@@ -65,8 +65,8 @@ The code is the spec. There is no separate design-doc corpus; the
 prose orientation is this file, and the rest is the source itself.
 
 1. **`AGENTS.md`** (this file) — orientation. Start here every session.
-2. **The module code** — `extension/peerd-provider/`, `peerd-egress/`,
-   `peerd-engine/`, `peerd-runtime/`, `peerd-distributed/`. Each
+2. **The module code** — `extension/mcdollar-provider/`, `mcdollar-egress/`,
+   `mcdollar-engine/`, `mcdollar-runtime/`, `mcdollar-distributed/`. Each
    module's `index.js` is its universal public surface; read it first, then the
    files it exports. An explicit environment entry point such as
    `background.js` may expose a cold-start-safe subset for that host.
@@ -100,7 +100,7 @@ prose orientation is this file, and the rest is the source itself.
   holds the real value; don't transcribe it. Static architectural
   invariants are fine; operational state belongs in code, generated output,
   or the release itself. When in doubt, describe the SHAPE and cite the file.
-- **The dweb boundary.** Nothing outside `peerd-distributed/`
+- **The dweb boundary.** Nothing outside `mcdollar-distributed/`
   imports it — not even its `index.js` (stricter than the per-module
   rule below; the store package prunes the module entirely). Core code
   uses the types + stub in `shared/dweb-interface.js` and
@@ -181,7 +181,7 @@ prose orientation is this file, and the rest is the source itself.
       runner + pinned Chrome (`scripts/cdp/chrome-version.txt`) - once
       against the merge-base extension build, once against the branch -
       diffs the pairs, and posts the before/after inline on the PR
-      (`scripts/cdp/visual-vs-base.mjs`). peerd has no development build output, so
+      (`scripts/cdp/visual-vs-base.mjs`). mcdollar has no development build output, so
       "check out the base and render it" is a worktree plus a harness
       run. The trade, stated: a computed reference cannot tell an intended
       redesign from a regression, so the lane REPORTS and never gates -
@@ -206,18 +206,18 @@ prose orientation is this file, and the rest is the source itself.
   surface; a named environment surface such as `background.js` may expose a
   strict cold-start subset. ESLint `no-restricted-imports` forbids every other
   deep path from outside the module. Inside the module, deep imports are fine.
-- **The credential ladder — prefer the credential peerd cannot read.**
+- **The credential ladder — prefer the credential mcdollar cannot read.**
   When the agent must act as the user, climb DOWN this ladder and stop at
   the first rung that works; never drop a rung for convenience:
     1. **The browser holds it.** Drive the authenticated tab and let the
-       browser attach the session. peerd requests no `cookies` permission,
+       browser attach the session. mcdollar requests no `cookies` permission,
        so it *structurally cannot* read what it is using — a platform
        guarantee, not a discipline one (`site_client_*`, the web actor).
-    2. **A key peerd cannot export.** A proof-of-possession keypair
-       generated `extractable: false`: peerd holds a HANDLE, mints a
+    2. **A key mcdollar cannot export.** A proof-of-possession keypair
+       generated `extractable: false`: mcdollar holds a HANDLE, mints a
        per-request DPoP proof at the egress boundary, and no in-origin
        code — ours or an attacker's — can export the key material. Needs
-       provider support, RFC 9449 (`peerd-egress/dpop/`).
+       provider support, RFC 9449 (`mcdollar-egress/dpop/`).
     3. **A bearer secret in the vault.** The fallback the ecosystem forces:
        bytes that must be sent verbatim, so *someone* holds them.
        Encrypted at rest, decrypted only in the SW, injected at the egress
@@ -226,7 +226,7 @@ prose orientation is this file, and the rest is the source itself.
     4. **The user's own hands.** If none of the above is safe, verify the
        origin, take consent, and hand the gesture back to the user (the
        `login` tool, INV-14).
-  why an explicit ladder: "can the AGENT see it" and "does PEERD hold it"
+  why an explicit ladder: "can the AGENT see it" and "does MCDOLLAR hold it"
   are different questions, and only the second decides whether a
   compromise yields a portable, replayable secret. A rung-1 or rung-2
   credential cannot be walked away with; a rung-3 one can. A new
@@ -259,21 +259,21 @@ exists today:
 
 1. **Chassis skeleton.** Manifest, SW entry, offscreen doc, sidepanel
    shell. Get "load unpacked" working with an empty UI.
-2. **`peerd-egress`** — vault, storage wrappers, `safeFetch`, denylist.
+2. **`mcdollar-egress`** — vault, storage wrappers, `safeFetch`, denylist.
    Everything depends on this; build it first.
-3. **`peerd-provider`** — Anthropic + OpenRouter adapters. Schema
+3. **`mcdollar-provider`** — Anthropic + OpenRouter adapters. Schema
    conversions, streaming, error handling.
-4. **`peerd-engine`** - Sandboxes: five execution kinds (taxonomy in
+4. **`mcdollar-engine`** - Sandboxes: five execution kinds (taxonomy in
    `registry-factory.js`). Four are hosted in their own visible tab -
    WebVM (CheerpX), Notebook (sealed JS worker + OPFS), Pod, App
-   (opaque-origin iframe) - each with a registry in `peerd-engine`, a
+   (opaque-origin iframe) - each with a registry in `mcdollar-engine`, a
    runtime in its tab page under `engine-tabs/` (`vm-tab/`,
    `notebook-tab/`, `pod-tab/`, `app-tab/`), and a tab tracker + RPC
    client in `background/`. The fifth, the **headless worker** (`script`),
    runs the Notebook's sealed worker in the offscreen document with no tab
    (`offscreen/job-runner.js`) - the agent's own quick compute, same
    substrate as a Notebook, different host.
-5. **`peerd-runtime`** — agent loop, tool dispatcher, and the controller-owned
+5. **`mcdollar-runtime`** — agent loop, tool dispatcher, and the controller-owned
    tool inventory. The sealed semantic catalog in `tools/metadata/catalog.js`
    is the model-facing source of truth; `controller-tool-ownership.js` maps
    that same inventory to finite authority families. The service worker sees
@@ -313,10 +313,10 @@ gotchas to know going in:
   OpenRouter adapter (OpenAI-compatible gateway), a direct OpenAI adapter,
   a Z.ai GLM adapter (OpenAI-compatible direct endpoint), and a keyless
   Ollama adapter (local inference; live `/api/tags` model inventory; GPU-fit
-  model recommendation in Settings) (`peerd-provider/`). The shipped set is
+  model recommendation in Settings) (`mcdollar-provider/`). The shipped set is
   whatever `registry.js` registers — don't take this list as authoritative.
 - Vault with passphrase unlock AND WebAuthn PRF (Touch ID / Windows
-  Hello) — same DK from either path (`peerd-egress/vault/`). Idle
+  Hello) — same DK from either path (`mcdollar-egress/vault/`). Idle
   auto-lock ON by default (user-settable); manual Lock button
   in the top bar.
 - `chrome.debugger` usage (CDP) — a CHANNEL-GATED required permission,
@@ -329,9 +329,9 @@ gotchas to know going in:
   a one-line flip; `docs/store/OPEN-DECISIONS.md` §1). The DEFAULT
   path for the web actor's DOM tools on store-Chrome AND Firefox is
   `chrome.scripting`: a DOM-walk pseudo-a11y snapshot
-  (`peerd-runtime/dom/walk-injected.js`) feeding the SAME serializer as
+  (`mcdollar-runtime/dom/walk-injected.js`) feeding the SAME serializer as
   CDP, with selector/`walkId` click/type and a `world:'MAIN'` `read_state`
-  fallback (`peerd-runtime/dom/framework-state.js`). Gating: the CDP pool
+  fallback (`mcdollar-runtime/dom/framework-state.js`). Gating: the CDP pool
   is wired into a tool context only when `advancedAutomationOn()` =
   `debuggerApiAvailable()` (namespace present) AND the
   `advancedAutomationEnabled` SETTING (default ON preview/dev, OFF store;
@@ -341,7 +341,7 @@ gotchas to know going in:
   `background/debugger-pool.js`.
 - Spawned actors — depth-bounded recursion, tool
   narrowing, output cap. Real implementation at
-  `peerd-runtime/actor/spawn.js` — not a stub. Since the async-actor
+  `mcdollar-runtime/actor/spawn.js` — not a stub. Since the async-actor
   unification (PR #134): a child runs under its own turn slot with an
   abort signal and a wall-clock timeout (Stop and `actor_cancel`
   actually end its work, transitively down the subtree), and a
@@ -351,7 +351,7 @@ gotchas to know going in:
   keyed by the lineage root, and an actor's actor reply resolves into
   its tool result (an ephemeral child has no later turn to wake).
 - The heap split — EVERY non-orchestrator agent loop runs in its OWN
-  dedicated Worker heap (`peerd-runtime/actor/actor-worker-core.js`
+  dedicated Worker heap (`mcdollar-runtime/actor/actor-worker-core.js`
   drives it; `offscreen/actor-worker.js` + `actor-runner.js` +
   `background/offscreen-actor-client.js` host + relay it). Chrome starts the
   runner from its offscreen document. Firefox starts the same runner directly
@@ -381,8 +381,8 @@ gotchas to know going in:
   authority in the first place.
 - Voice — local transcription via Moonshine (WASM, SRI-pinned model
   download, OPFS-cached) with a Web Speech API fallback. Hosted in the
-  offscreen doc (`peerd-runtime/voice/`).
-- Sandboxes - five execution kinds (taxonomy in the `peerd-engine/` code).
+  offscreen doc (`mcdollar-runtime/voice/`).
+- Sandboxes - five execution kinds (taxonomy in the `mcdollar-engine/` code).
   Four run in their
   own browser tab - WebVM (CheerpX), Notebook (sealed JS worker + OPFS),
   Pod, App (opaque-origin iframe) - each with its own registry + tab
@@ -406,12 +406,12 @@ gotchas to know going in:
   telemetry, skills, and hooks — all integrated.
   (do/get/check was CULLED: the web actor drives pages directly, so one
   delegation reaches the page instead of two.) Per-feature
-  detail lives in the code under `peerd-runtime/`.
+  detail lives in the code under `mcdollar-runtime/`.
 - Dual distribution: store (no dweb) + preview channels, generated
   `manifest.json` / `channel-config.js` (`bun run gen:dev`). `package.json`,
   `packaging/preflight.ts`, and CI are the source of truth for release
   checks.
-- `peerd-distributed/` — REAL code, well past the Phase 0 primitives
+- `mcdollar-distributed/` — REAL code, well past the Phase 0 primitives
   (Ed25519 did:key identity, codec, content addressing + chunked
   signed-bundle transfer, the pure signaling reducer shared with
   `signaling-node/`). Now live: an **opt-in base network** in the
@@ -423,7 +423,7 @@ gotchas to know going in:
   through the `dweb_share`/`dweb_discover`/`dweb_install` tools + the
   dwapp bridge (it builds p2p dwapps that users and agents both use).
   Chrome-preview only until Firefox has a mesh host. Other artifacts prune the
-  module and CI verifies the package boundary. See the `peerd-distributed/` code.
+  module and CI verifies the package boundary. See the `mcdollar-distributed/` code.
 - The **dweb actor** - one more bound-actor kind (`actorType:'dweb'`; the live
   set is `ACTOR_CAPABILITY_MANIFESTS`, not a number to memorize) and the
   first DAEMON actor: an opt-in (`dwebAgentEnabled`, Chrome-preview-only, default
@@ -432,7 +432,7 @@ gotchas to know going in:
   `mainAgentDescriptors` drops them by name + the tier gate refuses them for
   any non-actor ctx), runs keyless in the same offscreen heap as every actor,
   and MONITORS inbound mesh traffic: peers reach it on the reserved
-  `peerd-agent` room, whose `direct` events wake it as fenced, INBOUND
+  `mcdollar-agent` room, whose `direct` events wake it as fenced, INBOUND
   (untrusted) turns — the sender gate means an inbound message can never make
   it delegate. Rate-capped (per-did + global caps, `background/dweb-inbound-rate-cap.js`)
   before any model call; notable findings trickle up to the active chat as an attributed
@@ -450,7 +450,7 @@ gotchas to know going in:
   tag a request DM, await the matching reply bound to the target did, time
   out — is `actor/a2a-dispatch.js`; the SW singleton + consent live behind the
   exact authority in `background/dweb-tool-authority.js`. We RHYME with A2A's data
-  model (`peerd-distributed/agent-card.js` — Agent Card, message shape) for
+  model (`mcdollar-distributed/agent-card.js` — Agent Card, message shape) for
   future interop, but REJECT its HTTP+SSE transport: the mesh is the
   transport, did:key the address, the fenced inbound wake the stream. Signing
   ops (call/cast/publishCard) need per-target user consent, remembered and
@@ -471,7 +471,7 @@ land with deliberate design work):
   construction (`tools/exposure.js` `actorAllowedTools`, enforced at
   dispatch in `gates.js`) — an actor never sees the full surface.
 - New provider adapters — the shipped set (Anthropic, OpenRouter, OpenAI,
-  Z.ai GLM, Ollama) lives in `peerd-provider/adapters/`; adding one is a
+  Z.ai GLM, Ollama) lives in `mcdollar-provider/adapters/`; adding one is a
   registry entry, not chassis wiring. The manifest still does NOT pre-declare
   hosts for adapters a given package doesn't ship (store policy: never request
   what the shipped version doesn't use); `<all_urls>` already covers HTTPS API

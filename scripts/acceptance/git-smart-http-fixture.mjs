@@ -16,7 +16,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 export const GIT_FIXTURE_SCHEMA = 1;
-export const GIT_FIXTURE_HOST = 'git-fixture.peerd.test';
+export const GIT_FIXTURE_HOST = 'git-fixture.mcdollar.test';
 export const GIT_FIXTURE_REPOSITORY = 'acceptance/cutover.git';
 export const GIT_FIXTURE_REMOTE = `https://${GIT_FIXTURE_HOST}/${GIT_FIXTURE_REPOSITORY}`;
 export const GIT_FIXTURE_MAX_BODY_BYTES = 40 * 1024 * 1024;
@@ -267,7 +267,7 @@ export const redactGitFixtureCredential = (value, credential) => {
 };
 
 export const startGitSmartHttpFixture = async () => {
-  const root = mkdtempSync(join(tmpdir(), 'peerd-smart-http-'));
+  const root = mkdtempSync(join(tmpdir(), 'mcdollar-smart-http-'));
   const repositoryRoot = join(root, 'repositories');
   const repositoryPath = join(repositoryRoot, GIT_FIXTURE_REPOSITORY);
   const token = randomBytes(24).toString('hex');
@@ -306,7 +306,7 @@ export const startGitSmartHttpFixture = async () => {
         requests.push(row);
         if (!authenticated) {
           response.writeHead(401, {
-            'www-authenticate': 'Basic realm="peerd acceptance"',
+            'www-authenticate': 'Basic realm="mcdollar acceptance"',
             'cache-control': 'no-store',
           });
           response.end('authentication required');

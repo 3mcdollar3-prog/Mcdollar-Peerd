@@ -9,7 +9,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  launchPeerd, unlockAndReady, resetSession, rpc, evalIn, waitFor,
+  launchMcdollar, unlockAndReady, resetSession, rpc, evalIn, waitFor,
 } from '../cdp/e2e-harness.mjs';
 import { BRIDGE_MODEL, createBrowserDecisionResponder, assistantSse, makeLocalClients } from './model-bridge.mjs';
 import { parseSiteClientContract } from './api-policy.mjs';
@@ -66,7 +66,7 @@ const report = {
     ? 'real local decision endpoint; orchestrator and copper text helper remain scripted'
     : 'scripted; no model weights loaded',
   ...(decisionOrigin ? { decisionOrigin } : {}),
-  browser: 'real unpacked Peerd in Chrome for Testing',
+  browser: 'real unpacked Mcdollar in Chrome for Testing',
   enforceWebSecurity: true,
   automation: 'DOM-walk through the normal advancedAutomationEnabled=false setting',
   startedAt: new Date().toISOString(),
@@ -139,7 +139,7 @@ const fixtureHtml = (url) => {
   } else {
     content = '<h1>Unknown fixture path</h1>';
   }
-  return `<!doctype html><html lang="en"><meta charset="utf-8"><title>Peerd local browser fixture</title>
+  return `<!doctype html><html lang="en"><meta charset="utf-8"><title>Mcdollar local browser fixture</title>
     <body><main>${content}</main><script>
       'use strict';
       document.addEventListener('input', function(event) {
@@ -530,7 +530,7 @@ const runCase = async (spec, origin) => {
 
 const runSuite = async () => {
   const { origin, proxyServer } = await startFixture();
-  context = await launchPeerd({ modelResponder, tagsModel: BRIDGE_MODEL, enforceWebSecurity: true, proxyServer });
+  context = await launchMcdollar({ modelResponder, tagsModel: BRIDGE_MODEL, enforceWebSecurity: true, proxyServer });
   await unlockAndReady(context.page, { model: BRIDGE_MODEL });
   requireOk(await rpc(context.page, { type: 'settings/update', patch: {
     webActorActionSurface: 'tools', runnerModel: BRIDGE_MODEL, advancedAutomationEnabled: false,

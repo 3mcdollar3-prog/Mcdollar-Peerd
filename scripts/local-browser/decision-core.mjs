@@ -63,7 +63,7 @@ const parseDisabled = (state) => {
 };
 
 /**
- * Accept a complete current-format snapshot, with or without Peerd's envelope.
+ * Accept a complete current-format snapshot, with or without Mcdollar's envelope.
  * Reject ambiguous labels rather than trying to repair the serializer's raw
  * quotes/newlines. This restricts the supplied target set; it does NOT prevent
  * semantic prompt injection or prove that the host observation is still fresh.
@@ -267,7 +267,7 @@ export const selectDecision = (response, choices) => {
 };
 
 /**
- * Translate a previously selected action into the existing Peerd tool shape.
+ * Translate a previously selected action into the existing Mcdollar tool shape.
  * The shell delays WAIT, then takes a full snapshot. DONE/BLOCKED never dispatch.
  *
  * @param {unknown} action

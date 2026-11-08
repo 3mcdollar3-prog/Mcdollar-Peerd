@@ -1,4 +1,4 @@
-// "Keep peerd as the first tab" (background/kernel-first-tab.js, home/first-tab*.js)
+// "Keep mcdollar as the first tab" (background/kernel-first-tab.js, home/first-tab*.js)
 // and the side panel close that no longer disables the panel
 // (background/kernel-front-door.js), driven in the real extension.
 //
@@ -10,13 +10,13 @@ import {
   evalIn, openWidePage, rpc, sleep, sseText, waitFor, PANEL_METRICS, WIDE_METRICS,
 } from './e2e-harness.mjs';
 
-const HINT_KEY = 'peerd.home.firstTabHintSeen';
-const VIEW_KEY = 'peerd.home.activeView';
+const HINT_KEY = 'mcdollar.home.firstTabHintSeen';
+const VIEW_KEY = 'mcdollar.home.activeView';
 
 // why: the merge-base build has no first tab yet. Its render supplies only
 // the "before" picture, so a state for a new screen stops there.
 const absentOnBase = (rec, file) => {
-  if (process.env.PEERD_VISUAL_BASE_RENDER !== '1') return false;
+  if (process.env.MCDOLLAR_VISUAL_BASE_RENDER !== '1') return false;
   const extension = process.argv.find((arg) => arg.startsWith('--extension='))
     ?.slice('--extension='.length);
   if (!extension) throw new Error('base visual render requires an explicit extension tree');
@@ -85,7 +85,7 @@ const releasePanel = async (ctx) => {
 };
 const awaitLivePanel = async (ctx) => {
   const live = await waitFor(() => evalIn(ctx.page,
-    `document.documentElement.dataset.peerdBootStage === 'app-ready' && !!document.querySelector('.input-bar textarea')`).catch(() => false),
+    `document.documentElement.dataset.mcdollarBootStage === 'app-ready' && !!document.querySelector('.input-bar textarea')`).catch(() => false),
   { budgetMs: 20_000, pollMs: 80 });
   if (!live) throw new Error('the live side panel did not restore');
 };
@@ -154,7 +154,7 @@ export const FIRST_TAB_STATES = [
           !!added && oneAtStart(added) && added.tabs.find((tab) => tab.active)?.home === false,
           JSON.stringify(added));
 
-        // The user closes it. peerd does not put it back.
+        // The user closes it. mcdollar does not put it back.
         if (added) await evalIn(ctx.page, `chrome.tabs.remove(${pinnedHomes(added)[0].id})`, true);
         const third = await openWindow();
         const thirdAdded = await waitFor(async () => oneAtStart(await windowById(third)),
@@ -222,7 +222,7 @@ export const FIRST_TAB_STATES = [
     },
   },
 
-  // --- functional: Home's tab icon and title show what peerd is doing ------
+  // --- functional: Home's tab icon and title show what mcdollar is doing ------
   // Two Home tabs in two windows, both out of view: each shows the reply dot,
   // and looking at one clears the other.
   {
@@ -252,12 +252,12 @@ export const FIRST_TAB_STATES = [
         rec.check('Home sends the turn', sent?.ok === true, JSON.stringify(sent));
         const working = await waitFor(async () => {
           const face = await tabFace(home);
-          return face?.title === 'peerd is working…' && iconSvg(face).includes('stroke="#00b7eb"') ? face : null;
+          return face?.title === 'mcdollar is working…' && iconSvg(face).includes('stroke="#00b7eb"') ? face : null;
         }, { budgetMs: 15_000, pollMs: 80 });
-        rec.check('while peerd works, the tab shows the ring and says so', !!working,
+        rec.check('while mcdollar works, the tab shows the ring and says so', !!working,
           JSON.stringify(working ?? await tabFace(home)));
         releasePresence();
-        const replied = (face) => face?.title === 'peerd has a reply' && iconSvg(face).includes('class="d"');
+        const replied = (face) => face?.title === 'mcdollar has a reply' && iconSvg(face).includes('class="d"');
         const reply = await waitFor(async () => {
           const faces = [await tabFace(home), await tabFace(other)];
           return faces.every(replied) ? faces : null;
@@ -316,7 +316,7 @@ export const FIRST_TAB_STATES = [
               strip.append(img);
             }
             const caption = document.createElement('figcaption');
-            caption.textContent = presenceTitle(presence, 'peerd - home');
+            caption.textContent = presenceTitle(presence, 'mcdollar - home');
             cell.append(strip, caption);
             host.append(cell);
             return presenceIcon(presence);
@@ -370,9 +370,9 @@ export const FIRST_TAB_STATES = [
           } : null;
         })()`), { budgetMs: 10_000, pollMs: 80 });
         rec.check('after the last setup step, Home offers the first tab in plain words',
-          offer?.name === 'Keep peerd as the first tab?'
+          offer?.name === 'Keep mcdollar as the first tab?'
             && JSON.stringify(offer.text) === JSON.stringify([
-              'It stays at the start of your tabs in every window, so peerd is one click away.',
+              'It stays at the start of your tabs in every window, so mcdollar is one click away.',
               'You can turn this on later in Settings.',
             ])
             && JSON.stringify(offer.buttons) === JSON.stringify(['Keep it', 'Not now']), JSON.stringify(offer));
@@ -403,7 +403,7 @@ export const FIRST_TAB_STATES = [
         }, { budgetMs: 10_000, pollMs: 100 });
         rec.check('"Keep it" pins this Home tab at the start, with no second Home tab in this window',
           JSON.stringify(kept?.homes) === JSON.stringify([{ id: thisTab, index: 0, pinned: true }]), JSON.stringify(kept));
-        rec.check('the result shows here: the hint says where peerd lives', kept?.hint === true, JSON.stringify(kept));
+        rec.check('the result shows here: the hint says where mcdollar lives', kept?.hint === true, JSON.stringify(kept));
         const state = await rpc(page, { type: 'state/get' });
         rec.check('"Keep it" saves the answer and turns the setting on',
           state?.state?.settings?.firstTabEnabled === true && state.state.settings.firstTabOffered === true,
@@ -451,7 +451,7 @@ export const FIRST_TAB_STATES = [
           return host.querySelector('p.error')?.textContent ?? null;
         })()`, true);
         rec.check('a refused "Keep it" says what failed, then what to do',
-          shown === 'peerd could not turn this on. Try again, or turn it on in Settings.', String(shown));
+          shown === 'mcdollar could not turn this on. Try again, or turn it on in Settings.', String(shown));
         await rec.visualPage('home-first-tab-offer-error', page);
       } finally { try { page.close(); } catch { /* */ } }
     },
@@ -495,7 +495,7 @@ export const FIRST_TAB_STATES = [
         await page.send('Page.bringToFront');
         const shown = await waitFor(() => hint(page), { budgetMs: 15_000, pollMs: 80 });
         rec.check('pinned while open, the tab shows the hint once it is back in view, in plain words',
-          shown?.name === 'peerd lives here.' && shown.text === 'Click P anytime to ask peerd or open your apps.'
+          shown?.name === 'mcdollar lives here.' && shown.text === 'Click P anytime to ask mcdollar or open your apps.'
             && shown.button === 'Got it', JSON.stringify(shown));
         await sleep(800);
         const placed = await inView(page, '.first-tab-hint');
@@ -549,7 +549,7 @@ export const FIRST_TAB_STATES = [
           !!besidePanel, String(besidePanel ?? await evalIn(page, `document.querySelector('.home-content')?.className`)));
         await page.send('Emulation.setDeviceMetricsOverride', WIDE_METRICS);
         await rec.visualPage('home-first-tab-beside-panel', page);
-        if (process.env.PEERD_BROWSER_WINDOW_EVIDENCE === '1') await rec.browserWindow('pinned-home-beside-panel', ctx, page);
+        if (process.env.MCDOLLAR_BROWSER_WINDOW_EVIDENCE === '1') await rec.browserWindow('pinned-home-beside-panel', ctx, page);
       } finally {
         try { page?.close(); } catch { /* */ }
         try { second?.close(); } catch { /* */ }
@@ -575,7 +575,7 @@ export const FIRST_TAB_STATES = [
         type, key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, ...(type === 'keyDown' ? { text: '\r' } : {}),
       });
       try {
-        const marked = await evalIn(ctx.page, 'document.documentElement.dataset.peerdFirstSetup ?? null');
+        const marked = await evalIn(ctx.page, 'document.documentElement.dataset.mcdollarFirstSetup ?? null');
         rec.check('this panel showed the first vault setup', marked === 'true', String(marked));
         const reset = await rpc(ctx.page, { type: 'settings/update', patch: { firstTabOffered: false } });
         if (reset?.ok !== true) throw new Error(`fixture reset failed: ${JSON.stringify(reset)}`);
@@ -584,8 +584,8 @@ export const FIRST_TAB_STATES = [
           return section && section.parentElement.firstElementChild === section
             ? document.getElementById(section.getAttribute('aria-labelledby'))?.textContent ?? null : null;
         })()`), { budgetMs: 10_000, pollMs: 80 });
-        rec.check('once peerd can answer, the panel offers the first tab at the top of the chat',
-          offer === 'Keep peerd as the first tab?', String(offer));
+        rec.check('once mcdollar can answer, the panel offers the first tab at the top of the chat',
+          offer === 'Keep mcdollar as the first tab?', String(offer));
         await evalIn(ctx.page, `document.querySelector('.first-tab-offer .first-tab-later')?.focus()`);
         const before = await evalIn(ctx.page, 'document.activeElement?.textContent ?? null');
         await enter('keyDown');
@@ -611,7 +611,7 @@ export const FIRST_TAB_STATES = [
     },
   },
 
-  // --- visual: the offer in the side panel, where most people set peerd up --
+  // --- visual: the offer in the side panel, where most people set mcdollar up --
   // The two panel screens, as a render fixture: the real panel App with the
   // real offer over the live panel, then taken away. The live panel's own
   // offer is driven by sidepanel-first-tab-first-run.
@@ -661,7 +661,7 @@ export const FIRST_TAB_STATES = [
           return { line: host.querySelector('.first-tab-kept')?.textContent ?? null, sent };
         })()`, true);
         rec.check('after "Keep it" the panel says what changed in one line',
-          kept?.line === 'peerd is now the first tab in every window.'
+          kept?.line === 'mcdollar is now the first tab in every window.'
             && kept.sent?.[0]?.patch?.firstTabEnabled === true, JSON.stringify(kept));
         await rec.visual('sidepanel-first-tab-kept');
         const voice = await evalIn(ctx.page, `(() => {

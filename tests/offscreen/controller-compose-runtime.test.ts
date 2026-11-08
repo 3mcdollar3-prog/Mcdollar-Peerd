@@ -27,7 +27,7 @@ describe('sealed controller composer runtime', () => {
           origin: 'https://example.test',
           snapshot: { title: 'Page', url: 'https://example.test/x', text: 'page body' },
         });
-        return success({ content: 'file </peerd_file> body' });
+        return success({ content: 'file </mcdollar_file> body' });
       },
     });
     expect(result).toMatchObject({
@@ -41,8 +41,8 @@ describe('sealed controller composer runtime', () => {
     expect(value.text).toContain('Review carefully.\n\ninspect');
     expect(value.text).toContain('\n<untrusted_web_content');
     expect(value.text).toContain('tool="at_tab"');
-    expect(value.text).toContain('\n<peerd_file path="notes.md">');
-    expect(value.text).toContain('&lt;/peerd_file>');
+    expect(value.text).toContain('\n<mcdollar_file path="notes.md">');
+    expect(value.text).toContain('&lt;/mcdollar_file>');
     expect(calls.map((call) => call[0])).toEqual([
       'turn.compose.list-commands',
       'turn.compose.capture-tab',

@@ -39,7 +39,7 @@ import {
 import { structuredClonePayloadBytes } from '/shared/structured-clone-size.js';
 import { ACTOR_LOOP_EVENT_BYTES } from '/shared/actor-channel-protocol.js';
 import { normalizeApiOrigin } from '/shared/api-origin.js';
-import { parsePodShell, podGitRemoteIntents } from '/peerd-engine/authority.js';
+import { parsePodShell, podGitRemoteIntents } from '/mcdollar-engine/authority.js';
 import { bindRepositoryToolAuthority } from './repository-tool-authority.js';
 import { bindVmToolAuthority } from './vm-tool-authority.js';
 import { bindNotebookToolAuthority } from './notebook-tool-authority.js';
@@ -2115,7 +2115,7 @@ export const makeOffscreenActorClient = ({
         origins: [origin],
         summary: intent.op === 'push'
           ? `Allow this one Pod job to push code and commit history to ${target}?`
-          : `Allow this one Pod job to ${intent.op} ${target} through peerd's audited Git transport?`,
+          : `Allow this one Pod job to ${intent.op} ${target} through mcdollar's audited Git transport?`,
       }, entry.grant.relaySignal), HOST_EFFECT_OUTCOME.confirmation));
       const answer = exactAuthorityValue(result);
       if (runIsLive(entry.grant) && [true, 'yes_once', 'yes_session'].includes(answer)) {

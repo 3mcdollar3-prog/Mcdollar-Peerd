@@ -5,8 +5,8 @@ import { semanticCallAuditEntry } from '../../extension/background/semantic-call
 import { createControllerTurnRuntime } from '../../extension/offscreen/controller-turn-runtime.js';
 import { startActorWorker } from '../../extension/offscreen/actor-worker-runtime.js';
 import { describeActorExecution } from '../../extension/offscreen/actor-runner.js';
-import { projectControllerToolSurface } from '../../extension/peerd-runtime/controller-tool-projection.js';
-import { makeScriptedProviderAuthority } from '../peerd-provider/model-egress-fixture';
+import { projectControllerToolSurface } from '../../extension/mcdollar-runtime/controller-tool-projection.js';
+import { makeScriptedProviderAuthority } from '../mcdollar-provider/model-egress-fixture';
 import { createSessionTurnStore } from '../../extension/shared/session-turn-store.js';
 
 const projection: any = projectControllerToolSurface({

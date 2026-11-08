@@ -9,7 +9,7 @@ import m from '/vendor/mithril/mithril.js';
 import { VaultGate } from '/sidepanel/components/vault-gate.js';
 
 const HAVE_VIRTUAL_AUTHENTICATOR =
-  !!(/** @type {Record<string, unknown>} */ (globalThis).__PEERD_VIRTUAL_AUTHENTICATOR__);
+  !!(/** @type {Record<string, unknown>} */ (globalThis).__MCDOLLAR_VIRTUAL_AUTHENTICATOR__);
 
 /** @typedef {{ type: string } & Record<string, any>} Message */
 /** @typedef {(message: Message) => Promise<any>} Send */
@@ -210,7 +210,7 @@ if (HAVE_VIRTUAL_AUTHENTICATOR) describe('sidepanel.vault-gate post-credential a
       expect(typeof commits[0].credentialId).toBe('string');
       expect(typeof commits[0].prfSalt).toBe('string');
       expect(typeof commits[0].prfOutput).toBe('string');
-      expect(root.textContent).toContain('Wait a moment while peerd reconciles');
+      expect(root.textContent).toContain('Wait a moment while mcdollar reconciles');
     } finally { unmount(); }
   });
 
@@ -241,7 +241,7 @@ if (HAVE_VIRTUAL_AUTHENTICATOR) describe('sidepanel.vault-gate post-credential a
         'did not confirm whether that finished') === true);
       expect(sends.filter(({ type }) => type === 'vault/prfStatus').length).toBe(1);
       expect(sends.filter(({ type }) => type === 'vault/unlockPrf').length).toBe(1);
-      expect(root.textContent).toContain('Wait a moment while peerd reconciles');
+      expect(root.textContent).toContain('Wait a moment while mcdollar reconciles');
     } finally { unmount(); }
   });
 });

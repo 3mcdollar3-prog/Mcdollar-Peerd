@@ -1,6 +1,6 @@
-/* peerd brand fonts — vendored, served from the extension origin.
+/* mcdollar brand fonts — vendored, served from the extension origin.
  *
- * why: match peerd.ai, which loads JetBrains Mono + Geist Mono from
+ * why: match mcdollar.ai, which loads JetBrains Mono + Geist Mono from
  * Google Fonts. MV3's CSP blocks remote fonts, so the same families are
  * vendored (see ./fonts/SOURCE.txt) and exposed as two tokens. Variable
  * woff2: one file each, full 100–900 weight axis.

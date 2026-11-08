@@ -1,0 +1,85 @@
+// @ts-check
+// The notebook arm of sandbox_create — spin up a fresh Notebook.
+// (Was the standalone js_create tool; merged into sandbox_create({kind:'notebook'})
+// 2026-07-05: one kind-discriminated create tool.)
+//
+// Creates a Notebook record + spawns its tab in the background. The new
+// Notebook becomes this chat's current — subsequent js_notebook calls
+// without an explicit `notebook` arg route here.
+
+import { oncePerSession } from './once-per-session.js';
+
+// why a Notebook-specific note (the shared CODE_STYLE_NOTE rides the Notebook
+// actor's own prompt now): the
+// fresh-realm + file-tree + OPFS-state guidance holds for Notebooks, not Apps.
+// Every run is a clean realm, so durable state must be explicit — an OPFS file,
+// never a module global — which keeps Notebook code pure and functional.
+const NOTEBOOK_NOTE = [
+  '<notebook>',
+  'A Notebook is a fresh-run JS IDE with a file tree — every run starts a clean',
+  'realm, so runs are REPRODUCIBLE from the code + files alone (this is the',
+  'point; nothing in memory carries to the next run). Keep functions pure, split',
+  'reusable helpers into their own .js files and import them, and keep cross-run',
+  'state in OPFS via mcdollar.self.writeFile / readFile — never a module global.',
+  'OUTPUT: RETURN a value to display it (an array of flat objects renders as a',
+  'table; objects/arrays as JSON). For tables + charts + data helpers import the',
+  'stdlib — import { table, chart, mean } from \'mcdollar:std\' — then RETURN or',
+  'mcdollar.self.display() the result. chart spec: { type: bar|line|scatter|heatmap,',
+  'data, x, y, title } (heatmap: rows of { x, y, v } bins, shaded by v). These',
+  'FOUR types are the ONLY charts that render — a hand-rolled Vega/Vega-Lite/',
+  'plotly spec is NOT understood and dumps as raw JSON, so never return one.',
+  'CODE MODE: for multi-step work, write ONE script that orchestrates it and',
+  'return just the result — loop/filter/transform in code instead of many',
+  'separate tool calls. mcdollar.egress.fetch(url, { method, headers, body }) is',
+  'audited HTTP (denylist + SSRF + audit, same as fetch_url). mcdollar:wasi runs a',
+  'compiled wasm32-wasi binary over an in-memory FS (import { runWasi } from',
+  '\'mcdollar:wasi\'; runWasi(bytes, { args, stdin, files }) → { exitCode, stdout,',
+  'files }; the module gets no network; demoModule() from the same import is',
+  'a known-good smoke-test module). mcdollar.runtime.',
+  'runAgent({ task }) embeds an agent inside a Notebook you BUILD FOR THE USER',
+  '(e.g. a chat box that reasons); for your own work use the actor_create tool.',
+  'Keep approval-needing / money-spending actions as discrete tools, not buried',
+  'in a script. Persist reusable source in the Notebook workspace.',
+  'REPOSITORY: a Notebook created with gitUrl is a lightweight clone with no',
+  'Linux boot. Use repo_history, repo_version, and repo_remote for its Git',
+  'history; edit/run files with the normal Notebook tools.',
+  '</notebook>',
+].join('\n');
+
+/**
+ * Create a Notebook record + its background tab; returns { id, name, kind,
+ * isCurrent } plus the Notebook runtime note.
+ * @param {any} args @param {import('/shared/tool-types.js').ToolContext} ctx
+ * @returns {Promise<import('/shared/tool-types.js').ToolResult>}
+ */
+export const createNotebookSandbox = async (args, ctx) => {
+    const sessionId = ctx.session?.sessionId;
+    const authority = /** @type {any} */ (ctx).executionAuthority;
+    if (!authority?.createNotebook) return { ok: false, error: 'js_registry_unavailable' };
+    const created = await authority.createNotebook(args);
+    if (!created?.ok) return created;
+    const { record, repository, isCurrent } = created;
+    const summary = JSON.stringify({
+      id: record.id,
+      name: record.name,
+      // why kind: the merged sandbox_create result is the durable-handle
+      // carrier — instance-handle.js reads it to label the harvested id.
+      kind: 'notebook',
+      isCurrent,
+      ...(repository ? { repository } : {}),
+    }, null, 2);
+    // The Notebook ACTOR writes + runs the code, so the style + correctness
+    // guidance rides ITS prompt (actorBlock), not this orchestrator create-result.
+    // The full runtime note is disclosed once per session (schema-diet 6b): a
+    // second notebook this session doesn't need it re-stated — a pointer suffices.
+    const note = oncePerSession(
+      sessionId, 'notebook-note', ctx.session?.messages,
+      'sandbox_create', NOTEBOOK_NOTE,
+    )
+      ? NOTEBOOK_NOTE
+      : '(Notebook runtime note shown earlier this session — same rules apply.)';
+    return {
+      ok: true,
+      content: `${summary}\n\n${note}`,
+    };
+  };

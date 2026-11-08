@@ -23,5 +23,5 @@ export const firefoxKernelRuntimeModules = Object.freeze({
     './kernel-turn-authority-adapter.js'
   )).createKernelTurnAuthorityAdapter,
   directActorHost: async () => import('./direct-actor-host.js'),
-  artifactCodec: async () => import('/peerd-engine/export.js'),
+  artifactCodec: async () => import('/mcdollar-engine/export.js'),
 });

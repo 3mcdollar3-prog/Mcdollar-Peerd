@@ -1,5 +1,5 @@
 // @ts-check
-// eval/runner — drives peerd's REAL agent stack against the task suite.
+// eval/runner — drives mcdollar's REAL agent stack against the task suite.
 //
 // This is an automated "user": it connects the same SW port the side
 // panel uses (turn/* push events), sends agent/send per task, awaits the
@@ -15,7 +15,7 @@ import browser from '/shared/browser-api.js';
 import { TASKS, SUITES } from './tasks.js';
 import { aggregate, compare } from './score.js';
 import { makeOm2wRecorder } from './om2w-recorder.js';
-import { costOf } from '/peerd-provider/index.js';
+import { costOf } from '/mcdollar-provider/index.js';
 import { sleep } from '/shared/util.js';
 
 /**
@@ -34,10 +34,10 @@ const priceRunnerUsd = (cfg, usage) => {
 // Baseline = the last scorecard a dev pinned as "known good". Kept in
 // localStorage (per-browser, survives reloads) — there's no backend to store it
 // in, and a baseline is inherently local: it's tied to YOUR model + key + page
-// state at the time you pinned it. This is how peerd answers eve's "tell me what
+// state at the time you pinned it. This is how mcdollar answers eve's "tell me what
 // a prompt/model change broke" without a server: pin a baseline, change a thing,
 // re-run, read the delta + regression list.
-const BASELINE_KEY = 'peerd.eval.baseline.v1';
+const BASELINE_KEY = 'mcdollar.eval.baseline.v1';
 const loadBaseline = () => { try { return JSON.parse(localStorage.getItem(BASELINE_KEY) || 'null'); } catch { return null; } };
 /** @param {unknown} card */
 const saveBaseline = (card) => localStorage.setItem(BASELINE_KEY, JSON.stringify(card));
@@ -213,7 +213,7 @@ async function ensureSubject() {
 // subject was always the scored tab anyway: agent-opened tabs are active:false,
 // so resolveEndTab's subject fallback returns the same tab focusing used to.)
 
-// Tabs peerd opens DURING a task (e.g. via open_tab) LINGER in the subject
+// Tabs mcdollar opens DURING a task (e.g. via open_tab) LINGER in the subject
 // window. Across tasks they accumulate and can steal "active" status from the
 // tab the agent actually drove — so the runner scores the WRONG tab (a prior
 // task's page). This bit us: selenium-multifield was scored against
@@ -358,7 +358,7 @@ async function runTask(task, runnerCfg) {
   turn = fresh();
   log(`\n▶ ${task.id} — ${task.title}`);
   await browser.runtime.sendMessage({ type: 'session/reset' });
-  await closeAgentTabs(); // clear tabs peerd opened in PRIOR tasks → clean window to score
+  await closeAgentTabs(); // clear tabs mcdollar opened in PRIOR tasks → clean window to score
   // subjectId is set by ensureSubject before any task runs; cast off the null.
   const subjId = /** @type {number} */ (subjectId);
   // Substitute the fixture base into the __FIXTURE__ sentinel (web-actor suite);
@@ -506,7 +506,7 @@ const localAvailable = async () => {
   catch { return false; }
 };
 
-// Fill the A/B dropdowns from peerd's REAL available models (configured
+// Fill the A/B dropdowns from mcdollar's REAL available models (configured
 // providers' catalogs, via models/options — the same source the chat model
 // picker uses). We drop local-webgpu's own catalog entries: the runner pins a
 // BARE model id, and pinning 'gemma…' would mis-route to the active cloud
@@ -675,7 +675,7 @@ async function preflight() {
     const s = /** @type {any} */ (await browser.runtime.sendMessage({ type: 'provider/status' }));
     const hasKey = Array.isArray(s?.providers) ? s.providers.some((/** @type {any} */ p) => p.hasKey) : !!s?.providers?.hasKey;
     if (!s?.ok || !hasKey) {
-      $('warn').textContent = '⚠ No provider key detected (or vault locked). Open the peerd side panel, unlock, ensure a key is set, then reload this page.';
+      $('warn').textContent = '⚠ No provider key detected (or vault locked). Open the mcdollar side panel, unlock, ensure a key is set, then reload this page.';
     }
   } catch (e) {
     $('warn').textContent = `Could not reach the service worker: ${/** @type {{ message?: string }} */ (e)?.message ?? e}`;
@@ -860,7 +860,7 @@ const evalDriver = {
     })();
   },
 };
-/** @type {any} */ (window).__peerdEval = evalDriver;
+/** @type {any} */ (window).__mcdollarEval = evalDriver;
 
 // Build the suite dropdown FROM the SUITES registry (not static HTML) so every
 // registered suite is selectable — by a human AND by the CDP driver, which sets

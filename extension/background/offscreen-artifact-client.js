@@ -1,5 +1,5 @@
 // @ts-check
-// Demand-only .peerd artifact codec client. Chrome transfers the bounded
+// Demand-only .mcdollar artifact codec client. Chrome transfers the bounded
 // operation over one exact ServiceWorker -> offscreen WindowClient channel;
 // Firefox can import the same pure codec directly in its event page.
 

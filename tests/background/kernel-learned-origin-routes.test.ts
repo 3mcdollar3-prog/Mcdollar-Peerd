@@ -3,8 +3,8 @@ import {
   makeKernelLearnedOriginRoutes,
   normalizeKernelLearnedHost,
 } from '../../extension/background/settings-store.js';
-import { makeLearnedOrigins } from '../../extension/peerd-runtime/actor/learned-origins.js';
-import { normalizeApiOrigin } from '../../extension/peerd-runtime/actor/web-actor.js';
+import { makeLearnedOrigins } from '../../extension/mcdollar-runtime/actor/learned-origins.js';
+import { normalizeApiOrigin } from '../../extension/mcdollar-runtime/actor/web-actor.js';
 
 const hostFromLegacy = (value: unknown) => {
   const origin = normalizeApiOrigin(value);

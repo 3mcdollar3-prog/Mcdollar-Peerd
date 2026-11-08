@@ -4,8 +4,8 @@ import { collectStaticModuleGraph } from '../../packaging/static-module-graph.ts
 import { EXTENSION_DIR } from '../../packaging/lib.ts';
 import { createKernelTurnOwner } from '../../extension/background/kernel-turn-owner.js';
 import { createControllerTurnRuntime } from '../../extension/offscreen/controller-turn-runtime.js';
-import { makeAgentSendCustody } from '../../extension/peerd-egress/background.js';
-import { makeScriptedProviderAuthority } from '../peerd-provider/model-egress-fixture';
+import { makeAgentSendCustody } from '../../extension/mcdollar-egress/background.js';
+import { makeScriptedProviderAuthority } from '../mcdollar-provider/model-egress-fixture';
 import { createSessionTurnStore } from '../../extension/shared/session-turn-store.js';
 
 const until = async (predicate: () => boolean) => {
@@ -175,9 +175,9 @@ describe('native kernel turn owner', () => {
     expect(graph).toContain('background/controller-turn-bridge.js');
     expect(graph).toContain('background/kernel-session-turn-routes.js');
     expect(graph).not.toContain('background/service-worker.js');
-    expect(graph).not.toContain('peerd-runtime/loop/turn-driver.js');
-    expect(graph).toContain('peerd-runtime/loop/turn-authority-driver.js');
-    expect(graph).not.toContain('peerd-runtime/loop/agent-loop.js');
+    expect(graph).not.toContain('mcdollar-runtime/loop/turn-driver.js');
+    expect(graph).toContain('mcdollar-runtime/loop/turn-authority-driver.js');
+    expect(graph).not.toContain('mcdollar-runtime/loop/agent-loop.js');
     expect(graph).not.toContain('offscreen/controller-turn-runtime.js');
   });
 

@@ -66,10 +66,10 @@ export const SIMPLE_TASKS = [
     id: 'selenium-type-submit',
     title: 'Type into a field + submit',
     startUrl: SELENIUM_FORM,
-    prompt: 'Type "peerd-eval-42" into the text input field, then submit the form.',
+    prompt: 'Type "mcdollar-eval-42" into the text input field, then submit the form.',
     timeoutMs: 150_000,
     check: (s) => s.error ? no(`errored: ${s.error}`)
-      : (includesCI(s.tabText, 'Received') && includesCI(s.tabUrl + s.tabText, 'peerd-eval-42'))
+      : (includesCI(s.tabText, 'Received') && includesCI(s.tabUrl + s.tabText, 'mcdollar-eval-42'))
           ? ok('form submitted with the value')
           : no(`submitted? url=${s.tabUrl} text~="${(s.tabText || '').slice(0, 80)}"`),
   },
@@ -199,10 +199,10 @@ export const SIMPLE_TASKS = [
     // why: a distinct field type from selenium-type-submit (textarea, not the
     // text input). method=get → the value echoes verbatim into the URL. Token
     // is URL-safe (alphanumeric+hyphen) so a bare substring match is valid.
-    prompt: 'Type "peerd-area-5" into the "Textarea" field on this form, then submit the form.',
+    prompt: 'Type "mcdollar-area-5" into the "Textarea" field on this form, then submit the form.',
     timeoutMs: 150_000,
     check: (s) => s.error ? no(`errored: ${s.error}`)
-      : (includesCI(s.tabText, 'Received') && includesCI(s.tabUrl, 'peerd-area-5'))
+      : (includesCI(s.tabText, 'Received') && includesCI(s.tabUrl, 'mcdollar-area-5'))
           ? ok(`textarea value round-tripped: ${s.tabUrl}`)
           : no(`submitted? url=${s.tabUrl} text~="${(s.tabText || '').slice(0, 80)}"`),
   },
@@ -267,9 +267,9 @@ export const SIMPLE_TASKS = [
     id: 'js-base64',
     title: 'Headless compute — base64 encode',
     startUrl: null,
-    // why: btoa('peerd') === 'cGVlcmQ=' — not something a model recalls, so a
+    // why: btoa('mcdollar') === 'cGVlcmQ=' — not something a model recalls, so a
     // correct string is near-proof it executed code.
-    prompt: 'Base64-encode the ASCII string "peerd" and give me the resulting string.',
+    prompt: 'Base64-encode the ASCII string "mcdollar" and give me the resulting string.',
     timeoutMs: 120_000,
     check: (s) => s.error ? no(`errored: ${s.error}`)
       : includesCI(s.answer, 'cGVlcmQ=') ? ok('correct: cGVlcmQ=')
@@ -375,12 +375,12 @@ export const SIMPLE_TASKS = [
     // types (text, textarea, <select>) then submit = ~5 actions. The form is
     // method=get action=submitted-form.html, so every value is echoed verbatim
     // into the submitted URL's query string → a fully objective check. We omit
-    // the form's password field on purpose: peerd may refuse typing into a
+    // the form's password field on purpose: mcdollar may refuse typing into a
     // password input on policy grounds, which would fail this for a reason
     // unrelated to the DOM pipeline we're measuring. (The dropdown option
     // labeled "Two" submits value="2": my-select=2.)
     prompt: 'On this Selenium demo web form, do all of the following, then submit the form:\n'
-      + '- Type "peerd-long-7" into the "Text input" field.\n'
+      + '- Type "mcdollar-long-7" into the "Text input" field.\n'
       + '- Type "hello-textarea-xyz" into the "Textarea" field.\n'
       + '- In the "Dropdown (select)" menu, choose the option labeled "Two".\n'
       + 'Then click Submit.',
@@ -396,7 +396,7 @@ export const SIMPLE_TASKS = [
       // is valid. If you ever change them, keep them URL-safe (no spaces, =, &,
       // +) — otherwise they'd percent-encode in the URL and this would false-fail.
       const missing = [];
-      if (!includesCI(url, 'peerd-long-7')) missing.push('text(my-text=peerd-long-7)');
+      if (!includesCI(url, 'mcdollar-long-7')) missing.push('text(my-text=mcdollar-long-7)');
       if (!includesCI(url, 'hello-textarea-xyz')) missing.push('textarea(my-textarea=hello-textarea-xyz)');
       if (!includesCI(url, 'my-select=2')) missing.push('select(my-select=2 for option "Two")');
       if (missing.length) return no(`missing field values in submitted URL: ${missing.join(', ')} | url=${url}`);
@@ -678,10 +678,10 @@ const ROBUST_EXTRA = [
     id: 'do-text-blue',
     title: 'do → type a token + submit',
     startUrl: SELENIUM_FORM,
-    prompt: 'Type "peerd-blue-9" into the "Text input" field on this form, then submit the form.',
+    prompt: 'Type "mcdollar-blue-9" into the "Text input" field on this form, then submit the form.',
     timeoutMs: 150_000,
     check: (s) => s.error ? no(`errored: ${s.error}`)
-      : (includesCI(s.tabText, 'Received') && includesCI(s.tabUrl, 'peerd-blue-9')) ? ok(`round-tripped: ${s.tabUrl}`)
+      : (includesCI(s.tabText, 'Received') && includesCI(s.tabUrl, 'mcdollar-blue-9')) ? ok(`round-tripped: ${s.tabUrl}`)
         : no(`submitted? url=${s.tabUrl} text~="${(s.tabText || '').slice(0, 60)}"`),
   },
   {
@@ -700,14 +700,14 @@ const ROBUST_EXTRA = [
     id: 'do-text-and-select',
     title: 'do → text + dropdown "One" together + submit',
     startUrl: SELENIUM_FORM,
-    prompt: 'On this form: type "peerd-combo-8" into the "Text input" field, choose "One" in the "Dropdown (select)" menu, then submit.',
+    prompt: 'On this form: type "mcdollar-combo-8" into the "Text input" field, choose "One" in the "Dropdown (select)" menu, then submit.',
     timeoutMs: 160_000,
     check: (s) => {
       if (s.error) return no(`errored: ${s.error}`);
       const url = s.tabUrl || '';
       if (!includesCI(s.tabText, 'Received')) return no(`did not reach the confirmation; url=${url}`);
       const missing = [];
-      if (!includesCI(url, 'peerd-combo-8')) missing.push('text(peerd-combo-8)');
+      if (!includesCI(url, 'mcdollar-combo-8')) missing.push('text(mcdollar-combo-8)');
       if (!includesCI(url, 'my-select=1')) missing.push('select(my-select=1 for "One")');
       return missing.length ? no(`missing: ${missing.join(', ')} | url=${url}`) : ok(`both submitted: ${url}`);
     },
@@ -848,8 +848,8 @@ export const WEB_ACTOR_TASKS = [
     prompt: 'Open __FIXTURE__/ and tell me the name of this store (the main heading).',
     timeoutMs: 150_000,
     check: (s) => s.error ? no(`errored: ${s.error}`)
-      : includesCI(s.answer, 'Peerdmart') ? ok(`read the heading: "${(s.answer || '').slice(0, 60)}"`)
-        : no(`expected "Peerdmart", answer="${(s.answer || '').slice(0, 80)}"`),
+      : includesCI(s.answer, 'Mcdollarmart') ? ok(`read the heading: "${(s.answer || '').slice(0, 60)}"`)
+        : no(`expected "Mcdollarmart", answer="${(s.answer || '').slice(0, 80)}"`),
   },
   {
     id: 'web-products-list-all',

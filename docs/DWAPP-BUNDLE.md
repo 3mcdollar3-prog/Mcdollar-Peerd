@@ -14,7 +14,7 @@ The code is the protocol authority: the file container lives in
 descriptor and bounded codec live in
 [`shared/bundle/transport.js`](../extension/shared/bundle/transport.js), and the
 signed outer manifest lives in
-[`peerd-distributed/content/manifest.js`](../extension/peerd-distributed/content/manifest.js).
+[`mcdollar-distributed/content/manifest.js`](../extension/mcdollar-distributed/content/manifest.js).
 
 ## Version 2 descriptor
 
@@ -72,7 +72,7 @@ serves them directly.
 
 Texture, audio, model, font, and other byte files should be separate App files,
 not base64 strings embedded in JavaScript. Installed binary files are delivered
-to the opaque App realm through the frozen `window.peerd.assets` API. Its
+to the opaque App realm through the frozen `window.mcdollar.assets` API. Its
 `has`, `list`, `bytes`, and `url` methods reveal only assets packaged in that
 App; they expose no OPFS handle, extension API, or network primitive.
 

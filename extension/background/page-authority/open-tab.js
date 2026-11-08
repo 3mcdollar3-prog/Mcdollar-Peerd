@@ -18,7 +18,7 @@ import {
   resetToVerifiedBlank,
   sensitiveSiteBrowserTargetVerdict,
   updateAndObserveCommittedNavigation,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 
 const NAV_TIMEOUT_MS = 30_000;
 
@@ -44,7 +44,7 @@ export const openProtectedBackgroundTabAuthority = async (args, ctx) => {
       ok: false, error: 'page action was stopped',
       outcomeKind: performed ? 'effect-completed' : 'pre-effect-failure', retryable: false,
     });
-    // why background, always: a tab peerd opens no longer steals the user away
+    // why background, always: a tab mcdollar opens no longer steals the user away
     // (DESIGN-12, owner 2026-06-18). It opens quietly and ctx.announceTab drops a
     // "go there" card in the chat: the user's click focuses it AND opens the side
     // panel (the click is the only gesture Chrome lets us open the panel in).
@@ -72,7 +72,7 @@ export const openProtectedBackgroundTabAuthority = async (args, ctx) => {
     }
     // why: ctx.tabs is the opaque `Object` contract slot; narrow to the tab
     // creation and committed-navigation surface used here.
-    const tabsApi = /** @type {import('/peerd-runtime/browser-authority/committed-navigation.js').NavigationTabsApi & { create: (opts: CreateOpts) => Promise<BrowserTab>, remove?: (tabId: number) => Promise<unknown> }} */ (ctx.tabs);
+    const tabsApi = /** @type {import('/mcdollar-runtime/browser-authority/committed-navigation.js').NavigationTabsApi & { create: (opts: CreateOpts) => Promise<BrowserTab>, remove?: (tabId: number) => Promise<unknown> }} */ (ctx.tabs);
     // why: noteTab / hintPullIn are optional SW-injected context extras not on
     // the ToolContext contract slot.
     const ctxExtras = /** @type {{ noteTab?: (id: number | undefined, label?: string) => Promise<unknown>, hintPullIn?: (id: number | undefined, url: string) => unknown, judgeLanding?: (url: string) => Promise<unknown>, navigationTimeoutMs?: number, ensureBrowserNetworkGuard?: (tabId: number, targetUrl?: string) => Promise<import('/shared/tool-types.js').ToolResult>, armBrowserChildQuarantine?: (tabId:number)=>Promise<import('/shared/tool-types.js').ToolResult>, updateBrowserNetworkGuardOrigin?: (tabId: number, rawUrl?: string) => Promise<import('/shared/tool-types.js').ToolResult> }} */ (ctx);
@@ -224,7 +224,7 @@ export const openProtectedBackgroundTabAuthority = async (args, ctx) => {
       const finalLabel = requestedUrl ? tab.url || requestedUrl : 'a new tab';
       try { await ctxExtras.noteTab?.(tab.id, finalLabel); }
       catch (e) { console.debug('[open_tab] noteTab failed', e); }
-      // why: a peerd-opened web page can't carry the pull-in button, so it gets the
+      // why: a mcdollar-opened web page can't carry the pull-in button, so it gets the
       // informational reminder instead (the SW injects it once the tab is visible).
       // Only for real URL opens: a blank new tab has nothing to orient toward.
       if (requestedUrl) { try { ctxExtras.hintPullIn?.(tab.id, tab.url || requestedUrl); } catch (e) { console.debug('[open_tab] hintPullIn failed', e); } }

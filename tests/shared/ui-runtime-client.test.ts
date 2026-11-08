@@ -110,7 +110,7 @@ describe('bounded UI runtime client', () => {
     await expect(effect).resolves.toMatchObject({ ok: false });
     expect(calls).toBe(1);
     expect(notices).toHaveLength(1);
-    expect(notices[0].text).toBe('Peerd could not apply that change.');
+    expect(notices[0].text).toBe('Mcdollar could not apply that change.');
 
     notices = putUiEffectFailureNotice(notices, { ok: false, outcomeKnown: false });
     expect(notices).toHaveLength(1);

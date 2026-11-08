@@ -27,7 +27,7 @@ import {
   originOfUrl,
   resolveTargetTab,
   scriptingTarget,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 
 /** @param {any} args @param {any} ctx */
 export const queryOwnedDomAuthority = async (args, ctx) => {

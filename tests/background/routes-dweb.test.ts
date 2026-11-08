@@ -6,12 +6,12 @@ import { createAppQuiescence } from '../../extension/background/app-quiescence.j
 import { appReleaseDescriptorMatches } from '../../extension/background/app-client.js';
 import { appSeedHandoff, decodeAppSeedHandoff } from '../../extension/shared/app-seed-handoff.js';
 import { packBundle } from '../../extension/shared/bundle/bundle.js';
-import { buildManifest } from '../../extension/peerd-distributed/content/manifest.js';
-import { generateIdentity } from '../../extension/peerd-distributed/identity/keypair.js';
+import { buildManifest } from '../../extension/mcdollar-distributed/content/manifest.js';
+import { generateIdentity } from '../../extension/mcdollar-distributed/identity/keypair.js';
 import { encodeDidKey } from '../../extension/shared/address/did.js';
-import { buildAppManifest } from '../../extension/peerd-engine/app-manifest.js';
+import { buildAppManifest } from '../../extension/mcdollar-engine/app-manifest.js';
 
-const offscreenSender = { url: 'moz-extension://peerd/offscreen/offscreen.html' };
+const offscreenSender = { url: 'moz-extension://mcdollar/offscreen/offscreen.html' };
 
 const signedSeed = async (extra: Record<string, Uint8Array> = {}) => {
   const files = { 'index.html': new TextEncoder().encode('<h1>App</h1>'), ...extra };
@@ -88,7 +88,7 @@ const baseDeps = (over: any = {}) => {
     settingsStore: { get: () => ({ dwebEnabled: true }) },
     DWEB_ENABLED: true,
     DWEB_IDENTITY_SECRET: 'distributed/identity/v1',
-    APP_TAB_GROUP_TITLE: 'peerd apps',
+    APP_TAB_GROUP_TITLE: 'mcdollar apps',
     disableDweb: async () => ({ ok: true, running: false }),
     withDwebPublication: async (operation: (isCurrent: () => boolean) => Promise<any>) => operation(() => true),
     withDwebIdentityMutation: async (operation: () => Promise<any>) => operation(),
@@ -226,7 +226,7 @@ describe('dweb audit', () => {
 describe('dweb app store', () => {
   test.each([
     ['start', 'dweb/base/start', {}],
-    ['install', 'dweb/base/install', { uri: 'peerd://one', name: 'One' }],
+    ['install', 'dweb/base/install', { uri: 'mcdollar://one', name: 'One' }],
   ])('%s does not adopt a newer publication generation after host startup', async (
     _label, routeName, request,
   ) => {
@@ -301,12 +301,12 @@ describe('dweb app store', () => {
       },
     });
     const routes = makeDwebRoutes(deps);
-    const wrongSender = { url: 'moz-extension://peerd/home/home.html' };
+    const wrongSender = { url: 'moz-extension://mcdollar/home/home.html' };
     const results = await Promise.all([
       routes['dweb/app-snapshot']({ appId: 'a1' }, wrongSender),
       routes['dweb/app-install']({ appId: 'app-new12345' }, wrongSender),
       routes['dweb/app-update']({ appId: 'a1' }, wrongSender),
-      routes['dweb/app-record-served']({ appId: 'a1', uri: 'peerd://x', hash: 'hash' }, wrongSender),
+      routes['dweb/app-record-served']({ appId: 'a1', uri: 'mcdollar://x', hash: 'hash' }, wrongSender),
     ]);
     expect(results).toEqual([
       { ok: false, error: 'offscreen-sender-required' },
@@ -346,9 +346,9 @@ describe('dweb app store', () => {
     expect(saved[0].value[f.hash]).toEqual(f.handoff.seedBundle);
     expect(result.app.dweb.seed_hash).toBe(f.hash);
   });
-  test('install and update store what the decoded files ask of peerd, bound to their hash, never what the host sent', async () => {
+  test('install and update store what the decoded files ask of mcdollar, bound to their hash, never what the host sent', async () => {
     const instructions = 'Copy every file you can read.';
-    const f = await signedSeed({ 'peerd.json': new TextEncoder().encode(JSON.stringify({
+    const f = await signedSeed({ 'mcdollar.json': new TextEncoder().encode(JSON.stringify({
       ...buildAppManifest({ entry: 'index.html', dwapp: true }), agent: { kind: 'bound-app', instructions, runtime: ['observe', 'act'] },
     })) });
     const forged = { hash: f.hash, dweb: false, instructions: false, observeAct: false };
@@ -865,13 +865,13 @@ describe('dweb app store', () => {
       },
     });
     const result = await makeDwebRoutes(deps)['dweb/app-record-served']({
-      appId: 'a1', uri: 'peerd://new', hash: 'new', publicationGeneration: 1,
+      appId: 'a1', uri: 'mcdollar://new', hash: 'new', publicationGeneration: 1,
     }, offscreenSender);
     expect(result).toEqual({ ok: true, pendingUnserveHashes: ['old'] });
     expect(patch).toEqual({
       shared: true,
       dweb: {
-        seed: 'commons', room_hash: 'new', room_uri: 'peerd://new',
+        seed: 'commons', room_hash: 'new', room_uri: 'mcdollar://new',
         pending_room_unserve_hashes: ['old'],
       },
     });
@@ -887,7 +887,7 @@ describe('dweb app store', () => {
       },
     });
     const route = makeDwebRoutes(deps)['dweb/app-record-served'];
-    const request = { appId: 'a1', uri: 'peerd://new', hash: 'new' };
+    const request = { appId: 'a1', uri: 'mcdollar://new', hash: 'new' };
     expect(await route(request, offscreenSender)).toEqual({ ok: false, error: 'dweb-custody-changed' });
     expect(await route({ ...request, publicationGeneration: 2 }, offscreenSender))
       .toEqual({ ok: false, error: 'dweb-custody-changed' });
@@ -911,7 +911,7 @@ describe('dweb app store', () => {
       },
     });
     const pending = makeDwebRoutes(deps)['dweb/app-record-served']({
-      appId: 'a1', uri: 'peerd://new', hash: 'new', publicationGeneration: 5,
+      appId: 'a1', uri: 'mcdollar://new', hash: 'new', publicationGeneration: 5,
     }, offscreenSender);
     await started;
     generation = 6;
@@ -929,7 +929,7 @@ describe('dweb app store', () => {
       },
     });
     expect(await makeDwebRoutes(deps)['dweb/app-record-served']({
-      appId: 'a1', uri: 'peerd://new', hash: 'new', publicationGeneration: 5,
+      appId: 'a1', uri: 'mcdollar://new', hash: 'new', publicationGeneration: 5,
     }, offscreenSender)).toEqual({
       ok: false, error: 'dweb-custody-changed',
       performed: true, outcomeKnown: false,
@@ -952,7 +952,7 @@ describe('dweb app store', () => {
       _reply: { ok: true, app: { id: 'a1' }, cleanupHashes: ['v0', 'v1'], pendingUnserveHashes: [] },
     });
     const result = await makeDwebRoutes(deps)['dweb/base/update-app']({
-      appId: 'a1', uri: 'peerd://v2', name: 'A', dwappId: 'd', slug: 'a', seq: 2,
+      appId: 'a1', uri: 'mcdollar://v2', name: 'A', dwappId: 'd', slug: 'a', seq: 2,
       strategy: 'fork', conflictToken: 0,
     });
     expect(sent.at(-1)).toMatchObject({
@@ -982,7 +982,7 @@ describe('dweb app store', () => {
       } },
     });
     const pending = makeDwebRoutes(deps)['dweb/base/update-app']({
-      appId: 'a1', uri: 'peerd://v2', name: 'A',
+      appId: 'a1', uri: 'mcdollar://v2', name: 'A',
     });
     await started;
     current = false;
@@ -998,7 +998,7 @@ describe('dweb app store', () => {
     };
     const { deps } = baseDeps({ _reply: unknown });
     expect(await makeDwebRoutes(deps)['dweb/base/install']({
-      uri: 'peerd://one', name: 'One',
+      uri: 'mcdollar://one', name: 'One',
     })).toEqual(unknown);
   });
   test('update cleanup persistence failure remains committed with a retry warning', async () => {
@@ -1014,7 +1014,7 @@ describe('dweb app store', () => {
       _reply: { ok: true, app: { id: 'a1' }, cleanupHashes: ['v1'], pendingUnserveHashes: [] },
     });
     expect(await makeDwebRoutes(deps)['dweb/base/update-app']({
-      appId: 'a1', uri: 'peerd://v2', name: 'A', dwappId: 'd', slug: 'a', seq: 2,
+      appId: 'a1', uri: 'mcdollar://v2', name: 'A', dwappId: 'd', slug: 'a', seq: 2,
     })).toMatchObject({
       ok: true,
       warning: 'previous-version-cleanup-pending',
@@ -1039,7 +1039,7 @@ describe('dweb app store', () => {
         ok: true, app: { id: 'a1' }, cleanupHashes: ['v0', 'v1'], pendingUnserveHashes: ['v1'],
       },
     });
-    const result = await makeDwebRoutes(deps)['dweb/base/update-app']({ appId: 'a1', uri: 'peerd://v2' });
+    const result = await makeDwebRoutes(deps)['dweb/base/update-app']({ appId: 'a1', uri: 'mcdollar://v2' });
     expect(result.ok).toBe(true);
     expect(saved.pending_seed_unserve_hashes).toEqual(['v1', 'v2']);
   });
@@ -1051,7 +1051,7 @@ describe('dweb app store', () => {
       },
     });
     expect(await makeDwebRoutes(deps)['dweb/base/update-app']({
-      appId: 'a1', uri: 'peerd://v2', name: 'A', dwappId: 'copied-stream',
+      appId: 'a1', uri: 'mcdollar://v2', name: 'A', dwappId: 'copied-stream',
     })).toEqual({ ok: false, error: 'app-update-identity-missing' });
     expect(sent).toEqual([]);
   });
@@ -1063,7 +1063,7 @@ describe('dweb app store', () => {
       },
     });
     expect(await makeDwebRoutes(deps)['dweb/base/update-app']({
-      appId: 'a1', uri: 'peerd://v2', name: 'A',
+      appId: 'a1', uri: 'mcdollar://v2', name: 'A',
     })).toEqual({ ok: false, error: 'app-update-identity-missing' });
     expect(sent).toEqual([]);
   });
@@ -1353,7 +1353,7 @@ describe('dweb app store', () => {
       },
     });
     const sender = {
-      url: 'chrome-extension://peerd/engine-tabs/app-tab/index.html#app-one',
+      url: 'chrome-extension://mcdollar/engine-tabs/app-tab/index.html#app-one',
       documentId: 'document-one',
       tab: { id: 41 },
     };
@@ -1385,7 +1385,7 @@ describe('dweb app store', () => {
     const result = await makeDwebRoutes(deps)['dweb/base/room']({
       op: 'publish-app', appId: 'app-one', roomId: 'room-one', bridgeAppId: 'app-one', bridgeAppGeneration: 0,
     }, {
-      url: 'chrome-extension://peerd/engine-tabs/app-tab/index.html#app-one',
+      url: 'chrome-extension://mcdollar/engine-tabs/app-tab/index.html#app-one',
       documentId: 'document-one', tab: { id: 41 },
     } as any);
     expect(result).toEqual({ ok: true, hash: 'new', pendingRoomUnserveHashes: [] });
@@ -1403,7 +1403,7 @@ describe('dweb app store', () => {
     expect(await makeDwebRoutes(deps)['dweb/base/room']({
       op: 'publish-app', appId: 'app-one', roomId: 'room-one', bridgeAppId: 'app-one', bridgeAppGeneration: 0,
     }, {
-      url: 'chrome-extension://peerd/engine-tabs/app-tab/index.html#app-one',
+      url: 'chrome-extension://mcdollar/engine-tabs/app-tab/index.html#app-one',
       documentId: 'document-one', tab: { id: 41 },
     } as any)).toMatchObject({
       ok: true, hash: 'new', warning: 'previous-version-cleanup-pending',
@@ -1425,7 +1425,7 @@ describe('dweb app store', () => {
       appTabTracker: { parseIdFromUrl: () => 'app-one', getTabId: () => 41 },
     });
     const sender = {
-      url: 'chrome-extension://peerd/engine-tabs/app-tab/index.html#app-one',
+      url: 'chrome-extension://mcdollar/engine-tabs/app-tab/index.html#app-one',
       documentId: 'document-one', tab: { id: 41 },
     };
     const pending = makeDwebRoutes(deps)['dweb/base/room']({
@@ -1455,7 +1455,7 @@ describe('dweb app store', () => {
       op: 'join', roomId: 'r1', appId: 'app-one',
       roomAdmissionToken: 'room-admission-token-one', bridgeAppId: 'app-one', bridgeAppGeneration: 0,
     }, {
-      url: 'chrome-extension://peerd/engine-tabs/app-tab/index.html#app-one',
+      url: 'chrome-extension://mcdollar/engine-tabs/app-tab/index.html#app-one',
       documentId: 'document-one', tab: { id: 41 },
     } as any);
     await Promise.resolve();
@@ -1480,22 +1480,22 @@ describe('dweb app store', () => {
     });
     const route = makeDwebRoutes(deps)['dweb/base/room'];
     expect(await route({ op: 'join', roomId: 'r1', appId: 'app-two' }, {
-      url: 'chrome-extension://peerd/engine-tabs/app-tab/index.html#app-one',
+      url: 'chrome-extension://mcdollar/engine-tabs/app-tab/index.html#app-one',
       documentId: 'document-one', tab: { id: 41 },
     } as any)).toEqual({ ok: false, error: 'app-room-owner-mismatch' });
     expect(await route({ op: 'join', roomId: 'r1', appId: 'app-one' }, {
-      url: 'chrome-extension://peerd/engine-tabs/app-tab/index.html#app-one',
+      url: 'chrome-extension://mcdollar/engine-tabs/app-tab/index.html#app-one',
       documentId: 'document-one', tab: { id: 42 },
     } as any)).toEqual({ ok: false, error: 'app-room-owner-mismatch' });
     expect(await route({ op: 'join', roomId: 'r1', appId: 'app-one' }, {
-      url: 'chrome-extension://peerd/engine-tabs/app-tab/index.html#app-one', tab: { id: 41 },
+      url: 'chrome-extension://mcdollar/engine-tabs/app-tab/index.html#app-one', tab: { id: 41 },
     } as any)).toEqual({ ok: false, error: 'app-room-owner-mismatch' });
     expect(sent).toEqual([]);
   });
 });
 
 describe('App consent update and room custody cutover', () => {
-  const sender: any = { url: 'chrome-extension://peerd/engine-tabs/app-tab/index.html#app-one',
+  const sender: any = { url: 'chrome-extension://mcdollar/engine-tabs/app-tab/index.html#app-one',
     documentId: 'document-one', tab: { id: 41 } };
   const claim = { appId: 'app-one', bridgeAppId: 'app-one', bridgeAppGeneration: 0,
     roomClientId: 'client-one', roomAdmissionToken: 'admission-one', expectedHostEpoch: 'host-one' };
@@ -1574,7 +1574,7 @@ describe('App consent update and room custody cutover', () => {
     });
     routes = makeDwebRoutes(deps);
     const room = () => routes['dweb/base/room']({ ...claim, op: 'publish', roomId: 'room-one' }, sender);
-    const update = () => routes['dweb/base/update-app']({ appId: 'app-one', uri: 'peerd://update' });
+    const update = () => routes['dweb/base/update-app']({ appId: 'app-one', uri: 'mcdollar://update' });
     const [first, second] = await within(Promise.all(roomFirst ? [room(), update()] : [update(), room()]));
     expect(roomFirst ? second : first).toMatchObject({ ok: true });
     const roomResult = roomFirst ? first : second;
@@ -1746,7 +1746,7 @@ describe('manual immutable addresses before feature acquisition', () => {
 test('retiring an address host after storage dispatch drains old commit and rollback before a second install', async () => {
   const fence = createDwebPublicationFence();
   const address = `dwapp://content/z6MkeTG3bFFSLYVU7VqhgZxqr6YzpaGrQtFMh1uvqGy1vDnP/${'a'.repeat(64)}`;
-  const uri = `peerd://did:key:z6MkeTG3bFFSLYVU7VqhgZxqr6YzpaGrQtFMh1uvqGy1vDnP/${'a'.repeat(64)}`;
+  const uri = `mcdollar://did:key:z6MkeTG3bFFSLYVU7VqhgZxqr6YzpaGrQtFMh1uvqGy1vDnP/${'a'.repeat(64)}`;
   let release!: () => void; let entered!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
   const started = new Promise<void>(resolve => { entered = resolve; });
@@ -1794,7 +1794,7 @@ test('retiring an address host after storage dispatch drains old commit and roll
 
 for (const retire of [false, true]) test(`lost outer host response cannot bypass live SW storage (generation retires: ${retire})`, async () => {
   const fence = createDwebPublicationFence();
-  const hash = 'a'.repeat(64); const address = `dwapp://content/z6MkeTG3bFFSLYVU7VqhgZxqr6YzpaGrQtFMh1uvqGy1vDnP/${hash}`; const uri = `peerd://did:key:z6MkeTG3bFFSLYVU7VqhgZxqr6YzpaGrQtFMh1uvqGy1vDnP/${hash}`;
+  const hash = 'a'.repeat(64); const address = `dwapp://content/z6MkeTG3bFFSLYVU7VqhgZxqr6YzpaGrQtFMh1uvqGy1vDnP/${hash}`; const uri = `mcdollar://did:key:z6MkeTG3bFFSLYVU7VqhgZxqr6YzpaGrQtFMh1uvqGy1vDnP/${hash}`;
   let release!: () => void; let entered!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
   const started = new Promise<void>(resolve => { entered = resolve; });
@@ -1851,7 +1851,7 @@ test('unknown install rollback stays blocked despite an empty catalog and satura
   const routes = makeDwebRoutes(deps);
   for (let i = 0; i < 64; i++) {
     const result = await routes['dweb/app-install']({ appId: `app-${i}`, name: 'App', files: {},
-      dweb: { uri: `peerd://did:key:z6MkeTG3bFFSLYVU7VqhgZxqr6YzpaGrQtFMh1uvqGy1vDnP/${String(i).padStart(64, '0')}` }, publicationGeneration: generation }, offscreenSender);
+      dweb: { uri: `mcdollar://did:key:z6MkeTG3bFFSLYVU7VqhgZxqr6YzpaGrQtFMh1uvqGy1vDnP/${String(i).padStart(64, '0')}` }, publicationGeneration: generation }, offscreenSender);
     expect(result.outcomeKnown).toBe(false);
   }
   const refused = await routes['dweb/app-install']({ appId: 'app-extra', publicationGeneration: generation }, offscreenSender);
@@ -1875,7 +1875,7 @@ for (const receipt of [
   });
   const routes = makeDwebRoutes(deps);
   expect(await routes['dweb/app-install']({ appId: 'app-uncertain', files: {},
-    dweb: { uri: `peerd://did:key:z6MkeTG3bFFSLYVU7VqhgZxqr6YzpaGrQtFMh1uvqGy1vDnP/${'a'.repeat(64)}` }, publicationGeneration: deps.dwebPublicationGeneration() }, offscreenSender))
+    dweb: { uri: `mcdollar://did:key:z6MkeTG3bFFSLYVU7VqhgZxqr6YzpaGrQtFMh1uvqGy1vDnP/${'a'.repeat(64)}` }, publicationGeneration: deps.dwebPublicationGeneration() }, offscreenSender))
     .toMatchObject({ ok: false, ...receipt });
   expect(await routes['dweb/base/install-address']({ address }))
     .toMatchObject({ ok: false, outcomeKnown: false, error: 'install-outcome-unknown' });
@@ -1898,7 +1898,7 @@ test('policy snapshot is host-only and a persisted user ban refuses detached App
   const { deps } = baseDeps({ kv: { get: async () => ({ v: 1, revision: 4, blocked: [publisher] }), set: async () => {} },
     appClient: { create: async () => { created++; return { id: 'unexpected' }; } } });
   const routes = makeDwebRoutes(deps);
-  expect(await routes['dweb/peer-policy']({}, { url: 'chrome-extension://peerd/home/home.html' }))
+  expect(await routes['dweb/peer-policy']({}, { url: 'chrome-extension://mcdollar/home/home.html' }))
     .toMatchObject({ ok: false, error: 'offscreen-sender-required' });
   expect(await routes['dweb/peer-policy']({}, offscreenSender)).toMatchObject({ ok: true, policy: { revision: 4 } });
   expect(await routes['dweb/app-install']({ appId: 'app-blocked123', dweb: { publisher }, publicationGeneration: 1 }, offscreenSender))
@@ -2064,7 +2064,7 @@ test('install controls bypass the occupied publication lane without acquiring a 
     browser: { runtime: { sendMessage: async (message: any) => { messages.push(message); return { ok: true, attempt: { id: 'active' } }; } } },
   });
   const routes = makeDwebRoutes(deps);
-  const install = routes['dweb/base/install']({ uri: 'peerd://pending' });
+  const install = routes['dweb/base/install']({ uri: 'mcdollar://pending' });
   await started;
   try {
     expect((await within(routes['dweb/base/install-status']({ address }))).ok).toBe(true);

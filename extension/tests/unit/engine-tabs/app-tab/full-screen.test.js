@@ -117,14 +117,14 @@ describe('App full screen', () => {
 
   it('in Firefox the handle name says that it also leaves full screen', () => {
     const { handle } = mount({ panelKind: 'sidebar' });
-    expect(LEAVE_AND_OPEN).toBe('Leave full screen and open peerd');
+    expect(LEAVE_AND_OPEN).toBe('Leave full screen and open mcdollar');
     expect(handle.title).toBe(LEAVE_AND_OPEN);
     expect(handle.getAttribute('aria-label')).toBe(LEAVE_AND_OPEN);
     // Chrome keeps the name in the page, because there full screen stays on.
     expect(mount({ panelKind: 'side-panel' }).handle.getAttribute('aria-label')).toBe(null);
   });
 
-  it('in Chrome the handle hides while the side panel is open, because peerd is then on screen', () => {
+  it('in Chrome the handle hides while the side panel is open, because mcdollar is then on screen', () => {
     const { button, handle, leave, panel } = mount({ panelOpen: true });
     button.click();
     expect(handle.hidden).toBe(true);

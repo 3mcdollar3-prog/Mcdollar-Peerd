@@ -47,7 +47,7 @@ export const ApiIntegrationsSection = {
       const r = await vnode.attrs.send({ type: 'origin-cred/list' });
       if (r?.ok && Array.isArray(r.integrations)) vnode.state.integrations = r.integrations;
       else if (vnode.state.integrations === null) vnode.state.integrations = [];
-      if (r && !r.ok && r.error === 'locked') vnode.state.msg = { ok: false, text: 'Vault is locked — unlock in the peerd panel first.' };
+      if (r && !r.ok && r.error === 'locked') vnode.state.msg = { ok: false, text: 'Vault is locked — unlock in the mcdollar panel first.' };
       m.redraw();
       return r;
     } catch {
@@ -61,7 +61,7 @@ export const ApiIntegrationsSection = {
       mutationFailureCopy(reply, {
         action, fallback: 'The API integration could not be changed.',
         messages: {
-          locked: 'Vault is locked; unlock in the peerd panel first.',
+          locked: 'Vault is locked; unlock in the mcdollar panel first.',
           'bad-origin': 'Enter a real https host like api.stripe.com (https only; no localhost or IPs).',
           'bad-key': 'Paste a complete key (no spaces).',
         },
@@ -157,7 +157,7 @@ export const ApiIntegrationsSection = {
                   m('span.provider-card-name', it.origin),
                   m('span.key-badge.key-set',
                     { title: it.scheme === 'dpop'
-                      ? 'Proof-of-possession: bound to a device-only key peerd cannot export'
+                      ? 'Proof-of-possession: bound to a device-only key mcdollar cannot export'
                       : `Sent as ${it.header || 'Authorization'}` },
                     it.scheme === 'dpop' ? '✓ DPoP · device-bound' : `✓ ${it.header || 'Authorization'}`),
                 ]),
@@ -189,9 +189,9 @@ export const ApiIntegrationsSection = {
         m('code', 'Authorization: Bearer <key>'), '. ', m('strong', 'Custom header'),
         ' sends the key verbatim in a header you name (e.g. ', m('code', 'X-API-Key'), '). ',
         m('strong', 'DPoP'), ' stores an OAuth token that is only spendable alongside a '
-        + 'proof signed by a key peerd generates on this device and ',
+        + 'proof signed by a key mcdollar generates on this device and ',
         m('em', 'cannot read or export'),
-        ' — peerd shows you the key’s public thumbprint to register with the server. '
+        ' — mcdollar shows you the key’s public thumbprint to register with the server. '
         + 'Needs a server that implements RFC 9449.',
       ]),
       m('form.provider-card-form', { onsubmit: (/** @type {any} */ e) => { e.preventDefault(); save(); } }, [

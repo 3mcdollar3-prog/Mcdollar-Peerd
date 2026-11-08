@@ -9,13 +9,13 @@ import { EXTENSION_DIR } from '../../packaging/lib.ts';
  * to be quietly wrong.
  *
  * why this test: the class was `[a-z]+`, which stops at the first hyphen - so
- * `peerd-voice-host` sat outside the boundary entirely and a deep import into
+ * `mcdollar-voice-host` sat outside the boundary entirely and a deep import into
  * it would have linted clean. Nothing failed, because the module happens to
  * contain only index.js today. This asserts the regex covers every module that
  * actually exists, so adding a hyphenated one cannot reopen the hole.
  */
 const moduleNames = (): string[] => readdirSync(EXTENSION_DIR, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && entry.name.startsWith('peerd-'))
+  .filter((entry) => entry.isDirectory() && entry.name.startsWith('mcdollar-'))
   .map((entry) => entry.name);
 
 const boundaryRegex = async (): Promise<RegExp> => {
@@ -31,14 +31,14 @@ const boundaryRegex = async (): Promise<RegExp> => {
     if (!Array.isArray(rule)) continue;
     const options = rule[1] as { patterns?: Array<{ regex?: string }> } | undefined;
     for (const pattern of options?.patterns ?? []) {
-      if (pattern.regex?.includes('peerd-')) return new RegExp(pattern.regex);
+      if (pattern.regex?.includes('mcdollar-')) return new RegExp(pattern.regex);
     }
   }
   throw new Error('no cross-module import regex in eslint.config.js');
 };
 
 describe('cross-module import boundary', () => {
-  test('every peerd-* module on disk is inside the gate', async () => {
+  test('every mcdollar-* module on disk is inside the gate', async () => {
     const regex = await boundaryRegex();
     const names = moduleNames();
     expect(names.length).toBeGreaterThan(0);
@@ -49,7 +49,7 @@ describe('cross-module import boundary', () => {
 
   test('a hyphenated module name does not escape the gate', async () => {
     // The exact shape that was slipping through.
-    expect((await boundaryRegex()).test('/peerd-voice-host/internal/deep.js')).toBe(true);
+    expect((await boundaryRegex()).test('/mcdollar-voice-host/internal/deep.js')).toBe(true);
   });
 
   test('the declared public entry points stay reachable', async () => {

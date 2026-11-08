@@ -1,5 +1,5 @@
 // @ts-check
-// In-memory IDB mock matching the surface of peerd-egress/storage/idb.js
+// In-memory IDB mock matching the surface of mcdollar-egress/storage/idb.js
 // (put/get/getAll/del plus the retention helpers count/getAllKeys/
 // delUpTo/clear). Same shape; no transactions, no schema versioning, no
 // async cursor — just a Map per store. Key-ordered reads are emulated by

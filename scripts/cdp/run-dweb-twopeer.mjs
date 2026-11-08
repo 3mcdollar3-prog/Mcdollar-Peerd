@@ -181,7 +181,7 @@ const main = async () => {
   // host candidates behind a *.local mDNS name that doesn't resolve in a
   // headless CI sandbox, so loopback ICE never pairs. Exposing the real
   // loopback IP lets the two contexts connect with no STUN/TURN.
-  profile = mkdtempSync(join(tmpdir(), 'peerd-dweb-'));
+  profile = mkdtempSync(join(tmpdir(), 'mcdollar-dweb-'));
   chrome = spawn(CHROME, [
     '--headless=new', '--no-first-run', '--no-default-browser-check',
     '--disable-gpu', ...sandboxLaunchArgs(),

@@ -34,16 +34,16 @@ import {
 import { startGeckodriver, waitFor } from './webdriver.mjs';
 import {
   APP_EGRESS_REGEX, APP_EGRESS_RULE_ID,
-} from '../../extension/peerd-egress/denylist/dnr-rules.js';
+} from '../../extension/mcdollar-egress/denylist/dnr-rules.js';
 
 const ENTRY = import.meta.path;
 const FIREFOX_BACKGROUND_ENTRY = 'background/vault-kernel-firefox.js';
-const ADDON_ID = 'peerd@peerd.ai';
+const ADDON_ID = 'mcdollar@mcdollar.ai';
 const FIREFOX_UUID = '7d12f198-31fc-4e95-9184-e954123981b6';
 const HOME_URL = `moz-extension://${FIREFOX_UUID}/home/home.html#production-cutover`;
 const OPTIONS_URL = `moz-extension://${FIREFOX_UUID}/options/options.html#!/production-cutover`;
 const FIREFOX_ORIGIN = `moz-extension://${FIREFOX_UUID}`;
-const FIREFOX_SIDEBAR_ID = 'peerd_peerd_ai-sidebar-action';
+const FIREFOX_SIDEBAR_ID = 'mcdollar_mcdollar_ai-sidebar-action';
 const appUrl = (appId) => `moz-extension://${FIREFOX_UUID}/engine-tabs/app-tab/index.html#${encodeURIComponent(appId)}`;
 const CONTROLLER_IDLE_CONTINUITY_MS = 30_000;
 const EVENT_PAGE_IDLE_MS = 45_000;
@@ -280,7 +280,7 @@ const surfaceCheckpoint = (driver, kind, appId = null) => executeJson(driver, `(
   }
   const url = location.href.split('#')[0].split('?')[0];
   const stageReady = kind === 'home' || kind === 'sidebar'
-    ? document.documentElement.dataset.peerdBootStage === 'app-ready' : true;
+    ? document.documentElement.dataset.mcdollarBootStage === 'app-ready' : true;
   const ready = document.readyState === 'complete' && browser.runtime.id === arguments[2]
     && url === arguments[3] + arguments[4] && location.pathname === arguments[4]
     && visible(root) && shell && stageReady && (kind !== 'app' || target === appId);
@@ -323,10 +323,10 @@ const uiSnapshot = (driver) => executeJson(driver, `(() => {
   return {
     url: location.href,
     readyState: document.readyState,
-    stage: document.documentElement.dataset.peerdBootStage || '',
-    bootError: document.documentElement.dataset.peerdBootError || '',
-    bootModule: document.documentElement.dataset.peerdBootModule || '',
-    staticShellPainted: document.documentElement.dataset.peerdStaticShellPainted === 'true',
+    stage: document.documentElement.dataset.mcdollarBootStage || '',
+    bootError: document.documentElement.dataset.mcdollarBootError || '',
+    bootModule: document.documentElement.dataset.mcdollarBootModule || '',
+    staticShellPainted: document.documentElement.dataset.mcdollarStaticShellPainted === 'true',
     rootVisible: !!root && !!rect && rect.width > 0 && rect.height > 0
       && style?.visibility !== 'hidden' && style?.display !== 'none',
     rootTextLength: body.trim().length,
@@ -334,13 +334,13 @@ const uiSnapshot = (driver) => executeJson(driver, `(() => {
     homeShell: !!document.querySelector('.home-shell'),
     appShell: !!document.querySelector('.app-shell'),
     gate: !!document.querySelector('.gate-card'),
-    failure: document.documentElement.dataset.peerdBootStage === 'failed'
+    failure: document.documentElement.dataset.mcdollarBootStage === 'failed'
       || !!document.querySelector('[role="alert"]'),
   };
 })()`);
 
 const ensurePassphraseForm = async (driver) => waitFor(async () => executeJson(driver, `(() => {
-  if (document.documentElement.dataset.peerdBootStage !== 'vault-ready') return null;
+  if (document.documentElement.dataset.mcdollarBootStage !== 'vault-ready') return null;
   const root = document.querySelector('#app');
   const rootRect = root?.getBoundingClientRect();
   const rootStyle = root ? getComputedStyle(root) : null;
@@ -493,7 +493,7 @@ const openAppMain = async (driver, sender, handle, appId) => {
 
 const importAcceptanceApp = async (driver) => JSON.parse(await driver.executeAsync(`
   const done = arguments[arguments.length - 1];
-  import('/peerd-engine/index.js').then(async ({ buildAppExport }) => {
+  import('/mcdollar-engine/index.js').then(async ({ buildAppExport }) => {
     const envelope = await buildAppExport({
       record: {
         name: 'Production Cutover App Git Probe',
@@ -530,7 +530,7 @@ const verifyAppIsolation = async (driver) => {
   await driver.switchToFrame(frame);
   const realm = JSON.parse(await driver.executeAsync(`
     const done = arguments[arguments.length - 1];
-    const key = '__peerdFirefoxAppIsolation';
+    const key = '__mcdollarFirefoxAppIsolation';
     const script = document.createElement('script');
     script.textContent = ${JSON.stringify(`(() => {
       const opaqueOrigin = (() => {
@@ -549,7 +549,7 @@ const verifyAppIsolation = async (driver) => {
         webSocketBlocked: false,
         complete: false,
       };
-      globalThis.__peerdFirefoxAppIsolation = proof;
+      globalThis.__mcdollarFirefoxAppIsolation = proof;
       const fetchProbe = fetch('https://app-egress.invalid/probe', { cache: 'no-store' })
         .then(() => false, () => true);
       const socketProbe = new Promise((resolve) => {
@@ -1171,7 +1171,7 @@ export async function runFirefoxProductionCutover({
       throw new Error('Firefox provider setup did not become skippable');
     }
     const onboarding = await call(driver, {
-      type: 'onboarding/complete', peerName: 'peerd', facts: null,
+      type: 'onboarding/complete', peerName: 'mcdollar', facts: null,
     });
     const settings = await call(driver, {
       type: 'settings/update',
@@ -1394,15 +1394,15 @@ export async function runFirefoxProductionCutover({
 }
 
 if (import.meta.main) {
-  const artifactRoot = process.env.PEERD_ACCEPTANCE_ARTIFACT_ROOT
-    ? resolve(process.env.PEERD_ACCEPTANCE_ARTIFACT_ROOT) : ARTIFACTS_DIR;
-  const reportPath = process.env.PEERD_ACCEPTANCE_REPORT_PATH
-    ? resolve(process.env.PEERD_ACCEPTANCE_REPORT_PATH)
+  const artifactRoot = process.env.MCDOLLAR_ACCEPTANCE_ARTIFACT_ROOT
+    ? resolve(process.env.MCDOLLAR_ACCEPTANCE_ARTIFACT_ROOT) : ARTIFACTS_DIR;
+  const reportPath = process.env.MCDOLLAR_ACCEPTANCE_REPORT_PATH
+    ? resolve(process.env.MCDOLLAR_ACCEPTANCE_REPORT_PATH)
     : join(artifactRoot, 'e2e', 'firefox-production-cutover.json');
   try {
     console.log(JSON.stringify(await runFirefoxProductionCutover({
-      sourceRoot: process.env.PEERD_ACCEPTANCE_SOURCE_ROOT
-        ? resolve(process.env.PEERD_ACCEPTANCE_SOURCE_ROOT) : REPO_ROOT,
+      sourceRoot: process.env.MCDOLLAR_ACCEPTANCE_SOURCE_ROOT
+        ? resolve(process.env.MCDOLLAR_ACCEPTANCE_SOURCE_ROOT) : REPO_ROOT,
       artifactRoot,
       reportPath,
     }), null, 2));

@@ -4,7 +4,7 @@ import { createKernelMemoryAuthority } from './kernel-memory-authority.js';
 import { createKernelContactsAuthority } from './kernel-contacts-authority.js';
 import { PROVIDER_EGRESS_MANIFEST } from './provider-egress-manifest.js';
 import { createAppLaunchOwner } from '../shared/current-session-binding.js';
-import { parseAppManifest } from '../peerd-engine/app-manifest.js';
+import { parseAppManifest } from '../mcdollar-engine/app-manifest.js';
 
 const MEMORY_ROUTES = Object.freeze(Object.fromEntries([
   ['delete-all', 'deleteAll'], ['write', 'write'], ['delete', 'delete'],

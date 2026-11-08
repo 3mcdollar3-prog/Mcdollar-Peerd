@@ -9,7 +9,7 @@ import {
   actionableCta, installPageTrace, installVirtualPasskey, readChromeIdentity,
 } from './passkey-signup-lane.mjs';
 import {
-  evalIn, hostMonotonicMs, launchPeerd, rpc, waitFor,
+  evalIn, hostMonotonicMs, launchMcdollar, rpc, waitFor,
 } from './e2e-harness.mjs';
 import { buildVaultKernelArtifact } from './vault-kernel-artifact.mjs';
 import { assertLiveKernelAssembly } from '../acceptance/live-kernel-assembly.mjs';
@@ -21,7 +21,7 @@ const REPORT_PATH = join(ARTIFACTS_DIR, 'e2e', 'vault-kernel-passkey-report.json
 
 const readDurableRecords = (page) => evalIn(page, `(async () => {
   const open = await new Promise((resolve, reject) => {
-    const request = indexedDB.open('peerd');
+    const request = indexedDB.open('mcdollar');
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
@@ -54,7 +54,7 @@ export async function runVaultKernelPasskeyFloor({
   let ctx;
   let removePageListener = () => {};
   try {
-    ctx = await launchPeerd({
+    ctx = await launchMcdollar({
       extensionDir: artifact.staging,
       interceptModel: false,
       captureBootTimeline: true,

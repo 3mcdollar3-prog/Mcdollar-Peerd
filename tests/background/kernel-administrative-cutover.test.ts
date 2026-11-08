@@ -5,10 +5,10 @@ import { createKernelAdministrativeControl } from '../../extension/background/ke
 import { createKernelSkillPersistence } from '../../extension/background/kernel-skill-persistence.js';
 import { createKernelFeatureControl } from '../../extension/background/kernel-feature-control.js';
 import { makeSemanticControllerClient } from '../../extension/background/offscreen-controller-client.js';
-import { parseSkillMd } from '../../extension/peerd-runtime/skills/parse.js';
-import { parseHookMarkdown } from '../../extension/peerd-runtime/tools/hooks/compile.js';
-import { scopeId } from '../../extension/peerd-runtime/memory/memory.js';
-import { makeConfirmCoordinator } from '../../extension/peerd-egress/confirm/protocol.js';
+import { parseSkillMd } from '../../extension/mcdollar-runtime/skills/parse.js';
+import { parseHookMarkdown } from '../../extension/mcdollar-runtime/tools/hooks/compile.js';
+import { scopeId } from '../../extension/mcdollar-runtime/memory/memory.js';
+import { makeConfirmCoordinator } from '../../extension/mcdollar-egress/confirm/protocol.js';
 import { collectStaticModuleGraph } from '../../packaging/static-module-graph.ts';
 import { createController } from '../../extension/offscreen/controller-runtime.js';
 import { createKernelFeatureHost } from '../../extension/offscreen/kernel-feature-host.js';
@@ -498,7 +498,7 @@ describe('sealed administrative root cutover', () => {
   test('rolls back both memory rows when the initializer write fails', async () => {
     const harness = makeHarness({
       failMemoryPut: (doc: any) => {
-        if (doc.subpath === '.peerd/initializer') throw new Error('initializer failed');
+        if (doc.subpath === '.mcdollar/initializer') throw new Error('initializer failed');
       },
     });
     harness.control.routes['memory/init']();
@@ -527,14 +527,14 @@ describe('sealed administrative root cutover', () => {
       for (const path of graph) bytes += (await stat(path)).size;
       return bytes;
     };
-    expect([...hostGraph].some((path) => path.endsWith('/peerd-runtime/administrative.js')))
+    expect([...hostGraph].some((path) => path.endsWith('/mcdollar-runtime/administrative.js')))
       .toBe(false);
     expect([...hostGraph].some((path) => path.endsWith('/memory/store.js'))).toBe(false);
     expect([...hostGraph].some((path) => path.includes('/tools/hooks/defaults/'))).toBe(false);
     expect([...kernelGraph].some((path) => path.endsWith('/skills/parse.js'))).toBe(false);
     expect([...kernelGraph].some((path) => path.includes('browser-automation-policy'))).toBe(false);
     expect([...controlGraph].some((path) => path.endsWith('/tools/hooks/compile.js'))).toBe(false);
-    expect([...probeGraph].some((path) => path.includes('/peerd-runtime/'))).toBe(false);
+    expect([...probeGraph].some((path) => path.includes('/mcdollar-runtime/'))).toBe(false);
     expect(await graphBytes(hostGraph)).toBeLessThan(100_000);
     expect(await graphBytes(probeGraph)).toBeLessThan(10_000);
     expect(await graphBytes(kernelGraph)).toBeLessThan(20_000);

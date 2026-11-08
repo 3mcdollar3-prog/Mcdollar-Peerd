@@ -5,7 +5,7 @@
 // (stub tabs API / stub sendTabMessage), in the browser so the real
 // webextension-polyfill module and promise semantics are in play. The
 // pure lane logic itself (createKeyedQueue) is covered in Bun at
-// tests/peerd-engine/command-queue.test.ts.
+// tests/mcdollar-engine/command-queue.test.ts.
 
 import { describe, it, expect } from '../../framework.js';
 import { createVmTabTracker } from '/background/vm-tab-tracker.js';
@@ -135,7 +135,7 @@ const makeHarness = () => {
   let created = 0;
   // Minimal registry/tracker stubs — only the methods vm-client reaches are
   // implemented; cast each to the production type createVmClient's deps expect.
-  const registry = /** @type {ReturnType<typeof import('/peerd-engine/index.js').createVmRegistry>} */ (/** @type {unknown} */ ({
+  const registry = /** @type {ReturnType<typeof import('/mcdollar-engine/index.js').createVmRegistry>} */ (/** @type {unknown} */ ({
     /** @param {string} id */
     get: async (id) => ({ id }),
     getDefaultForSession: async () => defaultId,
@@ -289,7 +289,7 @@ const makeRebootHarness = ({ plan, timeoutMs = 40, readyProbeMs = 40, idleProbeM
     /** @param {string} id */ reloadTab: async (id) => { reloads.push(id); return true; },
     /** @param {string} id */ markReloading: (id) => { marked.push(id); },
   }));
-  const registry = /** @type {ReturnType<typeof import('/peerd-engine/index.js').createVmRegistry>} */ (/** @type {unknown} */ ({
+  const registry = /** @type {ReturnType<typeof import('/mcdollar-engine/index.js').createVmRegistry>} */ (/** @type {unknown} */ ({
     /** @param {string} id */ get: async (id) => ({ id }),
     getDefaultForSession: async () => null,
     setDefaultForSession: async () => {},

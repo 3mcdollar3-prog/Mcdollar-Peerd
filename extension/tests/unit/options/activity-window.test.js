@@ -100,7 +100,7 @@ describe('options.activity: the fetch window', () => {
 
   it('a log that keeps growing is fetched whole once, not once per keystroke', async () => {
     // An agent run writes audit rows between a reply and the next keystroke,
-    // so "fewer rows than the total" is the normal state while peerd works.
+    // so "fewer rows than the total" is the normal state while mcdollar works.
     const log = [...rows(2, 'tool_executed'), OLD_ROW];
     const { root, lists, unmount } = mount(log, 2);
     try {

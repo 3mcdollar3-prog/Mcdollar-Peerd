@@ -1,7 +1,7 @@
 # Lifecycle and recovery contract
 
 Browser extension service workers, tabs, workers, and sandbox processes can stop
-without warning. peerd treats an interruption as a state to reconcile, not as a
+without warning. mcdollar treats an interruption as a state to reconcile, not as a
 generic failure or permission to repeat work.
 
 ## Operation outcomes
@@ -23,7 +23,7 @@ After an interruption:
 - Idempotent writes may be retried only with the original idempotency key.
 - Conditional actions dispatched without proof of their outcome require
   external verification.
-- The lifecycle reconciler does not replay a non-idempotent tool call. If peerd
+- The lifecycle reconciler does not replay a non-idempotent tool call. If mcdollar
   cannot prove whether one completed, it reports `outcome_unknown` and tells the
   next model turn to verify the target before repeating it. The deterministic
   duplicate guard recognizes both the same tool-call ID and the same action
@@ -38,10 +38,10 @@ After an interruption:
   continuations. A new user turn must verify or deliberately resolve the
   uncertainty.
 - Engine catalog records and stored files remain available after host loss.
-  peerd does not automatically recreate the lost process or restore transient
+  mcdollar does not automatically recreate the lost process or restore transient
   grants.
 
-If lifecycle storage is unavailable, peerd refuses conditional actions,
+If lifecycle storage is unavailable, mcdollar refuses conditional actions,
 non-idempotent actions, and resource creation instead of running them without a
 recovery record. Stop prevents later automatic resumption. Positive evidence
 of a completed effect remains completed even if Stop arrived afterward.
@@ -67,10 +67,10 @@ and must repeat the prompt UUID, root owner, execution session, and tool
 dispatch. A foreign chat is not sent the prompt UUID. Parallel prompts remain
 queued per owner, and cancelling an execution session declines only its prompts.
 
-Current source: `extension/peerd-runtime/lifecycle/retry-class.js`,
-`extension/peerd-runtime/lifecycle/tool-retry-class.js`,
-`extension/peerd-runtime/lifecycle/dispatch-tracking.js`, and
-`extension/peerd-runtime/lifecycle/boot.js`.
+Current source: `extension/mcdollar-runtime/lifecycle/retry-class.js`,
+`extension/mcdollar-runtime/lifecycle/tool-retry-class.js`,
+`extension/mcdollar-runtime/lifecycle/dispatch-tracking.js`, and
+`extension/mcdollar-runtime/lifecycle/boot.js`.
 
 ## Resource recovery
 
@@ -93,14 +93,14 @@ tab whose page heap restarted. A restored tab can therefore lose in-memory
 state without producing a resource-loss report. Do not treat tracker discovery
 alone as proof that process state survived a full browser restart.
 
-Current live source: `extension/peerd-runtime/lifecycle/engine-liveness.js`,
-`extension/peerd-runtime/lifecycle/engine-liveness.js`, and engine tab trackers.
+Current live source: `extension/mcdollar-runtime/lifecycle/engine-liveness.js`,
+`extension/mcdollar-runtime/lifecycle/engine-liveness.js`, and engine tab trackers.
 
 ## Stored data and upgrades
 
 Each registered durable store has its own schema version and durability class. A
 first-run profile is stamped without being treated as corrupt. If a stamp is
-newer than the running peerd version, older than the supported schema, or
+newer than the running mcdollar version, older than the supported schema, or
 malformed, the live guard classifies the store read-only. Shared key-value and
 IndexedDB adapters refuse mapped writes, and injected guards cover the skills
 database, the reserved App-body database, and current App files in OPFS.
@@ -117,17 +117,17 @@ Exports identify device-bound state that cannot move to another install. A
 portable export must not silently imply that tabs, engine handles, local
 workspace roots, or device-bound keys moved with it.
 
-Current live source: `extension/peerd-runtime/lifecycle/store-registry.js`,
-`extension/peerd-runtime/lifecycle/write-guard.js`, service-worker boot, and the
+Current live source: `extension/mcdollar-runtime/lifecycle/store-registry.js`,
+`extension/mcdollar-runtime/lifecycle/write-guard.js`, service-worker boot, and the
 transfer code. The unwired migration core is
-`extension/peerd-runtime/lifecycle/store-version.js`.
+`extension/mcdollar-runtime/lifecycle/store-version.js`.
 
 ## How to audit it
 
 Run the lifecycle test suite with:
 
 ```sh
-bun test ./tests/peerd-runtime/lifecycle
+bun test ./tests/mcdollar-runtime/lifecycle
 ```
 
 The fault-injection tests stop work at dispatch, settlement, reconciliation,
@@ -151,5 +151,5 @@ notices, and no replay. See `scripts/cdp/run-lifecycle-faults.mjs` and the
 recovery smoke in `scripts/firefox/run-runtime-tests.mjs`.
 
 Relevant tests and historical inputs live under
-`tests/peerd-runtime/lifecycle/`. Test names and fixture contents are the live
+`tests/mcdollar-runtime/lifecycle/`. Test names and fixture contents are the live
 inventory.

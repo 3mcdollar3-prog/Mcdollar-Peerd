@@ -55,8 +55,8 @@ const afterTwoFramesOrTimeout = (done) => {
 
 /** @param {HTMLElement} root @param {unknown} [cause] */
 const renderVaultShellFailure = (root, cause = undefined) => {
-  document.documentElement.dataset.peerdBootStage = 'failed';
-  document.documentElement.dataset.peerdBootError = cause instanceof Error
+  document.documentElement.dataset.mcdollarBootStage = 'failed';
+  document.documentElement.dataset.mcdollarBootError = cause instanceof Error
     ? `${cause.name}:${cause.message}`.slice(0, 512) : 'unknown';
   m.mount(root, null);
   root.innerHTML = '';
@@ -65,7 +65,7 @@ const renderVaultShellFailure = (root, cause = undefined) => {
   shell.setAttribute('role', 'alert');
   const title = document.createElement('div');
   title.className = 'boot-shell__wordmark';
-  title.textContent = 'peerd';
+  title.textContent = 'mcdollar';
   const detail = document.createElement('p');
   detail.textContent = 'Application unavailable.';
   const retry = document.createElement('button');
@@ -97,7 +97,7 @@ export const afterStaticShellPaint = (start) => {
       renderVaultShellFailure(root, new Error('static vault shell did not paint'));
       return;
     }
-    document.documentElement.dataset.peerdStaticShellPainted = 'true';
+    document.documentElement.dataset.mcdollarStaticShellPainted = 'true';
     start();
   });
 };
@@ -130,19 +130,19 @@ export const startVaultShell = ({
   let refreshPromise = null;
   let portRetryMs = 200;
   const uiRuntime = makeUiRuntimeClient({ browser });
-  document.documentElement.dataset.peerdBootStage = 'vault-loading';
+  document.documentElement.dataset.mcdollarBootStage = 'vault-loading';
 
   const enterApplication = async () => {
     if (transitioning || stopped) return;
     transitioning = true;
     stopped = true;
     const generation = ++applicationGeneration;
-    document.documentElement.dataset.peerdBootStage = 'app-loading';
+    document.documentElement.dataset.mcdollarBootStage = 'app-loading';
     try { port?.disconnect(); } catch { /* the cold worker may have dropped it */ }
     m.mount(root, {
       view: () => m('main.boot-shell', { role: 'status', 'aria-live': 'polite' }, [
-        m('.boot-shell__wordmark', { 'aria-hidden': 'true' }, 'peerd'),
-        m('p', 'Opening peerd…'),
+        m('.boot-shell__wordmark', { 'aria-hidden': 'true' }, 'mcdollar'),
+        m('p', 'Opening mcdollar…'),
       ]),
     });
     try {
@@ -159,7 +159,7 @@ export const startVaultShell = ({
       if (!root.querySelector(appSelector)) {
         throw new Error(`application did not mount ${appSelector}`);
       }
-      document.documentElement.dataset.peerdBootStage = 'app-ready';
+      document.documentElement.dataset.mcdollarBootStage = 'app-ready';
     }
     catch (cause) { applicationGeneration += 1; renderVaultShellFailure(root, cause); }
   };
@@ -176,17 +176,17 @@ export const startVaultShell = ({
         && priorEpoch !== nextEpoch) retiredAuthorityEpochs.add(priorEpoch);
     snapshot = /** @type {VaultShellState} */ (normalized);
     authoritativeStateSeen = true;
-    document.documentElement.dataset.peerdVaultPosture = 'authoritative';
+    document.documentElement.dataset.mcdollarVaultPosture = 'authoritative';
     if (snapshot.vault?.initialized && snapshot.vault?.locked === false) {
       void enterApplication();
       return true;
     }
     if (snapshot.hydrated === true) {
-      document.documentElement.dataset.peerdBootStage = 'vault-ready';
+      document.documentElement.dataset.mcdollarBootStage = 'vault-ready';
       // This page shows the first vault setup. The app it loads next can offer
       // its first-run extras once (sidepanel.js).
       if (snapshot.vault?.initialized === false) {
-        document.documentElement.dataset.peerdFirstSetup = 'true';
+        document.documentElement.dataset.mcdollarFirstSetup = 'true';
       }
     }
     m.redraw();
@@ -221,13 +221,13 @@ export const startVaultShell = ({
       const stored = await browser.storage.local.get(VAULT_POSTURE_INDEX_KEY);
       if (stopped || authoritativeStateSeen) return;
       const posture = parseVaultPostureIndex(stored?.[VAULT_POSTURE_INDEX_KEY]);
-      // Missing posture is provisional only when this origin has no Peerd DB.
+      // Missing posture is provisional only when this origin has no Mcdollar DB.
       // An upgraded initialized profile can predate the index; keeping that
       // case in the loading shell avoids a false Create Vault/WebAuthn flow.
       const databases = posture || typeof indexedDB.databases !== 'function'
         ? null : await indexedDB.databases();
       const freshInstall = posture === null && Array.isArray(databases)
-        && !databases.some((entry) => entry?.name === 'peerd');
+        && !databases.some((entry) => entry?.name === 'mcdollar');
       if (!posture && !freshInstall) return;
       snapshot = {
         // This is display-only posture. Credential ceremonies remain disabled
@@ -242,9 +242,9 @@ export const startVaultShell = ({
           lockReason: null,
         } : EMPTY_VAULT,
       };
-      document.documentElement.dataset.peerdVaultPosture = posture
+      document.documentElement.dataset.mcdollarVaultPosture = posture
         ? 'indexed' : 'fresh-provisional';
-      document.documentElement.dataset.peerdBootStage = 'vault-posture';
+      document.documentElement.dataset.mcdollarBootStage = 'vault-posture';
       m.redraw();
     } catch { /* authoritative worker polling remains the fallback */ }
   };

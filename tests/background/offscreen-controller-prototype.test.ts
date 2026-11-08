@@ -134,7 +134,7 @@ describe('Chrome lazy controller private channel prototype', () => {
     });
     expect(phases).toEqual([]);
     expect(offers).toEqual([{
-      type: 'peerd/controller-channel',
+      type: 'mcdollar/controller-channel',
       protocol: 2,
       channelId: 'channel-one',
       buildDigest: BUILD_DIGEST,
@@ -836,7 +836,7 @@ describe('Chrome lazy controller private channel prototype', () => {
       workerUrl: '/offscreen/controller-worker.js',
       newId: ids('worker-request'),
       createWorker: (_url, options) => {
-        expect(options).toMatchObject({ type: 'module', name: 'peerd-controller' });
+        expect(options).toMatchObject({ type: 'module', name: 'mcdollar-controller' });
         workerCreated += 1;
         return {
           postMessage: (_message: any, transfer: Transferable[]) => {
@@ -1200,7 +1200,7 @@ describe('Chrome lazy controller private channel prototype', () => {
       isTrusted: true,
       source: { scriptURL: expectedWorkerUrl },
       data: {
-        type: 'peerd/controller-channel', protocol: 2,
+        type: 'mcdollar/controller-channel', protocol: 2,
         buildDigest: BUILD_DIGEST,
         kernelEpoch: 'legacy-kernel-epoch', channelId: 'legacy-channel',
         capabilities: ['state.read'],
@@ -1230,7 +1230,7 @@ describe('Chrome lazy controller private channel prototype', () => {
         isTrusted: true,
         source: { scriptURL: expectedWorkerUrl },
         data: {
-          type: 'peerd/controller-channel', protocol: 2,
+          type: 'mcdollar/controller-channel', protocol: 2,
           buildDigest: BUILD_DIGEST, kernelEpoch: KERNEL_IDENTITY.kernelEpoch,
           channelId, capabilities: ['state.read'],
           kernelIdentity: KERNEL_IDENTITY,
@@ -1305,7 +1305,7 @@ describe('Chrome lazy controller private channel prototype', () => {
         isTrusted: true,
         source: { scriptURL: expectedWorkerUrl },
         data: {
-          type: 'peerd/controller-channel', protocol: CONTROLLER_CHANNEL_PROTOCOL,
+          type: 'mcdollar/controller-channel', protocol: CONTROLLER_CHANNEL_PROTOCOL,
           buildDigest: BUILD_DIGEST,
           kernelEpoch: KERNEL_IDENTITY.kernelEpoch,
           channelId,
@@ -1369,7 +1369,7 @@ describe('Chrome lazy controller private channel prototype', () => {
         isTrusted: true,
         source: { scriptURL: expectedWorkerUrl },
         data: {
-          type: 'peerd/controller-channel', protocol: 2,
+          type: 'mcdollar/controller-channel', protocol: 2,
           buildDigest: BUILD_DIGEST, channelId, capabilities: ['state.read'],
           kernelEpoch: identity.kernelEpoch, kernelIdentity: identity,
           lease: controllerLease(identity, 1),
@@ -1404,7 +1404,7 @@ describe('Chrome lazy controller private channel prototype', () => {
         isTrusted: true,
         source: { scriptURL: expectedWorkerUrl },
         data: {
-          type: 'peerd/controller-channel', protocol: 2,
+          type: 'mcdollar/controller-channel', protocol: 2,
           buildDigest: BUILD_DIGEST,
           channelId: `controller-channel-${String(generation).padStart(8, '0')}`,
           capabilities: ['state.read'],

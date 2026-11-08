@@ -1,4 +1,4 @@
-// ESLint flat config for the peerd extension.
+// ESLint flat config for the mcdollar extension.
 //
 // why flat config: ESLint v9 removed eslintrc (`.eslintrc.cjs`) support and
 // v10 dropped even the `ESLINT_USE_FLAT_CONFIG=false` escape hatch, so the
@@ -23,7 +23,7 @@
 // The load-bearing security + architecture gates (carried over unchanged
 // from the eslintrc version) are:
 //   - `no-restricted-globals` forbids bare `fetch`. Use safeFetch from
-//     /peerd-egress/index.js — bare fetch bypasses the egress allowlist.
+//     /mcdollar-egress/index.js — bare fetch bypasses the egress allowlist.
 //   - `no-restricted-syntax` forbids Mithril `m.request`, `m.jsonp`, and
 //     `m.mount(document.body, …)`.
 //   - `no-restricted-imports` enforces per-module public APIs — the universal
@@ -42,20 +42,20 @@ import globals from 'globals';
 // re-list every rule EXCEPT the eval one (a flat-config override REPLACES the
 // whole rule, so the patterns it keeps must be spelled out).
 const CROSS_MODULE_IMPORT = {
-  // any `peerd-<name>/<deeper>` path that isn't a declared public entry point
+  // any `mcdollar-<name>/<deeper>` path that isn't a declared public entry point
   // A few pure leaves and exact host surfaces are deliberately public. Naming
   // each one keeps their cold graph explicit without widening sibling paths.
-  // why: hyphenated names such as peerd-voice-host must not escape the boundary.
-  regex: '(^|/)peerd-(?!runtime/(?:administrative|browser-authority|pacing-authority|controller(?:-administrative|-contributor|-model|-tools|-turn|-turn-semantics)?|kernel-executable|semantic|skills)\\.js$|runtime/(?:memory/store|skills/(?:registry|store)|tools/hooks/registry|transfer/(?:secret-policy|self-sync-surfaces|transfer)|voice/settings)\\.js$|runtime/contacts/(?:store|aggregate)\\.js$|runtime/observability/contributor-store\\.js$|engine/(?:app-assets|artifact|app-manifest|authority)\\.js$|egress/(?:kernel-storage\\.js|confirm/protocol\\.js)$)[a-z-]+/(?!index\\.js$|background\\.js$|controller\\.js$|document-conversion\\.js$|offscreen\\.js$|options\\.js$|repository\\.js$|voice-host\\.js$|kernel-(?:browser|credentials|custody|memory|network|transfer|turn|turn-authority|turn-lifecycle)\\.js$|ui\\.js$).+',
-  message: 'Cross-module imports must go through a declared /peerd-<name> public entry point.',
+  // why: hyphenated names such as mcdollar-voice-host must not escape the boundary.
+  regex: '(^|/)mcdollar-(?!runtime/(?:administrative|browser-authority|pacing-authority|controller(?:-administrative|-contributor|-model|-tools|-turn|-turn-semantics)?|kernel-executable|semantic|skills)\\.js$|runtime/(?:memory/store|skills/(?:registry|store)|tools/hooks/registry|transfer/(?:secret-policy|self-sync-surfaces|transfer)|voice/settings)\\.js$|runtime/contacts/(?:store|aggregate)\\.js$|runtime/observability/contributor-store\\.js$|engine/(?:app-assets|artifact|app-manifest|authority)\\.js$|egress/(?:kernel-storage\\.js|confirm/protocol\\.js)$)[a-z-]+/(?!index\\.js$|background\\.js$|controller\\.js$|document-conversion\\.js$|offscreen\\.js$|options\\.js$|repository\\.js$|voice-host\\.js$|kernel-(?:browser|credentials|custody|memory|network|transfer|turn|turn-authority|turn-lifecycle)\\.js$|ui\\.js$).+',
+  message: 'Cross-module imports must go through a declared /mcdollar-<name> public entry point.',
 };
 // The dweb module is stricter: NOTHING outside it may import it — not even its
 // index.js. Core code programs against /shared/dweb-interface.js + loadDweb()
 // (whose gated dynamic import this rule can't see — check-dweb-boundary.ts covers
 // that). The store package prunes it; a static import would break the store SW.
 const DWEB_IMPORT = {
-  regex: '(^|/)peerd-distributed/.*',
-  message: 'Dweb is channel-gated. Import /shared/dweb-interface.js types + loadDweb() from /shared/dweb-loader.js — never peerd-distributed directly. See PACKAGING.md.',
+  regex: '(^|/)mcdollar-distributed/.*',
+  message: 'Dweb is channel-gated. Import /shared/dweb-interface.js types + loadDweb() from /shared/dweb-loader.js — never mcdollar-distributed directly. See PACKAGING.md.',
 };
 // tests/ is PRUNE_ALWAYS (pruned from every package). A shipped file that
 // statically imports it 404s + blanks the page in a real install. Tests import
@@ -92,7 +92,7 @@ export default [
       sourceType: 'module',
       // Default context is the browser + the WebExtension APIs (chrome.* /
       // browser.*) — this is the side panel, content scripts, the offscreen
-      // doc, the *-tab pages, eval/, and the peerd-* modules when loaded
+      // doc, the *-tab pages, eval/, and the mcdollar-* modules when loaded
       // into a page. The service-worker and Node-ish test contexts layer
       // their extra globals on top (see below).
       globals: {
@@ -114,14 +114,14 @@ export default [
         'error',
         {
           name: 'fetch',
-          message: 'Use safeFetch from /peerd-egress/index.js — bare fetch bypasses the egress allowlist.',
+          message: 'Use safeFetch from /mcdollar-egress/index.js — bare fetch bypasses the egress allowlist.',
         },
       ],
       'no-restricted-syntax': [
         'error',
         {
           selector: 'CallExpression[callee.object.name="m"][callee.property.name="request"]',
-          message: 'Mithril m.request bypasses safeFetch. Use safeFetch from /peerd-egress/index.js.',
+          message: 'Mithril m.request bypasses safeFetch. Use safeFetch from /mcdollar-egress/index.js.',
         },
         {
           selector: 'CallExpression[callee.object.name="m"][callee.property.name="jsonp"]',
@@ -132,19 +132,19 @@ export default [
           message: 'Mount Mithril against a named container, not document.body.',
         },
       ],
-      // Cross-module deep imports are forbidden. From outside a peerd-*
+      // Cross-module deep imports are forbidden. From outside a mcdollar-*
       // module you may only import a declared top-level public entry point. Relaxed
-      // below for files INSIDE any peerd-* module (deep imports there are
+      // below for files INSIDE any mcdollar-* module (deep imports there are
       // fine) and for tests.
       //
       // why regex, not the eslintrc's gitignore-style `group` globs
-      // (`/peerd-*/*/**`, `/peerd-*/!(index)*.js`): that matcher silently
+      // (`/mcdollar-*/*/**`, `/mcdollar-*/!(index)*.js`): that matcher silently
       // fails to match LEADING-SLASH import specifiers — and every real
-      // import in this repo is leading-slash (`/peerd-egress/index.js`) or
-      // relative (`../../peerd-engine/foo.js`). So the glob form matched
+      // import in this repo is leading-slash (`/mcdollar-egress/index.js`) or
+      // relative (`../../mcdollar-engine/foo.js`). So the glob form matched
       // nothing; the rule was a no-op. (It went unnoticed because ESLint
       // itself never ran — the very gap this migration closes.) The regex
-      // matches any `peerd-<name>/<deeper>` path that isn't one of the
+      // matches any `mcdollar-<name>/<deeper>` path that isn't one of the
       // module's declared top-level public entry points.
       'no-restricted-imports': [
         'error',
@@ -239,15 +239,15 @@ export default [
   // back to the platform `fetch` by construction.
   {
     files: [
-      'extension/peerd-egress/fetch/safe-fetch.js',
-      'extension/peerd-egress/fetch/web-fetch.js',
+      'extension/mcdollar-egress/fetch/safe-fetch.js',
+      'extension/mcdollar-egress/fetch/web-fetch.js',
     ],
     rules: { 'no-restricted-globals': 'off' },
   },
   // Storage wrappers touch chrome.storage directly.
   {
     files: [
-      'extension/peerd-egress/storage/**',
+      'extension/mcdollar-egress/storage/**',
     ],
     rules: { 'no-restricted-globals': 'off' },
   },
@@ -258,7 +258,7 @@ export default [
   // runtime.getURL) - this bundled static read is not network egress.
   {
     files: [
-      'extension/peerd-runtime/loop/system-prompt.js',
+      'extension/mcdollar-runtime/loop/system-prompt.js',
       'extension/background/tab-affordances.js',
     ],
     rules: { 'no-restricted-globals': 'off' },
@@ -268,7 +268,7 @@ export default [
   // motivation behind safeFetch doesn't apply, and webFetch's denylist
   // semantics are for arbitrary user-driven web tools, not pinned assets.
   {
-    files: ['extension/peerd-runtime/voice/model-store.js'],
+    files: ['extension/mcdollar-runtime/voice/model-store.js'],
     rules: { 'no-restricted-globals': 'off' },
   },
   // pdf/ocr-store loads the opt-in OCR engine assets (CDN URLs); same posture
@@ -281,28 +281,28 @@ export default [
   // the request onto a host no gate saw.
   {
     files: [
-      'extension/peerd-runtime/pdf/ocr-store.js',
+      'extension/mcdollar-runtime/pdf/ocr-store.js',
       'extension/offscreen/pdf-extract.js',
       'extension/offscreen/doc-extract.js',
     ],
     rules: { 'no-restricted-globals': 'off' },
   },
-  // Within a peerd-* module, deep relative imports are fine. ESLint can't
+  // Within a mcdollar-* module, deep relative imports are fine. ESLint can't
   // tell "this file is inside the same module as its import target" purely
   // from path patterns, so relax the cross-module rule for any file that
-  // lives inside a peerd-* module. The rule still fires for chassis files
-  // importing from /peerd-*/ and for tests that try to deep-import.
+  // lives inside a mcdollar-* module. The rule still fires for chassis files
+  // importing from /mcdollar-*/ and for tests that try to deep-import.
   //
   // why the dweb pattern STAYS on here: other modules must not
-  // import peerd-distributed either — the store package prunes it, so a
-  // static import would break the store SW. Only peerd-distributed's own
+  // import mcdollar-distributed either — the store package prunes it, so a
+  // static import would break the store SW. Only mcdollar-distributed's own
   // files (relaxed below) may reference themselves.
   {
-    files: ['extension/peerd-*/**'],
+    files: ['extension/mcdollar-*/**'],
     rules: {
       // Drop the cross-module rule (deep imports inside a module are fine) but
-      // KEEP the dweb + prune-only-dir guards: a peerd-* file must not import
-      // peerd-distributed, eval/, or tests/ either (all pruned in some channel).
+      // KEEP the dweb + prune-only-dir guards: a mcdollar-* file must not import
+      // mcdollar-distributed, eval/, or tests/ either (all pruned in some channel).
       'no-restricted-imports': [
         'error',
         { patterns: [DWEB_IMPORT, TESTS_IMPORT, EVAL_IMPORT] },
@@ -310,7 +310,7 @@ export default [
     },
   },
   {
-    files: ['extension/peerd-distributed/**'],
+    files: ['extension/mcdollar-distributed/**'],
     rules: { 'no-restricted-imports': 'off' },
   },
   // Tests use the public surface but may deep-import white-box helpers, so
@@ -355,11 +355,11 @@ export default [
   // injected bodies) and each file's header comment for the full why.
   {
     files: [
-      'extension/peerd-runtime/dom/walk-injected.js',
-      'extension/peerd-runtime/dom/activity-overlay-injected.js',
-      'extension/peerd-runtime/dom/framework-state.js',
-      'extension/peerd-runtime/dom/pull-in-hint-injected.js',
-      'extension/peerd-runtime/dom/fetch-tap-injected.js',
+      'extension/mcdollar-runtime/dom/walk-injected.js',
+      'extension/mcdollar-runtime/dom/activity-overlay-injected.js',
+      'extension/mcdollar-runtime/dom/framework-state.js',
+      'extension/mcdollar-runtime/dom/pull-in-hint-injected.js',
+      'extension/mcdollar-runtime/dom/fetch-tap-injected.js',
       'extension/background/debugger-pool.js',
       'extension/background/page-authority/watch-changes.js',
     ],
@@ -391,7 +391,7 @@ export default [
   // the agent loop for every offscreen loop (reasoning actors + bound actors). It
   // must import a MINIMAL, worker-safe subset (agent-loop.js + actor-worker-core.js —
   // both verified to touch no chrome.*/DOM at import) rather than the full
-  // /peerd-runtime barrel, which re-exports voice/tools/etc. and would drag
+  // /mcdollar-runtime barrel, which re-exports voice/tools/etc. and would drag
   // chrome-touching modules into a context that has none, throwing at import. So the
   // cross-module rule is relaxed for THIS file only; the dweb/tests/eval guards stay.
   {

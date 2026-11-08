@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { createKernelDwebAgentOwner } from '../../extension/background/kernel-dweb-agent-owner.js';
-import { createConversationRegistry } from '../../extension/peerd-runtime/actor/conversation-registry.js';
+import { createConversationRegistry } from '../../extension/mcdollar-runtime/actor/conversation-registry.js';
 
 const waitFor = async (check: () => boolean) => {
   for (let attempt = 0; attempt < 50 && !check(); attempt += 1) {
@@ -68,7 +68,7 @@ describe('kernel dweb agent owner', () => {
   test('owns exact inbound provenance and replies only from the isolated inbound turn', async () => {
     const state = setup();
     expect(state.owner.onMessage({
-      type: 'dweb/base-room/event', roomId: 'peerd-agent', event: 'direct',
+      type: 'dweb/base-room/event', roomId: 'mcdollar-agent', event: 'direct',
       data: {
         from: 'did:peer',
         data: { deliver: { kind: 'ask', convId: 'conversation-1', reqId: 'request-1', message: 'hello' } },
@@ -77,7 +77,7 @@ describe('kernel dweb agent owner', () => {
     expect(state.actorTurns).toHaveLength(0);
 
     state.owner.onMessage({
-      type: 'dweb/base-room/event', roomId: 'peerd-agent', event: 'direct',
+      type: 'dweb/base-room/event', roomId: 'mcdollar-agent', event: 'direct',
       data: {
         from: 'did:peer',
         data: { deliver: { kind: 'ask', convId: 'conversation-1', reqId: 'request-1', message: 'hello' } },

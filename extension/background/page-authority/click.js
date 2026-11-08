@@ -30,7 +30,7 @@ import {
   formSubmissionRefusalReceiptFrom,
   resolveTargetTab,
   scriptingTarget,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 
 /**
  * Harness-injected ctx extras (ref registry + CDP pool). Not on the
@@ -40,7 +40,7 @@ import {
  * @typedef {{ backendDOMNodeId: number|null, walkId?: number|null, role: string, name: string }} RefEntry
  * @typedef {{ resolve?: (tabId: number, ref: string) => RefEntry | null }} DomRefs
  * @typedef {{ clickBackendNode?: (tabId: number, backendDOMNodeId: number, expectedDocument: ReturnType<typeof browserDocumentIdentity>) =>
- *   Promise<{ ok: false, error?: string, outcomeKind?: import('/peerd-runtime/lifecycle/failure-taxonomy.js').FailureOutcomeKind }
+ *   Promise<{ ok: false, error?: string, outcomeKind?: import('/mcdollar-runtime/lifecycle/failure-taxonomy.js').FailureOutcomeKind }
  *     | { ok: true, tag?: string, text?: string, navigated?: boolean, mutations?: any }> }} DebuggerPool
  * @typedef {{ domRefs?: DomRefs, debuggerPool?: DebuggerPool }} DomCtxExtras
  */
@@ -109,7 +109,7 @@ export const clickOwnedTargetAuthority = async (args, ctx) => {
             },
           };
         } catch (e) {
-          const outcomeKind = /** @type {{ outcomeKind?: import('/peerd-runtime/lifecycle/failure-taxonomy.js').FailureOutcomeKind }} */ (e)?.outcomeKind;
+          const outcomeKind = /** @type {{ outcomeKind?: import('/mcdollar-runtime/lifecycle/failure-taxonomy.js').FailureOutcomeKind }} */ (e)?.outcomeKind;
           const refusal = browserDocumentRefusalReceiptFrom(e);
           if (refusal) return refusal;
           return {
@@ -233,9 +233,9 @@ export function clickInjected(selector, nth, walkId, expectedCount, allowedCross
     // DOM-walk ref resolution: the walk (walk-injected.js) registered
     // walkId → element in this same isolated world. Element gone or
     // detached → the snapshot is stale, same contract as a CDP ref.
-    // why: __peerdWalkEls is set on the page world by walk-injected.js: not
+    // why: __mcdollarWalkEls is set on the page world by walk-injected.js: not
     // a standard global, so reach it through an erased cast.
-    const reg = /** @type {{ __peerdWalkEls?: Map<number, HTMLElement> }} */ (globalThis).__peerdWalkEls;
+    const reg = /** @type {{ __mcdollarWalkEls?: Map<number, HTMLElement> }} */ (globalThis).__mcdollarWalkEls;
     el = reg && typeof reg.get === 'function' ? (reg.get(walkId) ?? null) : null;
     // why: a walkId names exactly one registered element, so the real match
     // cardinality is 0 (stale/unregistered) or 1 (found). Enforce the guard

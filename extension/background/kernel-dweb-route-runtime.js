@@ -8,7 +8,7 @@ import {
   shapeSessionsSurface,
   shapeSettingsSurface,
   SurfaceApplyPartialError,
-} from '/peerd-runtime/transfer/self-sync-surfaces.js';
+} from '/mcdollar-runtime/transfer/self-sync-surfaces.js';
 import { makeDwebRoutes } from './routes/dweb.js';
 import { makeDwebSelfRoutes } from './routes/dweb-self.js';
 import { createDwebRollbackGuard } from './dweb-rollback-guard.js';
@@ -151,7 +151,7 @@ export const createKernelDwebRouteOwner = (deps) => {
       settingsStore: deps.settingsStore,
       shareLocalApp,
       DWEB_ENABLED: true,
-      APP_TAB_GROUP_TITLE: 'peerd',
+      APP_TAB_GROUP_TITLE: 'mcdollar',
       disableDweb: async () => {
         const patch = { dwebEnabled: false };
         transfer.onSettingsChanging(patch);

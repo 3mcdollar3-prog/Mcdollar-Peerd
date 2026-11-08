@@ -7,8 +7,8 @@ import { loadStagedModuleResolver } from '../../packaging/verify-store-artifact.
 
 describe('Store artifact executable policy verification', () => {
   test('isolates browser-root imports for each staged artifact', async () => {
-    const first = mkdtempSync(join(tmpdir(), 'peerd-store-verifier-first-'));
-    const second = mkdtempSync(join(tmpdir(), 'peerd-store-verifier-second-'));
+    const first = mkdtempSync(join(tmpdir(), 'mcdollar-store-verifier-first-'));
+    const second = mkdtempSync(join(tmpdir(), 'mcdollar-store-verifier-second-'));
     try {
       for (const scratchRoot of [first, second]) {
         const resolver = await loadStagedModuleResolver(EXTENSION_DIR, scratchRoot);

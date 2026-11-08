@@ -6,15 +6,15 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { attach, CDPSessionDetachedError, evalIn, launchPeerd, PASSPHRASE, rpc, waitFor } from './e2e-harness.mjs';
+import { attach, CDPSessionDetachedError, evalIn, launchMcdollar, PASSPHRASE, rpc, waitFor } from './e2e-harness.mjs';
 
 export const REPORT = resolve('artifacts/e2e/network-consent-cold.json');
-const BINDING = '__peerdConsentTransportObserved';
+const BINDING = '__mcdollarConsentTransportObserved';
 // Transparent native constructor observers: no application API is stubbed,
 // no connection is prevented, and successful construction still uses Chrome.
 export const OBSERVER_SOURCE = `(() => {
-  if (globalThis.__peerdConsentObserverInstalled) return;
-  globalThis.__peerdConsentObserverInstalled = true;
+  if (globalThis.__mcdollarConsentObserverInstalled) return;
+  globalThis.__mcdollarConsentObserverInstalled = true;
   const emit = (kind, details = {}) => globalThis.${BINDING}(JSON.stringify({
     kind, href: globalThis.location?.href ?? '', ...details,
   }));
@@ -166,7 +166,7 @@ export async function instrumentPausedTarget(connection, sessionId, diagnostic, 
         expression, returnByValue: true }));
     const probe = await evaluate('call-frame probe', '1');
     requireResult(!probe.exceptionDetails && probe.result?.value === 1, 'Target call-frame probe failed');
-    const result = await evaluate('observer injection', `${OBSERVER_SOURCE}; globalThis.__peerdConsentObserverInstalled === true`);
+    const result = await evaluate('observer injection', `${OBSERVER_SOURCE}; globalThis.__mcdollarConsentObserverInstalled === true`);
     requireResult(!result.exceptionDetails && result.result?.value === true, 'Target observer injection failed');
     await diagnostic(`target observer ready session=${sessionId}`, () => observed);
   } catch (error) { failure = error; throw error; }
@@ -546,7 +546,7 @@ const click = async (page, selector) => {
   await evalIn(page, `document.querySelector(${JSON.stringify(selector)}).click()`);
 };
 
-export async function runColdConsent({ reportPath = REPORT, launch = launchPeerd, runBudgetMs = 360_000 } = {}) {
+export async function runColdConsent({ reportPath = REPORT, launch = launchMcdollar, runBudgetMs = 360_000 } = {}) {
   const evidence = { schema: 1, ok: false, phase: 'fresh-locked', checks: [], events: [], observerErrors: [], restart: 'physical-mv3-worker' };
   const persist = () => {
     mkdirSync(dirname(reportPath), { recursive: true });
@@ -691,6 +691,6 @@ export async function runColdConsent({ reportPath = REPORT, launch = launchPeerd
 
 if (import.meta.url === pathToFileURL(resolve(process.argv[1] ?? '')).href) {
   runColdConsent().then(report => console.log(JSON.stringify(report, null, 2))).catch(error => {
-    console.error(error); process.exit(1); // launchPeerd exit cleanup reaps Chrome even if launch never returned.
+    console.error(error); process.exit(1); // launchMcdollar exit cleanup reaps Chrome even if launch never returned.
   });
 }

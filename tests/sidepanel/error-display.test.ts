@@ -2,8 +2,8 @@ import { describe, test, expect } from 'bun:test';
 import { mapError, errorSettingsTarget } from '../../extension/sidepanel/error-display.js';
 import {
   listProviderModels, listProviders, providerFailureCode, UnknownProviderError,
-} from '../../extension/peerd-provider/controller.js';
-import { makeModelEgress } from '../peerd-provider/model-egress-fixture';
+} from '../../extension/mcdollar-provider/controller.js';
+import { makeModelEgress } from '../mcdollar-provider/model-egress-fixture';
 
 // The error banner reads BOTH the SW's typed codes ("provider-http-429") and
 // the loop's raw throw text ("Provider 'anthropic' HTTP 429: {…}"). mapError

@@ -1,9 +1,9 @@
-// The sealed-worker source template. peerd.self.import remains as a compatibility
+// The sealed-worker source template. mcdollar.self.import remains as a compatibility
 // relay, but the host refuses it with the stable unsupported-import policy.
 
 import { describe, test, expect } from 'bun:test';
 import { buildWorkerSource, mapWorkerError } from '../../../extension/engine-tabs/notebook-tab/worker-source.js';
-import { buildCodeClientSource } from '../../../extension/peerd-runtime/actor/capability-manifest.js';
+import { buildCodeClientSource } from '../../../extension/mcdollar-runtime/actor/capability-manifest.js';
 
 const resolverDeps = {
   readFile: async () => { throw new Error('no OPFS in this test'); },
@@ -11,13 +11,13 @@ const resolverDeps = {
 };
 
 describe('buildWorkerSource dynamic import compatibility relay', () => {
-  test('peerd.self.import always routes to the host policy boundary', async () => {
+  test('mcdollar.self.import always routes to the host policy boundary', async () => {
     const { source } = await buildWorkerSource('return 1', { notebookId: 'nb-1', resolverDeps });
-    const shimAt = source.indexOf('__peerd_dynamic_import = async');
+    const shimAt = source.indexOf('__mcdollar_dynamic_import = async');
     const composeAt = source.indexOf("opfsCall('compose-module'", shimAt);
     expect(shimAt).toBeGreaterThan(-1);
     expect(composeAt).toBeGreaterThan(shimAt);
-    expect(source.slice(shimAt, composeAt)).not.toContain('PEERD_BUILTINS');
+    expect(source.slice(shimAt, composeAt)).not.toContain('MCDOLLAR_BUILTINS');
   });
 
   test('bridge error codes stay local and final payloads claim no policy provenance', async () => {
@@ -66,7 +66,7 @@ describe('buildWorkerSource — bodyLine + mapWorkerError', () => {
   });
 
   test('an import keeps line positions (extraction leaves a blank line behind)', async () => {
-    const code = "import { mean } from 'peerd:std';\nconst A = 1;\nmean([A]);";
+    const code = "import { mean } from 'mcdollar:std';\nconst A = 1;\nmean([A]);";
     const { source, bodyLine } = await buildWorkerSource(code, { notebookId: 'nb-1', resolverDeps });
     const lines = source.split('\n');
     expect(lines[bodyLine - 1]).toBe('');                      // user line 1: the extracted import → blank

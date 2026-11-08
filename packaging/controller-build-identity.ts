@@ -70,10 +70,10 @@ export const CONTROLLER_BUILD_ENTRIES = Object.freeze([
   'offscreen/document-conversion-worker.js',
   // Runtime-selected repository/model/document/voice implementations remain
   // part of the same host identity even though they stay off the cold graph.
-  'peerd-engine/export.js',
-  'peerd-engine/repository.js',
-  'peerd-runtime/offscreen.js',
-  'peerd-runtime/voice/transcriber-picker.js',
+  'mcdollar-engine/export.js',
+  'mcdollar-engine/repository.js',
+  'mcdollar-runtime/offscreen.js',
+  'mcdollar-runtime/voice/transcriber-picker.js',
   'vendor/isomorphic-git/index.js',
   'vendor/muse-glimmer/muse-glimmer.js',
   'vendor/pdfjs/pdf.min.mjs',
@@ -98,15 +98,15 @@ export const CONTROLLER_OPTIONAL_BUILD_ENTRIES = Object.freeze([
   'background/vault-kernel-firefox-preview.js',
   'background/kernel-contributor-owner.js',
   'offscreen/contributor-channel-addon.js',
-  'peerd-runtime/controller-contributor.js',
+  'mcdollar-runtime/controller-contributor.js',
   'shared/contributor-channel.js',
-  'peerd-distributed/index.js',
+  'mcdollar-distributed/index.js',
   'offscreen/semantic-routes/contributor.js',
 ] as const);
 
 export const CONTROLLER_BUILD_ASSETS = Object.freeze([
-  'peerd-provider/system-prompt.txt',
-  'peerd-provider/system-prompt-dweb.txt',
+  'mcdollar-provider/system-prompt.txt',
+  'mcdollar-provider/system-prompt-dweb.txt',
   // Runtime-selected executable children of the controller-owned local-model
   // and voice hosts are not visible to the static module graph.
   'vendor/transformers/ort-wasm-simd-threaded.asyncify.mjs',
@@ -158,7 +158,7 @@ export const controllerBuildDigest = async (
   }
 
   const hash = createHash('sha256');
-  hash.update('peerd-controller-build-v1\0');
+  hash.update('mcdollar-controller-build-v1\0');
   for (const file of [...files].sort()) {
     const rel = relative(absoluteRoot, file).split('\\').join('/');
     let bytes = readFileSync(file);

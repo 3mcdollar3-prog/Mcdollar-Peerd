@@ -5,7 +5,7 @@ import m from '/vendor/mithril/mithril.js';
 /** @typedef {(msg: object) => Promise<any>} Send */
 
 // Persistent capability failure. It is not dismissible because hiding it would
-// leave both the user and model with a false picture of what peerd can do.
+// leave both the user and model with a false picture of what mcdollar can do.
 export const ActorIsolationBanner = {
   /** @param {{ state: { retrying?: boolean, retryFailed?: boolean, retryRequested?: boolean, recoveryAnnounced?: boolean, recoveryDismissed?: boolean }, attrs: { capability?: { status?: string, reason?: string|null, retryable?: boolean }, send: Send } }} vnode */
   view(vnode) {

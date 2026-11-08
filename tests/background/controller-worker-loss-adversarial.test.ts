@@ -14,10 +14,10 @@ import {
 } from '../../extension/shared/structured-clone-size.js';
 import {
   makeLifecycleBoot,
-} from '../../extension/peerd-runtime/lifecycle/boot.js';
+} from '../../extension/mcdollar-runtime/lifecycle/boot.js';
 import {
   OPERATION_STATES,
-} from '../../extension/peerd-runtime/lifecycle/operation-state.js';
+} from '../../extension/mcdollar-runtime/lifecycle/operation-state.js';
 
 const BUILD_DIGEST = 'd'.repeat(64);
 const SEALED_REALM = Object.fromEntries(

@@ -7,8 +7,8 @@ const SESSIONS = 'sessions';
 const MESSAGES = 'session_messages';
 
 /**
- * @typedef {import('../peerd-runtime/sessions/types.js').Session} Session
- * @typedef {import('../peerd-provider/types.js').InternalMessage} InternalMessage
+ * @typedef {import('../mcdollar-runtime/sessions/types.js').Session} Session
+ * @typedef {import('../mcdollar-provider/types.js').InternalMessage} InternalMessage
  */
 
 /** @param {any} message */
@@ -216,9 +216,9 @@ export const createSessionTurnStore = ({
         ...(isRealUserMessage(message) ? { latestNonSyntheticUserMessageId: id } : {}),
       };
       if (!current.title && message.role === 'user' && typeof message.content === 'string') {
-        const title = message.content.replace(/\n\n<peerd_file name="[^"]*">\n[\s\S]*/, '')
-          .split(/<\/(?:untrusted_web_content|peerd_file)\s*>/i)
-          .map((part) => part.replace(/<(?:untrusted_web_content|peerd_file)\b[\s\S]*/i, ''))
+        const title = message.content.replace(/\n\n<mcdollar_file name="[^"]*">\n[\s\S]*/, '')
+          .split(/<\/(?:untrusted_web_content|mcdollar_file)\s*>/i)
+          .map((part) => part.replace(/<(?:untrusted_web_content|mcdollar_file)\b[\s\S]*/i, ''))
           .join(' ').replace(/\s+/g, ' ').trim();
         if (title) next.title = title.slice(0, 60);
       }

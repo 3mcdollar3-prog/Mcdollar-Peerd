@@ -27,7 +27,7 @@ const waitFor = (/** @type {Worker} */ worker, /** @type {string} */ type) =>
 describe('sealed actor Worker (real browser realm)', () => {
   it('removes prototype-recoverable ambient egress before semantic modules load', async () => {
     const worker = new Worker('/offscreen/actor-worker.js', {
-      type: 'module', name: 'peerd-actor-seal-test',
+      type: 'module', name: 'mcdollar-actor-seal-test',
     });
     try {
       const ready = /** @type {any} */ (await waitFor(worker, 'ready'));

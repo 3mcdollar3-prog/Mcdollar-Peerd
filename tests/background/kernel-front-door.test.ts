@@ -80,11 +80,11 @@ describe('thin-kernel synchronous front door', () => {
 
     const toggle = makeHarness({ panelOpen: true });
     toggle.command.emit('unrelated', { windowId: 5 });
-    toggle.command.emit('pull-in-peerd', { windowId: 5 });
+    toggle.command.emit('pull-in-mcdollar', { windowId: 5 });
     expect(toggle.calls).toEqual(['close']);
 
     const firefox = makeHarness({ firefox: true });
-    firefox.command.emit('pull-in-peerd', { windowId: 6 });
+    firefox.command.emit('pull-in-mcdollar', { windowId: 6 });
     expect(firefox.calls).toEqual(['sidebar']);
     expect(await firefox.api.syncNativeBehavior()).toBe(false);
     expect(firefox.calls).toEqual(['sidebar']);
@@ -93,7 +93,7 @@ describe('thin-kernel synchronous front door', () => {
   test('uses the focused-window backstop and mirrors the native Chrome preference', async () => {
     const harness = makeHarness({ nativeMirror: true });
     await Promise.resolve();
-    harness.command.emit('pull-in-peerd', {});
+    harness.command.emit('pull-in-mcdollar', {});
     expect(harness.calls).toEqual(['panel:8']);
     expect(await harness.api.syncNativeBehavior()).toBe(true);
     expect(harness.calls).toEqual(['panel:8', 'native:true']);

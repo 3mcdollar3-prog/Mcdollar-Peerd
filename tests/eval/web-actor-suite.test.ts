@@ -10,7 +10,7 @@ import { WEB_ACTOR_TASKS, SUITES } from '../../extension/eval/tasks.js';
 
 describe('web-actor fixture — serves what the tasks assert', () => {
   test('home heading is the store name (web-home-heading)', () => {
-    expect(route('GET', '/').html).toContain('Peerdmart');
+    expect(route('GET', '/').html).toContain('Mcdollarmart');
   });
 
   test('the product list carries all three names (web-products-list-all)', () => {

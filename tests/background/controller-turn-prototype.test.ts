@@ -2,11 +2,11 @@ import { describe, expect, test } from 'bun:test';
 import { makeControllerTurnBridge } from '../../extension/background/controller-turn-bridge.js';
 import { createControllerTurnRuntime } from '../../extension/offscreen/controller-turn-runtime.js';
 import { createControllerModelEgress } from '../../extension/offscreen/model-egress-client.js';
-import { runUserTurn as runDirectTurn } from '../../extension/peerd-runtime/loop/agent-loop.js';
+import { runUserTurn as runDirectTurn } from '../../extension/mcdollar-runtime/loop/agent-loop.js';
 import {
   buildTemporalBlock, buildTemporalContext,
-} from '../../extension/peerd-runtime/controller.js';
-import { makeScriptedProviderAuthority } from '../peerd-provider/model-egress-fixture';
+} from '../../extension/mcdollar-runtime/controller.js';
+import { makeScriptedProviderAuthority } from '../mcdollar-provider/model-egress-fixture';
 import { createContextSnapshots } from '../../extension/shared/model-context-snapshot.js';
 
 const clone = <T>(value: T): T => structuredClone(value);
@@ -525,7 +525,7 @@ describe('orchestrator controller turn boundary', () => {
         const token = request.nativeBody.messages
           .flatMap((message: any) => Array.isArray(message.content) ? message.content : [])
           .find((block: any) => typeof block?.source?.data === 'string')?.source.data;
-        expect(token).toStartWith('peerd-controller-opaque:');
+        expect(token).toStartWith('mcdollar-controller-opaque:');
         authorityMedia.push(grant.redeemOpaque(token));
       },
       interceptKernel: async (_operation, payload, next) => {

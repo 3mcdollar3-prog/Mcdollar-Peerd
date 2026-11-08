@@ -35,7 +35,7 @@ import m from '/vendor/mithril/mithril.js';
 import {
   MicButton, activeTrigger, classifyAttachment, ATTACHMENT_CAPS, MAX_ATTACHMENTS_PER_MESSAGE,
   DOC_MEDIA_TYPES, IMAGE_MEDIA_TYPES, formatBytes,
-} from '/peerd-runtime/ui.js';
+} from '/mcdollar-runtime/ui.js';
 import { CommandPalette, visibleCandidates, PALETTE_OPTION_ID } from './command-palette.js';
 import { CostChip } from './cost-meter.js';
 import { settleUiEffect } from '/shared/ui-effects.js';
@@ -116,7 +116,7 @@ const PAPERCLIP_ICON = () => m('svg', {
 // The office/e-book types are listed by EXTENSION as well as media type, and
 // that is load-bearing rather than belt-and-braces: the OS media-type registry
 // often has no entry for .docx, so a media-type-only `accept` greys the file
-// out in the picker even though peerd can read it. classifyAttachment applies
+// out in the picker even though mcdollar can read it. classifyAttachment applies
 // the same extension fallback, so the two stay in step.
 const DOC_ACCEPT_EXTENSIONS = [
   '.docx', '.xlsx', '.pptx', '.odt', '.ods', '.odp', '.rtf', '.epub',
@@ -192,7 +192,7 @@ const ensureItems = async (ui, send, trigger) => {
 // restored when you come back to that chat (the InputBar is keyed by sessionId in
 // ChatView, so a switch remounts it and re-reads the right draft). Cleared on send.
 /** @param {string|null|undefined} sid */
-const draftKey = (sid) => `peerd.draft.${sid || 'new'}`;
+const draftKey = (sid) => `mcdollar.draft.${sid || 'new'}`;
 /** @param {string|null|undefined} sid */
 const loadDraft = (sid) => { try { return localStorage.getItem(draftKey(sid)) || ''; } catch { return ''; } };
 /**
@@ -204,7 +204,7 @@ const saveDraft = (sid, text) => {
   catch { /* private mode — drafts are best-effort */ }
 };
 const unconfirmedKey = (/** @type {string|null|undefined} */ sid) =>
-  `peerd.unconfirmed-send.${sid || 'new'}`;
+  `mcdollar.unconfirmed-send.${sid || 'new'}`;
 /** @returns {UnconfirmedSend|null} */
 const loadUnconfirmed = (/** @type {string|null|undefined} */ sid) => {
   try {
@@ -318,7 +318,7 @@ export const InputBar = {
       saveUnconfirmed(null, null);
     }
     vnode.state.sendError = vnode.state.unconfirmedSend
-      ? 'Peerd has an unconfirmed message for this chat. Check delivery before sending again.'
+      ? 'Mcdollar has an unconfirmed message for this chat. Check delivery before sending again.'
       : null;
     vnode.state.fileInputEl = null;   // the hidden <input type=file>
   },
@@ -356,7 +356,7 @@ export const InputBar = {
         saveUnconfirmed(null, null);
       }
       ui.sendError = ui.unconfirmedSend
-        ? 'Peerd has an unconfirmed message for this chat. Check delivery before sending again.'
+        ? 'Mcdollar has an unconfirmed message for this chat. Check delivery before sending again.'
         : null;
       ui._sid = sid;
       // The popup belonged to the previous chat's draft.
@@ -380,7 +380,7 @@ export const InputBar = {
           saveDraft(sid, ui.value);
         }
         saveDraft(null, '');
-        ui.sendError = 'Peerd has an unconfirmed message for this chat. Check delivery before sending again.';
+        ui.sendError = 'Mcdollar has an unconfirmed message for this chat. Check delivery before sending again.';
         saveUnconfirmed(sid, freshPending);
         saveUnconfirmed(null, null);
       }
@@ -471,7 +471,7 @@ export const InputBar = {
             if (ui._sid === sid) {
               ui.value = text;
               ui.sendError = reply?.outcomeKnown === false
-                ? 'Peerd could not confirm whether the goal started. Check this chat before sending it again; your goal remains in the composer.'
+                ? 'Mcdollar could not confirm whether the goal started. Check this chat before sending it again; your goal remains in the composer.'
                 : 'The agent service was unavailable. Your goal is still here; try again.';
               if (unresolved) ui.unconfirmedSend = unresolved;
             } else {
@@ -481,7 +481,7 @@ export const InputBar = {
         } catch {
           if (ui._sid === sid) ui.value = text;
           else saveDraft(sid, text);
-          ui.sendError = 'Peerd could not confirm whether the goal started. Check this chat before sending it again; your goal remains in the composer.';
+          ui.sendError = 'Mcdollar could not confirm whether the goal started. Check this chat before sending it again; your goal remains in the composer.';
           if (ui._sid === sid) ui.unconfirmedSend = pending;
         } finally {
           ui.busy = false;
@@ -535,9 +535,9 @@ export const InputBar = {
           // Surface the SW's fail-closed refusal (e.g. an over-cap file)
           // where the chips are; turn-level errors render in the chat.
           if (attachments && reply?.error) ui.attachError = reply.outcomeKnown === false
-            ? 'Peerd could not confirm the attachment send.' : reply.error;
+            ? 'Mcdollar could not confirm the attachment send.' : reply.error;
           ui.sendError = reply?.outcomeKnown === false
-            ? 'Peerd could not confirm whether the message started. Check this chat before sending the restored draft again.'
+            ? 'Mcdollar could not confirm whether the message started. Check this chat before sending the restored draft again.'
             : 'The message was not sent. Your draft was restored; try again.';
           if (reply?.outcomeKnown === false) {
             ui.unconfirmedSend = pending;
@@ -553,7 +553,7 @@ export const InputBar = {
         if (ui._sid === sid) {
           ui.value = text;
           if (attachments) ui.attachments = attachments;
-          ui.sendError = 'Peerd could not confirm whether the message started. Check this chat before sending the restored draft again.';
+          ui.sendError = 'Mcdollar could not confirm whether the message started. Check this chat before sending the restored draft again.';
           ui.unconfirmedSend = pending;
           saveUnconfirmed(sid, ui.unconfirmedSend);
         } else {
@@ -795,7 +795,7 @@ export const InputBar = {
         ? 'Describe a goal to run autonomously…'
         : streaming
           ? 'Type to steer the current turn…'
-          : 'Message peerd…';
+          : 'Message mcdollar…';
 
     // aria-activedescendant points at the active option when the palette
     // lists one, so screen readers announce the highlighted candidate. An

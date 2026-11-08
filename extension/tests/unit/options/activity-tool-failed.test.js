@@ -6,7 +6,7 @@
 import m from '/vendor/mithril/mithril.js';
 import { describe, it, expect } from '../../framework.js';
 import { semanticCallAuditEntry } from '/background/semantic-call-audit.js';
-import { createAuditLog, idb, makeWebFetch } from '/peerd-egress/index.js';
+import { createAuditLog, idb, makeWebFetch } from '/mcdollar-egress/index.js';
 import { ActivityView, activityEventMeta } from '/options/sections/activity.js';
 
 /** @param {(msg: any) => Promise<any>} send */

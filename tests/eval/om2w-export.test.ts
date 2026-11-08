@@ -8,7 +8,7 @@ import { describe, test, expect } from 'bun:test';
 import { pageActionFor, pageActionForOp, formatAction, initialNavigation, taskComplete } from '../../extension/eval/om2w-actions.js';
 import { buildResult, validateResult, shotName } from '../../scripts/cdp/om2w/result-builder.mjs';
 
-describe('om2w-actions — peerd tool calls to Grammar A', () => {
+describe('om2w-actions — mcdollar tool calls to Grammar A', () => {
   test('page actions map; reads/orchestration/compute do NOT', () => {
     expect(pageActionFor('navigate', { url: 'https://x.com' })?.verb).toBe('NAVIGATE');
     expect(pageActionFor('click', { selector: '#buy' })?.verb).toBe('CLICK');

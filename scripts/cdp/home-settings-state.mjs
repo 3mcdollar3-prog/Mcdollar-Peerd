@@ -47,7 +47,7 @@ export const HOME_SETTINGS_STATES = [
           && !document.querySelector('button.stop')`), { budgetMs: 120_000, pollMs: 100 });
         if (!done) throw new Error('The four real sandbox creations did not settle');
         const records = await evalIn(ctx.page, `(async () => {
-          const idb = await import('/peerd-egress/storage/idb.js');
+          const idb = await import('/mcdollar-egress/storage/idb.js');
           return Promise.all(${JSON.stringify(sandboxes)}.map(async (spec) => {
             const row = await idb.get(spec.store, spec.key);
             const record = Object.values(row?.value?.[spec.collection] ?? {}).find((item) => item.name === spec.name);
@@ -62,12 +62,12 @@ export const HOME_SETTINGS_STATES = [
         const cards = await evalIn(ctx.page, `[...document.querySelectorAll('.agent-tab-notice')].map((row) => ({
           label: row.querySelector('.agent-tab-notice-label')?.textContent,
           aria: row.querySelector('.agent-tab-notice-go')?.getAttribute('aria-label') }))`);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('merge-base task card labels', cards);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('merge-base task card labels', cards);
         else rec.check('each task card has its saved name and distinct Go name', records.every((item) => cards.some((card) =>
           card.label === item.label + ' · ' + item.name && card.aria === 'Go to task tab: ' + item.label + ' · ' + item.name)), JSON.stringify(cards));
         const focused = [];
         for (const [index, item] of records.entries()) {
-          const rowIndex = process.env.PEERD_VISUAL_BASE_RENDER === '1' ? index
+          const rowIndex = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' ? index
             : cards.findIndex((card) => card.label === item.label + ' · ' + item.name);
           if (rowIndex < 0) throw new Error(`The named card is missing: ${item.name}`);
           await ctx.page.send('Page.bringToFront');
@@ -75,10 +75,10 @@ export const HOME_SETTINGS_STATES = [
           await rec.visual(item.kind === 'notebook' ? 'engine-task-tab-names' : `engine-task-card-${item.kind}`);
           await evalIn(ctx.page, `document.querySelectorAll('.agent-tab-notice-go')[${rowIndex}].click()`);
           const active = await waitFor(() => evalIn(ctx.page, `chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) =>
-            tabs.find((tab) => ${process.env.PEERD_VISUAL_BASE_RENDER === '1' ? JSON.stringify(records.map((entry) => entry.tabId)) + '.includes(tab.id)' : 'tab.id === ' + item.tabId}) ?? null)`, true),
+            tabs.find((tab) => ${process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' ? JSON.stringify(records.map((entry) => entry.tabId)) + '.includes(tab.id)' : 'tab.id === ' + item.tabId}) ?? null)`, true),
           { budgetMs: 5_000, pollMs: 50 });
           focused.push(active?.id);
-          rec.check(process.env.PEERD_VISUAL_BASE_RENDER === '1' ? `Go control ${index + 1} opens a created task tab` : `Go opens the exact ${item.label} task tab`, !!active && active.url === (process.env.PEERD_VISUAL_BASE_RENDER === '1'
+          rec.check(process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' ? `Go control ${index + 1} opens a created task tab` : `Go opens the exact ${item.label} task tab`, !!active && active.url === (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1'
             ? records.find((entry) => entry.tabId === active.id)?.url : item.url), JSON.stringify(active));
         }
         rec.check('the four Go controls reach four distinct created tabs', new Set(focused).size === 4, JSON.stringify(focused));
@@ -191,13 +191,13 @@ export const HOME_SETTINGS_STATES = [
         await observeRequests(ctx.page);
         await page.send('Page.bringToFront');
         await evalIn(page, `document.querySelector('[data-home-view="network"]').click()`);
-        const live = await waitFor(() => evalIn(page, `[...document.querySelectorAll('.peerd-net-btn')].some((button) => button.textContent === 'Stop the network' && !button.disabled)`), { budgetMs: 15_000 });
+        const live = await waitFor(() => evalIn(page, `[...document.querySelectorAll('.mcdollar-net-btn')].some((button) => button.textContent === 'Stop the network' && !button.disabled)`), { budgetMs: 15_000 });
         if (!live) throw new Error('The real Network page did not reach its running view');
         await rec.visualPage('home-network-running', page);
         await checkWindows('After the running captures');
         for (const surface of [page, other, ctx.page]) await evalIn(surface, `globalThis.__homeSettingsProof.armed = true`);
         page.on(onDialog);
-        await evalIn(page, `[...document.querySelectorAll('.peerd-net-btn')].find((button) => button.textContent === 'Stop the network').click()`);
+        await evalIn(page, `[...document.querySelectorAll('.mcdollar-net-btn')].find((button) => button.textContent === 'Stop the network').click()`);
         const receipt = await waitFor(() => evalIn(page, `globalThis.__homeSettingsProof.messages.find((entry) => entry.armed && entry.type === 'dweb/base/stop' && entry.reply)`), { budgetMs: 30_000 });
         rec.check('Stop uses the native confirm and its real route succeeds', dialog?.type === 'confirm'
           && !dialogFailure && receipt?.reply?.ok === true && receipt.reply.running === false, JSON.stringify({ dialog, dialogFailure, receipt }));
@@ -213,7 +213,7 @@ export const HOME_SETTINGS_STATES = [
           return homes.every((home) => home.railOff) && homes[0].stop === false && homes[1].enable ? homes : null;
         }, { budgetMs: 8_000, pollMs: 100 });
         const beforeRead = await readHomes();
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('merge-base Home state before any state read', beforeRead);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('merge-base Home state before any state read', beforeRead);
         else rec.check('Stop updates both Home rails and the other Home choice without a read', !!changed, JSON.stringify(beforeRead));
         await rec.visualPage('home-network-stop-state', page);
         await rec.visualPage('home-network-other-home-off', other);
@@ -309,13 +309,13 @@ export const HOME_SETTINGS_STATES = [
           text: globalThis.__memoryProofEditor.closest('.memory-card').querySelector('.key-msg.err')?.textContent,
           retryEnabled: !globalThis.__memoryProofEditor.closest('.memory-card').querySelector('.memory-card-actions button').disabled,
           timeOrigin: performance.timeOrigin })`);
-        const stored = await evalIn(page, `(async () => (await (await import('/peerd-egress/storage/idb.js')).get('agents_memory', 'user'))?.body)()`, true);
+        const stored = await evalIn(page, `(async () => (await (await import('/mcdollar-egress/storage/idb.js')).get('agents_memory', 'user'))?.body)()`, true);
         rec.check('the real locked save keeps the same draft and leaves durable memory unchanged',
           refusal?.reply?.ok === false && refusal.reply.error === 'vault-locked' && refusal.body === draft
           && view.draft === draft && view.sameEditor && view.retryEnabled && stored === baseline, JSON.stringify({ refusal, view, stored }));
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('merge-base locked Memory guidance', view.text);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('merge-base locked Memory guidance', view.text);
         else rec.check('known locked Memory copy gives the unlock step without dropping the draft',
-          view.text === 'Vault is locked. Unlock it in the peerd panel, then try again.', view.text);
+          view.text === 'Vault is locked. Unlock it in the mcdollar panel, then try again.', view.text);
         await rec.visualPage('settings-memory-locked-save', page);
         await ctx.page.send('Page.bringToFront');
         const unlockReady = await waitFor(() => evalIn(ctx.page, `!!document.querySelector('#pass:not(:disabled)')`), { budgetMs: 15_000 });

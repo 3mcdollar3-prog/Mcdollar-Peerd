@@ -178,7 +178,7 @@ describe('sidepanel.denylist-view', () => {
         // Armed, not dispatched — the consequence copy is on screen.
         expect(send.calls.some((c) => c.type === 'denylist/remove')).toBe(false);
         const strip = need(root, '.denylist-item-row.is-arming');
-        expect(strip.textContent).toContain('peerd will be able to act on evil.example again');
+        expect(strip.textContent).toContain('mcdollar will be able to act on evil.example again');
         expect(need(strip, '.denylist-badge').textContent).toBe('user');
 
         button(strip, 'Remove?').click();
@@ -198,7 +198,7 @@ describe('sidepanel.denylist-view', () => {
         await flush();
         const strip = need(root, '.denylist-item-row.is-arming');
         expect(need(strip, '.denylist-badge').textContent).toBe('built-in');
-        expect(strip.textContent).toContain('peerd will be able to act on chase.com again');
+        expect(strip.textContent).toContain('mcdollar will be able to act on chase.com again');
         expect(strip.textContent).toContain("can't be deleted");
         const verbs = [...strip.querySelectorAll('button')].map((b) => b.textContent);
         expect(verbs).toContain('Disable?');
@@ -355,7 +355,7 @@ describe('sidepanel.denylist-view · categories', () => {
   });
 
   it('a group with no search hits STAYS listed, marked empty', async () => {
-    // Hiding it would read as "peerd does not block banks".
+    // Hiding it would read as "mcdollar does not block banks".
     const { root, unmount } = await mountView(sendCategorised());
     try {
       await setSearch(root, 'uhc');

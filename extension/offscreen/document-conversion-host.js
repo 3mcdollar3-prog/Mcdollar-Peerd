@@ -6,8 +6,8 @@
 import { abortError, throwIfAborted } from '/shared/abort.js';
 
 export const DOCUMENT_CONVERSION_PROTOCOL = 1;
-export const DOCUMENT_CONVERSION_RUN = 'peerd/document-conversion/run';
-export const DOCUMENT_CONVERSION_RESULT = 'peerd/document-conversion/result';
+export const DOCUMENT_CONVERSION_RUN = 'mcdollar/document-conversion/run';
+export const DOCUMENT_CONVERSION_RESULT = 'mcdollar/document-conversion/result';
 export const MAX_DOCUMENT_CONVERSION_BYTES = 40 * 1024 * 1024;
 // The tool retains at most 2M rendered characters. This wider wire ceiling
 // preserves structural overhead without allowing a compact archive to clone an
@@ -60,7 +60,7 @@ export const parseDocumentConversionResult = (value) => {
       || typeof reply.ok !== 'boolean') return null;
   if (reply.ok === true) {
     if (Object.keys(reply).length !== 4 || !documentShapeAllowed(reply.doc)) return null;
-    return /** @type {{ok:true,doc:import('/peerd-runtime/doc/model.js').Document}} */ (reply);
+    return /** @type {{ok:true,doc:import('/mcdollar-runtime/doc/model.js').Document}} */ (reply);
   }
   if (Object.keys(reply).some((key) => !['protocol', 'type', 'ok', 'error', 'format'].includes(key))
       || !DOCUMENT_CONVERSION_ERRORS.has(/** @type {string} */ (reply.error))
@@ -72,7 +72,7 @@ export const parseDocumentConversionResult = (value) => {
 /** @returns {Worker} */
 const createDocumentConversionWorker = () => new Worker(
   new URL('./document-conversion-worker.js', import.meta.url),
-  { type: 'module', name: 'peerd-document-conversion' },
+  { type: 'module', name: 'mcdollar-document-conversion' },
 );
 
 /**

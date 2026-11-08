@@ -3,7 +3,7 @@
 // Opening a live App reuses its tab. New user-opened Apps take focus.
 
 import { createTabTracker } from './tab-tracker.js';
-import { APP_TAB_PATH } from '/peerd-engine/background.js';
+import { APP_TAB_PATH } from '/mcdollar-engine/background.js';
 import { createAppDwebAuthority } from './app-dweb-authority.js';
 export { AppDwebAuthorityChangedError } from './app-dweb-authority.js';
 import browser from '/shared/browser-api.js';

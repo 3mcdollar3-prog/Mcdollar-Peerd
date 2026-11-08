@@ -4,8 +4,8 @@
 // Module-specific errors (EgressDeniedError, VaultLockedError,
 // ProviderError, ToolBlockedError, ...) live INSIDE their owning module
 // — they're imported via the module's public surface, not from here.
-// See peerd-egress/fetch/errors.js, peerd-egress/vault/errors.js,
-// peerd-provider/errors.js, peerd-runtime/errors.js.
+// See mcdollar-egress/fetch/errors.js, mcdollar-egress/vault/errors.js,
+// mcdollar-provider/errors.js, mcdollar-runtime/errors.js.
 //
 // What lives here:
 //   - TypedError: a base class that sets `.name` from an explicit stable

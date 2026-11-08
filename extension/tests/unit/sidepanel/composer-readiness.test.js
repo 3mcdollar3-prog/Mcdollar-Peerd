@@ -35,7 +35,7 @@ const mountInput = (state, options = {}) => {
 describe('sidepanel own-send scroll', () => {
   it('follows only the submitting surface and keeps a reader in place during streaming', async () => {
     const sessionId = 'own-send-scroll-integrated';
-    const storageKeys = [`peerd.draft.${sessionId}`, `peerd.unconfirmed-send.${sessionId}`];
+    const storageKeys = [`mcdollar.draft.${sessionId}`, `mcdollar.unconfirmed-send.${sessionId}`];
     for (const key of storageKeys) localStorage.removeItem(key);
     const state = /** @type {any} */ ({
       session: {
@@ -138,7 +138,7 @@ describe('sidepanel own-send scroll', () => {
       secondList.dispatchEvent(new Event('scroll'));
       state.composer = { ...state.composer, canSend: false, reason: 'controller-not-ready' };
       await settle();
-      expect(localStorage.getItem(`peerd.unconfirmed-send.${sessionId}`)).toBe(null);
+      expect(localStorage.getItem(`mcdollar.unconfirmed-send.${sessionId}`)).toBe(null);
       expect(/** @type {HTMLButtonElement} */ (surfaces[0].querySelector('button.send-btn')).disabled).toBe(true);
       await submit(surfaces[0], 'Keep the blocked draft');
       expect(sends.length).toBe(2);
@@ -173,7 +173,7 @@ describe('session-aware composer readiness', () => {
       expect(field?.getAttribute('role')).toBe(null);
     } finally {
       mounted.unmount();
-      localStorage.removeItem('peerd.draft.composer-focus-body');
+      localStorage.removeItem('mcdollar.draft.composer-focus-body');
     }
   });
 
@@ -194,7 +194,7 @@ describe('session-aware composer readiness', () => {
     } finally {
       mounted.unmount();
       other.remove();
-      localStorage.removeItem('peerd.draft.composer-focus-other');
+      localStorage.removeItem('mcdollar.draft.composer-focus-other');
     }
   });
 
@@ -216,7 +216,7 @@ describe('session-aware composer readiness', () => {
       expect(mounted.root.querySelector('textarea') instanceof HTMLTextAreaElement).toBe(true);
     } finally {
       mounted.unmount();
-      localStorage.removeItem('peerd.draft.composer-focus-modal');
+      localStorage.removeItem('mcdollar.draft.composer-focus-modal');
     }
   });
 
@@ -245,7 +245,7 @@ describe('session-aware composer readiness', () => {
     } finally {
       mounted.unmount();
       other.remove();
-      localStorage.removeItem('peerd.draft.composer-focus-redraw');
+      localStorage.removeItem('mcdollar.draft.composer-focus-redraw');
     }
   });
 
@@ -253,14 +253,14 @@ describe('session-aware composer readiness', () => {
     it(`keeps a goal receipt with its originating chat after ${throws ? 'transport failure' : 'an unknown reply'}`, async () => {
       const sessionA = `goal-receipt-a-${throws}`;
       const sessionB = `goal-receipt-b-${throws}`;
-      const key = (/** @type {string} */ id) => `peerd.unconfirmed-send.${id}`;
+      const key = (/** @type {string} */ id) => `mcdollar.unconfirmed-send.${id}`;
       const pendingB = {
         operationId: `pending-b-${throws}`, sessionId: sessionB,
         text: 'B is still pending', goal: false, hadAttachments: false, source: 'composer',
       };
       localStorage.setItem(key(sessionB), JSON.stringify(pendingB));
       const draftB = 'Keep this separate draft in B';
-      localStorage.setItem(`peerd.draft.${sessionB}`, draftB);
+      localStorage.setItem(`mcdollar.draft.${sessionB}`, draftB);
       /** @type {(value?:any)=>void} */
       let finish = () => {};
       const reply = new Promise((resolve, reject) => {
@@ -298,18 +298,18 @@ describe('session-aware composer readiness', () => {
         expect(JSON.parse(localStorage.getItem(key(sessionA)) ?? 'null').sessionId)
           .toBe(sessionA);
         expect(textarea.value).toBe(draftB);
-        expect(localStorage.getItem(`peerd.draft.${sessionB}`)).toBe(draftB);
+        expect(localStorage.getItem(`mcdollar.draft.${sessionB}`)).toBe(draftB);
         state.session = { sessionId: sessionA, provider: 'ollama' };
         await settle();
         expect(textarea.value).toBe('Goal A');
-        expect(localStorage.getItem(`peerd.draft.${sessionA}`)).toBe('Goal A');
+        expect(localStorage.getItem(`mcdollar.draft.${sessionA}`)).toBe('Goal A');
         expect(mounted.root.textContent).toContain('Check delivery');
       } finally {
         finish();
         mounted.unmount();
         for (const id of [sessionA, sessionB]) {
           localStorage.removeItem(key(id));
-          localStorage.removeItem(`peerd.draft.${id}`);
+          localStorage.removeItem(`mcdollar.draft.${id}`);
         }
       }
     });
@@ -327,7 +327,7 @@ describe('session-aware composer readiness', () => {
       const textarea = mounted.root.querySelector('textarea');
       if (!(textarea instanceof HTMLTextAreaElement)) throw new Error('textarea missing');
       expect(textarea?.disabled).toBe(false);
-      expect(textarea?.placeholder).toBe('Message peerd…');
+      expect(textarea?.placeholder).toBe('Message mcdollar…');
       textarea.value = 'hello locally';
       textarea.dispatchEvent(new Event('input', { bubbles: true }));
       m.redraw.sync?.();
@@ -336,7 +336,7 @@ describe('session-aware composer readiness', () => {
       expect(mounted.sent.some((msg) => msg.type === 'agent/send' && msg.text === 'hello locally')).toBe(true);
     } finally {
       mounted.unmount();
-      localStorage.removeItem('peerd.draft.composer-ready-ollama');
+      localStorage.removeItem('mcdollar.draft.composer-ready-ollama');
     }
   });
 
@@ -366,7 +366,7 @@ describe('session-aware composer readiness', () => {
       expect(textarea.value).toBe('keep this draft');
     } finally {
       mounted.unmount();
-      localStorage.removeItem('peerd.draft.composer-missing-openai');
+      localStorage.removeItem('mcdollar.draft.composer-missing-openai');
     }
   });
 
@@ -404,14 +404,14 @@ describe('session-aware composer readiness', () => {
       expect(textarea.value).toBe('keep this startup draft');
     } finally {
       mounted.unmount();
-      localStorage.removeItem('peerd.draft.composer-controller-startup');
+      localStorage.removeItem('mcdollar.draft.composer-controller-startup');
     }
   });
 
   it('a confirmed composer send never comes back into the composer', async () => {
     const id = 'sent-text-returns';
-    localStorage.removeItem(`peerd.draft.${id}`);
-    localStorage.removeItem(`peerd.unconfirmed-send.${id}`);
+    localStorage.removeItem(`mcdollar.draft.${id}`);
+    localStorage.removeItem(`mcdollar.unconfirmed-send.${id}`);
     /** @type {(value?:any)=>void} */
     let finish = () => {};
     const reply = new Promise((resolve) => { finish = () => resolve({ ok: true }); });
@@ -437,18 +437,18 @@ describe('session-aware composer readiness', () => {
       await settle();
       await settle();
       expect(textarea.value).toBe('');
-      expect(localStorage.getItem(`peerd.draft.${id}`)).toBe(null);
+      expect(localStorage.getItem(`mcdollar.draft.${id}`)).toBe(null);
     } finally {
       finish();
       mounted.unmount();
-      localStorage.removeItem(`peerd.draft.${id}`);
-      localStorage.removeItem(`peerd.unconfirmed-send.${id}`);
+      localStorage.removeItem(`mcdollar.draft.${id}`);
+      localStorage.removeItem(`mcdollar.unconfirmed-send.${id}`);
     }
   });
 
   it('a first send whose session id arrives before the reply never comes back', async () => {
     const created = 'created-session';
-    const keys = ['new', created].flatMap((id) => [`peerd.draft.${id}`, `peerd.unconfirmed-send.${id}`]);
+    const keys = ['new', created].flatMap((id) => [`mcdollar.draft.${id}`, `mcdollar.unconfirmed-send.${id}`]);
     for (const key of keys) localStorage.removeItem(key);
     /** @type {(value?:any)=>void} */
     let finish = () => {};
@@ -480,8 +480,8 @@ describe('session-aware composer readiness', () => {
       await settle();
       await settle();
       expect(textarea.value).toBe('');
-      expect(localStorage.getItem(`peerd.draft.${created}`)).toBe(null);
-      expect(localStorage.getItem(`peerd.unconfirmed-send.${created}`)).toBe(null);
+      expect(localStorage.getItem(`mcdollar.draft.${created}`)).toBe(null);
+      expect(localStorage.getItem(`mcdollar.unconfirmed-send.${created}`)).toBe(null);
     } finally {
       finish();
       mounted.unmount();
@@ -506,9 +506,9 @@ describe('session-aware composer readiness', () => {
   for (const from of ['this chat', 'a fresh chat']) {
     it(`an unconfirmed send from another surface on ${from} never replaces this composer draft`, async () => {
       const id = `other-surface-draft-${from.replace(/ /g, '-')}`;
-      const key = `peerd.unconfirmed-send.${id}`;
-      const seedKey = from === 'a fresh chat' ? 'peerd.unconfirmed-send.new' : key;
-      localStorage.removeItem(`peerd.draft.${id}`);
+      const key = `mcdollar.unconfirmed-send.${id}`;
+      const seedKey = from === 'a fresh chat' ? 'mcdollar.unconfirmed-send.new' : key;
+      localStorage.removeItem(`mcdollar.draft.${id}`);
       localStorage.removeItem(key);
       localStorage.removeItem(seedKey);
       const pending = { ...otherSurfaceSend(id), sessionId: seedKey === key ? id : null };
@@ -523,17 +523,17 @@ describe('session-aware composer readiness', () => {
         localStorage.setItem(seedKey, JSON.stringify(pending));
         await settle();
         expect(textarea.value).toBe('Keep my own draft');
-        expect(localStorage.getItem(`peerd.draft.${id}`)).toBe('Keep my own draft');
+        expect(localStorage.getItem(`mcdollar.draft.${id}`)).toBe('Keep my own draft');
         expect(mounted.root.textContent).toContain('Check delivery');
         localStorage.removeItem(key);
         await settle();
         expect(textarea.value).toBe('Keep my own draft');
-        expect(localStorage.getItem(`peerd.draft.${id}`)).toBe('Keep my own draft');
+        expect(localStorage.getItem(`mcdollar.draft.${id}`)).toBe('Keep my own draft');
         expect(mounted.root.textContent?.includes('Check delivery')).toBe(false);
         expect(/** @type {HTMLButtonElement|null} */ (mounted.root.querySelector('button.send-btn'))?.disabled).toBe(false);
       } finally {
         mounted.unmount();
-        localStorage.removeItem(`peerd.draft.${id}`);
+        localStorage.removeItem(`mcdollar.draft.${id}`);
         localStorage.removeItem(key);
         localStorage.removeItem(seedKey);
       }
@@ -543,9 +543,9 @@ describe('session-aware composer readiness', () => {
   for (const adoptedOn of ['redraw', 'mount', 'fresh-chat redraw']) {
     it(`a copy adopted on ${adoptedOn} clears when the other surface settles its send`, async () => {
       const id = `other-surface-${adoptedOn.replace(/ /g, '-')}`;
-      const key = `peerd.unconfirmed-send.${id}`;
-      const seedKey = adoptedOn === 'fresh-chat redraw' ? 'peerd.unconfirmed-send.new' : key;
-      localStorage.removeItem(`peerd.draft.${id}`);
+      const key = `mcdollar.unconfirmed-send.${id}`;
+      const seedKey = adoptedOn === 'fresh-chat redraw' ? 'mcdollar.unconfirmed-send.new' : key;
+      localStorage.removeItem(`mcdollar.draft.${id}`);
       localStorage.removeItem(key);
       localStorage.removeItem(seedKey);
       const pending = { ...otherSurfaceSend(id), sessionId: seedKey === key ? id : null };
@@ -564,11 +564,11 @@ describe('session-aware composer readiness', () => {
         localStorage.removeItem(key);
         await settle();
         expect(textarea.value).toBe('');
-        expect(localStorage.getItem(`peerd.draft.${id}`)).toBe(null);
+        expect(localStorage.getItem(`mcdollar.draft.${id}`)).toBe(null);
         expect(mounted.root.textContent?.includes('Check delivery')).toBe(false);
       } finally {
         mounted.unmount();
-        localStorage.removeItem(`peerd.draft.${id}`);
+        localStorage.removeItem(`mcdollar.draft.${id}`);
         localStorage.removeItem(key);
         localStorage.removeItem(seedKey);
       }

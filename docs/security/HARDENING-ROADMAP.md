@@ -21,7 +21,7 @@ Keep untrusted actor reasoning outside privileged service-worker heaps. Bind
 relay authority to a live run and its sender. Firefox and interruption paths
 must fail closed when the required isolation host is unavailable.
 
-Current source: `extension/peerd-runtime/actor/`,
+Current source: `extension/mcdollar-runtime/actor/`,
 `extension/background/offscreen-actor-client.js`,
 `extension/background/offscreen-actor-channel-client.js`, and
 `extension/offscreen/`.
@@ -33,7 +33,7 @@ the live destination, liveness, deadline, and policy after waits or redirects.
 Treat credential detection and authenticated writes as security decisions, not
 prompt guidance.
 
-Current source: `extension/peerd-runtime/actor/`, browser tool gates, and
+Current source: `extension/mcdollar-runtime/actor/`, browser tool gates, and
 service-worker routes.
 
 ### Credential custody
@@ -42,7 +42,7 @@ Prefer browser-held sessions and non-extractable proof-of-possession keys over
 bearer secrets. Bind any stored credential to one HTTPS origin and inject it
 only at the egress boundary.
 
-Current source: `extension/peerd-egress/`, vault routes, DPoP, and origin
+Current source: `extension/mcdollar-egress/`, vault routes, DPoP, and origin
 credential handling.
 
 ### Sandbox and remote code boundaries
@@ -51,7 +51,7 @@ Keep Notebook, App, WebVM, and headless execution isolated from extension
 storage, browser authority, and ambient network access. Verify remote runtime
 assets and vendored code before use.
 
-Current source: `extension/peerd-engine/`, `extension/engine-tabs/`,
+Current source: `extension/mcdollar-engine/`, `extension/engine-tabs/`,
 `extension/offscreen/`, and `extension/vendor/`.
 
 ### Durable operations and recovery
@@ -60,7 +60,7 @@ Record enough state to recover safely after service-worker or execution-host
 loss. Retry only idempotent work. Surface uncertain writes instead of silently
 repeating them.
 
-Current source: `extension/peerd-runtime/lifecycle/` and background operation
+Current source: `extension/mcdollar-runtime/lifecycle/` and background operation
 registries.
 
 ### Dweb isolation
@@ -69,7 +69,7 @@ Treat all peers, cards, bundles, apps, and inbound agent messages as untrusted.
 Separate peer conversations mechanically and require explicit sharing and
 signing authority. Prompt text is not a data-access control.
 
-Current source: `extension/peerd-distributed/`, the dweb actor routes, and
+Current source: `extension/mcdollar-distributed/`, the dweb actor routes, and
 sealed job runners.
 
 ## Update rule

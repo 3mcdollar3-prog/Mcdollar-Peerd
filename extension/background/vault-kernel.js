@@ -39,7 +39,7 @@ import {
   VaultLockedError,
   VaultNotInitializedError,
   WrongPassphraseError,
-} from '/peerd-egress/kernel-storage.js';
+} from '/mcdollar-egress/kernel-storage.js';
 import { makeUiPorts } from './ui-ports.js';
 import { makeActorIsolationStateStore, readColdActorIsolation } from './actor-isolation-state.js';
 import { ACTOR_WORKER_PROTOCOL } from '/shared/actor-worker-protocol.js';
@@ -143,11 +143,11 @@ const kernelFirefox = BROWSER === 'firefox';
 const actorHost = kernelFirefox ? 'background-page-worker' : 'offscreen-document-worker';
 const actorIsolationState = makeActorIsolationStateStore({ storage: browser.storage.local, protocol: ACTOR_WORKER_PROTOCOL });
 const makeFirefoxGuard = /** @type {any} */ (
-  globalThis)[Symbol.for('peerd.kernel.firefox-addon.v1')];
+  globalThis)[Symbol.for('mcdollar.kernel.firefox-addon.v1')];
 if (kernelFirefox !== !!makeFirefoxGuard) {
   throw new Error('kernel-firefox-addon-invalid');
 }
-const targetAddon = /** @type {any} */ (globalThis)[Symbol.for('peerd.kernel.target-addon.v1')];
+const targetAddon = /** @type {any} */ (globalThis)[Symbol.for('mcdollar.kernel.target-addon.v1')];
 if (targetAddon && (targetAddon.target !== 'preview-chrome'
     || typeof targetAddon.update !== 'function'
     || typeof targetAddon.dwebCustody !== 'function'
@@ -226,7 +226,7 @@ const denylistPolicy = createKernelDenylistPolicy({
   kv,
   readSeed: async () => {
     const response = await packagedFetch(
-      browser.runtime.getURL('peerd-egress/denylist/default.json'),
+      browser.runtime.getURL('mcdollar-egress/denylist/default.json'),
     );
     if (!response.ok) throw new Error(`denylist seed fetch failed: ${response.status}`);
     return response.json();
@@ -350,7 +350,7 @@ kernelEvents.event(
       console.error('[kernel] fresh-install vault posture failed', error);
     });
   }
-  // why: unloading peerd for an update closes its tabs, the pinned ones too.
+  // why: unloading mcdollar for an update closes its tabs, the pinned ones too.
   if (details?.reason === 'update') void firstTab.restoreAfterUpdate();
 });
 firefoxActorLifetime = kernelFirefox
@@ -938,7 +938,7 @@ attachKernelLifecycleEvents({
     void firstTab.browserStarted();
     return browserEventOwners.lifecycle.onStartup();
   },
-  alarmName: 'peerd-schedule',
+  alarmName: 'mcdollar-schedule',
   onAlarm: browserEventOwners.lifecycle.onAlarm,
   onUpdateAvailable: kernelSelfHostedChrome
     ? kernelUpdateCustody?.onUpdateAvailable

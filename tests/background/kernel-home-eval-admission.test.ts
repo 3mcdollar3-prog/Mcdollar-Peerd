@@ -3,7 +3,7 @@ import { createKernelSenderPolicy } from '../../extension/background/kernel-send
 import { makeKernelRouteProvenance, makeVaultKernelMessageHandler } from '../../extension/background/vault-kernel-core.js';
 import { makeSessionRoutes } from '../../extension/background/routes/sessions.js';
 import { makeSystemRoutes } from '../../extension/background/routes/system.js';
-import { makeAgentSendCustody } from '../../extension/peerd-egress/background.js';
+import { makeAgentSendCustody } from '../../extension/mcdollar-egress/background.js';
 
 const HOME_ROUTES = [
   'agent/send', 'agent/stop', 'session/debugBundle', 'actor-isolation/retry',

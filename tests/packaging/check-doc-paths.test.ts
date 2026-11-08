@@ -30,11 +30,11 @@ describe('extractPathRefs', () => {
 
   test('backticked paths, minus commands, globs, schemes, npm names', () => {
     const refs = extractPathRefs([
-      'Read `peerd-egress/vault/` and `tools/exposure.js`.',
+      'Read `mcdollar-egress/vault/` and `tools/exposure.js`.',
       'Run `bun run gen:dev` with `manifests/*.json` and `@xterm/xterm`.',
       'Open `chrome://extensions` and `wss://x.test/y`; see `<kind>-tab/`.',
     ].join('\n'));
-    expect(refs).toContain('peerd-egress/vault/');
+    expect(refs).toContain('mcdollar-egress/vault/');
     expect(refs).toContain('tools/exposure.js');
     expect(refs.some((r) => r.includes('*') || r.includes('<'))).toBe(false);
     expect(refs.some((r) => r.startsWith('@') || r.includes('://'))).toBe(false);
@@ -53,13 +53,13 @@ describe('resolution against the real repo', () => {
 
   test('repo-root, extension/ shorthand, and module shorthand all resolve', () => {
     expect(resolvesInRepo('packaging/lib.ts', roots)).toBe(true);
-    expect(resolvesInRepo('peerd-egress/vault', roots)).toBe(true);      // extension/
-    expect(resolvesInRepo('tools/exposure.js', roots)).toBe(true);       // peerd-runtime/
+    expect(resolvesInRepo('mcdollar-egress/vault', roots)).toBe(true);      // extension/
+    expect(resolvesInRepo('tools/exposure.js', roots)).toBe(true);       // mcdollar-runtime/
     expect(resolvesInRepo('docs/DOES-NOT-EXIST.md', roots)).toBe(false);
   });
 
   test('only plausible repo paths are checkable', () => {
-    expect(isCheckableRef('peerd-runtime/nope.js', roots)).toBe(true);   // real module, drift if missing
+    expect(isCheckableRef('mcdollar-runtime/nope.js', roots)).toBe(true);   // real module, drift if missing
     expect(isCheckableRef('UsefulSensors/moonshine', roots)).toBe(false); // HF id
     expect(isCheckableRef('/api/tags', roots)).toBe(false);              // URL path
   });

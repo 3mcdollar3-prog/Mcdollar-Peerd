@@ -8,7 +8,7 @@
 // both runtimes; we feed them binary strings (one char per byte).
 //
 // why here and not the dweb module's codec dir: store packages prune the
-// dweb module entirely, but artifact export (.peerd files, DESIGN-10)
+// dweb module entirely, but artifact export (.mcdollar files, DESIGN-10)
 // rides these same primitives and must work in store packages. The dweb
 // module imports FROM here — the legal direction.
 

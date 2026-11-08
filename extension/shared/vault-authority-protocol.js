@@ -4,7 +4,7 @@
 // routing: every call and reverse-storage operation is enumerated here.
 
 export const VAULT_AUTHORITY_PROTOCOL = 1;
-export const VAULT_AUTHORITY_OFFER = 'peerd/vault-authority-channel';
+export const VAULT_AUTHORITY_OFFER = 'mcdollar/vault-authority-channel';
 export const VAULT_AUTHORITY_BOOTSTRAP = 'vault-authority-worker/bootstrap';
 export const VAULT_AUTHORITY_READY = 'vault-authority/ready';
 export const VAULT_AUTHORITY_CALL = 'vault-authority/call';

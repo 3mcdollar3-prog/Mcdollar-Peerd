@@ -1,12 +1,12 @@
 // Scenario 08: prompt-injection benchmark versus browser-use-style agents.
 //
 // This scenario takes a corpus of injection payloads, the kind of text a hostile
-// page plants to hijack a browsing agent, and checks that peerd's architecture
+// page plants to hijack a browsing agent, and checks that mcdollar's architecture
 // denies the capability each one needs.
 //
 // A browser-use-style agent runs the model, the tools, the API key, and the
 // page's text in one reasoning context. Injected page text is therefore in the
-// same context that holds the key and the fetch tool. peerd removes live
+// same context that holds the key and the fetch tool. mcdollar removes live
 // credential closures from the actor tool context and gates every tool at
 // dispatch, so injected text can influence reasoning but cannot reach a
 // capability through that context.
@@ -19,19 +19,19 @@ import {
   type Scenario, type Probe, blocked, leaked, summarize,
 } from '../harness.ts';
 import { createActorModelEgress } from '../../../extension/offscreen/actor-model-egress.js';
-import { exposureGate, actorTierGate } from '../../../extension/peerd-runtime/tools/gates.js';
-import { decideAction } from '../../../extension/peerd-runtime/permissions/policy.js';
-import { findDenylistMatch } from '../../../extension/peerd-egress/denylist/denylist.js';
+import { exposureGate, actorTierGate } from '../../../extension/mcdollar-runtime/tools/gates.js';
+import { decideAction } from '../../../extension/mcdollar-runtime/permissions/policy.js';
+import { findDenylistMatch } from '../../../extension/mcdollar-egress/denylist/denylist.js';
 import { isPrivateOrLocalHost } from '../../../extension/shared/private-network.js';
-import { makeSafeFetch } from '../../../extension/peerd-egress/fetch/safe-fetch.js';
-import { neutralizeFence } from '../../../extension/peerd-runtime/tools/prompt-wrap.js';
-import { EgressDeniedError } from '../../../extension/peerd-egress/fetch/errors.js';
-import { resolveRuntimeCapabilities } from '../../../extension/peerd-runtime/runtime-capabilities.js';
+import { makeSafeFetch } from '../../../extension/mcdollar-egress/fetch/safe-fetch.js';
+import { neutralizeFence } from '../../../extension/mcdollar-runtime/tools/prompt-wrap.js';
+import { EgressDeniedError } from '../../../extension/mcdollar-egress/fetch/errors.js';
+import { resolveRuntimeCapabilities } from '../../../extension/mcdollar-runtime/runtime-capabilities.js';
 
 interface InjectionCase {
   payload: string;         // the text a hostile page plants
   seeks: string;           // the authority it needs to succeed
-  defense: string;         // the peerd mechanism that denies it
+  defense: string;         // the mcdollar mechanism that denies it
   singleContextAgent: string; // why a browser-use-style agent is exposed to the same payload
   check(): Promise<{ denied: boolean; evidence: string }>;
 }
@@ -164,14 +164,14 @@ const CORPUS: InjectionCase[] = [
   },
 ];
 
-export const comparison = CORPUS.map((c) => ({ seeks: c.seeks, peerd: c.defense, singleContext: c.singleContextAgent }));
+export const comparison = CORPUS.map((c) => ({ seeks: c.seeks, mcdollar: c.defense, singleContext: c.singleContextAgent }));
 
 export const scenario: Scenario = {
   id: '08-prompt-injection-benchmark',
   title: 'Prompt-injection benchmark (versus single-context agents)',
   adversary: 'malicious model output / injected page content',
   asset: 'every capability an injected instruction might try to reach',
-  claim: 'For a corpus of injection payloads, the capability each one needs is denied by a real peerd mechanism (isolated exact relays, exposure and tier gates, runtime host capability gates, Plan mode, denylist, SSRF guard, egress allowlist, structural fence). Injected text can influence reasoning but cannot reach a capability.',
+  claim: 'For a corpus of injection payloads, the capability each one needs is denied by a real mcdollar mechanism (isolated exact relays, exposure and tier gates, runtime host capability gates, Plan mode, denylist, SSRF guard, egress allowlist, structural fence). Injected text can influence reasoning but cannot reach a capability.',
   threatModelRef: 'INV-8',
   tier: 'unit',
   async run() {

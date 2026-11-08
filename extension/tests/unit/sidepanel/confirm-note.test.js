@@ -65,7 +65,7 @@ describe('sidepanel.confirm note (issue 242)', () => {
   it('the note alone does not change the buttons', () => {
     const { root, unmount } = mount({ ...base, note: NOTE });
     try {
-      const labels = [...root.querySelectorAll('.peerd-modal-actions button')].map((b) => b.textContent);
+      const labels = [...root.querySelectorAll('.mcdollar-modal-actions button')].map((b) => b.textContent);
       // §4d: the session button says what it grants - the noun from the action
       // class (page_write has no dedicated noun → 'actions') and the true scope
       // (no origins on this prompt → the grant really is origin-blind).
@@ -92,7 +92,7 @@ describe('sidepanel.confirm note (issue 242)', () => {
       expect(values).toEqual([target, 'submit_payment']);
       expect(claim.textContent.includes('Exact target')).toBe(true);
       expect(claim.textContent.includes('Action')).toBe(true);
-      const buttons = [...root.querySelectorAll('.peerd-modal-actions button')];
+      const buttons = [...root.querySelectorAll('.mcdollar-modal-actions button')];
       expect(buttons.map((button) => button.textContent)).toEqual(['Reject', 'Allow once']);
       expect(buttons[1].classList.contains('lifecycle-confirm-allow')).toBe(true);
     } finally { unmount(); }
@@ -107,7 +107,7 @@ describe('sidepanel.confirm note (issue 242)', () => {
     // real way out.
     const { root, unmount } = mount({ ...base, note: NOTE, ephemeral: true });
     try {
-      const labels = [...root.querySelectorAll('.peerd-modal-actions button')].map((b) => b.textContent);
+      const labels = [...root.querySelectorAll('.mcdollar-modal-actions button')].map((b) => b.textContent);
       expect(labels).toEqual(['Reject', 'Allow once']);
     } finally { unmount(); }
   });

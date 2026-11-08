@@ -104,7 +104,7 @@ describe('App editor quiescence', () => {
     await quiescence.run('app-1', async () => 'done', { close: true });
     await Promise.resolve();
     expect(reopened).toEqual([{
-      active: false, groupTitle: 'peerd', ownerSessionId: 'current-chat-root',
+      active: false, groupTitle: 'mcdollar', ownerSessionId: 'current-chat-root',
     }]);
   });
 });

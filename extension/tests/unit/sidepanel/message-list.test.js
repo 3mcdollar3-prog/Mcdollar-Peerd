@@ -275,7 +275,7 @@ describe('sidepanel.message-list updates and aborted cards', () => {
   });
 });
 
-describe('sidepanel.message-list peerd tab notice', () => {
+describe('sidepanel.message-list mcdollar tab notice', () => {
   it('shows a stopped child action on the collapsed tool card', async () => {
     const policy = {
       reason: 'protected_child_navigation', outcome: 'not_run', child: 'closed', retryable: false,
@@ -397,7 +397,7 @@ describe('sidepanel.message-list peerd tab notice', () => {
     } finally { unmount(); }
   });
 
-  it('announces each newly opened peerd task tab once', async () => {
+  it('announces each newly opened mcdollar task tab once', async () => {
     const attrs = { sessionId: 's1', tabEvents: /** @type {any[]} */ ([]) };
     const { root, unmount } = mount([], attrs);
     try {
@@ -427,7 +427,7 @@ describe('sidepanel.message-list peerd tab notice', () => {
     } finally { unmount(); }
   });
 
-  it('announces when a peerd web tab is later reported as unguarded', async () => {
+  it('announces when a mcdollar web tab is later reported as unguarded', async () => {
     const event = { key: 'tab-changed', tabId: 4, label: 'a tab', protected: true, turnId: null };
     const attrs = { sessionId: 's1', tabEvents: /** @type {any[]} */ ([event]) };
     const { root, unmount } = mount([], attrs);
@@ -469,9 +469,9 @@ describe('sidepanel.message-list turn announcements', () => {
       expect(announced(root)).toBe('');
       attrs.streaming = false;
       m.redraw.sync();
-      expect(announced(root)).toBe('peerd replied: Hello there. Second line.');
+      expect(announced(root)).toBe('mcdollar replied: Hello there. Second line.');
       m.redraw.sync();
-      expect(announced(root)).toBe('peerd replied: Hello there. Second line.');
+      expect(announced(root)).toBe('mcdollar replied: Hello there. Second line.');
       expect(root.querySelectorAll('[role="status"]').length).toBe(0);
     } finally { unmount(); }
   });
@@ -485,7 +485,7 @@ describe('sidepanel.message-list turn announcements', () => {
       messages[1] = { ...messages[1], content: 'Done.', streaming: false };
       attrs.streaming = false;
       m.redraw.sync();
-      expect(announced(root)).toBe('peerd replied: Done.');
+      expect(announced(root)).toBe('mcdollar replied: Done.');
       messages.push({ role: 'user', id: 'u2', content: 'again' },
         { role: 'assistant', id: 'a2', content: '', streaming: true });
       attrs.streaming = true;
@@ -494,7 +494,7 @@ describe('sidepanel.message-list turn announcements', () => {
       messages[3] = { ...messages[3], content: 'Done.', streaming: false };
       attrs.streaming = false;
       m.redraw.sync();
-      expect(announced(root)).toBe('peerd replied: Done.');
+      expect(announced(root)).toBe('mcdollar replied: Done.');
     } finally { unmount(); }
   });
 
@@ -512,7 +512,7 @@ describe('sidepanel.message-list turn announcements', () => {
       stopped[1] = { ...stopped[1], content: 'half an answer', streaming: false, stopReason: 'aborted' };
       stoppedAttrs.streaming = false;
       m.redraw.sync();
-      expect(announced(first.root)).toBe('peerd could not reply.');
+      expect(announced(first.root)).toBe('mcdollar could not reply.');
       expect(announced(second.root)).toBe('');
     } finally { first.unmount(); second.unmount(); }
   });
@@ -526,7 +526,7 @@ describe('sidepanel.message-list turn announcements', () => {
       messages[1] = { ...messages[1], content: 'A new reply.', streaming: false };
       attrs.streaming = false;
       m.redraw.sync();
-      expect(announced(root)).toBe('peerd replied: A new reply.');
+      expect(announced(root)).toBe('mcdollar replied: A new reply.');
       messages.splice(0, messages.length, { role: 'assistant', id: 'b1', content: 'An older reply.' });
       attrs.sessionId = 's2';
       attrs.streaming = false;
@@ -644,7 +644,7 @@ describe('sidepanel.message-list actor-reply bubbles', () => {
         + 'actor_identity_provider_transit_only actor_sensitive_tab_requires_site '
         + 'actor_tab_sensitivity_unavailable actor_isolation_temporarily_unavailable '
         + 'actor_isolation_unavailable. Do not retry automatically. '
-        + 'Ask the user to reload peerd before another actor attempt.',
+        + 'Ask the user to reload mcdollar before another actor attempt.',
     }]);
     try {
       await flush();
@@ -691,7 +691,7 @@ describe('sidepanel.message-list actor disclosures', () => {
           kind: 'web', instanceId: 'web', streaming: false,
           performed: false, outcomeKnown: true,
           error: 'actor-provider-boundary-blocked: The actor model request was not run. '
-            + 'Do not retry automatically. Ask the user to reload peerd before another actor attempt.',
+            + 'Do not retry automatically. Ask the user to reload mcdollar before another actor attempt.',
         },
       },
     });

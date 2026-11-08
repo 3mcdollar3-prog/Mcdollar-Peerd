@@ -88,7 +88,7 @@ const nameView = ({ name, cls, onOpen }) => onOpen
   ? m(`button.disc-tile-open${cls}`, { type: 'button', dir: 'auto', title: name, onclick: onOpen }, name)
   : m(`div${cls}`, { dir: 'auto', title: name }, name);
 
-// why no line without a card: peerd then does not know what the maker said
+// why no line without a card: mcdollar then does not know what the maker said
 // (see descriptionLine).
 /** @param {unknown} description @param {string} selector */
 const descriptionView = (description, selector) => {
@@ -194,7 +194,7 @@ export const refreshButton = ({ spinning, onclick }) => m('button.icon.disc-refr
 }, icon('refresh', 16));
 
 /** @type {ReadonlyArray<[Pill, string]>} */
-const PILLS = Object.freeze([['all', 'All'], ['contacts', 'From people you know'], ['updates', 'Updates'], ['included', 'Comes with peerd']]);
+const PILLS = Object.freeze([['all', 'All'], ['contacts', 'From people you know'], ['updates', 'Updates'], ['included', 'Comes with mcdollar']]);
 /** @param {{value:Pill, onSelect:(pill:Pill)=>void}} props */
 export const pills = ({ value, onSelect }) => m('.disc-pills', { role: 'group', 'aria-label': 'Show' },
   PILLS.map(([id, label]) => m('button.disc-pill', { type: 'button', 'aria-pressed': String(value === id), onclick: () => onSelect(id) }, label)));
@@ -217,7 +217,7 @@ export const emptyState = ({ title, text, actions, boxed, waiting }) => m('.disc
   class: boxed ? 'disc-empty--boxed' : '',
 }, [
   title && waiting ? m('.disc-empty-waiting', [
-    m('span.peerd-spinner.peerd-spinner--sm', { 'aria-hidden': 'true' }), m('h2.type-heading', { role: 'status' }, title),
+    m('span.mcdollar-spinner.mcdollar-spinner--sm', { 'aria-hidden': 'true' }), m('h2.type-heading', { role: 'status' }, title),
   ]) : title ? m('h2.type-heading', title) : null,
   m('p.type-body-sm', text),
   actions.some(Boolean) ? m('.disc-empty-actions', actions) : null,
@@ -255,7 +255,7 @@ const ARIA_CURRENT = new Set(['current', 'working', 'failed', 'unknown']);
 // done step shows no line of its own, so only these words say it is done.
 /** @param {StepState} state @param {number} n */
 const stepMark = (state, n) => state === 'done' ? [icon('check', 14), m('span.sr-only', 'Done: ')]
-  : state === 'working' ? m('span.peerd-spinner', { 'aria-hidden': 'true' })
+  : state === 'working' ? m('span.mcdollar-spinner', { 'aria-hidden': 'true' })
     : state === 'failed' ? icon('x', 13) : String(n);
 
 /** @param {string} label @param {()=>void} onclick */
@@ -273,7 +273,7 @@ const linkButton = (label, onclick) => m('button.linklike.disc-link-btn', { type
  * `otherVersion`: the Library holds another version, so the installed line
  * claims no version. `fresh`: this visit installed it, so the line says so
  * and names it; `updated`: this visit updated it. `changed`: the copy changed
- * on this device, and peers still get the version peerd checked, never the
+ * on this device, and peers still get the version mcdollar checked, never the
  * edits. `steps`: false for an app the user made, which they never installed.
  * `secondary` sits next to `primary`; `sharing` explains what
  * Install and share does; `onLibrary` adds Go to Library next to Open.
@@ -314,7 +314,7 @@ export const installPanel = ({
             : 'In your Library. Other people can get it from you while your peer network is on.') : null,
     state === 'failed' && failure ? [
       failure.cancelled ? m('p.type-body-sm', { role: 'status' }, failure.action === 'update' ? 'Update cancelled. Your installed version is unchanged.' : 'Installation cancelled.')
-        : m('p.error.disc-panel-error', { role: 'alert' }, ['peerd could not ', failure.action, ' ', m('bdi', name), '.']),
+        : m('p.error.disc-panel-error', { role: 'alert' }, ['mcdollar could not ', failure.action, ' ', m('bdi', name), '.']),
       m('p.type-body-sm.disc-hint', failure.hint),
     ] : null,
     state === 'unknown' && unknown ? [
@@ -363,7 +363,7 @@ export const conflictPanel = ({ disabled, onFork, onReplace, onCancel }) => m('.
 
 export const cantRunPanel = () => m('.disc-panel', m('p.type-body-sm', [
   m('strong', 'This browser cannot run this app.'),
-  ' It needs a feature that peerd cannot use here. Technical details says which one.',
+  ' It needs a feature that mcdollar cannot use here. Technical details says which one.',
 ]));
 
 /** @param {string} name @param {unknown} text */
@@ -372,17 +372,17 @@ const safetyRow = (name, text) => m('.disc-safety-row', [
   m('span.type-body-sm.disc-safety-text', text),
 ]);
 // why "by itself": the app sandbox CSP blocks every network request of its
-// own, but an app can still reach peers through peerd.
+// own, but an app can still reach peers through mcdollar.
 // why `checked`: a share link was inspected ('link'), or the Library holds
 // this version ('installed', or 'updated' on the visit that updated it), so
-// peerd has checked every file. A heard card is
+// mcdollar has checked every file. A heard card is
 // only a claim. why the past for 'installed': an edit on this device can
 // change the files after the install, so the check belongs to the install.
 // `action` names what the page offers: an update page updates.
-// why `mine` outranks `checked`: the user made the app, so peerd may never have
+// why `mine` outranks `checked`: the user made the app, so mcdollar may never have
 // checked it at an install. Its one line is true in every case. `installed`:
 // the Library holds the user's app. `changed`:
-// the copy in the Library is no longer the files peerd checked, so it says so.
+// the copy in the Library is no longer the files mcdollar checked, so it says so.
 const SAFETY_TITLE = 'disc-safety-title';
 /**
  * @param {{maker:Maker|null, checked:'link'|'installed'|'updated'|null, action?:'install'|'update', mine?:boolean,
@@ -393,12 +393,12 @@ export const safetyLines = ({ maker, checked, action = 'install', mine = false, 
   const who = maker?.name ? m('bdi', maker.name) : 'its maker';
   const check = changed ? [checked === 'updated' ? 'It changed on this device after you updated it.'
     : 'It changed on this device after you installed it.', ' It is no longer exactly the app ', who, ' shared.']
-    : checked === 'installed' ? ['When you installed it, peerd checked that it was exactly the app ', who, ' shared.']
-      : checked === 'updated' ? ['When you updated it, peerd checked that it was exactly the app ', who, ' shared.']
-        : checked === 'link' ? ['peerd checked that this is exactly the app ', who, ' shared.']
-          : [`When you ${action} it, peerd checks that every file is exactly what `, who, ' shared.'];
+    : checked === 'installed' ? ['When you installed it, mcdollar checked that it was exactly the app ', who, ' shared.']
+      : checked === 'updated' ? ['When you updated it, mcdollar checked that it was exactly the app ', who, ' shared.']
+        : checked === 'link' ? ['mcdollar checked that this is exactly the app ', who, ' shared.']
+          : [`When you ${action} it, mcdollar checks that every file is exactly what `, who, ' shared.'];
   const own = installed ? 'You made this app. Other people get the files you share from your Library.'
-    : 'You made this app. It is not in your Library now. When you install it, peerd checks that every file is exactly what you shared.';
+    : 'You made this app. It is not in your Library now. When you install it, mcdollar checks that every file is exactly what you shared.';
   return m('section.disc-section.disc-safety', { 'aria-labelledby': SAFETY_TITLE }, [
     m('h3.type-label-strong', { id: SAFETY_TITLE }, 'What to know'),
     safetyRow('key', mine ? own : [...made, ...check, ' Nobody reviewed it for safety.']),
@@ -410,7 +410,7 @@ export const safetyLines = ({ maker, checked, action = 'install', mine = false, 
 const SAYS_TITLE = 'disc-says-title';
 /**
  * "The app says it", under What to know: chips for what the app's own files
- * ask of peerd, or one line. saysIt in discover-model.js picks every word.
+ * ask of mcdollar, or one line. saysIt in discover-model.js picks every word.
  * @param {SaysIt} props
  */
 export const saysItSection = ({ kind, chips, line, note }) => m('section.disc-section.disc-says', { 'aria-labelledby': SAYS_TITLE }, [
@@ -524,7 +524,7 @@ export const renameForm = ({ value, busy, failed, canSave, oninput, onSave, onCa
     m('button.disc-primary', { type: 'submit', disabled: busy || !canSave }, busy ? 'Saving…' : 'Save'),
     m('button.secondary.disc-btn', { type: 'button', disabled: busy, onclick: onCancel }, 'Cancel'),
   ]),
-  failed ? m('p.error', { role: 'alert' }, 'peerd could not save the name. Try again.') : null,
+  failed ? m('p.error', { role: 'alert' }, 'mcdollar could not save the name. Try again.') : null,
 ]);
 
 /** A blocked maker's page says so in place of their apps. Focus lands here after a block. @param {{maker:Maker}} props */
@@ -581,9 +581,9 @@ const dialogKeys = (onClose) => (/** @type {KeyboardEvent & {redraw?:boolean}} *
  *   copyDisabled:boolean, onCopy:()=>void, onClose:()=>void}} props
  */
 export const shareDialog = ({ name, letter, tone, address, maker, status, copyDisabled, onCopy, onClose }) =>
-  m('.peerd-modal-backdrop.disc-share-backdrop', {
+  m('.mcdollar-modal-backdrop.disc-share-backdrop', {
     onclick: (/** @type {MouseEvent} */ event) => { if (event.target === event.currentTarget) onClose(); },
-  }, m('.peerd-modal.disc-share', {
+  }, m('.mcdollar-modal.disc-share', {
     role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': SHARE_TITLE, tabindex: -1, onkeydown: dialogKeys(onClose),
   }, [
     m('.disc-share-head', [
@@ -591,7 +591,7 @@ export const shareDialog = ({ name, letter, tone, address, maker, status, copyDi
       m('h2.type-heading', { id: SHARE_TITLE }, ['Share ', m('bdi', name)]),
       m('button.icon.disc-share-close', { type: 'button', 'aria-label': 'Close', onclick: onClose }, icon('x', 16)),
     ]),
-    m('p.type-body-sm', 'Send this link to a friend. They open it in peerd with the peer network on, and can look at the app before they install it.'),
+    m('p.type-body-sm', 'Send this link to a friend. They open it in mcdollar with the peer network on, and can look at the app before they install it.'),
     m('label.type-label-strong', { for: SHARE_LINK }, 'Share link'),
     m('.disc-share-row', [
       m('input.disc-share-link', {
@@ -603,7 +603,7 @@ export const shareDialog = ({ name, letter, tone, address, maker, status, copyDi
     // why a stable status node: a live region must exist before its text changes.
     m('p.type-small.disc-share-status', { role: 'status', style: status ? null : 'position:absolute' }, status === 'copied'
       ? [icon('check', 14), 'Link copied.']
-      : status === 'failed' ? 'peerd could not copy the link. Select it and copy it yourself.' : null),
+      : status === 'failed' ? 'mcdollar could not copy the link. Select it and copy it yourself.' : null),
     // why `you` first: the user made the app, so the update is theirs to make.
     m('p.type-small.disc-footnote', maker?.you
       ? 'The link points to this exact version. If you update the app later, your friend still gets the version you shared.'
@@ -621,22 +621,22 @@ const BLOCK_TEXT = 'disc-block-text';
  * section ignores Cancel.
  * @param {{maker:Maker, busy:boolean, issue:'failed'|'unknown'|null, onConfirm:()=>void, onCancel:()=>void, onCheck:()=>void}} props
  */
-export const blockDialog = ({ maker, busy, issue, onConfirm, onCancel, onCheck }) => m('.peerd-modal-backdrop.disc-block-backdrop', {
+export const blockDialog = ({ maker, busy, issue, onConfirm, onCancel, onCheck }) => m('.mcdollar-modal-backdrop.disc-block-backdrop', {
   onclick: (/** @type {MouseEvent} */ event) => { if (event.target === event.currentTarget) onCancel(); },
-}, m('.peerd-modal.disc-block', {
+}, m('.mcdollar-modal.disc-block', {
   role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': BLOCK_TITLE, 'aria-describedby': BLOCK_TEXT, tabindex: -1,
   onkeydown: dialogKeys(onCancel),
 }, [
   m('h2.type-heading', { id: BLOCK_TITLE }, ['Block ', makerName(maker), '?']),
   m('p.type-body-sm', { id: BLOCK_TEXT },
-    'Their apps leave Discover. peerd stops downloading their files and disconnects from them. Apps you already installed stay in your Library.'),
+    'Their apps leave Discover. mcdollar stops downloading their files and disconnects from them. Apps you already installed stay in your Library.'),
   m('p.type-small.disc-footnote', 'You can undo this in Contacts.'),
-  issue === 'failed' ? m('p.error', { role: 'alert' }, ['peerd could not block ', makerName(maker), '. Try again.']) : null,
+  issue === 'failed' ? m('p.error', { role: 'alert' }, ['mcdollar could not block ', makerName(maker), '. Try again.']) : null,
   issue === 'unknown'
-    ? m('p.type-body-sm', { role: 'status' }, ['peerd is not sure ', makerName(maker), ' is blocked. Check again before you try again.'])
+    ? m('p.type-body-sm', { role: 'status' }, ['mcdollar is not sure ', makerName(maker), ' is blocked. Check again before you try again.'])
     : null,
   // why keyed: Check again replaces Block, and a reused node would keep its focus.
-  m('.peerd-modal-actions.disc-block-actions', keyedParts({
+  m('.mcdollar-modal-actions.disc-block-actions', keyedParts({
     cancel: m('button.secondary.disc-btn', { type: 'button', 'data-block-cancel': '', disabled: busy, onclick: onCancel }, 'Cancel'),
     check: issue === 'unknown' ? m('button.secondary.disc-btn', {
       type: 'button', 'data-block-check': '', disabled: busy, onclick: onCheck,

@@ -1,7 +1,7 @@
 // @ts-check
 // Firefox-only storage.session event-page lifetime lease.
 
-export const FIREFOX_ACTOR_KEEPALIVE_KEY = 'peerdActorHostKeepAlive';
+export const FIREFOX_ACTOR_KEEPALIVE_KEY = 'mcdollarActorHostKeepAlive';
 export const FIREFOX_ACTOR_KEEPALIVE_MS = 10_000;
 export const FIREFOX_ACTOR_KEEPALIVE_ACK_MS = 2_000;
 

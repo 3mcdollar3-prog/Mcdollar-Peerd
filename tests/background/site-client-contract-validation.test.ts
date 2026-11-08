@@ -1,10 +1,10 @@
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { useFakeIndexedDB } from '../setup.ts';
-import { createSiteClientStore } from '../../extension/peerd-runtime/site-clients/store.js';
-import { siteClientValidatedOperations } from '../../extension/peerd-runtime/site-clients/core.js';
+import { createSiteClientStore } from '../../extension/mcdollar-runtime/site-clients/store.js';
+import { siteClientValidatedOperations } from '../../extension/mcdollar-runtime/site-clients/core.js';
 import { createScriptRunRegistry } from '../../extension/background/script-runs.js';
-import { siteClientRunTool } from '../../extension/peerd-runtime/tools/defs/site-client-run.js';
-import { siteClientReadTool } from '../../extension/peerd-runtime/tools/defs/site-client-read.js';
+import { siteClientRunTool } from '../../extension/mcdollar-runtime/tools/defs/site-client-run.js';
+import { siteClientReadTool } from '../../extension/mcdollar-runtime/tools/defs/site-client-read.js';
 import { executeSiteClientTool } from '../helpers/site-client-tool.ts';
 
 beforeAll(async () => { await useFakeIndexedDB(); });

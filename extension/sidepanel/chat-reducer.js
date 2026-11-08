@@ -65,7 +65,7 @@ import { validateKernelStateProjection } from '/shared/kernel-state-contract.js'
  * @property {{ mode?: string, confirmActions?: boolean }} [permission]
  * @property {string} [customSystemPrompt]
  * @property {string} [toolManifest]
- * @property {import('/peerd-runtime/todo/core.js').TodoItem[]} [todos]  the goal run's plan-of-record (TodoCard)
+ * @property {import('/mcdollar-runtime/todo/core.js').TodoItem[]} [todos]  the goal run's plan-of-record (TodoCard)
  * @property {{id:string,text:string,at:number}|null} [goalStopNote]
  */
 
@@ -167,11 +167,11 @@ export const INITIAL_STATE = Object.freeze({
   session: { sessionId: null, messages: [], cost: null },
   providers: { current: 'anthropic', hasKey: false, model: 'claude-sonnet-4-6' },
   // Default profile: peerName labels assistant transcript rows;
-  // onboardingComplete gates the first-run "Hello, I'm peerd" screen.
+  // onboardingComplete gates the first-run "Hello, I'm mcdollar" screen.
   // why assume complete here: only a real SW push (which carries the
   // persisted latch) may open the gate — never a first paint, so
   // existing installs can't flash the onboarding screen on load.
-  profile: { id: 'default', peerName: 'peerd', onboardingComplete: true },
+  profile: { id: 'default', peerName: 'mcdollar', onboardingComplete: true },
   settings: { reasoningEnabled: true, spendLimitUsd: 0, pricingOverrides: {} },
   pendingConfirm: null,
   // Cost/usage telemetry (feature 06). `cost.turn` is the live tally for
@@ -199,7 +199,7 @@ export const INITIAL_STATE = Object.freeze({
   // { tabId, label, windowId } | null. The LIVE pointer; client-side (not in the
   // SW snapshot), updated by 'agent/tab' pushes; cleared when the tab closes.
   agentTab: null,
-  // Inline "peerd opened a tab" notices — one per DISTINCT tab the agent opened
+  // Inline "mcdollar opened a tab" notices — one per DISTINCT tab the agent opened
   // this session, each anchored to the message that was latest when it opened, so
   // it renders inline in the transcript and fades into the backlog as the chat
   // continues (DECISIONS #26 / the owner's call — replaces the old bright sticky
@@ -260,7 +260,7 @@ export const resetChatAfterRuntimeLoss = (/** @type {ChatState} */ state) => ({
  *  @returns {string|null} */
 const confirmSettleText = ({ cause, answer, via }) => {
   if (cause === 'timeout') return 'Not approved - no answer in two minutes.';
-  if (cause === 'unreachable') return 'Not approved - peerd wasn’t open to ask.';
+  if (cause === 'unreachable') return 'Not approved - mcdollar wasn’t open to ask.';
   if (cause === 'stop' || cause === 'abort') return 'Not approved - you stopped the turn.';
   if (cause === 'answer') {
     const verdict = answer === 'no' ? 'Not approved'
@@ -1059,7 +1059,7 @@ export const reduceChat = (state, msg) => {
     case 'turn/rate-limit-pause':
       if (state.session.sessionId && msg.sessionId && state.session.sessionId !== msg.sessionId) return state;
       return { ...state, rateLimit: { attempt: msg.attempt ?? null, retryAfterMs: msg.retryAfterMs ?? null } };
-    // #234: peerd is deliberately idle until a site's stated pause runs out.
+    // #234: mcdollar is deliberately idle until a site's stated pause runs out.
     // Session-guarded like every other lifecycle pulse - a background turn
     // waiting on one site must not paint the chat the user is reading.
     case 'turn/pacing-wait':
@@ -1132,7 +1132,7 @@ export const reduceChat = (state, msg) => {
         { id: msg.id ?? Date.now() + Math.random(), text: msg.text, action: msg.action ?? null,
           sessionId: msg.sessionId ?? null }].slice(-3) };
     case 'agent/tab': {
-      // The inline "peerd opened a tab" notice: minted the first time peerd OPENS
+      // The inline "mcdollar opened a tab" notice: minted the first time mcdollar OPENS
       // a tab, then RESURFACED into the current turn whenever the agent acts on it
       // again (so it follows the agent's attention and bubbles to the turn's end).
       // Cleared pointer (tab closed) → keep the notices (transcript history).
@@ -1175,7 +1175,7 @@ export const reduceChat = (state, msg) => {
           : e));
         return { ...state, agentTab: tab, agentTabEvents: events };
       }
-      // A NEW tab → mint a notice ONLY if peerd opened it (not when the agent
+      // A NEW tab → mint a notice ONLY if mcdollar opened it (not when the agent
       // merely acted on a tab the user opened — opened:false).
       if (tab.opened === false) return { ...state, agentTab: tab };
       const ev = {

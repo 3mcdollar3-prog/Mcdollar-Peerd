@@ -5,7 +5,7 @@ import { createKernelContactsAuthority } from './kernel-contacts-authority.js';
 import { createKernelSemanticControl } from './kernel-semantic-control.js';
 import { createKernelMemoryAuthority } from './kernel-memory-authority.js';
 import { makeContactsRoutes } from './routes/contacts.js';
-import { mergeContacts } from '/peerd-runtime/contacts/aggregate.js';
+import { mergeContacts } from '/mcdollar-runtime/contacts/aggregate.js';
 import { kernelAppCatalogRows } from './kernel-app-catalog.js';
 import { createKernelTurnOwner } from './kernel-turn-owner.js';
 import { KERNEL_SESSION_TURN_ROUTE_NAMES } from './kernel-session-turn-routes.js';
@@ -183,7 +183,7 @@ export const createKernelSemanticRuntime = (deps) => {
     let paths = [];
     if (deps.appFiles) {
       try {
-        manifestText = await deps.appFiles.readText(appId, 'peerd.json');
+        manifestText = await deps.appFiles.readText(appId, 'mcdollar.json');
         paths = await deps.appFiles.listApp(appId);
       } catch (cause) {
         if (/** @type {{name?:unknown}} */ (cause)?.name !== 'NotFoundError') {

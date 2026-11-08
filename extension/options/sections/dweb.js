@@ -64,20 +64,20 @@ export const DwebSection = {
         if (reply?.outcomeKnown === false) {
           ui.dwebOutcomeUnknown = true;
           ui.dwebStopIncomplete = false;
-          ui.dwebError = 'Peerd could not confirm whether the dweb change finished. Reload settings to reconcile before changing it again.';
+          ui.dwebError = 'Mcdollar could not confirm whether the dweb change finished. Reload settings to reconcile before changing it again.';
         } else if (reply?.ok) {
           ui.dwebOutcomeUnknown = false;
           ui.dwebStopIncomplete = false;
         } else if (!targetEnabled && reply?.settings?.dwebEnabled === false) {
           ui.dwebStopIncomplete = true;
-          ui.dwebError = 'dweb is set to Off, but the live network could not be stopped. Restart peerd or try again.';
+          ui.dwebError = 'dweb is set to Off, but the live network could not be stopped. Restart mcdollar or try again.';
         } else {
           ui.dwebError = 'Could not update dweb. Try again.';
         }
       } catch {
         ui.dwebOutcomeUnknown = true;
         ui.dwebStopIncomplete = false;
-        ui.dwebError = 'Peerd could not confirm whether the dweb change finished. Reload settings to reconcile before changing it again.';
+        ui.dwebError = 'Mcdollar could not confirm whether the dweb change finished. Reload settings to reconcile before changing it again.';
       } finally {
         ui.dwebBusy = false;
         m.redraw();
@@ -105,7 +105,7 @@ export const DwebSection = {
         : stopFailed
           ? 'Set to Off, but the live network is still running. Retry to stop it.'
           : dwebEnabled
-            ? 'This peerd can join dweb rooms with other instances and run peer-to-peer dwapps.'
+            ? 'This mcdollar can join dweb rooms with other instances and run peer-to-peer dwapps.'
             : 'The peer network is off. Enable it to discover and share peer-hosted apps.',
       why: dwebEnabled
         ? 'The peer network connects this browser to other peers to discover, '
@@ -137,8 +137,8 @@ export const DwebSection = {
         'This is research-grade. The protocol may change; data formats '
         + 'may evolve. Network participation is off until you enable it.',
       ]),
-      m('p', 'You’re running peerd with the dweb preview enabled. '
-        + 'The core extension is the same peerd that ships on the stores - '
+      m('p', 'You’re running mcdollar with the dweb preview enabled. '
+        + 'The core extension is the same mcdollar that ships on the stores - '
         + 'only this dweb overlay is preview.'),
       networkRow,
       ui.dwebError ? m('p.error', { role: 'alert' }, ui.dwebError) : null,

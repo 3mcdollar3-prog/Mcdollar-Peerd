@@ -143,8 +143,8 @@ describe('first tab: what the tab shows', () => {
   });
 
   test('titles say the state in plain words and restore the page title at rest', () => {
-    expect(presenceTitle('working', 'home', false)).toBe('peerd is working…');
-    expect(presenceTitle('reply', 'home', false)).toBe('peerd has a reply');
+    expect(presenceTitle('working', 'home', false)).toBe('mcdollar is working…');
+    expect(presenceTitle('reply', 'home', false)).toBe('mcdollar has a reply');
     expect(presenceTitle('idle', 'home', false)).toBe('home');
   });
 

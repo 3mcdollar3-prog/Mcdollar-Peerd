@@ -66,7 +66,7 @@ const nativeBodyAllowed = (providerId, body, modelId) => {
 
 /**
  * Redeem media without exposing a general opaque-value resolver. Only the two
- * provider-native media locations emitted by Peerd's formatters are accepted.
+ * provider-native media locations emitted by Mcdollar's formatters are accepted.
  * @param {string} providerId
  * @param {Record<string,any>} body
  * @param {(token:string)=>string|null} redeemOpaque

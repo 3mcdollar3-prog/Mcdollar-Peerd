@@ -2,7 +2,7 @@
 
 import { parseSkillDocument, SkillParseError, validSkillProjection } from '../shared/skill-document.js';
 
-const DB_NAME = 'peerd-skills';
+const DB_NAME = 'mcdollar-skills';
 const DB_VERSION = 1;
 const META_STORE = 'meta';
 const BODY_STORE = 'bodies';

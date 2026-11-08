@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { stripUntrustedFences } from '../../extension/shared/util.js';
-import { wrapUntrusted } from '../../extension/peerd-runtime/tools/prompt-wrap.js';
+import { wrapUntrusted } from '../../extension/mcdollar-runtime/tools/prompt-wrap.js';
 
 // The strip is the display-only inverse of the wrap: the model gets the fence,
 // the human never sees the literal <untrusted_*> tags in a tool-result card.
@@ -59,7 +59,7 @@ describe('stripUntrustedFences — legit text preservation', () => {
     expect(stripUntrustedFences(s)).toBe(s);
   });
   test('prose mentioning the tag name (no angle brackets) is untouched', () => {
-    const s = 'the untrusted_web_content fence is how peerd marks page text';
+    const s = 'the untrusted_web_content fence is how mcdollar marks page text';
     expect(stripUntrustedFences(s)).toBe(s);
   });
   test('similar-but-different tags are not matched', () => {

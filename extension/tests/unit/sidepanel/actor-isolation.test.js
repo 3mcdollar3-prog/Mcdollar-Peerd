@@ -173,7 +173,7 @@ describe('sidepanel actor isolation UX', () => {
         {
           role: 'user', id: 'reply-unknown', synthetic: true,
           actorReply: { kind: 'web', instanceId: 'web', failed: true, outcomeKnown: false },
-          content: 'The web actor did not complete cleanly. Its outcome is unknown. Do not retry automatically:\n\n<untrusted_web_content>peerd cannot confirm whether the previous request ran before the background host restarted. Check whether the requested action completed before trying again.</untrusted_web_content>',
+          content: 'The web actor did not complete cleanly. Its outcome is unknown. Do not retry automatically:\n\n<untrusted_web_content>mcdollar cannot confirm whether the previous request ran before the background host restarted. Check whether the requested action completed before trying again.</untrusted_web_content>',
         },
       ],
       actors: {
@@ -197,7 +197,7 @@ describe('sidepanel actor isolation UX', () => {
       expect(reply?.getAttribute('role')).toBe(null);
       expect(reply?.getAttribute('aria-live')).toBe(null);
       expect(root.querySelector('.actor-recovery-announcement')).toBe(null);
-      expect(root.textContent).toContain('peerd cannot confirm whether the actor ran or completed');
+      expect(root.textContent).toContain('mcdollar cannot confirm whether the actor ran or completed');
       expect(root.textContent).toContain('Check the target before trying again');
       expect(root.textContent.includes('Do not retry automatically')).toBe(false);
     } finally { m.mount(root, null); root.remove(); }

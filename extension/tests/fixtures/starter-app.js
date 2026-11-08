@@ -4,8 +4,8 @@
 // once it is ready, as a person does, so the capture shows the result. why a
 // probe: the runner's origin is opaque, so only a script inside it can press
 // the button and read the status line, which it posts back here.
-import { composeApp } from '/peerd-engine/app-compose.js';
-import { openEnvelope } from '/peerd-engine/export.js';
+import { composeApp } from '/mcdollar-engine/app-compose.js';
+import { openEnvelope } from '/mcdollar-engine/export.js';
 import { loadPackagedStarter } from '/shared/starter-catalog.js';
 
 const key = new URLSearchParams(location.search).get('starter') ?? 'csv-lab';

@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
-// Reusable scaffolding for peerd's end-to-end side-panel tests. The states live
+// Reusable scaffolding for mcdollar's end-to-end side-panel tests. The states live
 // in states.mjs and run against ONE Chrome via run-e2e-verify.mjs (the verify
 // loop); this module is the shared CDP plumbing they build on.
 //
 // What a scenario gets:
-//   launchPeerd({ modelResponder }) — load the REAL unpacked extension in
+//   launchMcdollar({ modelResponder }) — load the REAL unpacked extension in
 //     headless Chrome for Testing, discover its MV3 service worker, arm CDP
 //     Fetch interception of the keyless-Ollama model call (so NO real network
 //     egress and ZERO test-only code in any shipped file), open the side panel
@@ -42,8 +42,8 @@ const EXT = resolve(ROOT, 'extension');
 
 export const PASSPHRASE = 'correct-horse-battery-staple';
 export const NETWORK_GUARD_CONTROLLER_PORT = 18_763;
-export const NETWORK_GUARD_OWNED_HOST = 'guard.peerd.test';
-export const NETWORK_GUARD_UNRELATED_HOST = 'unguarded.peerd.test';
+export const NETWORK_GUARD_OWNED_HOST = 'guard.mcdollar.test';
+export const NETWORK_GUARD_UNRELATED_HOST = 'unguarded.mcdollar.test';
 export const SITE_CLIENT_FIXTURE_TLS_PORT = 18_764;
 export const READY_BUDGET_MS = 30_000; // extension load + SW boot + page mount
 const VAULT_READY_BUDGET_MS = 120_000; // production Argon2 under loaded CI/browser hosts
@@ -58,7 +58,7 @@ export const hostMonotonicMs = () => Number(process.hrtime.bigint()) / 1_000_000
 
 export const visualSourceIdentity = ({ extensionDir = EXT, states = [] } = {}) => {
   const hash = createHash('sha256').update(JSON.stringify({ states,
-    headed: process.env.PEERD_BROWSER_WINDOW_EVIDENCE === '1', sandbox: process.env.PEERD_REQUIRE_SANDBOX, security: process.argv.includes('--enforce-web-security'),
+    headed: process.env.MCDOLLAR_BROWSER_WINDOW_EVIDENCE === '1', sandbox: process.env.MCDOLLAR_REQUIRE_SANDBOX, security: process.argv.includes('--enforce-web-security'),
     chrome: resolveChrome(), platform: process.env.VISUAL_PLATFORM || `${process.platform}-${process.arch}`, timezone: process.env.TZ || Intl.DateTimeFormat().resolvedOptions().timeZone }));
   const listed = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z', '--', 'extension', 'scripts/cdp', 'packaging'],
     { cwd: ROOT, encoding: 'utf8' }).split('\0').filter(Boolean);
@@ -175,7 +175,7 @@ export const sseToolCalls = (calls, { text = '' } = {}) => {
 export function resolveChrome() {
   const explicit = process.env.CHROME_PATH || process.env.CHROME;
   if (explicit && existsSync(explicit)) return explicit;
-  const cft = `${process.env.HOME}/.cache/peerd-cft`;
+  const cft = `${process.env.HOME}/.cache/mcdollar-cft`;
   // The PINNED cache first (see ensure-chrome-for-testing.mjs). The unversioned
   // paths stay as trailing fallbacks so an existing dev cache keeps working —
   // safe because only the CI authority gates on pixels; a local run that picks
@@ -348,7 +348,7 @@ export async function capturePage(page, { bringToFront = true } = {}) {
  * BEFORE it boots (device metrics + light theme + the stable stylesheet), then
  * wait for its Mithril mount. Returns the page handle; the caller screenshots
  * it (both themes) and closes it. Used for the full-tab / large-view baselines.
- * @param {object} ctx  from launchPeerd
+ * @param {object} ctx  from launchMcdollar
  * @param {string} path  extension-relative, e.g. 'home/home.html'
  * @param {{ metrics?: object, newWindow?: boolean, windowBounds?: object, deferNavigation?: boolean }} [opts]
  */
@@ -576,16 +576,16 @@ async function waitForCdpPort(profile) {
   throw new Error('CDP endpoint never came up');
 }
 
-export const PEERD_BACKGROUND_ENTRIES = Object.freeze([
+export const MCDOLLAR_BACKGROUND_ENTRIES = Object.freeze([
   'background/vault-kernel-chrome.js',
   'background/vault-kernel-preview.js',
 ]);
 
-export const identifyPeerdBackgroundTarget = (target) => {
+export const identifyMcdollarBackgroundTarget = (target) => {
   if (target?.type !== 'service_worker') return null;
   const url = String(target?.url ?? '');
   const extensionId = url.match(/^chrome-extension:\/\/([a-p]{32})\//)?.[1];
-  const entry = PEERD_BACKGROUND_ENTRIES.find((candidate) => url.endsWith(`/${candidate}`));
+  const entry = MCDOLLAR_BACKGROUND_ENTRIES.find((candidate) => url.endsWith(`/${candidate}`));
   if (!extensionId || !entry || !target?.id || !target?.webSocketDebuggerUrl) return null;
   return {
     id: extensionId,
@@ -596,11 +596,11 @@ export const identifyPeerdBackgroundTarget = (target) => {
   };
 };
 
-// peerd's MV3 background target, never an arbitrary Chrome component
+// mcdollar's MV3 background target, never an arbitrary Chrome component
 // extension. Returns the exact loaded script entry as part of the identity.
-export async function findPeerdSw(port) {
+export async function findMcdollarSw(port) {
   const targets = await cdpList(port);
-  const matches = targets.map(identifyPeerdBackgroundTarget).filter(Boolean);
+  const matches = targets.map(identifyMcdollarBackgroundTarget).filter(Boolean);
   // A fresh-profile harness must never silently pick one of two matching
   // background entries. Ambiguity is a hard failure at the caller's timeout,
   // not permission to time or control an unrelated extension.
@@ -662,12 +662,12 @@ export const createAuxiliaryFetchRetirement = (connections, retiredEvents) => {
  * @param {boolean} [opts.webRtcLoopbackAcceptance] expose numeric loopback ICE
  *   candidates for a physical same-host multi-profile WebRTC acceptance lane.
  */
-export async function launchPeerd({
+export async function launchMcdollar({
   modelResponder, tagsModel = 'qwen3:8b', extensionDir = EXT,
   interceptModel = true, resumeAuxiliaryWorkers = true, captureBootTimeline = false, beforePanelNavigate,
   panelPath = 'sidepanel/sidepanel.html', expectedBackgroundEntry, proxyServer,
   webRtcLoopbackAcceptance = false,
-  enforceWebSecurity = false, headless = process.env.PEERD_BROWSER_WINDOW_EVIDENCE !== '1',
+  enforceWebSecurity = false, headless = process.env.MCDOLLAR_BROWSER_WINDOW_EVIDENCE !== '1',
 } = {}) {
   const launchStartedAt = hostMonotonicMs();
   const acceptanceProxy = normalizeAcceptanceProxyServer(proxyServer);
@@ -679,10 +679,10 @@ export async function launchPeerd({
   }
   const CHROME = resolveChrome();
   log('chrome:', CHROME);
-  const profile = mkdtempSync(join(tmpdir(), 'peerd-e2e-'));
+  const profile = mkdtempSync(join(tmpdir(), 'mcdollar-e2e-'));
   // why: a live task can trigger a file download; without redirection Chrome
   // dumps it into the REAL ~/Downloads. Send them to a temp dir cleaned on exit.
-  const downloadDir = mkdtempSync(join(tmpdir(), 'peerd-dl-'));
+  const downloadDir = mkdtempSync(join(tmpdir(), 'mcdollar-dl-'));
 
   const chrome = spawn(CHROME, [
     ...(headless ? ['--headless=new'] : ['--window-size=1440,1000', '--window-position=0,0']), '--no-first-run', '--no-default-browser-check',
@@ -690,9 +690,9 @@ export async function launchPeerd({
     // servers stay deterministic and offline. Reserved .test names preserve the
     // documented DNS-resolution residual without weakening localhost coverage.
     `--host-resolver-rules=${[
-      'MAP orders.peerd.test 127.0.0.1',
-      'MAP acme.peerd.test 127.0.0.1',
-      'MAP acct.peerd.test 127.0.0.1',
+      'MAP orders.mcdollar.test 127.0.0.1',
+      'MAP acme.mcdollar.test 127.0.0.1',
+      'MAP acct.mcdollar.test 127.0.0.1',
       `MAP ${NETWORK_GUARD_OWNED_HOST} 127.0.0.1`,
       `MAP ${NETWORK_GUARD_UNRELATED_HOST} 127.0.0.1`,
       'MAP chase.com 127.0.0.1',
@@ -768,14 +768,14 @@ export async function launchPeerd({
     await browserConn.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: downloadDir });
   } catch { /* download redirect is best-effort; never block the run on it */ }
 
-  // 1) discover peerd's id from its SW target (proves the extension loaded)
-  const sw = await waitFor(() => findPeerdSw(port), { budgetMs: READY_BUDGET_MS });
+  // 1) discover mcdollar's id from its SW target (proves the extension loaded)
+  const sw = await waitFor(() => findMcdollarSw(port), { budgetMs: READY_BUDGET_MS });
   if (!sw) {
     cleanup();
     if (/--disable-extensions-except is not allowed|--load-extension/i.test(chromeErr)) {
       throw new Error('Extension did not load — this Chrome ignores --load-extension. Use Chrome for Testing / Chromium (set CHROME_PATH).');
     }
-    throw new Error('peerd service-worker target never appeared (extension failed to load).');
+    throw new Error('mcdollar service-worker target never appeared (extension failed to load).');
   }
   if (expectedBackgroundEntry && sw.entry !== expectedBackgroundEntry) {
     cleanup();
@@ -1022,8 +1022,8 @@ export async function launchPeerd({
       await page.send('Page.reload');
       const remounted = await waitFor(() => evalIn(page, `performance.timeOrigin !== ${priorTimeOrigin}
         && document.readyState === 'complete'
-        && document.documentElement?.dataset.peerdBootModule === 'evaluated'
-        && !!document.documentElement?.dataset.peerdBootStage`).catch(() => false),
+        && document.documentElement?.dataset.mcdollarBootModule === 'evaluated'
+        && !!document.documentElement?.dataset.mcdollarBootStage`).catch(() => false),
       { budgetMs: READY_BUDGET_MS, pollMs: 25 });
       if (!remounted) throw new Error('side panel did not remount after reopen');
     };
@@ -1055,7 +1055,7 @@ export async function launchPeerd({
         // The source sets this marker only after the static shell itself has a
         // visible box. startVaultShell then synchronously replaces that node,
         // so requiring the old node to survive until a host poll is a race.
-        return document.documentElement?.dataset.peerdStaticShellPainted === 'true'
+        return document.documentElement?.dataset.mcdollarStaticShellPainted === 'true'
           && !!root && !!rect && rect.width > 0 && rect.height > 0
           && style?.visibility !== 'hidden' && style?.display !== 'none';
       })()`),
@@ -1090,8 +1090,8 @@ export async function launchPeerd({
 
   const mounted = await waitFor(
     () => evalIn(page, `document.readyState === 'complete'
-      && document.documentElement?.dataset.peerdBootModule === 'evaluated'
-      && !!document.documentElement?.dataset.peerdBootStage`),
+      && document.documentElement?.dataset.mcdollarBootModule === 'evaluated'
+      && !!document.documentElement?.dataset.mcdollarBootStage`),
     { budgetMs: READY_BUDGET_MS },
   );
   if (!mounted) { cleanup(); throw new Error('side panel never mounted'); }
@@ -1100,7 +1100,7 @@ export async function launchPeerd({
 
   const screenshot = () => capturePage(page);
   const screenshotWindow = async (target) => {
-    if (headless) throw new Error('Browser window capture requires PEERD_BROWSER_WINDOW_EVIDENCE=1');
+    if (headless) throw new Error('Browser window capture requires MCDOLLAR_BROWSER_WINDOW_EVIDENCE=1');
     const targetId = target ? (await target.send('Target.getTargetInfo')).targetInfo.targetId : created.id;
     await browserConn.send('Target.activateTarget', { targetId });
     const { windowId, bounds } = await browserConn.send('Browser.getWindowForTarget', { targetId });
@@ -1248,7 +1248,7 @@ print(id)`;
           throw new Error(`ServiceWorker version ${currentVersion.versionId} remained running`);
         }
         const gone = await waitFor(async () => {
-          const current = await findPeerdSw(port);
+          const current = await findMcdollarSw(port);
           return !current || current.targetId !== old.targetId;
         }, { budgetMs: 8_000, pollMs: 50 });
         if (!gone) throw new Error('MV3 service-worker target did not terminate');
@@ -1271,7 +1271,7 @@ print(id)`;
       const navigation = await page.send('Page.navigate', { url: panelUrl });
       if (navigation?.errorText) throw new Error(`panel wake navigation failed: ${navigation.errorText}`);
       const next = await waitFor(async () => {
-        const candidate = await findPeerdSw(port);
+        const candidate = await findMcdollarSw(port);
         return candidate && candidate.targetId !== oldTargetId ? candidate : null;
       }, { budgetMs: READY_BUDGET_MS, pollMs: 50 });
       if (!next) throw new Error('MV3 service worker did not restart after wake');
@@ -1282,8 +1282,8 @@ print(id)`;
       }
       const pageReady = await waitFor(
         () => evalIn(page, `document.readyState === 'complete'
-          && document.documentElement?.dataset.peerdBootModule === 'evaluated'
-          && !!document.documentElement?.dataset.peerdBootStage`),
+          && document.documentElement?.dataset.mcdollarBootModule === 'evaluated'
+          && !!document.documentElement?.dataset.mcdollarBootStage`),
         { budgetMs: READY_BUDGET_MS, pollMs: 25 },
       );
       if (!pageReady) throw new Error('side panel did not remount after worker wake');
@@ -1309,7 +1309,7 @@ export async function resetSession(ctx) {
   if (reset?.ok !== true) throw new Error(`session reset failed: ${JSON.stringify(reset)}`);
   const ready = await waitFor(async () => {
     const view = await evalIn(ctx.page, `({
-      stage: document.documentElement.dataset.peerdBootStage ?? null,
+      stage: document.documentElement.dataset.mcdollarBootStage ?? null,
       shell: !!document.querySelector('.app-shell'),
       composer: !!document.querySelector('.input-bar textarea'),
       empty: !document.querySelector('.message-user, .message-assistant'),
@@ -1340,7 +1340,7 @@ export async function reloadReadyPanel(ctx, {
     const view = await evalIn(ctx.page, `({
       timeOrigin: performance.timeOrigin,
       readyState: document.readyState,
-      stage: document.documentElement.dataset.peerdBootStage ?? null,
+      stage: document.documentElement.dataset.mcdollarBootStage ?? null,
       shell: !!document.querySelector('.app-shell'),
       composer: !!document.querySelector('.input-bar textarea'),
     })`).catch(() => null);
@@ -1360,10 +1360,10 @@ export async function reloadReadyPanel(ctx, {
     return {
       timeOrigin: performance.timeOrigin,
       readyState: document.readyState,
-      bootModule: document.documentElement.dataset.peerdBootModule ?? null,
-      bootStage: document.documentElement.dataset.peerdBootStage ?? null,
-      bootError: document.documentElement.dataset.peerdBootError ?? null,
-      vaultPosture: document.documentElement.dataset.peerdVaultPosture ?? null,
+      bootModule: document.documentElement.dataset.mcdollarBootModule ?? null,
+      bootStage: document.documentElement.dataset.mcdollarBootStage ?? null,
+      bootError: document.documentElement.dataset.mcdollarBootError ?? null,
+      vaultPosture: document.documentElement.dataset.mcdollarVaultPosture ?? null,
       body: document.body?.innerText?.slice(0, 500) ?? null,
       scripts: [...document.scripts].map((script) => ({
         src: script.src || null,
@@ -1412,7 +1412,7 @@ export async function freezeAnimations(ctx) {
  * checks: compare the screenshot against baselines/<name>.png (or write it when
  * missing / UPDATE_BASELINES=1). A small diff-ratio threshold absorbs rendering
  * noise so only real UI changes fail.
- * @param {object} ctx     the launchPeerd ctx
+ * @param {object} ctx     the launchMcdollar ctx
  * @param {object} checks  a makeChecks() collector
  * @param {string} name    baseline key
  * @param {{ threshold?: number, tolerance?: number }} [opts]
@@ -1438,7 +1438,7 @@ export async function visualCheck(ctx, checks, name, opts = {}) {
 /**
  * Bring a freshly-mounted panel to a ready, sendable state: create+unlock the
  * vault, lift the onboarding gate, and select the keyless Ollama provider.
- * @param {object} page  the page CDP connection from launchPeerd
+ * @param {object} page  the page CDP connection from launchMcdollar
  */
 export async function unlockAndReady(page, { provider = 'ollama', model = 'qwen3:8b' } = {}) {
   // Vault initialization intentionally uses the production Argon2 parameters.
@@ -1450,7 +1450,7 @@ export async function unlockAndReady(page, { provider = 'ollama', model = 'qwen3
   });
   if (!vault?.ok) throw new Error('vault/initialize failed: ' + JSON.stringify(vault));
   log('vault initialized + unlocked');
-  await rpc(page, { type: 'onboarding/complete', peerName: 'peerd', facts: null });
+  await rpc(page, { type: 'onboarding/complete', peerName: 'mcdollar', facts: null });
   // why answer the first tab offer here: the panel that saw the vault setup
   // asks once, and the harness finishes first-run setup for every state.
   const upd = await rpc(page, {
@@ -1463,9 +1463,9 @@ export async function unlockAndReady(page, { provider = 'ollama', model = 'qwen3
 /**
  * Open an arbitrary extension page (e.g. the eval harness) as a new tab and
  * return an attached page CDP connection — same `/json/new` + attach +
- * Runtime/Page.enable dance launchPeerd uses for the side panel, so any
+ * Runtime/Page.enable dance launchMcdollar uses for the side panel, so any
  * in-extension page can be driven, not just the panel.
- * @param {object} ctx   the launchPeerd ctx (uses ctx.sw.id + ctx.port)
+ * @param {object} ctx   the launchMcdollar ctx (uses ctx.sw.id + ctx.port)
  * @param {string} path  extension-relative path, e.g. 'eval/runner.html'
  */
 export async function openExtPage(ctx, path) {
@@ -1522,16 +1522,16 @@ export function makeChecks() {
 
 /**
  * Run a scenario `fn(ctx, checks)` end-to-end: launch, run, report, exit 0/1.
- * `fn` receives the launchPeerd ctx and a checks collector; the harness handles
+ * `fn` receives the launchMcdollar ctx and a checks collector; the harness handles
  * unlock-free launch (the scenario decides when to unlock), cleanup, and codes.
  * @param {string} name
  * @param {(ctx:object, checks:object) => Promise<void>} fn
- * @param {object} [launchOpts]  passed to launchPeerd (e.g. modelResponder)
+ * @param {object} [launchOpts]  passed to launchMcdollar (e.g. modelResponder)
  */
 export async function runScenario(name, fn, launchOpts = {}) {
   let ctx = null;
   try {
-    ctx = await launchPeerd(launchOpts);
+    ctx = await launchMcdollar(launchOpts);
     const checks = makeChecks();
     await fn(ctx, checks);
     await checks.finish(ctx);

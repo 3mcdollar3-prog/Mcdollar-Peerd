@@ -3,16 +3,16 @@ import { makeControllerTurnBridge } from '../../extension/background/controller-
 import { connectDirectController } from '../../extension/background/direct-controller-client.js';
 import { createControllerTurnRuntime } from '../../extension/offscreen/controller-turn-runtime.js';
 import { CONTROLLER_BUILD_DIGEST } from '../../extension/shared/structured-clone-size.js';
-import { getToolAuthority } from '../../extension/peerd-runtime/tools/metadata/authority.js';
-import { projectToolAuthority, toToolDescriptor } from '../../extension/peerd-runtime/tools/metadata/descriptor.js';
-import { makeScriptedProviderAuthority } from '../peerd-provider/model-egress-fixture';
-import { makeTurnAuthorityDriver } from '../../extension/peerd-runtime/loop/turn-authority-driver.js';
-import { makeTurnSlots } from '../../extension/peerd-runtime/loop/turn-slots.js';
-import { createSessionStore } from '../../extension/peerd-runtime/sessions/store.js';
+import { getToolAuthority } from '../../extension/mcdollar-runtime/tools/metadata/authority.js';
+import { projectToolAuthority, toToolDescriptor } from '../../extension/mcdollar-runtime/tools/metadata/descriptor.js';
+import { makeScriptedProviderAuthority } from '../mcdollar-provider/model-egress-fixture';
+import { makeTurnAuthorityDriver } from '../../extension/mcdollar-runtime/loop/turn-authority-driver.js';
+import { makeTurnSlots } from '../../extension/mcdollar-runtime/loop/turn-slots.js';
+import { createSessionStore } from '../../extension/mcdollar-runtime/sessions/store.js';
 import { makeMockIdb } from '../../extension/tests/mocks/idb.js';
-import { makeAsyncActors } from '../../extension/peerd-runtime/actor/async-actors.js';
-import { normalizeTally } from '../../extension/peerd-runtime/cost/accumulator.js';
-import { wrapUntrusted } from '../../extension/peerd-runtime/tools/prompt-wrap.js';
+import { makeAsyncActors } from '../../extension/mcdollar-runtime/actor/async-actors.js';
+import { normalizeTally } from '../../extension/mcdollar-runtime/cost/accumulator.js';
+import { wrapUntrusted } from '../../extension/mcdollar-runtime/tools/prompt-wrap.js';
 
 const clone = <T>(value: T): T => structuredClone(value);
 const turnRuntime = createControllerTurnRuntime();

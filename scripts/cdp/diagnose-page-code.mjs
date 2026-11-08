@@ -10,7 +10,7 @@
 //
 // Run: bun scripts/cdp/diagnose-page-code.mjs
 
-import { launchPeerd, rpc, waitFor, log, PASSPHRASE, sseText, sseToolCall } from './e2e-harness.mjs';
+import { launchMcdollar, rpc, waitFor, log, PASSPHRASE, sseText, sseToolCall } from './e2e-harness.mjs';
 import { startWebFixtureServer } from './fixtures/web-suite.mjs';
 
 // Pull the tool_result content(s) out of an OpenAI-format request body.
@@ -60,10 +60,10 @@ async function main() {
     return { sse: sseText('orchestrator: done.') };
   };
 
-  const ctx = await launchPeerd({ modelResponder });
+  const ctx = await launchMcdollar({ modelResponder });
   try {
     await rpc(ctx.page, { type: 'vault/initialize', passphrase: PASSPHRASE });
-    await rpc(ctx.page, { type: 'onboarding/complete', peerName: 'peerd', facts: null });
+    await rpc(ctx.page, { type: 'onboarding/complete', peerName: 'mcdollar', facts: null });
     await rpc(ctx.page, { type: 'settings/update', patch: { providerName: 'ollama', webActorActionSurface: 'code' } });
     log('web actor action surface: code');
 
@@ -76,7 +76,7 @@ async function main() {
     const result = captured[0] || '';
     // A working page_code returns the fixture's read_page/snapshot content; a
     // broken one returns 'page_code_unavailable' / a ReferenceError / times out.
-    const healthy = ok && /Peerdmart|untrusted_web_content/.test(result)
+    const healthy = ok && /Mcdollarmart|untrusted_web_content/.test(result)
       && !/unavailable|ReferenceError|not defined|no_target_tab|no_owned_tab|timed out/.test(result);
     log(`\n===== VERDICT: ${healthy ? 'page_code WORKS end to end ✓' : 'page_code BROKEN ✗'} =====`);
 

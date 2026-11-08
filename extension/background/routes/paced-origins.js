@@ -1,15 +1,15 @@
 // @ts-check
-// background/routes/paced-origins.js: the settings view of the sites peerd is
+// background/routes/paced-origins.js: the settings view of the sites mcdollar is
 // pacing itself on, and the only way to forget one.
 //
-// why these routes exist: a pacing rule silently makes peerd slower on a site,
+// why these routes exist: a pacing rule silently makes mcdollar slower on a site,
 // and a rule learned from a one-off outage would otherwise sit there taxing
 // every future turn with no reader and no eraser. Time decay eventually clears
 // it, but "eventually" is not an answer for someone watching a turn crawl.
 //
 // Reachable from the SETTINGS surface only. The tool dispatcher has no path to
 // routes, so neither the agent nor a page-fed actor can call these - which is
-// the whole reason accepting a removal is safe. Forgetting a rule makes peerd
+// the whole reason accepting a removal is safe. Forgetting a rule makes mcdollar
 // act FASTER on a site that already asked it to slow down, so it is exactly the
 // lever an injected page would want, and exactly the one a person is entitled
 // to. Who is asking is the only thing that separates them.

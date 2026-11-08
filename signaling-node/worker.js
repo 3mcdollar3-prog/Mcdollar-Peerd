@@ -1,4 +1,4 @@
-// peerd signaling node — Cloudflare Worker + Durable Object shell.
+// mcdollar signaling node — Cloudflare Worker + Durable Object shell.
 //
 // Each rendezvous key maps to one Durable Object via idFromName(key). The
 // shared signalingStep reducer remains the source of protocol behavior;
@@ -13,7 +13,7 @@
 // This is not a cross-room/account quota or a deployment/activation mechanism.
 // The rendezvous relays opaque signaling blobs without inspecting/logging SDP
 // or accepting a claimed DID as identity. Authentication happens peer-to-peer.
-import { signalingStep, sparsePublicProfile, PUBLIC_ROOM, PUBLIC_MEMBERSHIP_CAP } from '../extension/peerd-distributed/transport/signaling.js';
+import { signalingStep, sparsePublicProfile, PUBLIC_ROOM, PUBLIC_MEMBERSHIP_CAP } from '../extension/mcdollar-distributed/transport/signaling.js';
 import { validRoomKey } from './admission-budget.js';
 import { createDurableRoomBudget } from './durable-room-budget.js';
 
@@ -247,7 +247,7 @@ export class SignalingRoom {
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
-    if (url.pathname !== '/rendezvous') return new Response('peerd signaling node');
+    if (url.pathname !== '/rendezvous') return new Response('mcdollar signaling node');
     const key = url.searchParams.get('key');
     if (!validRoomKey(key)) return new Response('invalid room key', { status: 400 });
     const id = env.SIGNAL_ROOM.idFromName(key);

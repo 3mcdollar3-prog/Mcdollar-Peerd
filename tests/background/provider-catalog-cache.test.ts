@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { createProviderEgressAuthority } from '../../extension/background/provider-egress-authority.js';
-import { createVault } from '../../extension/peerd-egress/vault/vault.js';
-import { providerModelContextWindow } from '../../extension/peerd-provider/index.js';
+import { createVault } from '../../extension/mcdollar-egress/vault/vault.js';
+import { providerModelContextWindow } from '../../extension/mcdollar-provider/index.js';
 
 const grant = (owner = {}) => ({ owner, permitsProvider: (name: string) => name === 'openrouter' });
 const input = { providerId: 'openrouter', modelId: 'z-ai/glm-5.1' };

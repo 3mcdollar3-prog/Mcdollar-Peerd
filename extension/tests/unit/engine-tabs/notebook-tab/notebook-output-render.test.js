@@ -66,24 +66,24 @@ describe('notebook output-render', () => {
   });
 
   it('recognizes display descriptors and dispatches them', () => {
-    expect(isDescriptor({ __peerd_display: 'table', rows: [] })).toBe(true);
+    expect(isDescriptor({ __mcdollar_display: 'table', rows: [] })).toBe(true);
     expect(isDescriptor({ a: 1 })).toBe(false);
     expect(isDescriptor([1, 2])).toBe(false);
 
     // a table descriptor renders the table
     const h1 = document.createElement('div');
-    renderReturnValue(h1, { __peerd_display: 'table', rows: [{ a: 1 }, { a: 2 }] });
+    renderReturnValue(h1, { __mcdollar_display: 'table', rows: [{ a: 1 }, { a: 2 }] });
     expect(!!h1.querySelector('table.nb-table')).toBe(true);
 
     // an empty table descriptor renders a note, not a broken table
     const h2 = document.createElement('div');
-    renderReturnValue(h2, { __peerd_display: 'table', rows: [] });
+    renderReturnValue(h2, { __mcdollar_display: 'table', rows: [] });
     expect(h2.querySelector('table')).toBe(null);
     expect(h2.textContent).toContain('empty table');
 
     // a chart descriptor renders an SVG
     const h3 = document.createElement('div');
-    renderReturnValue(h3, { __peerd_display: 'chart', type: 'bar', data: [{ x: 'a', y: 1 }] });
+    renderReturnValue(h3, { __mcdollar_display: 'chart', type: 'bar', data: [{ x: 'a', y: 1 }] });
     expect(!!h3.querySelector('svg.nb-chart-svg')).toBe(true);
   });
 

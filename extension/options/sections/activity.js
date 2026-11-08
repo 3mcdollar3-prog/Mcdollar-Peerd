@@ -46,7 +46,7 @@ const EVENT_META = {
   memory_suggestion_dismissed:{ label: 'memory suggestion dismissed', level: 'info' },
   trim_summary_enriched:      { label: 'history summary updated', level: 'info' },
   cheap_call_skipped:         { label: 'background call skipped', level: 'info' },
-  // The origin lock (#255). These are the entries that answer "why did peerd
+  // The origin lock (#255). These are the entries that answer "why did mcdollar
   // refuse to open that site" - the exact question the learned set makes a user
   // ask - and without a label they rendered as a bare `origin_learned_sensitive`
   // slug with no origin attached. `origin_unlearned_sensitive` is written by the
@@ -55,10 +55,10 @@ const EVENT_META = {
   origin_learned_sensitive:   { label: 'host may share browser session', level: 'info' },
   origin_unlearned_sensitive: { label: 'learned host removed', level: 'warn' },
   // #234 per-origin pacing. `origin_paced` is the routine one - it fires
-  // whenever peerd actually waited before acting, which is the only evidence a
+  // whenever mcdollar actually waited before acting, which is the only evidence a
   // user has that a slow turn was politeness rather than a hang.
   origin_paced:               { label: 'waited for site limits', level: 'info' },
-  origin_pacing_learned:      { label: 'site asked peerd to slow down', level: 'info' },
+  origin_pacing_learned:      { label: 'site asked mcdollar to slow down', level: 'info' },
   origin_pacing_forgotten:    { label: 'site pacing forgotten', level: 'warn' },
   actor_origin_stop:          { label: 'web helper stopped',     level: 'warn' },
   browser_child_navigation_blocked:
@@ -275,7 +275,7 @@ export const ActivityView = {
   //
   // why a flag and not a row count: an agent run writes audit rows between a
   // reply and the next keystroke, so "fewer rows than the total" is the normal
-  // state while peerd works, and comparing counts refetched the whole log
+  // state while mcdollar works, and comparing counts refetched the whole log
   // (about 8 MB at the retention cap) on every keystroke. Rows that land after
   // the fetch show in the header's "Newest N of M"; Refresh pulls them in.
   /** @param {{ state: any, attrs: { send: Send } }} vnode */

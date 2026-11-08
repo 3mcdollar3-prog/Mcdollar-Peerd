@@ -8,7 +8,7 @@
 import { base64ToBytes } from '/shared/util.js';
 import {
   sniffDocFormat, DocFetchError,
-} from '/peerd-runtime/offscreen.js';
+} from '/mcdollar-runtime/offscreen.js';
 import { extractPdfBytes } from './pdf-extract.js';
 import {
   readBoundedResponseBytes, ResponseTooLargeError,
@@ -144,7 +144,7 @@ export const handleDocExtract = async (
     });
     throwIfAborted(signal, 'Document extraction stopped.');
     if ('ok' in converted && converted.ok === false) return converted;
-    const doc = /** @type {import('/peerd-runtime/doc/model.js').Document} */ (converted);
+    const doc = /** @type {import('/mcdollar-runtime/doc/model.js').Document} */ (converted);
     console.debug(`[offscreen/doc-extract] ${where}: ${doc.format}, ${doc.blocks.length} blocks, ${byteLength} bytes`);
     return { ok: true, result: { format: doc.format, doc, bytes: byteLength, sniffedVia: sniffed.via } };
   } catch (e) {

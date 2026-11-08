@@ -5,7 +5,7 @@ import {
   flattenCategorisedDenylist,
   matchesDenylist,
   normalizeDenylistPattern,
-} from '../peerd-egress/kernel-storage.js';
+} from '../mcdollar-egress/kernel-storage.js';
 
 /**
  * @param {Object} deps

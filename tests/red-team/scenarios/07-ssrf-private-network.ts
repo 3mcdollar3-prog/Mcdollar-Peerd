@@ -15,16 +15,16 @@
 import {
   type Scenario, type Probe, blocked, leaked, summarize,
 } from '../harness.ts';
-import { makeWebFetch } from '../../../extension/peerd-egress/fetch/web-fetch.js';
+import { makeWebFetch } from '../../../extension/mcdollar-egress/fetch/web-fetch.js';
 import { isPrivateOrLocalHost } from '../../../extension/shared/private-network.js';
-import { EgressDeniedError } from '../../../extension/peerd-egress/fetch/errors.js';
+import { EgressDeniedError } from '../../../extension/mcdollar-egress/fetch/errors.js';
 import {
   buildPrivateNetworkBlockRules, buildPrivateNetworkInitiatorBlockRules,
   PRIVATE_NETWORK_INITIATOR_RULE_IDS, PRIVATE_NETWORK_RULE_IDS,
-} from '../../../extension/peerd-egress/denylist/dnr-rules.js';
+} from '../../../extension/mcdollar-egress/denylist/dnr-rules.js';
 import {
   BROWSER_TARGET_STAGES, browserTargetRefusalResult, classifyBrowserAutomationTarget,
-} from '../../../extension/peerd-runtime/tools/browser-automation-policy.js';
+} from '../../../extension/mcdollar-runtime/tools/browser-automation-policy.js';
 import { makeStartupPopupNetworkGuard } from '../../../extension/background/startup-popup-network-guard.js';
 import {
   classifyDrivenChildRequestTarget,

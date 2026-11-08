@@ -12,7 +12,7 @@ import { makeBoundedModuleLoader } from '../shared/bounded-module-load.js';
 
 /**
  * @param {{
- *   loadService: () => Promise<ReturnType<typeof import('../peerd-engine/repository.js').createRepositoryService>>,
+ *   loadService: () => Promise<ReturnType<typeof import('../mcdollar-engine/repository.js').createRepositoryService>>,
  *   loadAppService?: () => Promise<Record<string,any>>,
  *   withLifetime?: <T>(operation:()=>Promise<T>,options?:{
  *     outcomeKnownOnLoss?:boolean,code?:string,onLost?:(cause:Error)=>void,
@@ -52,7 +52,7 @@ export const createLazyLocalRepositoryClient = ({
     loadCode: 'repository-app-service-load-failed',
     timeoutCode: 'repository-app-service-load-timeout',
   });
-  /** @type {Promise<ReturnType<typeof import('../peerd-engine/repository.js').createRepositoryService>> | null} */
+  /** @type {Promise<ReturnType<typeof import('../mcdollar-engine/repository.js').createRepositoryService>> | null} */
   let servicePromise = null;
   /** @type {Promise<Record<string,any>> | null} */
   let appServicePromise = null;
@@ -209,7 +209,7 @@ export const createLazyLocalRepositoryClient = ({
 export const createFirefoxRepositoryClient = ({ webFetch, getSecret, audit, withLifetime }) =>
   createLazyLocalRepositoryClient({
     loadService: async () => {
-      const { createRepositoryService } = await import('/peerd-engine/repository.js');
+      const { createRepositoryService } = await import('/mcdollar-engine/repository.js');
       return createRepositoryService({ webFetch, getSecret, audit });
     },
     withLifetime,

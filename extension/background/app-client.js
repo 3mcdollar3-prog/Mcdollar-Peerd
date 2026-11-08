@@ -9,12 +9,12 @@ import {
   opfsHelpers,
   buildAppManifest,
   parseAppManifest,
-} from '/peerd-engine/background.js';
+} from '/mcdollar-engine/background.js';
 import { base64ByteLength, fromBase64, toBase64 } from '/shared/bundle/bytes.js';
 import { APP_DATA_PATH_RE } from '/shared/app-dweb-identity.js';
 export { appReleaseDescriptorMatches } from '/shared/app-dweb-identity.js';
 
-export const APP_TAB_GROUP_TITLE = 'peerd';
+export const APP_TAB_GROUP_TITLE = 'mcdollar';
 
 // why: Enforce storage limits at the OPFS boundary for every caller.
 export const MAX_APP_TOTAL_BYTES = 50_000_000;
@@ -227,18 +227,18 @@ const normalizeFileMap = (fileMap, entry, declaredKinds = {}) => {
 
 /** @param {string} appId @param {() => void | Promise<void>} [beforeMutation] */
 const opfsForApp = (appId, beforeMutation = () => {}) =>
-  opfsHelpers(['peerd-apps', appId], { beforeMutation });
+  opfsHelpers(['mcdollar-apps', appId], { beforeMutation });
 
 /**
  * @param {Object} deps
- * @param {ReturnType<typeof import('/peerd-engine/background.js').createAppRegistry>} deps.registry
+ * @param {ReturnType<typeof import('/mcdollar-engine/background.js').createAppRegistry>} deps.registry
  * @param {ReturnType<typeof import('./app-tab-tracker.js').createAppTabTracker>} deps.tracker
  * @param {() => void | Promise<void>} [deps.beforeOpfsMutation]
  * @param {typeof opfsForApp} [deps.opfsForApp]
  * @param {(appId:string)=>void|Promise<void>} [deps.onManifestMutation]
  * @param {(ownerSessionId:string,record:any)=>Promise<string>} [deps.resolveOwnerRoot]
- * @param {ReturnType<typeof import('/peerd-engine/repository.js').createRepositoryService>} deps.repositories
- * @param {Pick<typeof import('/peerd-egress/background.js').idb, 'del'>} [deps.idb]
+ * @param {ReturnType<typeof import('/mcdollar-engine/repository.js').createRepositoryService>} deps.repositories
+ * @param {Pick<typeof import('/mcdollar-egress/background.js').idb, 'del'>} [deps.idb]
  */
 export const createAppClient = ({
   registry, tracker, beforeOpfsMutation = () => {}, onManifestMutation = () => {},
@@ -359,7 +359,7 @@ export const createAppClient = ({
   /**
    * Restore the mutable catalog fields changed by App file transactions.
    * @param {string} id
-   * @param {import('/peerd-engine/app-registry.js').AppRecord} record
+   * @param {import('/mcdollar-engine/app-registry.js').AppRecord} record
    */
   const restoreRecord = async (id, record) => {
     const restored = await registry.update(id, /** @type {any} */ ({
@@ -376,7 +376,7 @@ export const createAppClient = ({
    * @param {unknown} cause
    * @param {(() => Promise<void>) | null} rollbackBytes
    * @param {string} id
-   * @param {import('/peerd-engine/app-registry.js').AppRecord} record
+   * @param {import('/mcdollar-engine/app-registry.js').AppRecord} record
    */
   const rollbackMutation = async (cause, rollbackBytes, id, record) => {
     /** @type {unknown[]} */
@@ -412,7 +412,7 @@ export const createAppClient = ({
    * compat with the single-file model the agent used to assume).
    * @param {{ appId?: string, name?: string, files?: Record<string, unknown>, html?: string,
    *   tags?: string[], entryFile?: string, sessionId?: string,
-   *   dweb?: import('/peerd-engine/app-registry.js').AppDwebMeta, source?: string,
+   *   dweb?: import('/mcdollar-engine/app-registry.js').AppDwebMeta, source?: string,
    *   fileKinds?: Record<string, unknown>, syncContentHash?: string }} [opts]
    */
   const create = async ({
@@ -429,19 +429,19 @@ export const createAppClient = ({
     const requestedEntry = entryFile || 'index.html';
     /** @type {Record<string, unknown>} */
     const fileMap = Object.assign(Object.create(null), suppliedFiles);
-    if (!Object.hasOwn(fileMap, 'peerd.json')) {
-      fileMap['peerd.json'] = `${JSON.stringify(buildAppManifest({
+    if (!Object.hasOwn(fileMap, 'mcdollar.json')) {
+      fileMap['mcdollar.json'] = `${JSON.stringify(buildAppManifest({
         entry: requestedEntry,
         dwapp: !!dweb,
       }), null, 2)}\n`;
     }
     const manifestContent = normalizeFileContent(
-      'peerd.json',
-      fileMap['peerd.json'],
-      fileKinds?.['peerd.json'],
+      'mcdollar.json',
+      fileMap['mcdollar.json'],
+      fileKinds?.['mcdollar.json'],
     );
     if (manifestContent.kind !== 'text') {
-      throw new AppFileContentError('peerd.json must be text');
+      throw new AppFileContentError('mcdollar.json must be text');
     }
     const contract = parseAppManifest(typeof manifestContent.stored === 'string'
       ? manifestContent.stored
@@ -482,7 +482,7 @@ export const createAppClient = ({
     return record;
   };
 
-  /** Clone a repository and instantiate the validated peerd.json contract.
+  /** Clone a repository and instantiate the validated mcdollar.json contract.
    * @param {{name?:string,url:string,ref?:string,depth?:number,sessionId?:string,signal?:AbortSignal,allowDweb?:boolean}} opts */
   const createFromGit = async ({ name, url, ref, depth = 50, sessionId, signal, allowDweb = false }) => {
     if (typeof url !== 'string') throw new Error('git URL required');
@@ -519,13 +519,13 @@ export const createAppClient = ({
         fileKinds[path] = inferAppFileKind(path, bytes);
       }
       let contract;
-      if (paths.has('peerd.json')) {
-        if (fileKinds['peerd.json'] !== 'text') throw new AppFileContentError('peerd.json must be text');
-        contract = parseAppManifest(await opfs.read('peerd.json'));
+      if (paths.has('mcdollar.json')) {
+        if (fileKinds['mcdollar.json'] !== 'text') throw new AppFileContentError('mcdollar.json must be text');
+        contract = parseAppManifest(await opfs.read('mcdollar.json'));
       }
       else if (paths.has('index.html')) contract = parseAppManifest(JSON.stringify(buildAppManifest({ entry: 'index.html' })));
-      else throw new Error('repository is not an App: add peerd.json or index.html');
-      if (!paths.has(contract.entry)) throw new Error(`peerd.json entry is missing: ${contract.entry}`);
+      else throw new Error('repository is not an App: add mcdollar.json or index.html');
+      if (!paths.has(contract.entry)) throw new Error(`mcdollar.json entry is missing: ${contract.entry}`);
       if (fileKinds[contract.entry] !== 'text') throw new AppFileContentError(`entryFile must be text: ${contract.entry}`);
       if (contract.capabilities.includes('dweb') && !allowDweb) throw new Error('this dwapp requires a preview build with the dweb enabled');
       const dwapp = contract.capabilities.includes('dweb')
@@ -593,7 +593,7 @@ export const createAppClient = ({
       for (const replacement of replacements) nextKinds[replacement.path] = replacement.kind;
       const rollbackBytes = replacements.length
         ? await writeReplacements(opfs, replacements, signal) : null;
-      /** @type {Partial<import('/peerd-engine/app-registry.js').AppRecord>} */
+      /** @type {Partial<import('/mcdollar-engine/app-registry.js').AppRecord>} */
       const patch = { fileKinds: nextKinds };
       if (typeof name === 'string') patch.name = name.trim().slice(0, 80);
       if (Array.isArray(tags)) patch.tags = tags;
@@ -610,7 +610,7 @@ export const createAppClient = ({
 
     if (!updated) return null;
     if (sessionId) await registry.setDefaultForSession(sessionId, id);
-    if (path === 'peerd.json') await onManifestMutation(id);
+    if (path === 'mcdollar.json') await onManifestMutation(id);
     await tracker.reloadTab(id).catch(() => {});
     return updated;
   };
@@ -645,7 +645,7 @@ export const createAppClient = ({
     if (!invalidateDweb && !APP_DATA_PATH_RE.test(path)) throw new AppFileContentError('Only runtime data can retain App consent');
     const id = await resolveId({ sessionId, appId });
     const result = await withMutation(id, () => writeFileUnlocked(id, path, content, signal), invalidateDweb);
-    if (path === 'peerd.json') await onManifestMutation(id);
+    if (path === 'mcdollar.json') await onManifestMutation(id);
     // why: a following actor write must not invalidate a document still
     // reloading. Wait outside the consent/repository lanes so attach can finish.
     if (reload) await tracker.reloadTab(id).catch(() => {});
@@ -689,7 +689,7 @@ export const createAppClient = ({
       return { ok: true, value: await writeFileUnlocked(id, path, content, signal) };
     });
     if (result.ok) {
-      if (path === 'peerd.json') await onManifestMutation(id);
+      if (path === 'mcdollar.json') await onManifestMutation(id);
       // why: preserve the same settled reload boundary as an ordinary write.
       if (reload) await tracker.reloadTab(id).catch(() => {});
     }
@@ -718,7 +718,7 @@ export const createAppClient = ({
    * Replace an entire App tree while retaining a bounded byte snapshot for rollback.
    * @param {{ appId: string, files: Record<string, unknown>, entryFile: string,
    *   fileKinds?: Record<string, unknown>,
-   *   metadata?: { dweb?: import('/peerd-engine/app-registry.js').AppDwebMeta } }} args
+   *   metadata?: { dweb?: import('/mcdollar-engine/app-registry.js').AppDwebMeta } }} args
    */
   const replaceFiles = async ({ appId, files, entryFile, fileKinds, metadata = {} }) => {
     const id = await resolveId({ appId });
@@ -776,9 +776,9 @@ export const createAppClient = ({
   /** Caller holds the App lane so version checks, bytes, Git, and metadata stay atomic.
    * @param {{ appId: string, files: Record<string, unknown>, entryFile: string,
    *   fileKinds?: Record<string, unknown>, message?: string,
-   *   metadataForOid?: (oid: string | null, oldRecord: import('/peerd-engine/app-registry.js').AppRecord, fileKinds: Record<string, 'text'|'binary'>) => Partial<import('/peerd-engine/app-registry.js').AppRecord>,
+   *   metadataForOid?: (oid: string | null, oldRecord: import('/mcdollar-engine/app-registry.js').AppRecord, fileKinds: Record<string, 'text'|'binary'>) => Partial<import('/mcdollar-engine/app-registry.js').AppRecord>,
    *   isCurrent?: () => boolean,
-   *   afterCommit: (record: import('/peerd-engine/app-registry.js').AppRecord) => Promise<void>|void }} args
+   *   afterCommit: (record: import('/mcdollar-engine/app-registry.js').AppRecord) => Promise<void>|void }} args
    */
   const replaceVersionedFilesUnlocked = async ({
     appId, files, entryFile, fileKinds, message = 'replace App release', metadataForOid = () => ({}),
@@ -939,7 +939,7 @@ export const createAppClient = ({
         return rollbackMutation(error, () => opfs.write(path, backup), id, rec);
       }
     }, invalidateDweb);
-    if (path === 'peerd.json') await onManifestMutation(id);
+    if (path === 'mcdollar.json') await onManifestMutation(id);
     if (reload) await tracker.reloadTab(id).catch(() => {});
   };
 
@@ -986,7 +986,7 @@ export const createAppClient = ({
     await withMutation(appId, async () => {
       await tracker.closeTab(appId);
       await new Promise((r) => setTimeout(r, 100));
-      // Every App now owns a separate peerd-git/app/<id> DAG and remote
+      // Every App now owns a separate mcdollar-git/app/<id> DAG and remote
       // configuration. Deletion is one fail-closed transaction: preserve the
       // catalog/worktree recovery handle unless Git cleanup succeeds, and never
       // claim deletion while either durable byte root remains.
@@ -1030,7 +1030,7 @@ export const createAppClient = ({
     if (!q) return [];
     const ql = q.toLowerCase();
     const metaHits = await registry.searchMetadata(q);
-    /** @type {Map<string, { app: import('/peerd-engine/app-registry.js').AppRecord, snippet: string | null, rank: number }>} */
+    /** @type {Map<string, { app: import('/mcdollar-engine/app-registry.js').AppRecord, snippet: string | null, rank: number }>} */
     const byId = new Map();
     for (const m of metaHits) byId.set(m.id, { app: m, snippet: null, rank: 2 });
 

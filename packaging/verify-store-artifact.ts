@@ -3,7 +3,7 @@
 //
 // Layering (each layer catches what the previous can't):
 //   1. packaging/check-dweb-boundary.ts — SOURCE level, pre-package:
-//      no file outside peerd-distributed/ references the module.
+//      no file outside mcdollar-distributed/ references the module.
 //   2. package.ts pruning + loader swap — STRUCTURAL: the module isn't in
 //      the store tree at all.
 //   3. THIS CHECK — ARTIFACT level, post-package: even if 1–2 regress
@@ -11,16 +11,16 @@
 //      artifact itself is inspected before it can reach a store reviewer.
 //
 // Checks, in order:
-//   a. no path in the zip is under peerd-distributed/
+//   a. no path in the zip is under mcdollar-distributed/
 //   b. shared/dweb-loader.js and both cold dweb route factories are
 //      byte-identical to their committed disabled templates
-//   c. NO file in the artifact contains the string "peerd-distributed"
-//   d. manifest sanity: name "peerd", no update_url, no key
+//   c. NO file in the artifact contains the string "mcdollar-distributed"
+//   d. manifest sanity: name "mcdollar", no update_url, no key
 //   e. identifier sweep: identifiers that appear ONLY in dweb
 //      sources (never in the rest of extension/) must not appear in any
 //      artifact file — catches whole-file leaks under renamed paths
 //
-// Run: bun packaging/verify-store-artifact.ts artifacts/peerd-store-chrome.zip
+// Run: bun packaging/verify-store-artifact.ts artifacts/mcdollar-store-chrome.zip
 // (package.ts runs it automatically for every store artifact)
 
 import {
@@ -54,9 +54,9 @@ const DWEB_ABSENT_TARGETS = Object.freeze([
   'offscreen/contributor-channel-addon.js',
   'offscreen/semantic-routes/contributor.js',
   'options/sections/contributor-metrics.js',
-  'peerd-runtime/controller-contributor.js',
-  'peerd-runtime/observability/contributor-metrics.js',
-  'peerd-runtime/observability/contributor-store.js',
+  'mcdollar-runtime/controller-contributor.js',
+  'mcdollar-runtime/observability/contributor-metrics.js',
+  'mcdollar-runtime/observability/contributor-store.js',
   'offscreen/dweb-base.js', 'offscreen/dweb-custody-host.js',
   'offscreen/dweb-self.js', 'offscreen/dweb-transfer-host.js',
 ]);
@@ -103,13 +103,13 @@ export const storeContributorBoundaryFailures = (artifactRoot: string): string[]
 export const loadStagedModuleResolver = async (
   artifactRoot: string,
   scratchRoot: string,
-): Promise<typeof import('../extension/peerd-engine/module-resolver.js')> => {
+): Promise<typeof import('../extension/mcdollar-engine/module-resolver.js')> => {
   const built = await Bun.build({
-    entrypoints: [join(artifactRoot, 'peerd-engine', 'module-resolver.js')],
+    entrypoints: [join(artifactRoot, 'mcdollar-engine', 'module-resolver.js')],
     target: 'bun',
     format: 'esm',
     plugins: [{
-      name: 'peerd-staged-artifact-imports',
+      name: 'mcdollar-staged-artifact-imports',
       setup(build) {
         build.onResolve({ filter: /^\// }, (args) => {
           const candidate = join(artifactRoot, args.path.slice(1));
@@ -142,7 +142,7 @@ const identifiersOf = (text: string): Set<string> => new Set(text.match(IDENT_RE
  *  extension/ — if any shows up in a store artifact, dweb content
  *  leaked. Derived fresh per run so the set tracks the code. */
 const dwebOnlyIdentifiers = (extensionDir: string): Set<string> => {
-  const dwebDir = join(extensionDir, 'peerd-distributed');
+  const dwebDir = join(extensionDir, 'mcdollar-distributed');
   const fed = new Set<string>();
   for (const f of walk(dwebDir)) {
     if (/\.(js|mjs|html)$/.test(f)) for (const id of identifiersOf(readFileSync(f, 'utf8'))) fed.add(id);
@@ -160,18 +160,18 @@ export const verifyStoreArtifact = async (
   { sourceRoot = REPO_ROOT }: { sourceRoot?: string } = {},
 ): Promise<void> => {
   const failures: string[] = [];
-  const tmp = mkdtempSync(join(tmpdir(), 'peerd-verify-'));
+  const tmp = mkdtempSync(join(tmpdir(), 'mcdollar-verify-'));
   // why: Bun caches the extracted root's directory while bundling it, so a
   // verifier module written back into that same directory is not importable
   // reliably in the current process.
-  const runtimeTmp = mkdtempSync(join(tmpdir(), 'peerd-verify-runtime-'));
+  const runtimeTmp = mkdtempSync(join(tmpdir(), 'mcdollar-verify-runtime-'));
   try {
     execFileSync('unzip', ['-q', artifactPath, '-d', tmp]);
     const files = walk(tmp);
 
     // a. structural: the module directory must not exist
     for (const f of files) {
-      if (relative(tmp, f).includes('peerd-distributed')) {
+      if (relative(tmp, f).includes('mcdollar-distributed')) {
         failures.push(`dweb module path present in artifact: ${relative(tmp, f)}`);
       }
     }
@@ -184,14 +184,14 @@ export const verifyStoreArtifact = async (
     // c. no file may contain the module's name at all
     for (const f of files) {
       const body = readFileSync(f);
-      if (body.includes('peerd-distributed')) {
-        failures.push(`string "peerd-distributed" found in ${relative(tmp, f)}`);
+      if (body.includes('mcdollar-distributed')) {
+        failures.push(`string "mcdollar-distributed" found in ${relative(tmp, f)}`);
       }
     }
 
     // d. manifest sanity for the store channel
     const manifest = JSON.parse(readFileSync(join(tmp, 'manifest.json'), 'utf8'));
-    if (manifest.name !== 'peerd') failures.push(`store manifest name is "${manifest.name}", expected "peerd"`);
+    if (manifest.name !== 'mcdollar') failures.push(`store manifest name is "${manifest.name}", expected "mcdollar"`);
     if ('update_url' in manifest) failures.push('store manifest must not carry update_url');
     if ('key' in manifest) failures.push('store manifest must not carry key');
 

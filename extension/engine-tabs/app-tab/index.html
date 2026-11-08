@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <!-- why page-local: WebVM legitimately frames its packaged loader. Only the App parent rejects non-extension frame navigation. -->
   <meta http-equiv="Content-Security-Policy" content="frame-src 'self'">
-  <title>peerd · App</title>
+  <title>mcdollar · App</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='2' width='12' height='12' rx='2' fill='%23a78bfa'/%3E%3Crect x='4' y='4' width='8' height='2' fill='%230d1117'/%3E%3Crect x='4' y='7' width='5' height='1' fill='%230d1117'/%3E%3Crect x='4' y='9' width='6' height='1' fill='%230d1117'/%3E%3C/svg%3E">
   <!--
     Trusted parent shell. Multi-file apps live in OPFS at
-    peerd-apps/<appId>/. This page reads + composes them into a
+    mcdollar-apps/<appId>/. This page reads + composes them into a
     single HTML body and posts it to the sandboxed runner iframe.
-    A toggle in the corner swaps to edit mode (peerd-engine/editor).
+    A toggle in the corner swaps to edit mode (mcdollar-engine/editor).
   -->
   <link rel="stylesheet" href="/shared/brand.css">
   <style>
@@ -102,8 +102,8 @@
        when they open. */
     :root:fullscreen #mode-toggle, :root:fullscreen #export-btn,
     :root:fullscreen #actor-chat-toggle, :root:fullscreen #fullscreen-btn,
-    :root:fullscreen .peerd-pull, :root:fullscreen .peerd-pull-hint { display: none; }
-    #peerd-handle {
+    :root:fullscreen .mcdollar-pull, :root:fullscreen .mcdollar-pull-hint { display: none; }
+    #mcdollar-handle {
       position: fixed; left: 0; top: calc(50% - 32px);
       z-index: 40;
       width: 34px; height: 64px; padding: 0;
@@ -113,11 +113,11 @@
       box-shadow: 0 4px 16px rgba(0,0,0,.18), 0 0 0 1px var(--border-strong);
       cursor: pointer;
     }
-    #peerd-handle:hover { color: var(--fg); }
+    #mcdollar-handle:hover { color: var(--fg); }
     /* Inside the dark handle, so the ring shows on a light App too. */
-    #peerd-handle:focus-visible { outline: 2px solid var(--fg); outline-offset: -5px; }
-    #peerd-handle img { display: block; width: 18px; height: 18px; border-radius: 4px; }
-    #peerd-handle svg { display: block; width: 12px; height: 12px; }
+    #mcdollar-handle:focus-visible { outline: 2px solid var(--fg); outline-offset: -5px; }
+    #mcdollar-handle img { display: block; width: 18px; height: 18px; border-radius: 4px; }
+    #mcdollar-handle svg { display: block; width: 12px; height: 12px; }
     #fullscreen-status {
       position: fixed; left: 8px; top: calc(50% + 44px);
       z-index: 40;
@@ -135,7 +135,7 @@
       font: inherit; font-weight: 600;
       padding: 1px 6px; border-radius: 4px; border: 1px solid currentColor;
     }
-    #peerd-handle[hidden], #fullscreen-status[hidden] { display: none; }
+    #mcdollar-handle[hidden], #fullscreen-status[hidden] { display: none; }
     @keyframes fullscreen-status-fade { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
     @media (prefers-reduced-motion: reduce) { #fullscreen-status { animation: none; } }
 
@@ -260,18 +260,18 @@
     <button id="actor-retry" type="button" hidden>Retry actor</button>
   </div>
 
-  <button id="peerd-handle" type="button" aria-label="Open peerd" title="Open peerd" hidden>
+  <button id="mcdollar-handle" type="button" aria-label="Open mcdollar" title="Open mcdollar" hidden>
     <img src="/icons/icon48.png" alt="">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
   </button>
   <div id="fullscreen-status" role="status" hidden>Press <kbd>Esc</kbd> to leave full screen</div>
 
   <div class="frame-host">
-    <iframe id="app-frame" title="peerd app" sandbox="allow-scripts allow-modals allow-pointer-lock"></iframe>
+    <iframe id="app-frame" title="mcdollar app" sandbox="allow-scripts allow-modals allow-pointer-lock"></iframe>
   </div>
 
   <div class="edit-toolbar">
-    <span class="peerd-brand" aria-hidden="true"><span class="b-p">p</span><span class="b-e">e</span><span class="b-e2">e</span><span class="b-r">r</span><span class="b-d">d</span></span>
+    <span class="mcdollar-brand" aria-hidden="true"><span class="b-p">p</span><span class="b-e">e</span><span class="b-e2">e</span><span class="b-r">r</span><span class="b-d">d</span></span>
     <span aria-hidden="true">·</span>
     <span class="app-dot" aria-hidden="true">◇</span>
     <span>app editor</span>
@@ -309,7 +309,7 @@
 
   <button id="fullscreen-btn" type="button" title="Show this App on the whole screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>Full screen</button>
   <button id="actor-chat-toggle" type="button" title="Talk directly with this App's actor" aria-expanded="false">Actor ◇</button>
-  <button id="export-btn" title="Download this app as a .peerd file">Export ⤓</button>
+  <button id="export-btn" title="Download this app as a .mcdollar file">Export ⤓</button>
   <button id="mode-toggle" title="Toggle render / edit">Edit ✎</button>
 
   <script src="/engine-tabs/app-tab/app-tab.js" type="module"></script>

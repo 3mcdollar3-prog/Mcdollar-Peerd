@@ -1,7 +1,7 @@
 // @ts-check
 // Exact one-command channel between the authority kernel and the DOM voice host.
 
-export const VOICE_CHANNEL_OFFER = 'peerd/voice-channel';
+export const VOICE_CHANNEL_OFFER = 'mcdollar/voice-channel';
 export const VOICE_CHANNEL_RESULT = 'voice/result';
 export const VOICE_CHANNEL_PROTOCOL = 1;
 export const VOICE_COMMANDS = Object.freeze([

@@ -15,7 +15,7 @@
 //      exports (a second constant added upstream fails here, not at runtime).
 //   3. CHANNEL POSTURE — shared/channel-config.js carries CHANNEL "web" and
 //      DWEB_ENABLED false.
-//   4. BUILD STAMP — build.json exists and sw.js's __PEERD_WEB_*__ tokens were
+//   4. BUILD STAMP — build.json exists and sw.js's __MCDOLLAR_WEB_*__ tokens were
 //      replaced (the per-build cache name is what invalidates staged modules
 //      on a redeploy).
 //   5. SHIPPABILITY — no file exceeds the 25 MiB static-host per-file limit.
@@ -47,9 +47,9 @@ const walk = (dir: string, out: string[] = []): string[] => {
 };
 
 // Specifier schemes that are not file paths by design: the Notebook's
-// peerd:std builtin, and blob:/data: URLs the resolvers construct.
+// mcdollar:std builtin, and blob:/data: URLs the resolvers construct.
 const isFileSpecifier = (spec: string): boolean =>
-  !/^(peerd:|blob:|data:|https?:)/.test(spec);
+  !/^(mcdollar:|blob:|data:|https?:)/.test(spec);
 
 const stripComments = (src: string): string =>
   src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
@@ -212,13 +212,13 @@ export const checkWebBoundary = async (): Promise<void> => {
   }
 
   // Channel posture. The module itself is not staged (web-target.ts drops
-  // peerd-distributed from the include list) — assert that too, the same
+  // mcdollar-distributed from the include list) — assert that too, the same
   // posture guarantee the store build gets from its dweb-prune.
   const cfg = readFileSync(join(WEB_DIST, 'shared', 'channel-config.js'), 'utf8');
   if (!cfg.includes('CHANNEL = "web"')) f.violations.push('channel-config: CHANNEL is not "web"');
   if (!cfg.includes('DWEB_ENABLED = false')) f.violations.push('channel-config: DWEB_ENABLED is not false in the web build');
-  if (existsSync(join(WEB_DIST, 'peerd-distributed'))) {
-    f.violations.push('peerd-distributed/ is present in web-dist/ — the web target must not stage the dweb module');
+  if (existsSync(join(WEB_DIST, 'mcdollar-distributed'))) {
+    f.violations.push('mcdollar-distributed/ is present in web-dist/ — the web target must not stage the dweb module');
   }
 
   // Build stamp.
@@ -234,8 +234,8 @@ export const checkWebBoundary = async (): Promise<void> => {
   // exact token names UNQUOTED — the SW comment mentions only the *-pattern
   // in prose, and matching the quoted form would miss a quoting change in the
   // template (verified: that shipped the literal token with the gate green).
-  if (sw.includes('__PEERD_WEB_BUILD__') || sw.includes('__PEERD_WEB_PRECACHE__')) {
-    f.violations.push('sw.js still contains unstamped __PEERD_WEB_BUILD__/__PEERD_WEB_PRECACHE__ tokens — the build stamp did not apply');
+  if (sw.includes('__MCDOLLAR_WEB_BUILD__') || sw.includes('__MCDOLLAR_WEB_PRECACHE__')) {
+    f.violations.push('sw.js still contains unstamped __MCDOLLAR_WEB_BUILD__/__MCDOLLAR_WEB_PRECACHE__ tokens — the build stamp did not apply');
   }
 
   // Shippability: static-host per-file limit (Cloudflare Pages' 25 MiB cap).

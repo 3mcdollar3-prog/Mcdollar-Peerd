@@ -78,8 +78,8 @@ describe('native kernel App file picker', () => {
         },
       }),
     });
-    await expect(reader.readText('app-1', 'nested/peerd.json')).resolves.toBe('manifest-body');
-    expect(calls).toEqual([['app-1', 'nested/peerd.json']]);
+    await expect(reader.readText('app-1', 'nested/mcdollar.json')).resolves.toBe('manifest-body');
+    expect(calls).toEqual([['app-1', 'nested/mcdollar.json']]);
   });
 
   test('locked and failed reads preserve the empty-picker UX without storage leakage', async () => {
@@ -200,7 +200,7 @@ describe('native kernel App file picker', () => {
       isAppSender: () => true,
     });
     for (const type of ['app/editor/write', 'app/editor-write'] as const) {
-      for (const path of ['peerd.json', 'data/document.json', 'DATA/State.JSON']) {
+      for (const path of ['mcdollar.json', 'data/document.json', 'DATA/State.JSON']) {
         await expect(routes[type]({ appId: 'app-1', path, content: '{' }, 'exact-app'))
           .resolves.toEqual({ ok: false, code: 'app-file-invalid-json', error: `${path} is not valid JSON` });
       }

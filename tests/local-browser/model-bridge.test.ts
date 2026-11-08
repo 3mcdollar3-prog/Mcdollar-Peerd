@@ -207,12 +207,12 @@ describe('HTTP bridge boundary', () => {
       expect((await fetch(`${url}/health`, { headers: { origin: 'https://attacker.example' } })).status).toBe(403);
       expect((await fetch(`${url}/health`, { headers: { origin: '' } })).status).toBe(403);
       expect((await fetch(`${url}/health`, { headers: { host: 'attacker.example' } })).status).toBe(403);
-      const response = await fetch(`${url}/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'peerd-local-browser', messages: [{ role: 'user', content: 'hi' }] }) });
+      const response = await fetch(`${url}/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'mcdollar-local-browser', messages: [{ role: 'user', content: 'hi' }] }) });
       expect(response.status).toBe(200);
       expect((await response.json()).choices[0].message.content).toBe('local');
       for (const [model, expected] of [[BRIDGE_MODEL, BRIDGE_TRANSPORT_CONTEXT], ['qwen3.5:2b-q4_K_M', HELPER_CONTEXT]]) {
         const info = await fetch(`${url}/api/show`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model }) });
-        expect((await info.json()).model_info['peerd.context_length']).toBe(expected);
+        expect((await info.json()).model_info['mcdollar.context_length']).toBe(expected);
       }
       expect((await fetch(`${url}/api/show`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'cloud-model' }) })).status).toBe(404);
     } finally { await new Promise<void>(resolve => server.close(resolve)); }

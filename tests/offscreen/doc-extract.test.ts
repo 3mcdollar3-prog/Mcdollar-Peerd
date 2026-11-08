@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { handleDocExtract } from '../../extension/offscreen/doc-extract.js';
-import { makeZip } from '../peerd-runtime/doc/fixtures.ts';
+import { makeZip } from '../mcdollar-runtime/doc/fixtures.ts';
 
 describe('offscreen document extraction cancellation', () => {
   test('size refusals keep their code at inline, fetch and conversion limits', async () => {

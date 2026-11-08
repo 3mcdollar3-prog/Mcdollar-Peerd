@@ -61,8 +61,8 @@ export const makeUiRuntimeClient = ({
         callback(value);
       };
       const timer = setTimeoutFn(() => finish(reject, Object.assign(
-        new Error(read ? 'Peerd did not finish loading this view in time.'
-          : 'Peerd could not confirm whether the requested change finished.'),
+        new Error(read ? 'Mcdollar did not finish loading this view in time.'
+          : 'Mcdollar could not confirm whether the requested change finished.'),
         {
           code: 'ui-runtime-timeout', outcomeKnown: read,
           ...(read ? {} : { outcomeKind: 'unknown', retryable: false }),
@@ -71,8 +71,8 @@ export const makeUiRuntimeClient = ({
       pending.then(
         (value) => finish(resolve, value),
         (cause) => finish(reject, Object.assign(
-          new Error(read ? 'Peerd is restarting. Retry this read.'
-            : 'Peerd could not confirm whether the requested change finished.'),
+          new Error(read ? 'Mcdollar is restarting. Retry this read.'
+            : 'Mcdollar could not confirm whether the requested change finished.'),
           {
             code: 'ui-runtime-transport-lost', outcomeKnown: read,
             ...(read ? { retryable: true } : { outcomeKind: 'unknown', retryable: false }),

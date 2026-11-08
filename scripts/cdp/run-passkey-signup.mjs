@@ -8,12 +8,12 @@ import {
 } from './passkey-signup-lane.mjs';
 
 const options = {
-  ...(process.env.PEERD_ACCEPTANCE_SOURCE_ROOT
-    ? { sourceRoot: resolve(process.env.PEERD_ACCEPTANCE_SOURCE_ROOT) } : {}),
-  ...(process.env.PEERD_ACCEPTANCE_ARTIFACT_ROOT
-    ? { artifactRoot: resolve(process.env.PEERD_ACCEPTANCE_ARTIFACT_ROOT) } : {}),
-  ...(process.env.PEERD_ACCEPTANCE_REPORT_PATH
-    ? { reportPath: resolve(process.env.PEERD_ACCEPTANCE_REPORT_PATH) } : {}),
+  ...(process.env.MCDOLLAR_ACCEPTANCE_SOURCE_ROOT
+    ? { sourceRoot: resolve(process.env.MCDOLLAR_ACCEPTANCE_SOURCE_ROOT) } : {}),
+  ...(process.env.MCDOLLAR_ACCEPTANCE_ARTIFACT_ROOT
+    ? { artifactRoot: resolve(process.env.MCDOLLAR_ACCEPTANCE_ARTIFACT_ROOT) } : {}),
+  ...(process.env.MCDOLLAR_ACCEPTANCE_REPORT_PATH
+    ? { reportPath: resolve(process.env.MCDOLLAR_ACCEPTANCE_REPORT_PATH) } : {}),
 };
 const reportPath = options.reportPath
   ?? (options.artifactRoot

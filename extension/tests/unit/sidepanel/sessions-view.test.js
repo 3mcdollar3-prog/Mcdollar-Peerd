@@ -2,8 +2,8 @@
 
 import m from '/vendor/mithril/mithril.js';
 import { describe, it, expect } from '../../framework.js';
-import { createSessionStore } from '/peerd-runtime/index.js';
-import { idb } from '/peerd-egress/index.js';
+import { createSessionStore } from '/mcdollar-runtime/index.js';
+import { idb } from '/mcdollar-egress/index.js';
 import { SessionsView } from '/sidepanel/components/sessions-view.js';
 
 const settle = async () => {

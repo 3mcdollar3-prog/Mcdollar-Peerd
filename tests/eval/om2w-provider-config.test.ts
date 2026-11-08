@@ -7,7 +7,7 @@ describe('Online-Mind2Web provider setup', () => {
   test('a real local run configures its endpoint without registering any cloud key', async () => {
     const config = resolveOm2wProviderConfig({
       provider: 'ollama', model: 'local-browser-policy', ollamaHost: 'http://127.0.0.1:11435/',
-      env: { PEERD_BENCH_KEY: 'must-not-leave-env', ANTHROPIC_API_KEY: 'also-private' },
+      env: { MCDOLLAR_BENCH_KEY: 'must-not-leave-env', ANTHROPIC_API_KEY: 'also-private' },
     });
     const sent: any[] = [];
     await configureOm2wProvider(async (message) => { sent.push(message); return { ok: true }; }, config, 'tools');
@@ -36,14 +36,14 @@ describe('Online-Mind2Web provider setup', () => {
 
   test('chat and web actor models are configured independently for a local comparison', async () => {
     const config = resolveOm2wProviderConfig({
-      provider: 'ollama', model: 'qwen3.5:2b-q4_K_M', runnerModel: ' peerd-local-browser ',
+      provider: 'ollama', model: 'qwen3.5:2b-q4_K_M', runnerModel: ' mcdollar-local-browser ',
     });
     const sent: any[] = [];
     await configureOm2wProvider(async (message) => { sent.push(message); return { ok: true }; }, config, 'tools');
     expect(sent).toEqual([{
       type: 'settings/update', patch: {
         providerName: 'ollama', providerModel: 'qwen3.5:2b-q4_K_M',
-        runnerModel: 'peerd-local-browser', webActorActionSurface: 'tools',
+        runnerModel: 'mcdollar-local-browser', webActorActionSurface: 'tools',
       },
     }]);
     expect(resolveOm2wProviderConfig({ provider: 'ollama', runnerModel: ' ' }).settingsPatch)

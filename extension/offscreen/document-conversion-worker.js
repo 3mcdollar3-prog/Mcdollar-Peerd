@@ -5,7 +5,7 @@
 import {
   convertToDocument, DocParseError, UnsupportedDocFormatError,
   LegacyDocFormatError, ZipError,
-} from '/peerd-runtime/document-conversion.js';
+} from '/mcdollar-runtime/document-conversion.js';
 import {
   DOCUMENT_CONVERSION_PROTOCOL,
   DOCUMENT_CONVERSION_RESULT,

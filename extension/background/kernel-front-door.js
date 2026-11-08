@@ -120,7 +120,7 @@ export const createKernelFrontDoor = ({
     });
   coldEvent('commands.onCommand', browser.commands?.onCommand)
     ?.addListener((/** @type {string} */ command, /** @type {any} */ tab) => {
-      if (command !== 'pull-in-peerd') return;
+      if (command !== 'pull-in-mcdollar') return;
       pullIn(tab?.windowId ?? lastFocusedWindowId, true);
     });
 

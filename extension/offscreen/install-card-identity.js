@@ -4,16 +4,16 @@ import { normalizeAppRuntime, appRuntimeVerdict } from '/shared/app-runtime.js';
 
 /**
  * A discovery head carries the same manifest hash twice: as `version_id` and
- * inside its `peerd://` content address. Keep the check local to this boundary
+ * inside its `mcdollar://` content address. Keep the check local to this boundary
  * module so the Store package still has no static distributed-module edge.
  * @param {any} row
  */
 const hasConsistentVersionAddress = (row) => {
   const uri = row?.head?.content_addr;
   const versionId = row?.head?.version_id;
-  if (typeof uri !== 'string' || !uri.startsWith('peerd://')
+  if (typeof uri !== 'string' || !uri.startsWith('mcdollar://')
       || typeof versionId !== 'string' || !/^[a-f0-9]{64}$/.test(versionId)) return false;
-  let rest = uri.slice('peerd://'.length);
+  let rest = uri.slice('mcdollar://'.length);
   if (rest.startsWith('did:')) {
     const slash = rest.indexOf('/');
     if (slash < 0) return false;

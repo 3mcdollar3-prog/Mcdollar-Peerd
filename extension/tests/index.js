@@ -11,65 +11,65 @@
 import './unit/shared/util.test.js';
 import './unit/shared/bundle-transport.test.js';
 
-// --- peerd-egress ---
-import './unit/peerd-egress/audit-retention.test.js';
-import './unit/peerd-egress/denylist.test.js';
-import './unit/peerd-egress/safe-fetch.test.js';
-import './unit/peerd-egress/vault.test.js';
-import './unit/peerd-egress/vault-blob-idb.test.js';
-import './unit/peerd-egress/dpop-key-idb.test.js';
-import './unit/peerd-egress/vault-kdf.test.js';
-import './unit/peerd-egress/vault-prf.test.js';
-import './unit/peerd-egress/web-fetch.test.js';
+// --- mcdollar-egress ---
+import './unit/mcdollar-egress/audit-retention.test.js';
+import './unit/mcdollar-egress/denylist.test.js';
+import './unit/mcdollar-egress/safe-fetch.test.js';
+import './unit/mcdollar-egress/vault.test.js';
+import './unit/mcdollar-egress/vault-blob-idb.test.js';
+import './unit/mcdollar-egress/dpop-key-idb.test.js';
+import './unit/mcdollar-egress/vault-kdf.test.js';
+import './unit/mcdollar-egress/vault-prf.test.js';
+import './unit/mcdollar-egress/web-fetch.test.js';
 // Real WebAuthn ceremonies — the ceremony tests register only under the
 // CDP harness (virtual authenticators + injected flag); a manual
 // runner.html shows one documentation test naming the gate.
-import './unit/peerd-egress/webauthn-virtual.test.js';
+import './unit/mcdollar-egress/webauthn-virtual.test.js';
 
-// --- peerd-provider ---
-import './unit/peerd-provider/sse-parser.test.js';
-import './unit/peerd-provider/from-anthropic.test.js';
-import './unit/peerd-provider/to-anthropic.test.js';
-import './unit/peerd-provider/anthropic-adapter.test.js';
-import './unit/peerd-provider/ollama-adapter.test.js';
-import './unit/peerd-provider/ollama-recommend.test.js';
+// --- mcdollar-provider ---
+import './unit/mcdollar-provider/sse-parser.test.js';
+import './unit/mcdollar-provider/from-anthropic.test.js';
+import './unit/mcdollar-provider/to-anthropic.test.js';
+import './unit/mcdollar-provider/anthropic-adapter.test.js';
+import './unit/mcdollar-provider/ollama-adapter.test.js';
+import './unit/mcdollar-provider/ollama-recommend.test.js';
 
-// --- peerd-runtime ---
-import './unit/peerd-runtime/sessions-store.test.js';
-import './unit/peerd-runtime/agent-loop.test.js';
-import './unit/peerd-runtime/actor-spawn.test.js';
-import './unit/peerd-runtime/idp-sign-in-flow.test.js';
+// --- mcdollar-runtime ---
+import './unit/mcdollar-runtime/sessions-store.test.js';
+import './unit/mcdollar-runtime/agent-loop.test.js';
+import './unit/mcdollar-runtime/actor-spawn.test.js';
+import './unit/mcdollar-runtime/idp-sign-in-flow.test.js';
 import './unit/sidepanel/login-confirm.test.js';
-import './unit/peerd-runtime/turn-driver-credentials.test.js';
-import './unit/peerd-runtime/dispatcher.test.js';
-import './unit/peerd-runtime/introspection-tools.test.js';
-import './unit/peerd-runtime/query-dom.test.js';
-import './unit/peerd-runtime/dom-walk.test.js';
-import './unit/peerd-runtime/activity-overlay.test.js';
-import './unit/peerd-runtime/default-hooks.test.js';
-import './unit/peerd-runtime/user-hook-csp.test.js';
-import './unit/peerd-runtime/prompt-wrap.test.js';
-import './unit/peerd-runtime/system-prompt.test.js';
-import './unit/peerd-runtime/tool-manifests.test.js';
-import './unit/peerd-runtime/redact.test.js';
+import './unit/mcdollar-runtime/turn-driver-credentials.test.js';
+import './unit/mcdollar-runtime/dispatcher.test.js';
+import './unit/mcdollar-runtime/introspection-tools.test.js';
+import './unit/mcdollar-runtime/query-dom.test.js';
+import './unit/mcdollar-runtime/dom-walk.test.js';
+import './unit/mcdollar-runtime/activity-overlay.test.js';
+import './unit/mcdollar-runtime/default-hooks.test.js';
+import './unit/mcdollar-runtime/user-hook-csp.test.js';
+import './unit/mcdollar-runtime/prompt-wrap.test.js';
+import './unit/mcdollar-runtime/system-prompt.test.js';
+import './unit/mcdollar-runtime/tool-manifests.test.js';
+import './unit/mcdollar-runtime/redact.test.js';
 // Lifecycle recovery contract — the SW-eviction sequence over REAL
 // chrome.storage (the bun suite proves the decisions; this proves the IO).
-import './unit/peerd-runtime/lifecycle-recovery.test.js';
-import './unit/peerd-runtime/trim.test.js';
-import './unit/peerd-runtime/clock/now.test.js';
-import './unit/peerd-runtime/clock/context.test.js';
-import './unit/peerd-runtime/web/tools.test.js';
-import './unit/peerd-runtime/voice/model-store.test.js';
-import './unit/peerd-runtime/voice/manager.test.js';
-import './unit/peerd-runtime/voice/transcriber.test.js';
-import './unit/peerd-runtime/voice/engine-picker.test.js';
-import './unit/peerd-runtime/voice/host-runtime.test.js';
-import './unit/peerd-runtime/vm-tools.test.js';
+import './unit/mcdollar-runtime/lifecycle-recovery.test.js';
+import './unit/mcdollar-runtime/trim.test.js';
+import './unit/mcdollar-runtime/clock/now.test.js';
+import './unit/mcdollar-runtime/clock/context.test.js';
+import './unit/mcdollar-runtime/web/tools.test.js';
+import './unit/mcdollar-runtime/voice/model-store.test.js';
+import './unit/mcdollar-runtime/voice/manager.test.js';
+import './unit/mcdollar-runtime/voice/transcriber.test.js';
+import './unit/mcdollar-runtime/voice/engine-picker.test.js';
+import './unit/mcdollar-runtime/voice/host-runtime.test.js';
+import './unit/mcdollar-runtime/vm-tools.test.js';
 
-// --- peerd-engine ---
-import './unit/peerd-engine/overlay.test.js';
-import './unit/peerd-engine/personal-index-durability.test.js';
-import './unit/peerd-engine/pod-opfs.test.js';
+// --- mcdollar-engine ---
+import './unit/mcdollar-engine/overlay.test.js';
+import './unit/mcdollar-engine/personal-index-durability.test.js';
+import './unit/mcdollar-engine/pod-opfs.test.js';
 
 // --- chassis: notebook-tab ---
 import './unit/engine-tabs/notebook-tab/notebook-seal.test.js';
@@ -87,7 +87,7 @@ import './unit/red-team/sandbox-escape.test.js';
 // --- chassis: vm-tab ---
 import './unit/engine-tabs/vm-tab/firefox-webvm-note.test.js';
 import './unit/engine-tabs/vm-tab/disk-lock.test.js';
-import './unit/peerd-engine/repository.test.js';
+import './unit/mcdollar-engine/repository.test.js';
 
 // --- chassis: offscreen (headless JS jobs / script) ---
 import './unit/offscreen/job-runner.test.js';
@@ -102,7 +102,7 @@ import './unit/background/notebook-tab-tracker.test.js';
 import './unit/background/pod-client.test.js';
 import './unit/background/state-get.test.js';
 
-// --- peerd-distributed ---
+// --- mcdollar-distributed ---
 // (none yet — dweb surface reserved for V2+)
 
 // --- sidepanel (chassis) ---

@@ -1,9 +1,9 @@
 // @ts-check
-// page-activity — make it obvious WHICH tab peerd is driving and WHAT it is
+// page-activity — make it obvious WHICH tab mcdollar is driving and WHAT it is
 // doing in there, from inside the browser rather than only from the side panel.
 //
 // Two surfaces, one lifecycle:
-//   TAB STRIP   the driven tab joins the collapsible "peerd" tab group, the same
+//   TAB STRIP   the driven tab joins the collapsible "mcdollar" tab group, the same
 //               group the engine tabs already use (background/tab-tracker.js), so
 //               a glance at the strip says which tab is not the user's to touch.
 //   IN PAGE     a small corner pill (dom/activity-overlay-injected.js) naming the
@@ -12,14 +12,14 @@
 // why both and not one: they answer different questions. The group answers
 // "which tab", visible even when the tab is in the background. The pill answers
 // "is it working, or has it hung" — the complaint that prompted this — and it is
-// only visible where the user is actually looking when peerd is mid-task.
+// only visible where the user is actually looking when mcdollar is mid-task.
 //
 // IO IS INJECTED (tabs / tabGroups / scripting), so the whole lifecycle is
 // testable without a browser and the in-browser tests can drive it with stubs —
 // the same posture tab-tracker.js takes.
 //
 // EVERYTHING HERE IS BEST-EFFORT. A failure to decorate a tab must never fail
-// the tool call that triggered it: the user asked peerd to do something on a
+// the tool call that triggered it: the user asked mcdollar to do something on a
 // page, and losing that to a cosmetic error would be a strictly worse bug than
 // the one this fixes. Every entry point swallows. On Firefox, `tabGroups` is
 // absent and the group half no-ops while the pill still works.
@@ -30,24 +30,24 @@ import {
   clearActivityOverlayInjected,
   isDenylistedTab,
   liveDocumentLocationInjected,
-} from '/peerd-runtime/kernel-browser.js';
+} from '/mcdollar-runtime/kernel-browser.js';
 
 /**
  * The tab group the driven tab joins. Deliberately the SAME title the engine
- * tabs use (app-client.js APP_TAB_GROUP_TITLE), so peerd owns one group in the
+ * tabs use (app-client.js APP_TAB_GROUP_TITLE), so mcdollar owns one group in the
  * strip rather than sprouting one per subsystem.
  */
-export const ACTIVITY_GROUP_TITLE = 'peerd';
+export const ACTIVITY_GROUP_TITLE = 'mcdollar';
 
 /** @typedef {{ tabs: any, tabGroups?: any, scripting: any }} ActivityDeps */
 /** @typedef {{ denylist?: readonly string[] }} ActivityPolicy */
 
 /**
- * Put a tab into peerd's tab group.
+ * Put a tab into mcdollar's tab group.
  *
  * A tab already in a user group is left there. Moving its only tab would delete
  * that group immediately, making restoration impossible. For an ungrouped tab,
- * the prior strip index is captured before it joins peerd's group.
+ * the prior strip index is captured before it joins mcdollar's group.
  *
  * @param {number} tabId
  * @param {ActivityDeps} deps
@@ -78,7 +78,7 @@ export const groupDrivenTab = async (tabId, deps) => {
 };
 
 /**
- * Take a tab back out of peerd's group.
+ * Take a tab back out of mcdollar's group.
  * @param {number} tabId
  * @param {ActivityDeps} deps
  * @returns {Promise<boolean>}
@@ -95,7 +95,7 @@ export const ungroupDrivenTab = async (tabId, deps) => {
 };
 
 /**
- * Restore the user's original group and strip position after peerd releases a
+ * Restore the user's original group and strip position after mcdollar releases a
  * tab. Browser chrome is user state, so decoration must be reversible.
  * @param {number} tabId
  * @param {{ groupId: number, index: number } | null} placement
@@ -170,13 +170,13 @@ const clearOnTarget = async (target, deps) => {
  * THE TWO LIFETIMES, which are deliberately different because they answer
  * different questions:
  *
- *   THE GROUP lasts as long as peerd OWNS the tab — across turns, through the
+ *   THE GROUP lasts as long as mcdollar OWNS the tab — across turns, through the
  *   thinking gaps, until the binding drops. "This tab is not yours right now."
  *   THE PILL lasts only while a turn is actually running. "It is working, here,
  *   on this, and here is Stop."
  *
  * Collapsing them was the first design and it was wrong in both directions: a
- * pill that outlived the turn says peerd is busy when it is idle, and a group
+ * pill that outlived the turn says mcdollar is busy when it is idle, and a group
  * that ended with the turn would shuffle the tab in and out of the strip on
  * every exchange.
  *
@@ -234,7 +234,7 @@ export const createPageActivityReporter = (deps) => {
     }),
 
     /**
-     * The TURN is over. Take the pill down — peerd is not doing anything right
+     * The TURN is over. Take the pill down — mcdollar is not doing anything right
      * now — but keep the group: it still owns the tab and will be back.
      */
     idle: (tabId) => schedule(tabId, async () => {
@@ -244,7 +244,7 @@ export const createPageActivityReporter = (deps) => {
     }),
 
     /**
-     * Peerd no longer OWNS the tab — the binding dropped, the tab closed, or the
+     * Mcdollar no longer OWNS the tab — the binding dropped, the tab closed, or the
      * origin lock handed it back. Undo everything, including the grouping.
      */
     release: (tabId) => schedule(tabId, async () => {

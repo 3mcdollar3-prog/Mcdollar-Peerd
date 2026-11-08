@@ -120,7 +120,7 @@ describe('bound local decision requests', () => {
   });
 });
 
-describe('decision validation and Peerd tool mapping', () => {
+describe('decision validation and Mcdollar tool mapping', () => {
   test('accepts a known choice and preserves zero probability', () => {
     const { choices } = request();
     expect(selectDecision({ answers: { action: { choice: 'click_e2', probability: 0 } } }, choices))

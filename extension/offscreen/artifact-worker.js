@@ -11,7 +11,7 @@ import {
   inspectEnvelope,
   openEnvelope,
   decodeAppSeedHandoff,
-} from '/peerd-engine/artifact.js';
+} from '/mcdollar-engine/artifact.js';
 import {
   ARTIFACT_CHANNEL_PROTOCOL,
   artifactChannelRequestAllowed,

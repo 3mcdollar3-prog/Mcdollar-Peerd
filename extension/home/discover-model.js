@@ -9,7 +9,7 @@ import { matchesWords, searchWords } from './explore-order.js';
 
 /** @typedef {{ dwapp_id?: string, uri?: string, name?: string, slug?: string, seq?: number, publisher?: string, from?: string, version_id?: string, description?: string, size?: number, includes_wasm?: boolean|null, runtimeCompatibility?: {status:string,message:string}, retrieval?: {outcome:string,observedAt:number,expiresAt:number}|null }} DwebApp */
 /** @typedef {{action:'install'|'update', versionId:string|null, seq:number|null, uri:string|null}} PendingTarget */
-/** What an app's own peerd.json asks of peerd (see verifiedDeclared). @typedef {{dweb:boolean, instructions:boolean, observeAct:boolean}} Declared */
+/** What an app's own mcdollar.json asks of mcdollar (see verifiedDeclared). @typedef {{dweb:boolean, instructions:boolean, observeAct:boolean}} Declared */
 /** @typedef {{appId?:string, notice?:string, failure?:string}} LinkOutcome */
 /**
  * Effect custody that must outlive one mount of the section: the page says
@@ -60,7 +60,7 @@ const IN_FLIGHT = Object.freeze(['installing', 'updating']);
  * the reason the host gave for a runtime refusal.
  * @param {string|undefined} busy */
 export const isFailure = (busy) => typeof busy === 'string' && busy !== 'installed' && !IN_FLIGHT.includes(busy);
-// why markers, not the words: the line names the app ("peerd could not
+// why markers, not the words: the line names the app ("mcdollar could not
 // install Field notes."), and a name is peer text, so the view builds it.
 export const FAILED = 'failed';
 export const UNKNOWN = 'unknown';
@@ -86,12 +86,12 @@ export const failureHint = (busy, action = 'install') => {
 };
 
 /**
- * An install or update whose outcome peerd does not know. Neutral words: it
+ * An install or update whose outcome mcdollar does not know. Neutral words: it
  * may still finish.
  * @param {'install'|'update'} action
  */
 export const unknownLines = (action) => ({
-  status: `peerd is not sure the ${action} finished. It may still finish by itself.`,
+  status: `mcdollar is not sure the ${action} finished. It may still finish by itself.`,
   hint: `Check again before you try to ${action} it again.`,
 });
 
@@ -160,7 +160,7 @@ export const networkState = (ready, info) => {
 export const rootView = ({ enabled, net, heardCount, loading, failed, included }) => {
   if (!enabled) return 'start';
   if (net?.kind === 'offline') return 'offline';
-  // why included: the Comes with peerd pill lists apps that come with peerd,
+  // why included: the Comes with mcdollar pill lists apps that come with mcdollar,
   // so it needs no peer and no heard app.
   if (heardCount > 0 || included) return 'grid';
   // why: "No shared apps yet" is a claim. Make it only after a good read.
@@ -172,7 +172,7 @@ export const rootView = ({ enabled, net, heardCount, loading, failed, included }
  * lands, an installed app looks new, so Install stays off. The offline root
  * offers neither Install nor Surprise me, so its lines name what it shows.
  * why "Try again in a moment": the poll reads the Library again, and so does
- * a manual refresh. why "peerd tries again by itself" offline: that root has
+ * a manual refresh. why "mcdollar tries again by itself" offline: that root has
  * no Refresh, and its one Try again starts the peer network, not a read.
  * @param {{ready:boolean, failed:boolean, offline?:boolean}} library
  * @returns {string|null}
@@ -180,17 +180,17 @@ export const rootView = ({ enabled, net, heardCount, loading, failed, included }
 export const libraryStatus = ({ ready, failed, offline = false }) => {
   if (!failed) return ready ? null : 'Checking your Library…';
   if (offline) {
-    return ready ? 'peerd could not refresh your Library. This list may be out of date. peerd tries again by itself.'
-      : 'peerd could not read your Library. peerd tries again by itself.';
+    return ready ? 'mcdollar could not refresh your Library. This list may be out of date. mcdollar tries again by itself.'
+      : 'mcdollar could not read your Library. mcdollar tries again by itself.';
   }
-  return ready ? 'peerd could not refresh your Library. Surprise me stays off until peerd can read it. Try again in a moment.'
-    : 'peerd could not read your Library. Install stays off until peerd can read it. Try again in a moment.';
+  return ready ? 'mcdollar could not refresh your Library. Surprise me stays off until mcdollar can read it. Try again in a moment.'
+    : 'mcdollar could not read your Library. Install stays off until mcdollar can read it. Try again in a moment.';
 };
 
 /**
  * Why the browse list is empty, and what to do. An empty pill says how its
  * apps get there; a search says that nothing matches. why "right now", never
- * "up to date": peerd knows only the versions that people share with it.
+ * "up to date": mcdollar knows only the versions that people share with it.
  * @param {{pill:Pill, searching:boolean}} grid
  * @returns {{title:string, text:string}}
  */
@@ -280,10 +280,10 @@ export const pageState = ({ incompatible, conflict, busy, uncertain, installed, 
 
 const STEPS = Object.freeze([
   { title: 'Look at it', sub: 'You are here' },
-  { title: 'Install', sub: 'peerd checks every file, then adds the app to your Library' },
+  { title: 'Install', sub: 'mcdollar checks every file, then adds the app to your Library' },
   { title: 'Open', sub: 'It opens in its own tab' },
 ]);
-const UPDATE_STEP = Object.freeze({ title: 'Update', sub: 'peerd checks every file, then updates the app in your Library' });
+const UPDATE_STEP = Object.freeze({ title: 'Update', sub: 'mcdollar checks every file, then updates the app in your Library' });
 /** @type {Record<InstallState, StepState[]>} */
 const STEP_STATES = {
   review: ['current', 'pending', 'pending'],
@@ -305,12 +305,12 @@ export const installSteps = (state, action = 'install') => STEPS.map((step, i) =
 /** @type {ReadonlyArray<[keyof Declared, string]>} */
 const SAYS = Object.freeze([
   ['dweb', 'Uses the peer network'],
-  ['instructions', 'Comes with instructions for peerd'],
-  ['observeAct', 'Lets peerd see and use it'],
+  ['instructions', 'Comes with instructions for mcdollar'],
+  ['observeAct', 'Lets mcdollar see and use it'],
 ]);
 
 /**
- * What peerd read from an app's own files, only for the version `version`
+ * What mcdollar read from an app's own files, only for the version `version`
  * names: the host binds it to the hash it checked. A value for another
  * version, or of any other shape, is not known.
  * @param {unknown} value a share-link summary's or a Library record's `declared`
@@ -325,32 +325,32 @@ export const verifiedDeclared = (value, version) => {
 };
 
 /**
- * "The app says it". `checked` names where peerd read the app's own files: a
- * share link it looked at, or the version the Library holds, which peerd
+ * "The app says it". `checked` names where mcdollar read the app's own files: a
+ * share link it looked at, or the version the Library holds, which mcdollar
  * installed or, on this visit, updated. Unchecked, the
- * page says how peerd finds out, never what an app or a peer claims. Checked
- * with nothing recorded (installed before peerd kept it), no section: "Not
- * known yet" would contradict "peerd checked" in What to know.
+ * page says how mcdollar finds out, never what an app or a peer claims. Checked
+ * with nothing recorded (installed before mcdollar kept it), no section: "Not
+ * known yet" would contradict "mcdollar checked" in What to know.
  * why strong: the agent can then see and use the app, the furthest reach.
  * why the note says when: an edit on this device can change the files after
  * the check, so the facts belong to that check. why `changed` for the
  * Library's copy: an edit keeps the version, so the facts show only while
- * the service worker says the files are still the ones peerd checked.
+ * the service worker says the files are still the ones mcdollar checked.
  * @param {{declared:Declared|null, checked:'link'|'installed'|'updated'|null, action?:'install'|'update', changed?:boolean|null}} input
  * @returns {{kind:'unknown'|'nothing'|'checked', chips:{text:string, strong:boolean}[], line:string|null, note:string|null}|null}
  */
 export const saysIt = ({ declared, checked, action = 'install', changed = null }) => {
   if (!checked) {
     return { kind: 'unknown', chips: [], note: null,
-      line: `Not known yet. peerd reads this from the app itself when it checks it. Paste its link or ${action} it, and peerd checks every file first.` };
+      line: `Not known yet. mcdollar reads this from the app itself when it checks it. Paste its link or ${action} it, and mcdollar checks every file first.` };
   }
   if (!declared || (checked !== 'link' && changed !== false)) return null;
   const chips = SAYS.filter(([key]) => declared[key]).map(([key, text]) => ({ text, strong: key === 'observeAct' }));
-  const note = `From the app’s own files, checked when peerd ${checked === 'link' ? 'looked at it'
+  const note = `From the app’s own files, checked when mcdollar ${checked === 'link' ? 'looked at it'
     : checked === 'updated' ? 'updated it' : 'installed it'}.`;
   return chips.length
     ? { kind: 'checked', chips, line: null, note }
-    : { kind: 'nothing', chips, line: 'It does not use the peer network and has no instructions for peerd.', note };
+    : { kind: 'nothing', chips, line: 'It does not use the peer network and has no instructions for mcdollar.', note };
 };
 
 /**
@@ -388,7 +388,7 @@ export const savedContactNames = (rows) => {
  * What the maker page menu offers. A saved maker is renamed; an unsaved one
  * gets a name, as Contacts does. why Block needs the user's own key: a block
  * of yourself would hide your own apps and refuse your own files, so Block
- * waits until peerd knows the page is someone else's. A blocked maker is
+ * waits until mcdollar knows the page is someone else's. A blocked maker is
  * unblocked in Contacts, so the page offers no second block.
  * @param {{did:string, myDid:string|null, saved:boolean, blocked:boolean}} maker
  * @returns {{rename:string, block:boolean}}
@@ -415,7 +415,7 @@ export const keptCards = (cache, latest, keep) => {
 /**
  * The description under an app's name. A heard card always carries the
  * maker's text, so an empty one means the maker gave none. With no card,
- * peerd does not know, so the line claims nothing.
+ * mcdollar does not know, so the line claims nothing.
  * @param {unknown} description a heard card's, or undefined without a card
  * @returns {{text:string, missing:boolean}|null}
  */
@@ -448,7 +448,7 @@ export const libraryPeerApps = (records, heard) => records.flatMap(record => {
 });
 
 /**
- * The search over the apps that come with peerd, by the words of the query
+ * The search over the apps that come with mcdollar, by the words of the query
  * (see searchWords).
  * @template {{name?:string, description?:string}} T
  * @param {T[]} items @param {string} query
@@ -462,8 +462,8 @@ export const matchQuery = (items, query) => {
 // dweb module.
 export const COMMONS_NAME = 'Chat rooms';
 // The names that Chat rooms had before. A Library copy from that time still
-// has one. peerd gave that name, not the user, so Discover shows the new one.
-const FORMER_COMMONS_NAMES = Object.freeze(['commons', 'Peerd-to-Peerd Commons']);
+// has one. mcdollar gave that name, not the user, so Discover shows the new one.
+const FORMER_COMMONS_NAMES = Object.freeze(['commons', 'Mcdollar-to-Mcdollar Commons']);
 
 /**
  * The name Discover shows for a Library app: the name the Library holds, or

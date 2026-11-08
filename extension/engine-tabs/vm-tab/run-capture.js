@@ -32,7 +32,7 @@
 
 // Per-call stderr capture file prefix inside the VM. Dot-file under /tmp so a
 // user ls-ing mid-run doesn't trip over plumbing.
-export const ERRFILE_PREFIX = '/tmp/.peerd-stderr-';
+export const ERRFILE_PREFIX = '/tmp/.mcdollar-stderr-';
 
 /**
  * The text typed into the persistent shell for one wrapped run (sans the

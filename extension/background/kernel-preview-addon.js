@@ -72,11 +72,11 @@ export const createKernelUpdateCustody = (/** @type {any} */ {
   const notePending = async (/** @type {string} */ version) => {
     const state = await read();
     if (state.notifiedVersion === version) return;
-    // why: with the first tab on, a pinned peerd tab stays open, so peerd
+    // why: with the first tab on, a pinned mcdollar tab stays open, so mcdollar
     // does not go quiet.
     if (!notify(restartToInstall()
-      ? `peerd v${version} is downloaded. Restart the browser to install it.`
-      : `peerd v${version} is downloaded - it installs when peerd goes quiet or the browser restarts.`)) return;
+      ? `mcdollar v${version} is downloaded. Restart the browser to install it.`
+      : `mcdollar v${version} is downloaded - it installs when mcdollar goes quiet or the browser restarts.`)) return;
     await update((latest) => ({ ...latest, notifiedVersion: version }));
   };
 
@@ -1080,6 +1080,6 @@ export const previewTargetAddon = Object.freeze({
 });
 
 const root = /** @type {any} */ (globalThis);
-const addonId = Symbol.for('peerd.kernel.target-addon.v1');
+const addonId = Symbol.for('mcdollar.kernel.target-addon.v1');
 if (root[addonId]) throw new Error('kernel-target-addon-owner-conflict');
 root[addonId] = previewTargetAddon;

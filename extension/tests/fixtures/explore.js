@@ -18,7 +18,7 @@ const apps = [
   {name:'Pixel garden',description:'An older shared App without a WebAssembly declaration.'},
 ].map((app,i)=>{
   const publisher=encodeDidKey(new Uint8Array(32).fill(i+1)), version_id=String(i+1).repeat(64);
-  return {...app,dwapp_id:`fixture-${i}`,publisher,version_id,seq:2,size:1024 * (i+1),uri:`peerd://${publisher}/${version_id}`};
+  return {...app,dwapp_id:`fixture-${i}`,publisher,version_id,seq:2,size:1024 * (i+1),uri:`mcdollar://${publisher}/${version_id}`};
 });
 const [orbit, notes, garden] = apps;
 if (frame === 'recent-misses') {
@@ -29,8 +29,8 @@ if (frame === 'recent-misses') {
 // The user's own key, and an app they made and shared from their Library.
 const self = encodeDidKey(new Uint8Array(32).fill(9));
 const own = {name:'Packing list',description:'Pack for a trip, one item at a time.',includes_wasm:false,dwapp_id:'fixture-own',
-  publisher:self,version_id:'9'.repeat(64),seq:1,size:2048,uri:`peerd://${self}/${'9'.repeat(64)}`};
-// offline-fresh: offline from the start, so peerd heard no card this visit.
+  publisher:self,version_id:'9'.repeat(64),seq:1,size:2048,uri:`mcdollar://${self}/${'9'.repeat(64)}`};
+// offline-fresh: offline from the start, so mcdollar heard no card this visit.
 // mine-offline: the app the user made and shared, while the peer network is off.
 const OFFLINE = ['offline', 'offline-empty', 'offline-reading', 'offline-failed', 'offline-fresh', 'mine-offline'];
 // The first Library read lands, and the one Refresh starts fails. Offline,
@@ -79,7 +79,7 @@ const library = () => frame === 'offline-empty' ? [] : [
   ...frame === 'link-changed' ? [{ id: 'local-trail', name: 'Trail map', dweb: { uri: changedLink.uri, hash: changedLink.hash,
     version_id: changedLink.hash, publisher: changedLink.publisher, declared: { ...asksNothing, hash: changedLink.hash } } }] : [],
   // An earlier add of Chat rooms, under the name it had then.
-  ...frame === 'commons-renamed' ? [{ id: 'local-commons', name: 'Peerd-to-Peerd Commons', dweb: { seed: 'commons' } }] : [],
+  ...frame === 'commons-renamed' ? [{ id: 'local-commons', name: 'Mcdollar-to-Mcdollar Commons', dweb: { seed: 'commons' } }] : [],
 ];
 // mine-tile and mine-not-installed: peers share an app the user made, and the user's Library no longer holds it.
 const heard = ['looking', 'empty', 'offline-fresh'].includes(frame) ? []
@@ -192,8 +192,8 @@ const STEPS = {
   'mine-link': [['button', 'Paste link'], ['.disc-start-form input', null, ownLink], ['.disc-start-form button', 'Check link']],
   'mine-share': [['[data-share-open]', 'Share']],
   'link-changed': [['button', 'Paste link'], ['.disc-start-form input', null, loneLink], ['.disc-start-form button', 'Check link']],
-  'commons-renamed': [['.disc-pill', 'Comes with peerd']],
-  // A search on All that only an app that comes with peerd matches.
+  'commons-renamed': [['.disc-pill', 'Comes with mcdollar']],
+  // A search on All that only an app that comes with mcdollar matches.
   'search-included': [['input.disc-search', null, 'chat']],
   maker: [['.disc-app-maker', 'Made by Ana, someone you know']],
   'maker-menu': [['.disc-app-maker', 'Made by Ana, someone you know'], ['[data-maker-menu]', null]],
@@ -218,7 +218,7 @@ const STEPS = {
   'maker-empty': [['button', 'Paste link'], ['.disc-start-form input', null, loneLink],
     ['.disc-start-form button', 'Check link'], ['.disc-app-maker', null]],
   'says-checked': [['button', 'Paste link'], ['.disc-start-form input', null, loneLink], ['.disc-start-form button', 'Check link']],
-  'commons-unknown': [['.disc-pill', 'Comes with peerd'], ['.disc-tile-action', 'Add and open Chat rooms']],
+  'commons-unknown': [['.disc-pill', 'Comes with mcdollar'], ['.disc-tile-action', 'Add and open Chat rooms']],
   share: [['[data-share-open]', 'Share']],
   'share-copied': [['[data-share-open]', 'Share'], ['[data-share-copy]', 'Copy link']],
   'share-copy-failed': [['[data-share-open]', 'Share'], ['[data-share-copy]', 'Copy link']],

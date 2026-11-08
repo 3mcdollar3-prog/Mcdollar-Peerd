@@ -15,7 +15,7 @@ const text = (/** @type {string} */ value) => new TextEncoder().encode(value);
 describe('dwapp deterministic bundle codec', () => {
   it('matches the version-pinned Bun golden in the browser', async () => {
     const compressed = await compressBundleBytes(
-      text('peerd dwapp deterministic gzip codec v2\n'.repeat(257)),
+      text('mcdollar dwapp deterministic gzip codec v2\n'.repeat(257)),
     );
     expect(compressed.byteLength).toBe(106);
     expect(await sha256hex(compressed))

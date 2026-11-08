@@ -16,7 +16,7 @@ import { OptionsApp } from './components/options-app.js';
 import { callPrivateTransfer } from './private-transfer-session.js';
 
 // null until the first snapshot lands — the shell renders a loading
-// gate rather than guessing at vault state (a flash of "set up peerd"
+// gate rather than guessing at vault state (a flash of "set up mcdollar"
 // on every open would be a lie for established installs).
 /** @type {any} */
 let currentState = null;

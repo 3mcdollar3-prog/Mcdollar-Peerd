@@ -16,11 +16,11 @@ import { EXTENSION_DIR, REPO_ROOT } from './lib.ts';
 // here, so an ES5 body that can never carry // @ts-check sat in this scan's
 // denominator, holding reported coverage at 99.7% with nothing to fix.
 export const ES5_INJECTED = new Set<string>([
-  'peerd-runtime/dom/walk-injected.js',
-  'peerd-runtime/dom/framework-state.js',
-  'peerd-runtime/dom/activity-overlay-injected.js',
-  'peerd-runtime/dom/pull-in-hint-injected.js',
-  'peerd-runtime/dom/fetch-tap-injected.js',
+  'mcdollar-runtime/dom/walk-injected.js',
+  'mcdollar-runtime/dom/framework-state.js',
+  'mcdollar-runtime/dom/activity-overlay-injected.js',
+  'mcdollar-runtime/dom/pull-in-hint-injected.js',
+  'mcdollar-runtime/dom/fetch-tap-injected.js',
   'background/debugger-pool.js',
   'background/page-authority/watch-changes.js',
 ]);

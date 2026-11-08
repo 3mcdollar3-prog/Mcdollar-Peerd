@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for trying peerd — it's **0.x experimental**, so rough edges are expected.
+        Thanks for trying mcdollar — it's **0.x experimental**, so rough edges are expected.
         Please do **not** paste API keys, vault contents, or full page text from private sites.
   - type: textarea
     id: what-happened
@@ -38,7 +38,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: peerd version
+      label: mcdollar version
       description: Shown in Settings / the extension's manifest.
       placeholder: 0.1.0
     validations:

@@ -1,8 +1,8 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { createBaseNetwork } from '../../extension/peerd-distributed/base-network.js';
-import { createRoomMesh } from '../../extension/peerd-distributed/transport/mesh.js';
-import { generateIdentity } from '../../extension/peerd-distributed/identity/keypair.js';
+import { createBaseNetwork } from '../../extension/mcdollar-distributed/base-network.js';
+import { createRoomMesh } from '../../extension/mcdollar-distributed/transport/mesh.js';
+import { generateIdentity } from '../../extension/mcdollar-distributed/identity/keypair.js';
 import { createPeerPolicyView } from '../../extension/offscreen/peer-policy.js';
 import { createDiscoverySettings } from '../../extension/offscreen/discovery-settings.js';
 import { withDeadline } from '../../extension/shared/cold-util.js';

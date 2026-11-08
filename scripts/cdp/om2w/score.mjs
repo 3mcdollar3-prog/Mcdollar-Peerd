@@ -67,7 +67,7 @@ const KEY_SOURCES = [
   ['--api-key', flag('api-key', false) ? String(flag('api-key', '')) : ''],
   ['OPENAI_API_KEY', process.env.OPENAI_API_KEY || ''],
   ['OPENROUTER_API_KEY', process.env.OPENROUTER_API_KEY || ''],
-  ['PEERD_OPEN_AI_KEY', process.env.PEERD_OPEN_AI_KEY || ''],
+  ['MCDOLLAR_OPEN_AI_KEY', process.env.MCDOLLAR_OPEN_AI_KEY || ''],
 ];
 const looksPlaceholder = (k) => !k || k.length < 20 || /your[_-]?api|key[_-]?here|placeholder|replace[_-]?me|example|xxxx|^</i.test(k);
 const KEY_CHOSEN = KEY_SOURCES.find(([, v]) => v && !looksPlaceholder(v)) || null;
@@ -158,12 +158,12 @@ function ensureScorer() {
 function patchRunPy() {
   const p = join(REPO, 'src', 'run.py');
   let src = readFileSync(p, 'utf8');
-  if (src.includes('# peerd-patched')) return;
+  if (src.includes('# mcdollar-patched')) return;
   const edits = [
     ['def process_subset(task_subset, args, final_predicted_labels, lock, model):\n\n    auto_eval(args, task_subset, final_predicted_labels, lock, model)',
       'def process_subset(task_subset, args, final_predicted_labels, lock):\n\n    model = OpenaiEngine(model=args.model, api_key=args.api_key)\n    auto_eval(args, task_subset, final_predicted_labels, lock, model)'],
     ['    #Load model\n    model = OpenaiEngine(\n        model=args.model,\n        api_key=args.api_key\n    )\n',
-      '    # peerd-patch: model is built per-worker in process_subset (spawn-safe)\n'],
+      '    # mcdollar-patch: model is built per-worker in process_subset (spawn-safe)\n'],
     ['args=(subset, args, final_predicted_labels, lock, model))',
       'args=(subset, args, final_predicted_labels, lock))'],
     ['chunk_size = len(task_dirs) // num_workers',
@@ -173,7 +173,7 @@ function patchRunPy() {
     if (!src.includes(from)) fail(`could not patch run.py — anchor missing near "${from.slice(0, 48)}…". Upstream at ${PIN.slice(0, 8)} changed? Remove ${REPO} and re-run.`);
     src = src.replace(from, to);
   }
-  writeFileSync(p, `# peerd-patched: per-worker model build (spawn-safe) + chunk_size guard.\n${src}`);
+  writeFileSync(p, `# mcdollar-patched: per-worker model build (spawn-safe) + chunk_size guard.\n${src}`);
   log('patched run.py (per-worker model build; spawn-safe)');
 }
 
@@ -189,7 +189,7 @@ function patchRunPy() {
 function patchUtilsPy() {
   const p = join(REPO, 'src', 'utils.py');
   let src = readFileSync(p, 'utf8');
-  if (src.includes('# peerd-patched')) return;
+  if (src.includes('# mcdollar-patched')) return;
   const from = '        response = self.client.chat.completions.create(\n'
     + '            model=model if model else self.model,\n'
     + '            messages=messages,\n'
@@ -197,7 +197,7 @@ function patchUtilsPy() {
     + '            temperature=temperature,\n'
     + '            **kwargs,\n'
     + '        )';
-  const to = '        # peerd-patch: o-series reasoning judges (o1/o3/o4-*) share the token\n'
+  const to = '        # mcdollar-patch: o-series reasoning judges (o1/o3/o4-*) share the token\n'
     + '        # budget with hidden reasoning + reject max_tokens/temperature — a 512 cap\n'
     + '        # returns empty content scored as failure. Send max_completion_tokens (high)\n'
     + '        # and drop temperature for them; leave other judges unchanged.\n'
@@ -211,7 +211,7 @@ function patchUtilsPy() {
     + '            _params["temperature"] = temperature\n'
     + '        response = self.client.chat.completions.create(**_params)';
   if (!src.includes(from)) fail(`could not patch utils.py — generate() anchor missing. Upstream at ${PIN.slice(0, 8)} changed? Remove ${REPO} and re-run.`);
-  writeFileSync(p, `# peerd-patched: o-series judge uses max_completion_tokens + no temperature.\n${src.replace(from, to)}`);
+  writeFileSync(p, `# mcdollar-patched: o-series judge uses max_completion_tokens + no temperature.\n${src.replace(from, to)}`);
   log('patched utils.py (o-series judge: max_completion_tokens, no temperature)');
 }
 
@@ -227,9 +227,9 @@ function patchBackoffPatience() {
   // v2: also GIVE UP instantly on insufficient_quota — that's the account out
   // of credit, not a rate window; retrying it for 600s is pure spin. (The v1
   // marker gets upgraded in place.)
-  if (src.includes('# peerd-patched-backoff-v2')) return;
-  if (src.includes('# peerd-patched-backoff')) {
-    src = src.replace('# peerd-patched-backoff:', '# peerd-patched-backoff-v2:')
+  if (src.includes('# mcdollar-patched-backoff-v2')) return;
+  if (src.includes('# mcdollar-patched-backoff')) {
+    src = src.replace('# mcdollar-patched-backoff:', '# mcdollar-patched-backoff-v2:')
       .replace('        max_tries=12, max_time=600,', "        max_tries=12, max_time=600,\n        giveup=lambda e: 'insufficient_quota' in str(e),");
     writeFileSync(p, src);
     log('patched utils.py (backoff v2: give up instantly on insufficient_quota)');
@@ -237,7 +237,7 @@ function patchBackoffPatience() {
   }
   const from = '        max_tries=3,';
   if (!src.includes(from)) fail(`could not patch utils.py backoff — max_tries anchor missing. Upstream at ${PIN.slice(0, 8)} changed? Remove ${REPO} and re-run.`);
-  writeFileSync(p, `# peerd-patched-backoff-v2: ride out TPM windows; give up on insufficient_quota.\n${src.replace(from, "        max_tries=12, max_time=600,\n        giveup=lambda e: 'insufficient_quota' in str(e),")}`);
+  writeFileSync(p, `# mcdollar-patched-backoff-v2: ride out TPM windows; give up on insufficient_quota.\n${src.replace(from, "        max_tries=12, max_time=600,\n        giveup=lambda e: 'insufficient_quota' in str(e),")}`);
   log('patched utils.py (backoff: TPM waited out, insufficient_quota gives up instantly)');
 }
 
@@ -274,13 +274,13 @@ function patchImageMediaType() {
 function patchClientTimeout() {
   const p = join(REPO, 'src', 'utils.py');
   const src = readFileSync(p, 'utf8');
-  if (src.includes('# peerd-patched-timeout')) return;
+  if (src.includes('# mcdollar-patched-timeout')) return;
   const from = '        self.client = OpenAI(\n'
     + '                        api_key=api_key,\n'
     + '                    )';
   const to = '        self.client = OpenAI(\n'
     + '                        api_key=api_key,\n'
-    + '                        timeout=90,  # peerd-patched-timeout: stall -> fast retry, not 600s hang\n'
+    + '                        timeout=90,  # mcdollar-patched-timeout: stall -> fast retry, not 600s hang\n'
     + '                        max_retries=0,  # backoff decorator owns retries\n'
     + '                    )';
   if (!src.includes(from)) fail(`could not patch utils.py client timeout — OpenAI() anchor missing. Remove ${REPO} and re-run.`);
@@ -298,12 +298,12 @@ function patchClientTimeout() {
 function patchClaudeJudgeBudget() {
   const p = join(REPO, 'src', 'utils.py');
   const src = readFileSync(p, 'utf8');
-  if (src.includes('# peerd-patched-claude-judge')) return;
+  if (src.includes('# mcdollar-patched-claude-judge')) return;
   const from = '        else:\n'
     + '            _params["max_tokens"] = max_new_tokens\n'
     + '            _params["temperature"] = temperature';
   const to = '        elif _base.startswith("claude"):\n'
-    + '            # peerd-patched-claude-judge: verdict truncation at 512 scores as failure\n'
+    + '            # mcdollar-patched-claude-judge: verdict truncation at 512 scores as failure\n'
     + '            _params["max_tokens"] = max(max_new_tokens, 4096)\n'
     + '            _params["temperature"] = temperature\n'
     + '        else:\n'

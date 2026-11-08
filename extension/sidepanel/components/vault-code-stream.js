@@ -4,7 +4,7 @@ import m from '/vendor/mithril/mithril.js';
 // Short, valid DOM/JS fragments: each types out at its own random spot, like
 // the rain but horizontal. Attention to detail: real browser APIs, not lorem.
 const SNIPPETS = [
-  "document.querySelector('#peerd')",
+  "document.querySelector('#mcdollar')",
   "el.addEventListener('pointerdown', unlock)",
   "await navigator.credentials.get({ publicKey })",
   "crypto.subtle.deriveKey({ name: 'AES-GCM' })",
@@ -14,10 +14,10 @@ const SNIPPETS = [
   "node.classList.add('peer', 'online')",
   "el.dataset.peerId = id",
   "root.replaceChildren(view(state))",
-  "new WebSocket('wss://peerd.ai/rendezvous')",
+  "new WebSocket('wss://mcdollar.ai/rendezvous')",
   "socket.addEventListener('message', route)",
   "for (const peer of swarm) dial(peer)",
-  "await indexedDB.open('peerd-vault', 1)",
+  "await indexedDB.open('mcdollar-vault', 1)",
   "requestAnimationFrame(frame)",
   "queueMicrotask(flush)",
   "new TextEncoder().encode(json)",

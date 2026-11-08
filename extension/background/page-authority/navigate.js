@@ -25,7 +25,7 @@ import {
   sensitiveSiteBrowserTargetVerdict,
   unverifiedBrowserTargetVerdict,
   updateAndObserveCommittedNavigation,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 
 const NAV_TIMEOUT_MS = 30_000;
 const DOCUMENT_READY_WAIT_MS = 2_000;
@@ -170,7 +170,7 @@ export const navigateOwnedTabAuthority = async (args, ctx) => {
       );
       return {
         ok: false,
-        error: 'navigation_final_url_unavailable: peerd could not verify where navigation landed.',
+        error: 'navigation_final_url_unavailable: mcdollar could not verify where navigation landed.',
         structured: { neutralized, phase: 'final_url_unavailable', target: 'tab' },
         outcomeKind: 'host-lost',
       };
@@ -190,7 +190,7 @@ export const navigateOwnedTabAuthority = async (args, ctx) => {
     //
     //   1. This pin IS the credential scope. The host wires
     //      `webFetch = withSessionScopedCredentials(webFetch, () => ctx.activeTab?.origin)`
-    //      and peerd-egress reads that getter LIVE on every fetch to decide
+    //      and mcdollar-egress reads that getter LIVE on every fetch to decide
     //      `credentials:'include'`. Freezing it at the owned origin leaves a
     //      hijacked actor sitting on the attacker's page still holding
     //      CREDENTIALED reach into the origin it left: strictly worse than the
@@ -350,8 +350,8 @@ export const navigateOwnedTabAuthority = async (args, ctx) => {
           throw cause;
         }
       }
-      if (verifiedTab?.peerdDocumentId
-          && Number.isFinite(verifiedTab.peerdDocumentTimeOrigin)) break;
+      if (verifiedTab?.mcdollarDocumentId
+          && Number.isFinite(verifiedTab.mcdollarDocumentTimeOrigin)) break;
       verifiedTab = null;
       if (Date.now() < readyDeadline) {
         await new Promise((resolve) => setTimeout(resolve, 25));
@@ -363,9 +363,9 @@ export const navigateOwnedTabAuthority = async (args, ctx) => {
       });
     }
     finalTab = verifiedTab;
-    // A freshly-adopted web-actor tab is a peerd-opened web page, same as open_tab :
+    // A freshly-adopted web-actor tab is a mcdollar-opened web page, same as open_tab :
     // give it the agent-tab card (the landed URL as its label, not a blank "a tab") and
-    // schedule the "pull peerd in" orientation hint, matching the open_tab path.
+    // schedule the "pull mcdollar in" orientation hint, matching the open_tab path.
     if (adoptedPin && finalTab?.url) {
       try { c.noteTab?.(tabId, finalTab.url, { opened: true }); } catch { /* best-effort */ }
       try { c.hintPullIn?.(tabId, finalTab.url); } catch { /* best-effort */ }

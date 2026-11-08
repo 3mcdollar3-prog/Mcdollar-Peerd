@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { makeSessionMutationRoutes } from '../../extension/background/routes/session-mutations.js';
-import { makeLifecycleBoot } from '../../extension/peerd-runtime/lifecycle/boot.js';
+import { makeLifecycleBoot } from '../../extension/mcdollar-runtime/lifecycle/boot.js';
 import { bindCurrentChat } from '../../extension/shared/current-session-binding.js';
 
 class SessionNotFoundError extends Error {}

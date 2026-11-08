@@ -1,0 +1,741 @@
+// @ts-check
+// mcdollar-distributed/base-network.js — the always-on base network (S2).
+//
+// ONE peer-node joined to a well-known LOBBY (the base topic). Its job is the
+// universal layer: keep a healthy mesh, carry the base announcements, and let
+// apps plug in as SUB-PROTOCOLS — namespaced overlays on the SHARED mesh links,
+// so many dwapps ride one network instead of each spinning up its own. A "room"
+// is just a sub-protocol generalized (GLOBAL-NETWORK.md).
+//
+// Hosted in the offscreen document in production (so it outlives any tab); the
+// mesh is injected, so the SAME logic runs over WebRTC, memoryPair, or the
+// simulator. Verbose by design (dlog) — every join/announce/sub-protocol step
+// is logged so a real-network bug is visible in the console immediately.
+
+import { createRetrievalHistory, NoAppProviderError } from './apps/retrieval-history.js';
+import { PROVIDER_TTL_MS } from './dht/provider-store.js';
+import { createPeerNode } from './peer-node.js';
+import { createPresence } from './gossip/presence.js';
+import { mutableKey, signProvider } from './dht/records.js';
+import { decodeDidKey } from './identity/did.js';
+import {
+  assertBundleWithinLimits,
+  assertBundlePayloadWithinLimits,
+  buildManifest,
+  manifestHash,
+  verifyManifest,
+  MAX_BUNDLE_BYTES,
+} from './content/manifest.js';
+import { packTransportBundle } from './content/bundle.js';
+import { chunkBytes, sha256hex as sha256ChunkHex } from './content/chunk.js';
+import { createRoutedContentChannel } from './content/routed.js';
+import { RETRIEVAL_CONCURRENCY } from './transport/retrieval-protocol.js';
+import { swarmFetch } from './content/swarm.js';
+import { formatMcdollarUri, parseMcdollarUri } from './content/uri.js';
+import { concat, utf8, toHex } from '/shared/bundle/bytes.js';
+import { createLibrary } from './apps/library.js';
+import { createDiscovery, DISCOVERY_BOUNDED_PROFILE } from './apps/discovery.js';
+import { buildMeta, dwappId, verifyMeta } from './apps/meta.js';
+import { dlog } from './log.js';
+import { AppRuntimeError, assertAppRuntime, assertAppRuntimeAgreement, appRuntimeFromFiles } from '/shared/app-runtime.js';
+
+/** @param {string} s */
+const sha256hex = async (s) => toHex(new Uint8Array(await crypto.subtle.digest('SHA-256', utf8(s))));
+// The DHT key a content address provides under — H(mcdollar://…). All providers of
+// the same bytes announce under this one key; the k-closest nodes hold the set.
+/** @param {string} contentAddr */
+const contentKey = (contentAddr) => sha256hex(String(contentAddr));
+
+export const BASE_TOPIC = 'mcdollar/base/1';
+const T_ON = `${BASE_TOPIC}/on`;          // PEER_ON_DWAPP — "I'm running dwapp X"
+/** @param {string} id */
+const subMsgTopic = (id) => `dwapp/${id}/msg`;            // a sub-protocol's gossip topic
+
+/**
+ * @param {{ identity: import('./transport/mesh.js').Identity, mesh: any,
+ *   meta?: () => any, dial?: any, audit?: import('./transport/mesh.js').AuditFn,
+ *   now?: () => number, maxBundleBytes?: number, discoveryEnabled?: ()=>boolean, localRecoveryPending?: ()=>boolean, userBlocked?: (did:string)=>boolean,
+ *   discoveryDisseminationProfile?: typeof import('./apps/discovery.js').DISCOVERY_BOUNDED_PROFILE | null,
+ *   admitDwappMeta?: ((candidate: { dwappId: string, publisher: string, seq: number, versionId: string }) => Promise<boolean>) | null }} opts
+ */
+export const createBaseNetwork = async ({
+  identity, mesh, meta = () => ({}), dial = null, audit = null,
+  now = Date.now, maxBundleBytes = MAX_BUNDLE_BYTES, admitDwappMeta = null, userBlocked = () => false, discoveryEnabled = () => true, localRecoveryPending = () => false,
+  discoveryDisseminationProfile = null,
+}) => {
+  // why: reject unsupported local rollout settings before acquiring node
+  // listeners or transport resources that a rejected constructor cannot close.
+  if (discoveryDisseminationProfile !== null && discoveryDisseminationProfile !== DISCOVERY_BOUNDED_PROFILE) {
+    throw new Error('unsupported discovery dissemination profile');
+  }
+  dlog('base', `assembling base network for ${(identity.did || '').slice(-8)} on lobby "${BASE_TOPIC}"`);
+  const node = await createPeerNode({ identity, mesh, meta, dial, audit, now });
+  let closed = false;
+  /** @type {ReturnType<typeof setInterval> | null} */
+  let maintenanceTimer = null;
+  /** @type {Map<string, number>} */
+  const providerRenewals = new Map();
+  let renewingProviders = false;
+  /** @type {Set<AbortController>} */
+  const operations = new Set();
+  /** @type {Map<string, Set<AbortController>>} */
+  const providerAttempts = new Map();
+  // The injected dialer must honor cancellation by closing pending transports.
+  // Production propagates it through the room dial and HELLO admission fence.
+  /** @template T @param {(signal: AbortSignal) => Promise<T>} run @param {string} [hash] @param {AbortSignal} [parentSignal] */
+  const withNetworkBudget = async (run, hash, parentSignal) => {
+    if (closed) throw new Error('base network closed');
+    parentSignal?.throwIfAborted();
+    const ac = new AbortController();
+    const cancel = () => ac.abort(parentSignal?.reason);
+    parentSignal?.addEventListener('abort', cancel, { once: true });
+    operations.add(ac);
+    if (hash) {
+      if (!providerAttempts.has(hash)) providerAttempts.set(hash, new Set());
+      providerAttempts.get(hash)?.add(ac);
+    }
+    const timer = setTimeout(() => ac.abort(), 5_000);
+    try { return await run(ac.signal); }
+    finally {
+      clearTimeout(timer);
+      parentSignal?.removeEventListener('abort', cancel);
+      operations.delete(ac);
+      if (hash) {
+        const attempts = providerAttempts.get(hash);
+        attempts?.delete(ac);
+        if (!attempts?.size) providerAttempts.delete(hash);
+      }
+      ac.abort();
+    }
+  };
+  /** @param {string} hash */
+  const revokeProvider = (hash) => {
+    for (const ac of providerAttempts.get(hash) ?? []) ac.abort();
+    providerRenewals.delete(hash);
+    return node.content.unannounce(hash);
+  };
+
+  // --- discovery: the metadata plane (PROPAGATION.md) -----------------------
+  // Sovereign + event-driven: no node receives a card it didn't subscribe for.
+  // The Library is the bounded discovery cache; the discovery plane runs the
+  // SUBSCRIBE/SNAPSHOT/stream/UNSUBSCRIBE/ban protocol over the shared mesh. This
+  // RETIRES the old gossip-flood DWAPP_ANNOUNCE + the on-connect push-greet: a
+  // late joiner now ASKS (default-subscribe on connect) and is answered.
+  /** @type {Set<string>} */
+  const blocklist = new Set();
+  /** @param {string} did */
+  const isBlocked = (did) => userBlocked(did) || blocklist.has(did);
+  let contributionGeneration = 0;
+  const retrievalHistory = createRetrievalHistory({ now });
+  /** @param {string} did @param {string} [reason] */
+  const block = (did, reason) => { contributionGeneration += 1; retrievalHistory.clear(); if (reason !== 'user-policy') blocklist.add(did); audit?.('dwapp_publisher_blocked', { did, reason }); };
+  /** @type {Set<(card: any) => void>} */
+  const dwappCbs = new Set();
+  const library = createLibrary({ isBlocked, now });
+  const discovery = createDiscovery({
+    mesh: node.mesh, identity, library, isBlocked, block, audit, now, admitMeta: admitDwappMeta, isEnabled: discoveryEnabled,
+    disseminationProfile: discoveryDisseminationProfile,
+    onCard: (/** @type {any} */ card) => { dlog('base', `card ingested: ${card.value?.name} (${card.dwapp_id.slice(0, 8)}…)`); for (const cb of dwappCbs) cb(card); },
+  });
+
+  // --- sub-protocols: one direct router, many namespaced gossip overlays ----
+  /**
+   * @typedef {{
+   *   onMsg: Set<(arg: { from: string, data: any }) => void>,
+   *   onDirect: Set<(arg: { from: string, data: any }) => void>,
+   *   onPeerCbs: Set<(arg: { did: string }) => void>,
+   *   peers: Map<string, number>,
+   * }} Sub
+   */
+  /** @type {Map<string, Sub>} */
+  const subs = new Map(); // protoId -> { onMsg:Set, onDirect:Set, peers:Map<did,ts> }
+  // The lobby's single direct channel carries every sub-protocol's 1:1 traffic,
+  // tagged with `proto`; route each frame to the right sub-protocol's handlers.
+  node.direct.onMessage((/** @type {{ from: string, data: any }} */ { from, data }) => {
+    const s = data?.proto && subs.get(data.proto);
+    if (s) for (const cb of s.onDirect) cb({ from, data: data.payload });
+  });
+  // PEER_ON_DWAPP keeps each sub-protocol's membership view fresh.
+  node.gossip.subscribe(T_ON, (/** @type {{ from: string, data: any }} */ { from, data }) => {
+    const s = data?.dwapp_id && subs.get(data.dwapp_id);
+    if (s && from !== identity.did) {
+      const isNew = !s.peers.has(from);
+      s.peers.set(from, now());
+      if (isNew) for (const cb of s.onPeerCbs) cb({ did: from });
+    }
+  });
+
+  /** @param {string} id */
+  const joinSubProtocol = (id) => {
+    dlog('base', `dwapp "${id}" joining as a sub-protocol`);
+    let s = subs.get(id);
+    if (!s) { s = { onMsg: new Set(), onDirect: new Set(), onPeerCbs: new Set(), peers: new Map() }; subs.set(id, s); }
+    const sub = s; // why local: TS keeps the non-null narrowing inside the closures below
+    const offGossip = node.gossip.subscribe(subMsgTopic(id), (/** @type {{ from: string, data: any }} */ { from, data }) => {
+      if (from !== identity.did) for (const cb of sub.onMsg) cb({ from, data });
+    });
+    const announceOn = () => node.gossip.publish(T_ON, { dwapp_id: id }).catch(() => {});
+    announceOn(); // tell the room I'm on this dwapp now
+    return Object.freeze({
+      id,
+      self: identity.did,
+      peers: () => [...sub.peers.keys()],
+      /** @param {any} data */
+      broadcast: (data) => node.gossip.publish(subMsgTopic(id), data),
+      /** @param {string} toDid @param {any} payload */
+      send: (toDid, payload) => node.direct.send(toDid, { proto: id, payload }),
+      /** @param {(arg: { from: string, data: any }) => void} cb */
+      onMessage: (cb) => { sub.onMsg.add(cb); return () => sub.onMsg.delete(cb); },
+      /** @param {(arg: { from: string, data: any }) => void} cb */
+      onDirect: (cb) => { sub.onDirect.add(cb); return () => sub.onDirect.delete(cb); },
+      /** @param {(arg: { did: string }) => void} cb */
+      onPeer: (cb) => { sub.onPeerCbs.add(cb); return () => sub.onPeerCbs.delete(cb); },
+      leave: () => { offGossip(); subs.delete(id); },
+    });
+  };
+
+  // --- content helpers (shared by the base handle AND every room) -----------
+  // why locals: a room serves/fetches app bundles over the SAME shared mesh, so
+  // it reuses these exactly — no second content store, no second transport.
+  // Announce that WE serve the bytes at `contentAddr` (Plane 2 provider set):
+  // sign a provider record + ADD_PROVIDER to the k-closest DHT nodes. Idempotent
+  // (re-PUT refreshes the TTL — self-healing). Best-effort: a cold DHT just stores
+  // locally, which is enough for a linked peer to find us via the mesh fallback.
+  /** @param {string} contentAddr */
+  const announceProvider = async (contentAddr) => {
+    const { hash } = parseMcdollarUri(contentAddr);
+    const key = await contentKey(contentAddr);
+    if (closed || !node.content.isAnnounced(hash)) return { key, stored: 0 };
+    try {
+      const result = await withNetworkBudget(async (signal) => {
+        const entry = await signProvider({ key, ts: now() }, identity);
+        signal.throwIfAborted();
+        return node.dht.announceProvider(key, entry, { signal });
+      }, hash);
+      if (!closed && node.content.isAnnounced(hash)) providerRenewals.set(hash, now() + (result.stored ? PROVIDER_TTL_MS / 2 : 30_000));
+      return result;
+    } catch (e) {
+      if (!closed && node.content.isAnnounced(hash)) providerRenewals.set(hash, now() + 30_000);
+      dlog('base', `announceProvider ${key.slice(0, 8)} failed: ${/** @type {{ message?: string }} */ (e)?.message ?? String(e)}`);
+      return { key, stored: 0 };
+    }
+  };
+  const refreshProviders = async () => {
+    if (closed || renewingProviders) return;
+    renewingProviders = true;
+    try {
+      const hashes = node.content.announcedHashes();
+      const live = new Set(hashes);
+      for (const hash of providerRenewals.keys()) if (!live.has(hash)) providerRenewals.delete(hash);
+      // Bounded maintenance traffic; later ticks pick up the remaining due apps.
+      const due = hashes.filter((hash) => (providerRenewals.get(hash) ?? 0) <= now())
+        .sort((a, b) => (providerRenewals.get(a) ?? 0) - (providerRenewals.get(b) ?? 0)).slice(0, 8);
+      for (const hash of due) {
+        if (closed) break;
+        const manifest = node.content.getManifest(hash);
+        if (!manifest) continue;
+        await announceProvider(formatMcdollarUri({ did: manifest.publisher, hash }));
+      }
+    } finally { renewingProviders = false; }
+  };
+
+  /** @param {string} contentAddr */
+  const findProviders = async (contentAddr) => {
+    const key = await contentKey(contentAddr);
+    try { return await node.dht.findProviders(key); }
+    catch { return []; }
+  };
+
+  /** @param {{ name: string, entry: string, files: Record<string, string | Uint8Array>,
+   *   fileKinds?: Record<string, 'text' | 'binary'>, release?: Record<string, any>, created?: number,
+   *   expectedHash?: string }} opts */
+  const publishApp = async ({ name, entry, files, fileKinds, release, created, expectedHash }) => {
+    /** @type {Record<string, Uint8Array>} */
+    const bytes = Object.create(null);
+    for (const [path, content] of Object.entries(files)) {
+      bytes[path] = typeof content === 'string' ? utf8(content) : new Uint8Array(content);
+    }
+    const runtime = appRuntimeFromFiles(bytes);
+    const { payload, descriptor } = await packTransportBundle({ entry, files: bytes, fileKinds });
+    const packedBytes = assertBundlePayloadWithinLimits(payload, maxBundleBytes);
+    const manifestCreated = typeof created === 'number' && Number.isFinite(created) ? created : null;
+    const { manifest, hash, chunks } = await buildManifest({
+      payload,
+      type: 'app',
+      entry,
+      identity,
+      bundle: descriptor,
+      ...((release || runtime) ? { meta: { ...(release ? { release } : {}), ...(runtime ? { runtime } : {}) } } : {}),
+      ...(manifestCreated !== null ? { now: () => manifestCreated } : {}),
+    });
+    assertBundleWithinLimits(manifest);
+    if (expectedHash && hash !== expectedHash) {
+      throw new Error('shared App bytes changed since the recorded version');
+    }
+    node.content.publish({ manifest, hash, chunks });
+    const uri = formatMcdollarUri({ did: identity.did, hash });
+    // why NOT awaited: we already serve the bytes (content.publish), so the DHT
+    // provider record is pure durability for cold lookups. With the per-hop dialer
+    // unwired, that lookup can stall on unreachable contacts — awaiting it made
+    // share take MINUTES and delayed the discovery announce behind it. Background.
+    announceProvider(uri).catch(() => {}); // the publisher is the first provider
+    dlog('base', `published app "${name}" → ${uri}`);
+    // A discovery hint from these exact published bytes, not a compatibility or
+    // safety verdict. Do not add it to the manifest and change immutable hashes.
+    const includesWasm = Object.values(bytes).some(file => file.length >= 8
+      && file[0] === 0 && file[1] === 97 && file[2] === 115 && file[3] === 109);
+    return { uri, hash, packedBytes, created: manifest.created, includesWasm, ...(runtime ? { runtime } : {}) };
+  };
+
+  // Re-seed bytes we fetched so WE become a provider too (install → seeder). The
+  // payload re-chunks deterministically into the SAME hashes the original signed
+  // manifest commits to, so we serve the publisher's bundle unchanged (no
+  // re-attribution). Then announce ourselves as a provider.
+  /** @param {{ manifest: any, payload: Uint8Array }} opts */
+  const seedApp = async ({ manifest, payload }) => {
+    if (isBlocked(manifest.publisher)) throw new Error('publisher-user-blocked');
+    assertBundleWithinLimits(manifest);
+    if (!(payload instanceof Uint8Array) || payload.byteLength !== manifest.size) {
+      throw new Error('seed App payload does not match its signed manifest size');
+    }
+    const hash = await manifestHash(manifest);
+    // Own immutable snapshots of the signed representation. `chunkBytes`
+    // returns views, so retaining them directly would let a caller mutate a
+    // successfully verified seed after admission and poison future serves.
+    const chunks = chunkBytes(payload).map((chunk) => new Uint8Array(chunk));
+    if (chunks.length !== manifest.chunks.length) {
+      throw new Error('seed App payload does not match its signed chunk count');
+    }
+    for (const [index, chunk] of chunks.entries()) {
+      const committed = manifest.chunks[index];
+      if (chunk.byteLength !== committed.size || await sha256ChunkHex(chunk) !== committed.hash) {
+        throw new Error(`seed App compressed chunk ${index} failed verification`);
+      }
+    }
+    if (isBlocked(manifest.publisher)) throw new Error('publisher-user-blocked');
+    node.content.publish({ manifest, hash, chunks });
+    announceProvider(formatMcdollarUri({ did: manifest.publisher ?? identity.did, hash })).catch(() => {}); // background durability
+    return hash;
+  };
+
+  // Un-share / un-seed an app. STOP being a provider for its bytes (unannounce
+  // from the content store → the liability firewall now REFUSES every chunk we
+  // used to serve, so no peer can pull it from us anymore) and drop OUR card for
+  // it from the discovery Library (it vanishes from our own Discover; other peers'
+  // caches age it out once nobody seeds it — popularity = availability, there is
+  // no flooded retraction to send). Resolves the dwapp_id from (publisher, slug):
+  // for an app WE published, publisher is us and the bundle hash lives on our own
+  // card's head; an INSTALLED app passes its hash explicitly (its card is the
+  // ORIGINAL publisher's, so we can't author a fresh version). Best-effort +
+  // idempotent: an app we never shared unshares to a clean no-op.
+  /** @param {{ slug?: string | null, publisher?: string }} [opts] */
+  const unpublishMeta = async ({ slug = null, publisher = identity.did } = {}) => {
+    const id = slug ? await dwappId(publisher, slug) : null;
+    if (id) discovery.tombstone(id);
+    return { removed: !!id, dwapp_id: id };
+  };
+
+  /** @param {{ slug?: string | null, publisher?: string, hash?: string | null, hashes?: string[] }} [opts] */
+  const unshareApp = async ({ slug = null, publisher = identity.did, hash = null, hashes = [] } = {}) => {
+    const id = slug ? await dwappId(publisher, slug) : null;
+    // Prefer the caller's hash (installed apps carry it on their record); else read
+    // it off our own card (a self-published app — version_id IS the bundle hash).
+    let h = hash;
+    if (!h && id) { const card = library.get(id); h = card?.value?.head?.version_id ?? null; }
+    const releaseHashes = [...new Set([h, ...hashes].filter((value) => typeof value === 'string'))];
+    let unserved = 0;
+    for (const releaseHash of releaseHashes) if (revokeProvider(releaseHash)) unserved += 1;
+    // tombstone (not a bare remove): also blocks a peer's cached copy from
+    // re-infecting our Library on the next snapshot. Lifted if we re-share.
+    await unpublishMeta({ slug, publisher });
+    dlog('base', `unshare ${id ? `${id.slice(0, 8)}…` : '?'} — unserved:${unserved} tombstoned:${!!id}`);
+    return { unserved, removed: !!id, dwapp_id: id, hash: h };
+  };
+
+  // Revoke one served version without changing discovery metadata. Share and
+  // update transactions use this after a replacement succeeds, and while
+  // rolling back bytes whose public metadata failed to publish.
+  /** @param {string} hash */
+  const unserveContent = revokeProvider;
+
+  // Fetch only on request. Prefer the named publisher while qualifying other
+  // linked seeders concurrently; unrelated neighbors never delay useful chunks.
+  /** @param {string} uri @param {{ timeoutMs?: number, onProgress?: (p: any) => void, signal?: AbortSignal, expectedRuntime?: {value:unknown} }} [opts] */
+  const fetchAllowedApp = async (uri, { timeoutMs = 15_000, onProgress, signal: callerSignal, expectedRuntime } = {}) => {
+    /** @type {Array<{release:()=>void}>} */
+    const leases = [];
+    const traversal = dial?.createTraversal?.({signal:callerSignal});
+    try {
+      callerSignal?.throwIfAborted();
+      /** @param {string} did */
+      const channelFor = (did) => {
+        if(isBlocked(did))return null;
+        const direct=node.mesh.contentChannel(did);if(direct)return direct;
+        return dial?.retrieval?createRoutedContentChannel({isAllowed:()=>!closed&&!isBlocked(did),
+          read:(kind,hash,signal,onPart)=>dial.retrieval.read(did,{kind,hash},signal,onPart)}):null;
+      };
+      const acceptManifest = (/** @type {any} */ manifest) => {
+        if (expectedRuntime) assertAppRuntimeAgreement(expectedRuntime.value, manifest.meta?.runtime);
+        assertAppRuntime(manifest.meta?.runtime);
+      };
+      /** @type {string | null | undefined} */
+      let publisher = null;
+      let localHash = null;
+      try { ({ did: publisher, hash: localHash } = parseMcdollarUri(uri)); } catch { /* malformed uri → skip the fast path */ }
+      if (publisher && isBlocked(publisher)) throw new Error('publisher-user-blocked');
+      // why: a seeder can be the only remaining provider of another author's
+      // App. Read its explicitly announced bytes without a mesh channel to self,
+      // preserving the original signer and verifying the same addressed content.
+      if (publisher && localHash && node.content.isAnnounced(localHash)) {
+        const manifest = structuredClone(node.content.getManifest(localHash));
+        if (!manifest || await manifestHash(manifest) !== localHash) {
+          throw new Error('local manifest hash mismatch');
+        }
+        if (manifest.publisher !== publisher) throw new Error('local manifest publisher mismatch');
+        assertBundleWithinLimits(manifest);
+        if (!(await verifyManifest(manifest)).ok) throw new Error('local manifest signature invalid');
+        acceptManifest(manifest);
+        const chunks = manifest.chunks.map((/** @type {{hash:string}} */ chunk) => {
+          const bytes = node.content.getChunk(chunk.hash);
+          return bytes instanceof Uint8Array ? new Uint8Array(bytes) : null;
+        });
+        for (const [index, chunk] of chunks.entries()) {
+          if (!(chunk instanceof Uint8Array)) throw new Error('local bundle chunk unavailable');
+          // assertBundleWithinLimits checked sizes; the generic content store
+          // intentionally models only the hash used by its serving firewall.
+          const committed = /** @type {{hash:string,size:number}} */ (manifest.chunks[index]);
+          if (chunk.byteLength !== committed.size || await sha256ChunkHex(chunk) !== committed.hash) {
+            throw new Error('local bundle chunk verification failed');
+          }
+        }
+        const payload = concat(.../** @type {Uint8Array[]} */ (chunks));
+        assertBundlePayloadWithinLimits(payload, maxBundleBytes);
+        if (payload.byteLength !== manifest.size) throw new Error('local bundle size mismatch');
+        if (manifest.v === 2 && await sha256ChunkHex(payload) !== manifest.bundle.compressedHash) {
+          throw new Error('local compressed bundle hash mismatch');
+        }
+        return { manifest, payload, providers: [identity.did], verifiedContributors: [] };
+      }
+      if (publisher === identity.did && (localRecoveryPending() || node.mesh.peers().length === 0)) {
+        // why: an install holds the publication lane needed by local reseeding.
+        // Yield before network IO while recovery is pending, even if neighbors
+        // have already supplied a discovery card. After recovery, another seeder
+        // may still serve an older local version that is no longer announced.
+        throw Object.assign(new Error('local shared App bytes are not available yet'), {
+          code: 'dweb-local-content-unavailable',
+          performed: false,
+          outcomeKnown: true,
+          outcomeKind: 'pre-effect-failure',
+          retryable: true,
+        });
+      }
+      const linked = node.mesh.peers().map((/** @type {{ did: string }} */ p) => p.did);
+
+      const isAllowed = (/** @type {string} */ did) => !closed && !isBlocked(did);
+      // Match chunk scheduling to the bounded routed reader. A third chunk
+      // otherwise spends its send deadline waiting behind two healthy reads.
+      // Fully linked transfers keep the ordinary swarm concurrency.
+      const fetchProviders = (/** @type {string[]} */ providers) => swarmFetch({uri,providers,channelFor,timeoutMs,onProgress,
+        signal:callerSignal,isAllowed,acceptManifest,
+        alpha:dial?.retrieval&&providers.some(did=>!node.mesh.hasLink(did))?RETRIEVAL_CONCURRENCY:undefined});
+      const preferred = [...new Set([...(publisher ? [publisher] : []), ...linked])];
+      if (linked.length) {
+        try { return await fetchProviders(preferred); }
+        catch (e) { callerSignal?.throwIfAborted(); if (e instanceof AppRuntimeError) throw e; dlog('base', `linked seeder fetch failed (${/** @type {{ message?: string }} */ (e)?.message ?? String(e)}); trying DHT providers (bounded)`); }
+      }
+      // Retain the DHT responder as the signaling broker for each provider.
+      // Bound both lookup and dialing; unavailable referrals must not hang an install.
+      onProgress?.({ phase: 'locating' });
+      callerSignal?.throwIfAborted();
+      let lookupCompleted = false;
+      const contacts = await withNetworkBudget(async (signal) => {
+        const key = await contentKey(uri);
+        signal.throwIfAborted();
+        let queryFailed = false;
+        const found = await node.dht.findProviderContacts(key, { signal, traversal, onQueryFailure: () => { queryFailed = true; } });
+        // A deadline ends exploration, not referrals already received. The
+        // caller's cancellation is checked below before any provider is dialed.
+        lookupCompleted = !queryFailed && !signal.aborted;
+        return found;
+      }, undefined, callerSignal).catch(() => []);
+      callerSignal?.throwIfAborted();
+      const candidates = contacts.filter((/** @type {any} */ contact) => contact.did !== identity.did && !isBlocked(contact.did)).slice(0, 8);
+      if(dial?.retrieval&&candidates.length){
+        try{return await fetchProviders([...new Set([...candidates.map((/** @type {any} */ c)=>c.did),...linked])]);}
+        catch(error){callerSignal?.throwIfAborted();if(error instanceof AppRuntimeError)throw error;}
+      }
+      let next = 0;
+      const connectProvider = async () => {
+        while (next < candidates.length && !closed && !callerSignal?.aborted) {
+          const contact = candidates[next++];
+          if (node.mesh.hasLink(contact.did) || !dial) continue;
+          onProgress?.({ phase: 'connecting' });
+          callerSignal?.throwIfAborted();
+          try { await withNetworkBudget(async (signal) => {
+            const acquireContent = traversal?.acquireContent ?? dial.acquireContent;
+            if (acquireContent) {
+              // Dial deadline cleanup must not cancel an admitted transfer. The
+              // caller owns its lease until fetch completion/cancellation.
+              const lease = await acquireContent(contact, { signal, leaseSignal: callerSignal ?? null });
+              leases.push(lease);
+            } else await dial(contact, { signal });
+          }, undefined, callerSignal); }
+          catch { /* another provider may be reachable */ }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(3, candidates.length) }, connectProvider));
+      callerSignal?.throwIfAborted();
+      if (closed) throw new Error('base network closed');
+      const provided = candidates.map((/** @type {any} */ contact) => contact.did);
+      const providers = [...new Set([...provided, ...linked])];
+      if (!providers.length && lookupCompleted && !contacts.length) throw new NoAppProviderError(uri);
+      if (!providers.length) throw new Error(`no peer is serving ${uri} right now. The peer may have dropped; try again`);
+      return await fetchProviders(providers);
+    } finally { for (const lease of leases) lease.release(); traversal?.close(); }
+  };
+
+  /** @param {string} uri @param {{timeoutMs?:number,onProgress?:(p:any)=>void,signal?:AbortSignal,expectedRuntime?:{value:unknown}}} [options] */
+  const fetchApp = async (uri, options) => {
+    options?.signal?.throwIfAborted();
+    const { did, hash } = parseMcdollarUri(uri);
+    const generation = contributionGeneration;
+    if (did && isBlocked(did)) throw new Error('publisher-user-blocked');
+    // why: only a completed, explicitly requested lookup can suppress a recent
+    // suggestion. A newer request supersedes an older completion; policy and
+    // host changes invalidate all tickets without retaining unbounded history.
+    const address = formatMcdollarUri({ did, hash });
+    const ticket = retrievalHistory.begin(address);
+    let result;
+    try {
+      result = await fetchAllowedApp(uri, options);
+      options?.signal?.throwIfAborted();
+    }
+    catch (error) {
+      if (!closed && !options?.signal?.aborted && generation === contributionGeneration && error instanceof NoAppProviderError) {
+        retrievalHistory.miss(address, ticket);
+      }
+      throw error;
+    }
+    retrievalHistory.forget(address, ticket);
+    if (closed) throw new Error('base network closed');
+    if (isBlocked(result.manifest.publisher)) throw new Error('publisher-user-blocked');
+    // why: a ban/unban during a transfer cannot resurrect pre-policy history.
+    // Evidence is local to the exact verified version and the live host lifetime.
+    if (!closed && generation === contributionGeneration) {
+      library.observeContributors(result.manifest.publisher, hash,
+        result.verifiedContributors.filter((provider) => provider !== identity.did));
+    }
+    return result;
+  };
+
+  // --- a ROOM: the full feed / presence / dm / content surface a dwapp expects,
+  // composed over the SHARED base mesh by NAMESPACING every topic to dwapp/<id>/.
+  // This is room-host.js's composition WITHOUT a second rendezvous + mesh: the
+  // base network already supplies connectivity, so "join a room" is just "open a
+  // namespaced overlay" (GLOBAL-NETWORK.md — a room is a sub-protocol generalized).
+  // Many rooms ride one mesh; a dwapp is a sub-protocol id, never tied to a signaler.
+  /** @param {string} roomId @param {{ meta?: () => any }} [opts] */
+  const openRoom = (roomId, { meta: roomMeta = () => ({}) } = {}) => {
+    const id = String(roomId);
+    /** @param {string} topic */
+    const ns = (topic) => `dwapp/${id}/${topic}`;
+    const sub = joinSubProtocol(id);   // proto-tagged direct router + T_ON membership announce
+    // Per-room presence on a namespaced topic: who's in THIS room, with names
+    // (the lobby's global presence is a different, broader set). The anti-flap
+    // suppression in presence.js applies here too.
+    const presence = createPresence({ gossip: node.gossip, selfDid: identity.did, meta: roomMeta, topic: ns('~presence') });
+    presence.start();                  // beacon our membership (carries the display name)
+    dlog('base', `room "${id}" opened over the base mesh (namespaced overlay)`);
+    return Object.freeze({
+      did: identity.did,
+      roomId: id,
+      // room membership, with display names + onJoin/onLeave — the only liveness
+      // a room needs (the shared mesh's own link events aren't room-scoped).
+      presence,
+      // multi-topic feed over the shared gossip, namespaced to this room
+      gossip: {
+        /** @param {string} topic @param {any} data */
+        publish: (topic, data) => node.gossip.publish(ns(topic), data),
+        /** @param {string} topic @param {(arg: any) => void} cb */
+        subscribe: (topic, cb) => node.gossip.subscribe(ns(topic), cb),
+        /** @param {string} did */
+        mute: (did) => node.gossip.mute(did),
+      },
+      // retained-topic backfill (late-join history), namespaced
+      sync: {
+        /** @param {string} topic */
+        retain: (topic) => node.sync.retain(ns(topic)),
+        /** @param {string} topic @param {any} data */
+        publish: (topic, data) => node.sync.publish(ns(topic), data),
+        /** @param {string} topic */
+        history: (topic) => node.sync.history(ns(topic)),
+      },
+      // 1:1 direct, proto-tagged so a message never crosses into another room
+      direct: { send: sub.send, onMessage: sub.onDirect },
+      status: () => ({ joined: id, did: identity.did, present: presence.list().length }),
+      leave: () => { presence.close(); sub.leave(); dlog('base', `room "${id}" left`); },
+    });
+  };
+
+  return Object.freeze({
+    did: identity.did,
+    node,
+    mesh,
+    presence: node.presence, // global presence (the lobby's "who's here")
+    dht: node.dht,
+    peers: () => node.mesh.peers().map((/** @type {{ did: string, info?: any }} */ p) => ({ did: p.did, info: p.info })),
+
+    // The discovery plane handle (subscribe/ban/setEnabled) + the Library.
+    discovery,
+    // Build + publish one of OUR apps' metadata card (the metadata plane). Floods
+    // to our subscribers via discovery AND drops a durable DHT copy keyed by our
+    // (publisher, slug) — so a peer that knows the publisher can resolve it cold
+    // (the DHT durability layer the RFC keeps; the content-keyed mirror is the
+    // deferred scaling step). Returns { dwapp_id, card }.
+    /** @param {{ slug: string, name: string, description?: string, seq?: number, head: any, icon?: any }} opts */
+    async publishMeta({ slug, name, description = '', seq = now(), head, icon = null }) {
+      const card = await buildMeta({ slug, name, description, seq, head, icon }, identity);
+      // discovery.announce forwards the card to our SUBSCRIBERS — this is what makes
+      // peers SEE it, and it's fast (point-to-point sends). The DHT put is the
+      // durable cold-lookup copy; awaiting it (with the dialer unwired) is what made
+      // share take minutes AND delayed this announce. Background, best-effort.
+      const { dwapp_id, propagated } = await discovery.announce(card);
+      dlog('base', `published dwapp meta "${name}" → ${dwapp_id.slice(0, 12)}…`);
+      node.dht.put(card) // card IS a signed DHT item (records.js shape)
+        .then((/** @type {{ stored: number }} */ { stored }) => dlog('base', `DHT put ${dwapp_id.slice(0, 8)}…: stored to ${stored} peer(s)`))
+        .catch((/** @type {unknown} */ e) => dlog('base', `DHT put for ${dwapp_id.slice(0, 8)}… failed: ${/** @type {{ message?: string }} */ (e)?.message ?? String(e)}`));
+      return { dwapp_id, card, propagated };
+    },
+    /** @param {(card: any) => void} cb */
+    onDwappAnnounce: (cb) => { dwappCbs.add(cb); return () => dwappCbs.delete(cb); },
+    // The discovery view the Library UI lists — the bounded, no-downgrade cache.
+    heardDwapps: () => library.rows().map((row) => ({
+      ...row,
+      // Unsigned, local observation; never accept this field from card metadata.
+      retrieval: retrievalHistory.read(row.head.content_addr),
+    })),
+    // Resolve a card by id: the Library first (already subscribed), else the DHT
+    // by (publisher, slug) — the durable late-join path that survives a card we
+    // never had streamed to us. A DHT hit is verified + cached into the Library.
+    /** @param {string} id @param {string} [publisherDid] @param {string} [slug] */
+    async findDwapp(id, publisherDid = '', slug = '') {
+      const local = library.get(id);
+      if (local) return local;
+      if (publisherDid && slug) {
+        try {
+          const hit = await node.dht.get(await mutableKey(decodeDidKey(publisherDid), slug));
+          if (hit?.value && await verifyMeta(hit)) {
+            const derived = await dwappId(hit.publisher, hit.salt);
+            if (derived === id && await discovery.ingest(hit)) return hit;
+          }
+        } catch { /* not found */ }
+      }
+      return null;
+    },
+    // Apply user policy to cached publishers too, even when their signed cards
+    // arrived through a different seeder rather than a current direct link.
+    /** @param {(did:string)=>boolean} [explicitlyBlocked] */
+    enforceUserPolicy: (explicitlyBlocked = userBlocked) => {
+      // why: a policy refresh can revoke a disconnected contributor absent
+      // from the publisher catalog. Fence every older transfer, even if the
+      // blocked DID is subsequently unblocked before verification completes.
+      contributionGeneration += 1;
+      retrievalHistory.clear();
+      for (const did of new Set([...node.mesh.peers().map((/** @type {any} */ peer) => peer.did),
+        ...library.rows().map((/** @type {any} */ row) => row.publisher)])) {
+        // why: a temporary policy outage closes admission without turning
+        // cached publishers (including ourselves) into destructive user bans.
+        if (explicitlyBlocked(did)) discovery.ban(did, 'user-policy');
+      }
+    },
+    // Ban a publisher/peer: drop their feed, blocklist, purge, cut the link.
+    /** @param {string} did @param {string} [reason] */
+    ban: (did, reason) => discovery.ban(did, reason),
+    // Lift a ban: un-blocklist and re-subscribe so their cards can flow again.
+    /** @param {string} did */
+    unblock: (did) => { blocklist.delete(did); discovery.subscribeTo(did).catch(() => {}); audit?.('dwapp_publisher_unblocked', { did }); },
+    isBlocked,
+    // The sovereign discovery switch + a read of the discovery state (for the
+    // agent's dweb_peers tool and the Network view).
+    /** @param {boolean} on */
+    setDiscovery: (on) => discovery.setEnabled(on),
+    discoveryState: () => ({ enabled: discovery.enabled(), subscribers: discovery.subscriberCount(), library: library.size(), blocked: [...blocklist] }),
+
+    // --- app store: publish a dwapp's files as a signed bundle the base mesh
+    // serves, and fetch one from whoever's serving it. SAME content modules as a
+    // room — the base mesh already serves content (createPeerNode does
+    // mesh.serveContent), so this just rides ch=2 over the always-on lobby.
+    publishApp,
+    fetchApp,
+    // Stop sharing/seeding a deleted app: unannounce its bytes + drop our card.
+    unshareApp,
+    unpublishMeta,
+    unserveContent,
+    // Plane 2: the content provider set + "install → seeder" re-seed.
+    announceProvider,
+    refreshProviders,
+    findProviders,
+    seedApp,
+
+    joinSubProtocol,
+    // A room is a sub-protocol with the full dwapp surface (feed/presence/dm/
+    // content) — the connectivity comes from the base mesh, no signaler needed.
+    openRoom,
+
+    // A read-only snapshot of the live mesh for a status/visualization surface
+    // (the home-page Network view). The UNION of two honest layers:
+    //   - mesh links  = peers we hold a direct authenticated channel to, each
+    //     carrying its real ICE path (direct-ipv6 / direct-ipv4-srflx / relay).
+    //   - gossip presence = peers we've HEARD (a beacon) but may not link to;
+    //     these carry the display name (meta.name) and may be link-less.
+    // `linked` distinguishes them so the UI can draw a solid edge (direct) vs a
+    // faint one (heard-via-gossip). Side-effect-free; tolerant of a cold node.
+    snapshot: () => {
+      /** @type {Array<{ did: string, lastSeen?: number, info?: any }>} */
+      const links = node.mesh.peers();              // [{ did, lastSeen, info, channel }]
+      const linkByDid = new Map(links.map((l) => /** @type {const} */ ([l.did, l])));
+      const present = node.presence.list().filter((/** @type {{ did: string }} */ p) => p.did !== identity.did);
+      const nameByDid = new Map(present.map((/** @type {{ did: string, meta?: any }} */ p) => /** @type {const} */ ([p.did, p.meta?.name ?? null])));
+      const seenByDid = new Map(present.map((/** @type {{ did: string, lastSeen?: number }} */ p) => /** @type {const} */ ([p.did, p.lastSeen ?? null])));
+      const dids = new Set([...linkByDid.keys(), ...nameByDid.keys()]);
+      const peers = [...dids].map((did) => {
+        const l = linkByDid.get(did);
+        return {
+          did,
+          name: nameByDid.get(did) ?? null,
+          linked: !!l,
+          path: l?.info?.path ?? null,                // null until ICE stats settle / link-less
+          via: l?.info?.via ?? null,                  // who introduced us: 'rendezvous' | a peer did
+          lastSeen: l?.lastSeen ?? seenByDid.get(did) ?? null,
+        };
+      });
+      return {
+        lobby: BASE_TOPIC,
+        peers,
+        peerCount: peers.length,
+        linkedCount: links.length,
+        presentCount: present.length,
+        dhtSize: node.dht?.routingTable?.size?.() ?? 0,
+      };
+    },
+
+    start: () => {
+      if (closed) return;
+      if (!maintenanceTimer) maintenanceTimer = setInterval(() => {
+        // A SUB may race link admission or replacement. Reconcile here, at the
+        // reusable base-network owner, so every client self-heals rather than
+        // relying on an offscreen-host-only timer.
+        discovery.subscribeAll();
+        refreshProviders().catch(() => {});
+      }, 12_000);
+      refreshProviders().catch(() => {});
+      dlog('base', 'base network ONLINE (presence + liveness started)');
+      node.start();
+      // Reconcile against peers we're ALREADY linked to: the base mesh is usually
+      // up long before discovery starts, and onPeer only covers FUTURE links — so
+      // subscribe to current peers too, or a late starter's Library stays empty.
+      discovery.subscribeAll();
+    },
+    close: () => { closed = true; retrievalHistory.clear(); library.clearContributors(); for (const ac of operations) ac.abort(); if (maintenanceTimer) clearInterval(maintenanceTimer); providerRenewals.clear(); dlog('base', 'base network closing'); discovery.close(); node.close(); },
+  });
+};

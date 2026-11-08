@@ -45,8 +45,8 @@ export interface Scenario {
   /** Which surface runs the probes. */
   tier: ScenarioTier;
   /**
-   * For the malicious-MCP-server adversary: peerd ships no MCP client, so the
-   * named vector maps onto peerd's real untrusted-tool-metadata surface. This
+   * For the malicious-MCP-server adversary: mcdollar ships no MCP client, so the
+   * named vector maps onto mcdollar's real untrusted-tool-metadata surface. This
    * records that mapping so the report is clear about what is and is not tested.
    */
   mcpMapping?: string;
@@ -113,7 +113,7 @@ export const formatMarkdown = (ran: RanScenario[], generatedNote: string): strin
   const probesBlocked = ran.reduce((n, r) => n + r.result.probes.filter((p) => p.blocked).length, 0);
 
   const lines: string[] = [];
-  lines.push('# peerd red-team results');
+  lines.push('# mcdollar red-team results');
   lines.push('');
   lines.push('> Generated file. Do not hand-edit. Produced by');
   lines.push('> `bun run tests/red-team/report.ts` (`bun run red-team:report`). It runs the');
@@ -167,5 +167,5 @@ export const formatConsole = (ran: RanScenario[]): string => {
   });
   const partial = ran.filter((r) => r.result.held && r.result.coverage === 'partial').length;
   const held = ran.filter((r) => r.result.held && r.result.coverage !== 'partial').length;
-  return [`peerd red-team: ${held} fully held, ${partial} partial, ${ran.length - held - partial} failed`, ...rows].join('\n');
+  return [`mcdollar red-team: ${held} fully held, ${partial} partial, ${ran.length - held - partial} failed`, ...rows].join('\n');
 };

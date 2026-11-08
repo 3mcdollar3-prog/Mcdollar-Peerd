@@ -476,7 +476,7 @@ const fetchJson = async (
 ): Promise<Record<string, unknown>> => {
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json, application/json',
-    'User-Agent': 'peerd-dependabot-security-policy',
+    'User-Agent': 'mcdollar-dependabot-security-policy',
     'X-GitHub-Api-Version': '2022-11-28',
   };
   if (githubToken) headers.Authorization = `Bearer ${githubToken}`;
@@ -498,7 +498,7 @@ const fetchJsonArray = async (
 ): Promise<unknown[]> => {
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json',
-    'User-Agent': 'peerd-dependabot-security-policy',
+    'User-Agent': 'mcdollar-dependabot-security-policy',
     'X-GitHub-Api-Version': '2022-11-28',
   };
   if (githubToken) headers.Authorization = `Bearer ${githubToken}`;

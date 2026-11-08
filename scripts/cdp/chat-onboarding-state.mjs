@@ -6,7 +6,7 @@ import { startOllamaAcceptanceFixture, ACCEPTANCE_MODEL } from './product-accept
 const savedSession = (page, id) => evalIn(page, `(async () => {
   'use strict';
   const { createKernelSessionReader } = await import('/background/kernel-session-reader.js');
-  const idb = await import('/peerd-egress/storage/idb.js');
+  const idb = await import('/mcdollar-egress/storage/idb.js');
   return createKernelSessionReader(idb).get(${JSON.stringify(id)});
 })()`, true);
 const tabIds = (page) => evalIn(page, 'chrome.tabs.query({}).then((tabs) => tabs.map((tab) => tab.id))', true);
@@ -39,11 +39,11 @@ export const CHAT_ONBOARDING_STATES = [
           } else await evalIn(ctx.page, `document.querySelector('.path-card[data-path="ask"]').click()`);
           const settled = await waitFor(() => evalIn(ctx.page, `document.body.textContent.includes(${JSON.stringify(`NO-CHOICE-${source}-OK`)})
             && !document.querySelector('button.stop')`), { budgetMs: 25_000 });
-          if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe(`merge-base first ${source}`, { settled, wireCalls: wire.length });
+          if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe(`merge-base first ${source}`, { settled, wireCalls: wire.length });
           else rec.check(`the first ${source} reaches the displayed Ollama provider once`, !!settled
             && wire.length === 1 && wire[0].model === ACCEPTANCE_MODEL, JSON.stringify({ settled, wire }));
           await rec.visual(source === 'send' ? 'chat-no-explicit-provider' : 'chat-no-choice-starter');
-          if (!settled && process.env.PEERD_VISUAL_BASE_RENDER !== '1') throw new Error('The first unchosen-provider turn did not finish');
+          if (!settled && process.env.MCDOLLAR_VISUAL_BASE_RENDER !== '1') throw new Error('The first unchosen-provider turn did not finish');
         }
       } finally {
         await rpc(ctx.page, { type: 'settings/update', patch: { providerName: 'ollama', providerModel: ACCEPTANCE_MODEL } });
@@ -187,8 +187,8 @@ export const CHAT_ONBOARDING_STATES = [
                 const session = await savedSession(ctx.page, id);
                 return session?.messages?.some((message) => message.role === 'assistant'
                   && message.content === `COLD-RECOVERED-${kind}` && message.streaming !== true) ? session : null;
-              }, { budgetMs: process.env.PEERD_VISUAL_BASE_RENDER === '1' ? 12_000 : 30_000 });
-              if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe(`merge-base cold ${kind}`, { completed: !!completed, calls: active.requests.length });
+              }, { budgetMs: process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1' ? 12_000 : 30_000 });
+              if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe(`merge-base cold ${kind}`, { completed: !!completed, calls: active.requests.length });
               else rec.check(kind === 'tool' ? 'cold worker resumes the saved tool-use interruption once'
                 : `cold worker resumes the real ${kind} interruption once`, !!completed
                 && active.requests.length === beforeCalls + 1
@@ -286,11 +286,11 @@ export const CHAT_ONBOARDING_STATES = [
         page = await attach(target.webSocketDebuggerUrl); await page.send('Page.enable');
         const failed = await waitFor(() => evalIn(page, `document.getElementById('vm-boot')?.classList.contains('is-failed')`), { budgetMs: 30_000 });
         const done = await waitFor(() => evalIn(ctx.page, `document.body.textContent.includes('VM-BOOT-REFUSED') && !document.querySelector('button.stop')`), { budgetMs: 40_000 });
-        if (process.env.PEERD_REQUIRE_VM_MODULE_FAULT === '1' && faults.length !== 1) throw new Error('PROBE-GAP: the strict VM module fault was not exercised');
+        if (process.env.MCDOLLAR_REQUIRE_VM_MODULE_FAULT === '1' && faults.length !== 1) throw new Error('PROBE-GAP: the strict VM module fault was not exercised');
         if (!failed || !done || faultError) throw new Error(`The explicit VM boot failure did not settle: ${JSON.stringify({ failed, done, faultError })}`);
         const id = new URL(target.url).hash.slice(1);
         const saved = await evalIn(ctx.page, `(async () => {
-          const row = await (await import('/peerd-egress/storage/idb.js')).get('vms', 'webvms.v1');
+          const row = await (await import('/mcdollar-egress/storage/idb.js')).get('vms', 'webvms.v1');
           return row?.value?.vms?.[${JSON.stringify(id)}] ?? null;
         })()`, true);
         const state = await rpc(ctx.page, { type: 'state/get' });
@@ -301,11 +301,11 @@ export const CHAT_ONBOARDING_STATES = [
         const retained = (await fetch(`http://127.0.0.1:${ctx.port}/json/list`).then((reply) => reply.json()))
           .some((item) => item.id === target.id && item.url === target.url);
         rec.check('the real failed VM tab stays open for its boot details', failed && retained, JSON.stringify(report));
-        if (process.env.PEERD_REQUIRE_VM_MODULE_FAULT === '1') {
+        if (process.env.MCDOLLAR_REQUIRE_VM_MODULE_FAULT === '1') {
           rec.check('strict isolation reaches the actual CheerpX module-wire fault', report.isolated === true && faults.length === 1, JSON.stringify(report));
           if (report.isolated !== true) throw new Error('PROBE-GAP: the strict VM module fault was not exercised');
         }
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('merge-base explicit VM failure result', report);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('merge-base explicit VM failure result', report);
         else rec.check('explicit boot failure is fast and known and rolls back the new record',
           report.latencyMs < 20_000 && saved === null && results.some((result) => result.is_error === true
             && result.outcomeKnown !== false && /vm_spawn_failed/.test(result.content ?? '')), JSON.stringify(report));

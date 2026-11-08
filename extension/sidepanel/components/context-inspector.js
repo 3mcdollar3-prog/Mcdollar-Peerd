@@ -5,7 +5,7 @@
 // ring: one entry per model call (orchestrator turns AND delegated
 // actor/actor calls), each showing the shaped request — clipped
 // system prompt, message roster, tool names, params. This is the
-// debugging view for the two hardest bug classes peerd has: compaction
+// debugging view for the two hardest bug classes mcdollar has: compaction
 // surprises ("why did it forget?") and fence regressions ("what
 // exactly entered the context?").
 //
@@ -60,8 +60,8 @@ const Snapshot = {
  */
 export const ContextInspector = {
   /** @param {{ attrs: ContextInspectorAttrs, state: {returnFocus?: HTMLElement | null} }} vnode */
-  view: ({ attrs: { snapshots, error = null, onClose }, state }) => m('.peerd-modal-backdrop', { onclick: onClose },
-    m('.peerd-modal.context-inspector', { ...confirmationDialogAttrs('context-inspector-title', onClose, state), onclick: (/** @type {Event} */ e) => e.stopPropagation() }, [
+  view: ({ attrs: { snapshots, error = null, onClose }, state }) => m('.mcdollar-modal-backdrop', { onclick: onClose },
+    m('.mcdollar-modal.context-inspector', { ...confirmationDialogAttrs('context-inspector-title', onClose, state), onclick: (/** @type {Event} */ e) => e.stopPropagation() }, [
       m('.ctx-header', [
         m('span.ctx-title#context-inspector-title', 'context inspector'),
         m('span.ctx-subtitle', 'what each model call carried, newest first'),

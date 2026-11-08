@@ -1,5 +1,5 @@
 // @ts-check
-// home/first-tab-prompts.js - the one-time prompts for "Keep peerd as the
+// home/first-tab-prompts.js - the one-time prompts for "Keep mcdollar as the
 // first tab": the offer after the first setup, and the hint in the pinned tab.
 // The rules are in first-tab.js; home.js and the side panel decide when each
 // one shows.
@@ -49,11 +49,11 @@ export const FirstTabOffer = () => {
     view: ({ attrs: { send, onAnswered, beforeKeep } }) =>
       m('section.first-tab-offer', { 'aria-labelledby': 'first-tab-offer-title' }, [
         m('.first-tab-offer-text', [
-          m('h2#first-tab-offer-title', 'Keep peerd as the first tab?'),
-          m('p', 'It stays at the start of your tabs in every window, so peerd is one click away.'),
+          m('h2#first-tab-offer-title', 'Keep mcdollar as the first tab?'),
+          m('p', 'It stays at the start of your tabs in every window, so mcdollar is one click away.'),
           m('p', 'You can turn this on later in Settings.'),
           failed ? m('p.error', { role: 'alert' },
-            'peerd could not turn this on. Try again, or turn it on in Settings.') : null,
+            'mcdollar could not turn this on. Try again, or turn it on in Settings.') : null,
         ]),
         m('.first-tab-offer-actions', [
           m('button.first-tab-keep', {
@@ -69,12 +69,12 @@ export const FirstTabOffer = () => {
 
 /** The side panel's answer to "Keep it": the new tabs open out of sight. */
 export const FirstTabKept = {
-  view: () => m('p.first-tab-kept', { role: 'status' }, 'peerd is now the first tab in every window.'),
+  view: () => m('p.first-tab-kept', { role: 'status' }, 'mcdollar is now the first tab in every window.'),
 };
 
 /**
- * The side panel asks too, because most people set peerd up there. It asks
- * once, in the panel that showed the first vault setup, and only when peerd
+ * The side panel asks too, because most people set mcdollar up there. It asks
+ * once, in the panel that showed the first vault setup, and only when mcdollar
  * can answer, so it never stacks on the provider setup.
  * @param {{ send: Send, afterAnswer?: () => void }} deps
  *   afterAnswer - runs once the offer has its answer (the panel moves focus)
@@ -100,7 +100,7 @@ export const makePanelFirstTab = ({ send, afterAnswer = () => {} }) => {
 };
 
 /**
- * The tab strip is browser UI, so the hint shows inside peerd, at the top of
+ * The tab strip is browser UI, so the hint shows inside mcdollar, at the top of
  * the pinned tab. Escape works like "Got it".
  */
 export const FirstTabHint = {
@@ -113,8 +113,8 @@ export const FirstTabHint = {
       onDismiss();
     },
   }, [
-    m('h2#first-tab-hint-title', 'peerd lives here.'),
-    m('p', 'Click P anytime to ask peerd or open your apps.'),
+    m('h2#first-tab-hint-title', 'mcdollar lives here.'),
+    m('p', 'Click P anytime to ask mcdollar or open your apps.'),
     m('.first-tab-hint-actions',
       m('button.first-tab-hint-ok', { type: 'button', onclick: onDismiss }, 'Got it')),
   ]),

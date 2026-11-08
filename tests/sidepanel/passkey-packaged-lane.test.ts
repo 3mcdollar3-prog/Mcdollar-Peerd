@@ -7,7 +7,7 @@ import {
   PRODUCTION_PREVIEW_CHROME_BACKGROUND_ENTRY,
 } from '../../scripts/cdp/passkey-signup-lane.mjs';
 import {
-  identifyPeerdBackgroundTarget, normalizeAcceptanceProxyServer,
+  identifyMcdollarBackgroundTarget, normalizeAcceptanceProxyServer,
 } from '../../scripts/cdp/e2e-harness.mjs';
 import {
   ACCEPTANCE_REPLY, startOllamaAcceptanceFixture,
@@ -191,9 +191,9 @@ describe('packaged first-install passkey lane', () => {
     const lane = readFileSync(join(REPO_ROOT, 'scripts/cdp/passkey-signup-lane.mjs'), 'utf8');
     const harness = readFileSync(join(REPO_ROOT, 'scripts/cdp/e2e-harness.mjs'), 'utf8');
     expect(lane).toContain("channel: 'store', browser: 'chrome'");
-    expect(lane).toContain("peerdStaticShellPainted !== 'true'");
-    expect(lane).toContain("peerdBootModule !== 'evaluated'");
-    expect(lane).toContain("peerdBootStage !== 'vault-ready'");
+    expect(lane).toContain("mcdollarStaticShellPainted !== 'true'");
+    expect(lane).toContain("mcdollarBootModule !== 'evaluated'");
+    expect(lane).toContain("mcdollarBootStage !== 'vault-ready'");
     expect(lane).toContain('Passkey verified. Finishing secure vault setup…');
     expect(lane).toContain("stage === 'app-ready'");
     expect(lane).toContain("clock: 'host-monotonic-ms'");
@@ -235,13 +235,13 @@ describe('packaged first-install passkey lane', () => {
       url: `chrome-extension://${'a'.repeat(32)}/${entry}`,
       webSocketDebuggerUrl: 'ws://127.0.0.1/devtools/page/target-1',
     });
-    expect(identifyPeerdBackgroundTarget(target(PRODUCTION_BACKGROUND_ENTRY))?.entry)
+    expect(identifyMcdollarBackgroundTarget(target(PRODUCTION_BACKGROUND_ENTRY))?.entry)
       .toBe(PRODUCTION_BACKGROUND_ENTRY);
-    expect(identifyPeerdBackgroundTarget(target(PRODUCTION_PREVIEW_CHROME_BACKGROUND_ENTRY))?.entry)
+    expect(identifyMcdollarBackgroundTarget(target(PRODUCTION_PREVIEW_CHROME_BACKGROUND_ENTRY))?.entry)
       .toBe(PRODUCTION_PREVIEW_CHROME_BACKGROUND_ENTRY);
-    expect(identifyPeerdBackgroundTarget(target('background/service-worker.js'))).toBeNull();
-    expect(identifyPeerdBackgroundTarget(target('background/other.js'))).toBeNull();
-    expect(identifyPeerdBackgroundTarget(target(PRODUCTION_BACKGROUND_ENTRY, 'worker'))).toBeNull();
+    expect(identifyMcdollarBackgroundTarget(target('background/service-worker.js'))).toBeNull();
+    expect(identifyMcdollarBackgroundTarget(target('background/other.js'))).toBeNull();
+    expect(identifyMcdollarBackgroundTarget(target(PRODUCTION_BACKGROUND_ENTRY, 'worker'))).toBeNull();
   });
 
   test('realm-independent Ollama fixture serves one exact streamed controller turn', async () => {

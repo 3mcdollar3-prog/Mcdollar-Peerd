@@ -10,7 +10,7 @@
 // ----------------
 //   - WebAuthn available: passkey-only sign-up — one ceremony →
 //     `vault/initializeWithPasskey`. A capability probe (pure planning
-//     in peerd-egress enroll-options) decides which choices to show:
+//     in mcdollar-egress enroll-options) decides which choices to show:
 //     the platform authenticator leads when one exists (labeled "Touch
 //     ID"/"Windows Hello" where the platform is recognizable — label
 //     only, never behavior), and a security key (YubiKey or any FIDO2
@@ -36,11 +36,11 @@ import m from '/vendor/mithril/mithril.js';
 import { base64ToBytes, bytesToBase64 } from '/shared/util.js';
 import browser from '/shared/browser-api.js';
 
-/** @typedef {import('/peerd-egress/vault/enroll-options.js').CapabilityProbe} CapabilityProbe */
+/** @typedef {import('/mcdollar-egress/vault/enroll-options.js').CapabilityProbe} CapabilityProbe */
 
-/** @type {Promise<typeof import('/peerd-egress/ui.js')>|null} */
+/** @type {Promise<typeof import('/mcdollar-egress/ui.js')>|null} */
 let vaultUiPromise = null;
-const loadVaultUi = () => (vaultUiPromise ??= import('/peerd-egress/ui.js')
+const loadVaultUi = () => (vaultUiPromise ??= import('/mcdollar-egress/ui.js')
   .catch((cause) => { vaultUiPromise = null; throw cause; }));
 const isWebAuthnAvailable = () => typeof navigator !== 'undefined'
   && typeof navigator.credentials?.create === 'function'
@@ -84,7 +84,7 @@ const APP_VERSION = (() => {
  * Big "manifest" brand wordmark for the vault gate — the hero logo on
  * the lock / sign-up screen, and the only brand mark there (the top-bar
  * wordmark is suppressed while locked). It plays the same two-phase
- * intro as peerd.ai: the letters type out behind a terminal cursor,
+ * intro as mcdollar.ai: the letters type out behind a terminal cursor,
  * then the blocks colorize. Pure CSS via .wordmark--intro/.wordmark--hero;
  * runs once on mount (Mithril patches the node across redraws).
  *
@@ -102,7 +102,7 @@ const BrandHeader = {
       m('svg.ic', { width: 19, height: 19, viewBox: '0 0 24 24' },
         m('use', { href: '#ic-lock' }))),
     m('.wordmark.wordmark--intro.wordmark--hero', {
-      'aria-label': 'peerd',
+      'aria-label': 'mcdollar',
       role: 'img',
     }, [
       m('.block.b-p',  'p'),
@@ -141,21 +141,21 @@ const ERROR_MESSAGES = {
   'recovery-not-set':    'No recovery passphrase has been set — unlock with your passkey.',
   'invalid-passphrase':  'Passphrase must be at least 8 characters.',
   'invalid-prf-payload': 'Passkey setup did not return usable credentials.',
-  'vault-authority-timeout': 'The secure vault did not confirm whether the operation finished. Wait a moment while peerd reconciles, then try again.',
-  'vault-authority-channel-lost': 'The secure vault restarted before it could confirm the result. Wait a moment while peerd reconciles, then try again.',
+  'vault-authority-timeout': 'The secure vault did not confirm whether the operation finished. Wait a moment while mcdollar reconciles, then try again.',
+  'vault-authority-channel-lost': 'The secure vault restarted before it could confirm the result. Wait a moment while mcdollar reconciles, then try again.',
 };
 
 /** @param {unknown} cause */
 const authorityUncertainMessage = (cause) => {
   const error = /** @type {{code?:string,outcomeKnown?:boolean}} */ (cause);
   return error?.outcomeKnown === false || error?.code === 'vault-authority-timeout'
-    ? 'The secure vault did not confirm whether that finished. Wait a moment while peerd reconciles before trying again.'
+    ? 'The secure vault did not confirm whether that finished. Wait a moment while mcdollar reconciles before trying again.'
     : null;
 };
 
 /** @typedef {import('../chat-reducer.js').ChatState} ChatState */
 /** @typedef {(msg: object) => Promise<any>} Send */
-/** @typedef {import('/peerd-egress/vault/enroll-options.js').EnrollFlavor} EnrollFlavor */
+/** @typedef {import('/mcdollar-egress/vault/enroll-options.js').EnrollFlavor} EnrollFlavor */
 
 /**
  * Component-local UI state for the vault gate.

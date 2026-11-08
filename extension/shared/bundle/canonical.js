@@ -12,7 +12,7 @@
 // commit to something non-reproducible.
 //
 // why here and not the dweb module's codec dir: the manifest hash IS the
-// peerd:// address, and the .peerd export format (DESIGN-10) commits to
+// mcdollar:// address, and the .mcdollar export format (DESIGN-10) commits to
 // the same hash — exports must work in store packages, which prune the
 // dweb module. The dweb imports FROM here.
 

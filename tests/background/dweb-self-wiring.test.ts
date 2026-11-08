@@ -9,7 +9,7 @@
 import { describe, test, expect } from 'bun:test';
 import { createKernelDwebVaultEffects } from '../../extension/background/kernel-preview-addon.js';
 import { makeDwebSelfRoutes } from '../../extension/background/routes/dweb-self.js';
-import { encodeDidKey } from '../../extension/peerd-distributed/identity/did.js';
+import { encodeDidKey } from '../../extension/mcdollar-distributed/identity/did.js';
 
 const IDENTITY_SECRET = 'distributed/identity/v1';
 const SELF_CUSTODY_SECRET_NAMES = Object.freeze([

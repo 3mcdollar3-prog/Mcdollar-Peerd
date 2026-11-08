@@ -21,7 +21,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
-import { launchPeerd, rpc, unlockAndReady, waitFor, log, sseText } from './e2e-harness.mjs';
+import { launchMcdollar, rpc, unlockAndReady, waitFor, log, sseText } from './e2e-harness.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = resolve(__dirname, 'bench-results');
@@ -45,7 +45,7 @@ async function main() {
   // Capture the FIRST /v1/chat/completions request — that is one full turn's
   // always-on context (system prompt + the advertised tools).
   let captured = null;
-  const ctx = await launchPeerd({
+  const ctx = await launchMcdollar({
     modelResponder: (i, req) => { if (i === 0 && !captured) captured = (req && req.postData) || ''; return { sse: sseText('ok') }; },
   });
   try {

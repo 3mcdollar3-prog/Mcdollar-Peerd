@@ -1,16 +1,16 @@
 // @ts-check
-// Settings → Paced sites: the sites peerd has slowed itself down on, and the
+// Settings → Paced sites: the sites mcdollar has slowed itself down on, and the
 // only place a rule can be forgotten.
 //
 // why its own nav entry rather than a block under Learned sites: the two answer
-// different questions. Learned sites is "which sites does peerd treat as
-// YOURS"; this is "which sites asked peerd to go slower". A user watching a turn
+// different questions. Learned sites is "which sites does mcdollar treat as
+// YOURS"; this is "which sites asked mcdollar to go slower". A user watching a turn
 // crawl is looking for this page, and burying it under a page about session
 // custody would hide it from exactly that search.
 //
-// The distinction the copy has to carry: a rule here is peerd being polite, not
-// peerd being blocked. Forgetting one does not unlock anything - it only lets
-// peerd go back to full speed and, if the site still minds, learn the same rule
+// The distinction the copy has to carry: a rule here is mcdollar being polite, not
+// mcdollar being blocked. Forgetting one does not unlock anything - it only lets
+// mcdollar go back to full speed and, if the site still minds, learn the same rule
 // again on the next refusal. That matters because forgetting is the ONE
 // direction an injected page would want, and the reason it is safe here is that
 // the caller is a person on a settings page rather than anything the agent can
@@ -47,7 +47,7 @@ const SOURCE_COPY = {
   'retry-after-seconds': 'the site stated how long to wait',
   'retry-after-date': 'the site stated a time to come back',
   'status-backoff': 'the site refused a request as too frequent',
-  none: 'peerd measured the rate that got refused',
+  none: 'mcdollar measured the rate that got refused',
 };
 
 /**
@@ -156,19 +156,19 @@ export const PacedOriginsView = {
     const now = Date.now();
 
     return m('div.paced-sites', [
-      m('h3', { tabindex: -1, 'data-paced-role': 'heading' }, 'Sites peerd is going slower on'),
-      m('p', 'When a site answers that peerd is asking too often, peerd records the '
+      m('h3', { tabindex: -1, 'data-paced-role': 'heading' }, 'Sites mcdollar is going slower on'),
+      m('p', 'When a site answers that mcdollar is asking too often, mcdollar records the '
         + 'pause that site asked for and waits it out before acting there again. '
-        + 'peerd never tries to disguise itself or work around a site’s limits.'),
+        + 'mcdollar never tries to disguise itself or work around a site’s limits.'),
       m('p.hint', 'A rule fades on its own after the site stops refusing. '
         + 'Forget one here to go back to full speed immediately. If the site still '
-        + 'minds, peerd will learn the same rule again the next time it is refused.'),
+        + 'minds, mcdollar will learn the same rule again the next time it is refused.'),
 
       // The durable read failed. Say so plainly: an empty list and a broken list
       // look identical, and only one of them explains why an action just refused.
       ui.degraded
         ? m('p.key-msg.err', { role: 'alert' },
-          'peerd could not read its pacing record, so it is refusing browser actions '
+          'mcdollar could not read its pacing record, so it is refusing browser actions '
           + 'rather than risk acting inside a pause a site asked for. Start a fresh '
           + 'record below to clear that state.')
         : null,
@@ -181,7 +181,7 @@ export const PacedOriginsView = {
       rows === null
         ? m('p.muted', 'Loading…')
         : rows.length === 0 && !ui.degraded
-          ? m('p.muted', 'No site has asked peerd to slow down.')
+          ? m('p.muted', 'No site has asked mcdollar to slow down.')
           : m('div', [
             // why no keys on the rows: keyed and unkeyed siblings cannot be
             // mixed, and the list is re-fetched wholesale after every mutation,
@@ -198,7 +198,7 @@ export const PacedOriginsView = {
                   ' · ',
                   SOURCE_COPY[/** @type {keyof SOURCE_COPY} */ (row.notBeforeSource)] ?? row.notBeforeSource,
                 ]),
-                // A pause that is still running is the reason peerd is refusing
+                // A pause that is still running is the reason mcdollar is refusing
                 // this site RIGHT NOW. Without it the row explains a rule while
                 // the user is asking about a refusal they just saw.
                 pending(row, now)

@@ -5,7 +5,7 @@ import {
   browserDocumentIdentity,
   resolveTargetTab,
   scriptingTarget,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 import {
   AppBinaryFileError,
   AppDefaultMissingError,

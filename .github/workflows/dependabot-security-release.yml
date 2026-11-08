@@ -12,7 +12,7 @@
 #   - root Bun or GitHub Actions ecosystem, no maintainer changes
 #   - manifest/lock-only Bun diff, or SHA-pinned uses:-line-only Actions diff
 #
-# The workflow prepares peerd's own patch version and changelog in the same PR,
+# The workflow prepares mcdollar's own patch version and changelog in the same PR,
 # regenerates the reproducible CodeMirror vendor bundle for Bun changes, then
 # waits for protected normal and security CI, then merges only the exact
 # authenticated head. A trusted finalizer tags that merge and explicitly
@@ -357,10 +357,10 @@ jobs:
             seasoning='a continuous 72-hour clean GitHub and Socket observation window'
           fi
           cat > "$RUNNER_TEMP/security-autorelease.md" <<EOF
-          <!-- peerd-security-autorelease: ${PREPARED_SHA} v${VERSION} -->
+          <!-- mcdollar-security-autorelease: ${PREPARED_SHA} v${VERSION} -->
           This semver-patch security update was authenticated as Dependabot-only,
           every replacement release passed ${seasoning}, and the PR was
-          prepared as peerd v${VERSION} for a protected exact-head merge.
+          prepared as mcdollar v${VERSION} for a protected exact-head merge.
           Reproducible CodeMirror vendored bytes changed: ${VENDORED_CODEMIRROR}.
           EOF
           gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
@@ -626,7 +626,7 @@ jobs:
           set -euo pipefail
           marker="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate \
             --jq '.[] | select(.user.login == "github-actions[bot]") | .body' \
-            | sed -n 's/.*peerd-security-autorelease: \([0-9a-f]\{40\}\) v\([0-9][0-9.]*\).*/\1 \2/p' \
+            | sed -n 's/.*mcdollar-security-autorelease: \([0-9a-f]\{40\}\) v\([0-9][0-9.]*\).*/\1 \2/p' \
             | tail -1)"
           read -r prepared_sha version <<< "$marker"
           [ -n "${prepared_sha:-}" ] && [ -n "${version:-}" ] \
@@ -663,7 +663,7 @@ jobs:
           base_version="$(git show "$base_commit:package.json" | jq -r .version)"
           IFS=. read -r major minor patch <<< "$base_version"
           [ "$VERSION" = "$major.$minor.$((patch + 1))" ] \
-            || { echo '::error::security release is not exactly one peerd patch version'; exit 1; }
+            || { echo '::error::security release is not exactly one mcdollar patch version'; exit 1; }
           grep -Eq "^## \\[$VERSION\\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md \
             || { echo '::error::prepared changelog section is missing'; exit 1; }
 

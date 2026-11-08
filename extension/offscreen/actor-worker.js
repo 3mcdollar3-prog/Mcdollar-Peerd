@@ -86,7 +86,7 @@ void (async () => {
   if (sealFailures.length > 0) throw new Error(`actor realm seal failed: ${sealFailures.join(', ')}`);
   const [{ startActorWorker }, { projectContributorSettlement }] = await Promise.all([
     import('/offscreen/actor-worker-runtime.js'),
-    import('/peerd-runtime/controller-contributor.js'),
+    import('/mcdollar-runtime/controller-contributor.js'),
   ]);
   startActorWorker((result, program, metadata) => {
     const contributor = metadata.actorType === 'web' && metadata.backing === 'tab'

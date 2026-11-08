@@ -1,6 +1,6 @@
 // Shared shaping for the per-lane test-count badges.
 //
-// peerd's coverage is spread across surfaces that no single number describes:
+// mcdollar's coverage is spread across surfaces that no single number describes:
 // the Bun suite (badges/functional-tests.json), the in-browser suite run under
 // Chrome AND under Gecko, and the live side-panel E2E lane. Each of those runs
 // in its own CI job, drops a machine-readable summary, and hands the totals
@@ -22,7 +22,7 @@ import { join } from 'node:path';
 import { REPO_ROOT } from './lib.ts';
 
 /** Env var each browser harness writes its summary JSON to when asked. */
-export const SUMMARY_ENV = 'PEERD_TEST_SUMMARY';
+export const SUMMARY_ENV = 'MCDOLLAR_TEST_SUMMARY';
 
 export interface SuiteTotals {
   passed: number;
@@ -228,7 +228,7 @@ export const runLane = (
   argv: string[],
   readSummary: (scratch: string) => string,
 ): string => {
-  const scratch = mkdtempSync(join(tmpdir(), 'peerd-test-badge-'));
+  const scratch = mkdtempSync(join(tmpdir(), 'mcdollar-test-badge-'));
   try {
     const run = spawnSync(process.execPath, argv, {
       cwd: REPO_ROOT,

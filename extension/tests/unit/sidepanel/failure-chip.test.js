@@ -69,7 +69,7 @@ describe('sidepanel.failure-kind chip', () => {
   });
 
   it('a remote import refusal is an expandable policy failure', async () => {
-    const message = 'remote_module_imports_unavailable: This version of peerd does not allow remote module imports. No request was made for this module.';
+    const message = 'remote_module_imports_unavailable: This version of mcdollar does not allow remote module imports. No request was made for this module.';
     const { root, unmount } = mount([
       {
         role: 'assistant', id: 'a-policy', content: '',

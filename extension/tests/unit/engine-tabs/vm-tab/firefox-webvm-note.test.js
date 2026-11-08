@@ -15,14 +15,14 @@ import {
 } from '/engine-tabs/vm-tab/firefox-webvm-note.js';
 
 describe('buildFirefoxWebVmNote', () => {
-  it('names WebVM + Firefox and frames it as a platform limit, not a peerd bug', () => {
+  it('names WebVM + Firefox and frames it as a platform limit, not a mcdollar bug', () => {
     const note = buildFirefoxWebVmNote();
     const text = note.textContent ?? '';
     expect(note.className).toBe('boot-firefox-note');
     expect(text).toContain('WebVM');
     expect(text).toContain('Firefox');
     expect(text).toContain('SharedArrayBuffer');
-    expect(text).toContain('not a peerd');
+    expect(text).toContain('not a mcdollar');
   });
 
   it('links BOTH open threads: the Firefox bug and the WECG standards issue', () => {

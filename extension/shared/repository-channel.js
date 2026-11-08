@@ -27,9 +27,9 @@ export const sameRepositoryLease = (left, right) => !!left && !!right
 
 /** @returns {unknown} */
 export const encodeRepositoryRpcValue = (/** @type {unknown} */ value) => {
-  if (value instanceof Uint8Array) return { __peerdRepositoryBytes: bytesToBase64(value) };
+  if (value instanceof Uint8Array) return { __mcdollarRepositoryBytes: bytesToBase64(value) };
   if (value instanceof ArrayBuffer) {
-    return { __peerdRepositoryBytes: bytesToBase64(new Uint8Array(value)) };
+    return { __mcdollarRepositoryBytes: bytesToBase64(new Uint8Array(value)) };
   }
   if (Array.isArray(value)) return value.map(encodeRepositoryRpcValue);
   if (!value || typeof value !== 'object') return value;
@@ -45,8 +45,8 @@ export const decodeRepositoryRpcValue = (/** @type {unknown} */ value) => {
   if (Array.isArray(value)) return value.map(decodeRepositoryRpcValue);
   if (!value || typeof value !== 'object') return value;
   const record = /** @type {Record<string, unknown>} */ (value);
-  if (Object.keys(record).length === 1 && typeof record.__peerdRepositoryBytes === 'string') {
-    return base64ToBytes(record.__peerdRepositoryBytes);
+  if (Object.keys(record).length === 1 && typeof record.__mcdollarRepositoryBytes === 'string') {
+    return base64ToBytes(record.__mcdollarRepositoryBytes);
   }
   return Object.fromEntries(Object.entries(record)
     .map(([key, entry]) => [key, decodeRepositoryRpcValue(entry)]));

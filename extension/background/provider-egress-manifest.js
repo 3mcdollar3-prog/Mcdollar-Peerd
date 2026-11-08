@@ -103,8 +103,8 @@ export const providerEgressHeaders = (policyEntry, credential) => {
   if (policyEntry.authentication === 'bearer-attributed') return {
     'content-type': 'application/json',
     authorization: `Bearer ${key}`,
-    'http-referer': 'https://peerd.ai',
-    'x-title': 'peerd.ai',
+    'http-referer': 'https://mcdollar.ai',
+    'x-title': 'mcdollar.ai',
     'x-openrouter-categories': 'personal-agent',
   };
   if (policyEntry.authentication === 'bearer') return {

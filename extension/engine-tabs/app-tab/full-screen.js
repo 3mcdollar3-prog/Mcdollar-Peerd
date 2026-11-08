@@ -1,12 +1,12 @@
 // @ts-check
 // app-tab/full-screen.js: the App tab's "Full screen" button, the P handle that
-// keeps peerd one click away in full screen, and the short Esc status.
+// keeps mcdollar one click away in full screen, and the short Esc status.
 //
 // why the trusted page goes full screen, not the App: the App frame has no
 // allow="fullscreen", so App code cannot start full screen. Only this page's own
 // button, after a real click, starts it. After that the App fills the screen and
 // can draw anything, including fake browser UI or a copy of the P handle. The
-// protections are that click, the browser's own exit message that names peerd,
+// protections are that click, the browser's own exit message that names mcdollar,
 // and Esc, which App code cannot block.
 //
 // why the page root, not the frame's box: the notices, the App actor drawer and
@@ -25,7 +25,7 @@
 // why the handle acts by browser (measured in Chrome for Testing 151 and
 // Firefox 154): Chrome keeps its side panel beside a full-screen element, so
 // the handle opens the panel and full screen stays on. While the panel is open,
-// peerd is on screen, so the handle hides. Firefox hides its sidebar during
+// mcdollar is on screen, so the handle hides. Firefox hides its sidebar during
 // element full screen, and sidebarAction.open() then shows nothing. There the
 // handle leaves full screen first, then opens the sidebar in the same click
 // handler. An await between the two loses the click, and Firefox then refuses
@@ -50,7 +50,7 @@ export const FULL_SCREEN_FAILED = 'Full screen did not start. Click Full screen 
 
 // why a second name: in Firefox the handle also leaves full screen, so its
 // name says so.
-export const LEAVE_AND_OPEN = 'Leave full screen and open peerd';
+export const LEAVE_AND_OPEN = 'Leave full screen and open mcdollar';
 
 // why 4 s: enough time to read one short sentence. The fade in index.html
 // ends at the same moment.

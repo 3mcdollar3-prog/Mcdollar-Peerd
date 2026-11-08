@@ -48,17 +48,17 @@ export const assertAppRuntime = (value, supported) => {
 
 /** @param {Record<string,string|Uint8Array>} files */
 export const appRuntimeFromFiles = (files) => {
-  if (!Object.hasOwn(files, 'peerd.json')) return undefined;
-  const raw = files['peerd.json'];
+  if (!Object.hasOwn(files, 'mcdollar.json')) return undefined;
+  const raw = files['mcdollar.json'];
   let text;
   try { text = typeof raw === 'string' ? raw : new TextDecoder('utf-8', { fatal: true }).decode(raw); }
-  catch { throw new AppRuntimeError('peerd.json is not valid UTF-8.'); }
+  catch { throw new AppRuntimeError('mcdollar.json is not valid UTF-8.'); }
   // Existing declarations contain actor instructions; bound the descriptor
   // without applying the much smaller runtime-field limit to unrelated fields.
-  if (text.length > 32_768) throw new AppRuntimeError('peerd.json exceeds the runtime descriptor limit.');
+  if (text.length > 32_768) throw new AppRuntimeError('mcdollar.json exceeds the runtime descriptor limit.');
   let declaration;
   try { declaration = JSON.parse(text); }
-  catch { throw new AppRuntimeError('peerd.json is not valid JSON.'); }
+  catch { throw new AppRuntimeError('mcdollar.json is not valid JSON.'); }
   return normalizeAppRuntime(declaration?.runtime);
 };
 

@@ -17,7 +17,7 @@ import { REPO_ROOT } from './lib.ts';
 // prose in the repo, and a stale citation there is worse than elsewhere — the whole
 // point of THREAT-MODEL / HARDENING-ROADMAP is that a reader can check a claim
 // against the code it names. (Caught a real one: the roadmap cited
-// peerd-runtime/tools/provider-call-api.js, which lives under actor/.)
+// mcdollar-runtime/tools/provider-call-api.js, which lives under actor/.)
 export const CHECKED_DOCS = [
   // Both harness guides and the host/App guides make executable path claims.
   'README.md', 'CLAUDE.md', 'AGENTS.md', 'SECURITY.md', 'CONTRIBUTING.md',
@@ -64,16 +64,16 @@ export const extractPathRefs = (md: string): string[] => {
 };
 
 /** The roots a doc path claim may be relative to. Docs use module-relative
- *  shorthand constantly: `peerd-egress/vault/` means extension/peerd-egress/
+ *  shorthand constantly: `mcdollar-egress/vault/` means extension/mcdollar-egress/
  *  vault/, and `tools/exposure.js` or `dom/walk-injected.js` are relative to
- *  a peerd-* module.
+ *  a mcdollar-* module.
  *
  *  `docDir` adds the checked document's OWN directory, so a doc outside the repo
  *  root can use ordinary relative links (`./THREAT-MODEL.md` between the two
  *  security docs) — without it, every sibling link in docs/ reads as dead. */
 export const resolutionRoots = (root: string = REPO_ROOT, docDir?: string): string[] => {
   const modules = existsSync(join(root, 'extension'))
-    ? readdirSync(join(root, 'extension')).filter((d) => d.startsWith('peerd-'))
+    ? readdirSync(join(root, 'extension')).filter((d) => d.startsWith('mcdollar-'))
       .map((d) => join(root, 'extension', d))
     : [];
   return [root, join(root, 'extension'), ...modules, ...(docDir ? [docDir] : [])];
@@ -94,7 +94,7 @@ export const resolvesInRepo = (ref: string, roots: string[]): boolean =>
   roots.some((r) => existsSync(join(r, ref)));
 
 /** Only flag refs whose first segment is a real directory under one of the
- *  resolution roots: a missing peerd-runtime/x is drift; UsefulSensors/x is
+ *  resolution roots: a missing mcdollar-runtime/x is drift; UsefulSensors/x is
  *  a Hugging Face id and none of our business. Leading-slash refs are URL
  *  paths (`/api/tags`), never repo paths. */
 export const isCheckableRef = (ref: string, roots: string[]): boolean => {

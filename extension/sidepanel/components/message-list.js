@@ -26,7 +26,7 @@ import m from '/vendor/mithril/mithril.js';
 import { renderMarkdown } from '/shared/markdown.js';
 import { stripUntrustedFences } from '/shared/util.js';
 import { CHANNEL } from '/shared/channel-config.js';
-import { classifyFailure, contributorFeedbackTargets, formatBytes } from '/peerd-runtime/ui.js';
+import { classifyFailure, contributorFeedbackTargets, formatBytes } from '/mcdollar-runtime/ui.js';
 
 // `performed:false` is host custody metadata. Error bodies are not: provider,
 // actor, and page text can all flow into them. Keep the human recovery generic
@@ -36,7 +36,7 @@ const ACTOR_NOT_RUN_USER_FAILURE =
 
 /** @param {string} _text @returns {string} */
 const actorOutcomeUnknownFailure = (_text) =>
-  'peerd cannot confirm whether the actor ran or completed. Check the target before trying again.';
+  'mcdollar cannot confirm whether the actor ran or completed. Check the target before trying again.';
 
 /** @typedef {import('../chat-reducer.js').ChatMessage} ChatMessage */
 /** @typedef {import('../chat-reducer.js').SpawnedSession} SpawnedSession */
@@ -100,7 +100,7 @@ const SETTLED_NOTES = Object.freeze({
 });
 
 /**
- * An inline "peerd opened a tab" notice event.
+ * An inline "mcdollar opened a tab" notice event.
  * @typedef {Object} TabEvent
  * @property {string} key
  * @property {string|null} [sessionId]
@@ -164,7 +164,7 @@ const renderTranscript = ({ messages, vmStreams, spawned, actors, scriptOps, loa
   const feedbackMessageIds = busy || !CONTRIBUTOR_FEEDBACK_ENABLED
     ? new Set()
     : new Set(contributorFeedbackTargets(messages ?? []).keys());
-  // Inline "peerd opened a tab" notices (top level only), bucketed by the TURN
+  // Inline "mcdollar opened a tab" notices (top level only), bucketed by the TURN
   // (its starting user-message id) they belong to. They render at the END of that
   // turn — after the agent's later messages — then freeze above the next turn.
   /** @type {Map<string|null|undefined, TabEvent[]>} */
@@ -266,8 +266,8 @@ const freshTabAnnouncements = (state, tabEvents) => {
         && state.seenTabEventStates.get(event.key) === isProtected) continue;
     state.seenTabEventStates.set(event.key, isProtected);
     announcements.push(!isProtected
-      ? 'peerd left a blank tab because browser control was not confirmed. Close it before continuing. Use Go to focus it.'
-      : 'peerd opened a task tab with additional browser safeguards. Use Go to focus it.');
+      ? 'mcdollar left a blank tab because browser control was not confirmed. Close it before continuing. Use Go to focus it.'
+      : 'mcdollar opened a task tab with additional browser safeguards. Use Go to focus it.');
   }
   return announcements;
 };
@@ -319,7 +319,7 @@ const replyPreview = (markdown) => {
 const settledTurnAnnouncement = (messages, peerName) => {
   const last = [...(messages ?? [])].reverse().find((message) => message.role === 'assistant');
   if (!last || last.stopReason === 'aborted') return '';
-  const who = peerName || 'peerd';
+  const who = peerName || 'mcdollar';
   if (last.error) return `${who} could not reply.`;
   const preview = typeof last.content === 'string' ? replyPreview(last.content) : '';
   return preview ? `${who} replied: ${preview}` : '';
@@ -458,7 +458,7 @@ export const MessageList = {
     ]),
 };
 
-// Inline "peerd opened a tab" notice — anchored at the turn it happened so it
+// Inline "mcdollar opened a tab" notice — anchored at the turn it happened so it
 // scrolls into the backlog as the chat continues (replaces the old bright,
 // sticky agent-tab card; DECISIONS #26 / owner's call). Quiet by default; the
 // current turn's notice gets a subtle, NON-accent highlight, then mutes. "Go ↗"
@@ -473,7 +473,7 @@ const AgentTabNotice = {
       m('span.agent-tab-notice-icon', { 'aria-hidden': 'true' }, '▦'),
       m('span.agent-tab-notice-copy', [
         m('span.agent-tab-notice-text', [
-          protectedTab ? 'peerd opened a task tab · ' : 'peerd left a blank tab · ',
+          protectedTab ? 'mcdollar opened a task tab · ' : 'mcdollar left a blank tab · ',
           m('span.agent-tab-notice-label', label),
         ]),
         m('span.agent-tab-notice-detail', protectedTab
@@ -614,7 +614,7 @@ const LandingStopCard = {
       m('.landing-stop-headline', card.headline),
       card.reason ? m('.landing-stop-reason', card.reason) : null,
       m('.landing-stop-unknown', [
-        m('.landing-stop-unknown-label', 'WHAT PEERD DOESN’T KNOW'),
+        m('.landing-stop-unknown-label', 'WHAT MCDOLLAR DOESN’T KNOW'),
         m('.landing-stop-unknown-text', card.whatIsNotKnown),
       ]),
       card.action ? m('button.landing-stop-action', {
@@ -702,7 +702,7 @@ const AssistantMessage = {
       // single surface the profile's peer name shows on (owner
       // direction: "it will only really reflect in the chat logs").
       // Every other brand surface stays the literal wordmark.
-      m('.role', peerName || 'peerd'),
+      m('.role', peerName || 'mcdollar'),
       // Chain-of-reasoning (extended thinking), when the provider emitted
       // it. Renders above the answer as a collapsible section — open
       // while the model is still only thinking, folds away once the
@@ -840,8 +840,8 @@ const TaskFeedback = {
 
 // ─── Thinking spinner ────────────────────────────────────────────────────
 //
-// The peerd orb: a rainbow RING where the five brand colors sweep through one
-// conic gradient, masked to a hollow ring (see .peerd-spinner in styles.css).
+// The mcdollar orb: a rainbow RING where the five brand colors sweep through one
+// conic gradient, masked to a hollow ring (see .mcdollar-spinner in styles.css).
 // A single div — the gradient, mask, and spin are CSS-only and disabled under
 // prefers-reduced-motion.
 //
@@ -850,7 +850,7 @@ const TaskFeedback = {
 const ThinkingSpinner = {
   /** @param {{ attrs?: { sm?: boolean } }} vnode */
   view: ({ attrs }) =>
-    m(attrs && attrs.sm ? 'span.peerd-spinner.peerd-spinner--sm' : '.peerd-spinner',
+    m(attrs && attrs.sm ? 'span.mcdollar-spinner.mcdollar-spinner--sm' : '.mcdollar-spinner',
       { role: 'status', 'aria-label': 'Working…' }),
 };
 
@@ -1034,12 +1034,12 @@ const ToolCall = {
           m('.lineage-row', [
             m('span.lineage-label', 'primitive'),
             // Badge colored by OWNING MODULE; the module is also named in
-            // full ("peerd-engine") right after, so the color is labelled,
+            // full ("mcdollar-engine") right after, so the color is labelled,
             // not a thing the user has to decode.
             m(`span.primitive-badge.pmod-${moduleFor(meta?.primitive) ?? 'unknown'}`,
               meta?.primitive ?? '—'),
             moduleFor(meta?.primitive)
-              ? m('span.primitive-module', `peerd-${moduleFor(meta?.primitive)}`)
+              ? m('span.primitive-module', `mcdollar-${moduleFor(meta?.primitive)}`)
               : null,
           ]),
           meta && meta.gates.length > 0
@@ -1352,8 +1352,8 @@ const formatResultContent = (toolResult) => {
   return stripUntrustedFences(content);
 };
 
-// Canonical primitive → owning peerd module. This is the SINGLE source
-// of truth: the badge color (CSS .pmod-<module>) and the "peerd-<module>"
+// Canonical primitive → owning mcdollar module. This is the SINGLE source
+// of truth: the badge color (CSS .pmod-<module>) and the "mcdollar-<module>"
 // label both derive from it, so color and text can never drift. Mapping
 // is by which module actually owns the subsystem the primitive exercises
 // (see CLAUDE.md's five-module table), NOT by aesthetic color choice:

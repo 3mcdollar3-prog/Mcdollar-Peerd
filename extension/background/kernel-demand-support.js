@@ -23,10 +23,10 @@ import {
 import { makeKernelProviderSetKeyRoute } from './kernel-provider-key-route.js';
 import { makeKernelSettingsRoutes, normalizeSettingsPatch } from './settings-patch.js';
 import { KERNEL_DEMAND_SUPPORT_ROUTE_NAMES } from '../shared/kernel-feature-route-inventory.js';
-import { createOriginPacingStore } from '/peerd-runtime/pacing-authority.js';
+import { createOriginPacingStore } from '/mcdollar-runtime/pacing-authority.js';
 import { normalizeApiOrigin } from '../shared/api-origin.js';
 import { makePacedOriginRoutes } from './routes/paced-origins.js';
-import { makeLearnedOrigins } from '/peerd-runtime/kernel-turn-authority.js';
+import { makeLearnedOrigins } from '/mcdollar-runtime/kernel-turn-authority.js';
 import { makeKernelLearnedOriginRoutes } from './settings-store.js';
 
 /** @param {Record<string,any>} deps */

@@ -1,11 +1,11 @@
 // @ts-check
 /// <reference lib="webworker" />
-// sw.js: app-shell service worker for the peerd web demo.
+// sw.js: app-shell service worker for the mcdollar web demo.
 //
 // The cache name and precache list are STAMPED AT PACKAGE TIME by
-// packaging/package-web.ts (the __PEERD_WEB_*__ tokens below): every build
+// packaging/package-web.ts (the __MCDOLLAR_WEB_*__ tokens below): every build
 // gets its own shell cache, so a deploy atomically invalidates ALL staged
-// module files. why: the staged tree (/peerd-*/**, /shared/**) is rebuilt
+// module files. why: the staged tree (/mcdollar-*/**, /shared/**) is rebuilt
 // fresh from extension source each deploy. A hand-bumped cache name (the old
 // prototype pattern) left returning visitors running STALE staged source,
 // silently defeating the target's inherits-upstream premise.
@@ -34,14 +34,14 @@
 // one `self` actually is at runtime.
 const worker = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
 
-const BUILD = '__PEERD_WEB_BUILD__';
+const BUILD = '__MCDOLLAR_WEB_BUILD__';
 const UNBUILT = BUILD.startsWith('__');
 /** @type {string[]} */
 let PRECACHE = [];
-try { PRECACHE = JSON.parse('__PEERD_WEB_PRECACHE__'); } catch { /* unbuilt tree */ }
+try { PRECACHE = JSON.parse('__MCDOLLAR_WEB_PRECACHE__'); } catch { /* unbuilt tree */ }
 
-const CACHE_SHELL = `peerd-web-${BUILD}`;
-const CACHE_VENDOR = 'peerd-web-vendor-v1';
+const CACHE_SHELL = `mcdollar-web-${BUILD}`;
+const CACHE_VENDOR = 'mcdollar-web-vendor-v1';
 
 worker.addEventListener('install', (e) => {
   // allSettled: a single 404 must not wedge installation of the new build.

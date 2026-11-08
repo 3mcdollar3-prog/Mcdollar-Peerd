@@ -53,14 +53,14 @@ describe('secretless local Smart HTTP acceptance fixture', () => {
 
   test('serves an authenticated push and clean clone through its loopback CONNECT proxy', async () => {
     const fixture = await startGitSmartHttpFixture();
-    const root = mkdtempSync(join(tmpdir(), 'peerd-smart-http-test-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-smart-http-test-'));
     roots.push(root);
     try {
       const work = join(root, 'work');
       const clone = join(root, 'clone');
       await run(['init', work], root);
-      await run(['config', 'user.name', 'Peerd Acceptance'], work);
-      await run(['config', 'user.email', 'acceptance@peerd.test'], work);
+      await run(['config', 'user.name', 'Mcdollar Acceptance'], work);
+      await run(['config', 'user.email', 'acceptance@mcdollar.test'], work);
       writeFileSync(join(work, 'index.html'), '<!doctype html><title>fixture</title>');
       await run(['add', 'index.html'], work);
       await run(['commit', '-m', 'fixture commit'], work);

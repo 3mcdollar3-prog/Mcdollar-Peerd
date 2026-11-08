@@ -20,7 +20,7 @@ describe('Options startup recovery', () => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 0));
       m.redraw.sync?.();
-      expect(root.textContent).toContain('Peerd is restarting');
+      expect(root.textContent).toContain('Mcdollar is restarting');
       expect(root.textContent).toContain('Retry');
       const retry = /** @type {HTMLButtonElement|null} */ (root.querySelector('button'));
       if (!retry) throw new Error('retry button missing');

@@ -18,7 +18,7 @@ import {
   PrfCancelledError,
   PrfNotSupportedError,
   PrfUnsupportedByAuthenticatorError,
-} from '/peerd-egress/ui.js';
+} from '/mcdollar-egress/ui.js';
 import { bytesToBase64 } from '/shared/util.js';
 import {
   isUnknownMutationOutcome, mutationFailureCopy, unknownMutationCopy,
@@ -34,7 +34,7 @@ export const VaultSection = {
     vnode.state.prfMessage = null;
     vnode.state.prfError = null;
     // Capability probe → enrollment plan (pure planEnrollment in
-    // peerd-egress). null while the async probes resolve (milliseconds);
+    // mcdollar-egress). null while the async probes resolve (milliseconds);
     // the section renders the generic single button meanwhile.
     vnode.state.prfProbe = null;
     probeWebAuthnCapabilities().then((/** @type {any} */ p) => {
@@ -69,7 +69,7 @@ export const VaultSection = {
       uaData?.platform || navigator.platform || '');
 
     // flavor: 'platform' | 'security-key' | undefined (browser's picker).
-    /** @param {import('/peerd-egress/vault/enroll-options.js').EnrollFlavor} [flavor] */
+    /** @param {import('/mcdollar-egress/vault/enroll-options.js').EnrollFlavor} [flavor] */
     const enrollPasskey = async (flavor) => {
       if (ui.prfBusy || ui.prfUncertain) return;
       ui.prfBusy = true;
@@ -94,7 +94,7 @@ export const VaultSection = {
           ui.prfUncertain = isUnknownMutationOutcome(reply);
           ui.prfError = mutationFailureCopy(reply, {
             action: 'adding the passkey', fallback: 'The passkey could not be added.',
-            messages: { locked: 'Vault is locked; unlock in the peerd panel first.' },
+            messages: { locked: 'Vault is locked; unlock in the mcdollar panel first.' },
           });
         }
       } catch (e) {
@@ -180,7 +180,7 @@ export const VaultSection = {
           ui.recoveryError = mutationFailureCopy(reply, {
             action: 'saving the recovery passphrase',
             fallback: 'The recovery passphrase could not be saved.',
-            messages: { locked: 'Vault is locked; unlock in the peerd panel first.' },
+            messages: { locked: 'Vault is locked; unlock in the mcdollar panel first.' },
           });
         }
       } finally {
@@ -282,7 +282,7 @@ export const VaultSection = {
 
       m('.settings-divider'),
       m('h3', 'Auto-lock'),
-      m('p', 'Lock the vault after a period of inactivity. While unlocked, your decrypted key is held in memory; auto-lock bounds that window. Re-unlocking is a single tap with a passkey — in the peerd panel.'),
+      m('p', 'Lock the vault after a period of inactivity. While unlocked, your decrypted key is held in memory; auto-lock bounds that window. Re-unlocking is a single tap with a passkey — in the mcdollar panel.'),
       m('.input-row', [
         m('label', { for: 'autolock' }, 'Lock when idle for'),
         m('select', {

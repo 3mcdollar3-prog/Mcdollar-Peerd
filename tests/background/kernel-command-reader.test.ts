@@ -3,7 +3,7 @@ import {
   createKernelCommandReader,
   makeKernelComposerRoutes,
 } from '../../extension/background/kernel-composer-routes.js';
-import { disarmText as richDisarmText } from '../../extension/peerd-runtime/dom/cdr.js';
+import { disarmText as richDisarmText } from '../../extension/mcdollar-runtime/dom/cdr.js';
 import { disarmText as leafDisarmText } from '../../extension/shared/disarm-text.js';
 import { useFakeIndexedDB } from '../setup.ts';
 
@@ -41,7 +41,7 @@ describe('native kernel command metadata reader', () => {
         list: async (prefix: string) => {
           calls.push(`kv:${prefix}`);
           return {
-            'peerd.commands.local': {
+            'mcdollar.commands.local': {
               name: 'local', body: 'secret local body', description: 'local command',
             },
           };
@@ -55,7 +55,7 @@ describe('native kernel command metadata reader', () => {
     await expect(reader.list()).resolves.toEqual([
       { name: 'local', description: 'local command' },
     ]);
-    expect(calls).toEqual(['kv:peerd.commands.', 'idb:open']);
+    expect(calls).toEqual(['kv:mcdollar.commands.', 'idb:open']);
   });
 
   test('merges enabled skill metadata after local commands with exact shadowing and sorting', async () => {

@@ -80,7 +80,7 @@ describe('target-specific native background entry', () => {
     for (const leaf of [
       'background/kernel-firefox-update-custody.js',
       'background/kernel-firefox-voice-host.js',
-      'peerd-runtime/voice/host-runtime.js',
+      'mcdollar-runtime/voice/host-runtime.js',
     ]) {
       const path = join(EXTENSION, leaf);
       expect(firefox.has(path), leaf).toBe(true);

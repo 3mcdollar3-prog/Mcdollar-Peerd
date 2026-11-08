@@ -5,13 +5,13 @@ body:
   - type: markdown
     attributes:
       value: |
-        peerd's direction lives in `ROADMAP.md` and `docs/DECISIONS.md` — a quick skim
+        mcdollar's direction lives in `ROADMAP.md` and `docs/DECISIONS.md` — a quick skim
         there may show your idea is already planned (or deliberately out of scope).
   - type: textarea
     id: problem
     attributes:
       label: The problem / use case
-      description: What are you trying to do that peerd can't (or makes hard) today?
+      description: What are you trying to do that mcdollar can't (or makes hard) today?
     validations:
       required: true
   - type: textarea

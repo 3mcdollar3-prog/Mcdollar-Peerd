@@ -3,14 +3,14 @@
 
 import { describe, it, expect } from '../../framework.js';
 import { CONTROLLER_REALM_FACT_KEYS } from '/shared/structured-clone-size.js';
-import { renderSystemPromptFromAssets } from '/peerd-runtime/loop/system-prompt.js';
+import { renderSystemPromptFromAssets } from '/mcdollar-runtime/loop/system-prompt.js';
 
 /**
  * @param {(context: { worker: Worker, port: MessagePort, ready: any }) => Promise<void>} run
  */
 const withControllerWorker = async (run) => {
   const worker = new Worker('/offscreen/controller-worker.js', {
-    type: 'module', name: 'peerd-controller-test',
+    type: 'module', name: 'mcdollar-controller-test',
   });
   const channel = new MessageChannel();
   try {

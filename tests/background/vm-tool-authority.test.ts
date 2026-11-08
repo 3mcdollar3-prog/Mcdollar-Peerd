@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { createVmToolAuthority } from '../../extension/background/vm-tool-authority.js';
-import { executeControllerVmTool } from '../../extension/peerd-runtime/controller-vm-tools.js';
+import { executeControllerVmTool } from '../../extension/mcdollar-runtime/controller-vm-tools.js';
 
 const deferred = <T>() => {
   let resolve!: (value: T) => void;

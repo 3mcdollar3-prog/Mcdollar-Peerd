@@ -76,7 +76,7 @@ export const cancelRepositoryCall = (value) => {
 export const acceptRepositoryOffer = (event, {
   ownsLease = () => false,
   createWorker = () => new Worker(new URL('./repository-worker.js', import.meta.url), {
-    type: 'module', name: 'peerd-repository-operation',
+    type: 'module', name: 'mcdollar-repository-operation',
   }),
 } = {}) => {
   const offer = parseRepositoryChannelOffer(event.data);

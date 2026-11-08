@@ -4,7 +4,7 @@
 // Credentials never enter this realm: Smart-HTTP bytes go back to the authority
 // kernel, which independently validates the bound remote and injects any token.
 
-import { createRepositoryService } from '/peerd-engine/repository.js';
+import { createRepositoryService } from '/mcdollar-engine/repository.js';
 import { createRepositoryAppFileService } from './repository-app-files.js';
 import {
   REPOSITORY_CHANNEL_CANCEL,

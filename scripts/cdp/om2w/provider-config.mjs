@@ -15,7 +15,7 @@ export const resolveOm2wProviderConfig = ({
   provider, model = '', runnerModel = '', ollamaHost = '', smoke = false, env = {},
 }) => {
   if (provider === 'local-webgpu') {
-    // why: launchPeerd creates a fresh browser profile, with no cached weights.
+    // why: launchMcdollar creates a fresh browser profile, with no cached weights.
     // Claiming keyless support without loading the engine would measure failures.
     throw new Error('local-webgpu needs downloaded weights and a loaded WebGPU engine; this fresh-profile driver does not initialize it. Use the Eval Lab in a prepared browser, or --provider=ollama.');
   }
@@ -44,9 +44,9 @@ export const resolveOm2wProviderConfig = ({
   // why provider-specific fallback: an Anthropic key in the environment must
   // never be stored as an OpenRouter key (or sent to an Ollama-compatible shim).
   const keyName = KEY_ENV[/** @type {keyof typeof KEY_ENV} */ (provider)];
-  const key = keyless ? '' : env.PEERD_BENCH_KEY || env[keyName] || '';
+  const key = keyless ? '' : env.MCDOLLAR_BENCH_KEY || env[keyName] || '';
   if (!keyless && !key) {
-    throw new Error(`no ${provider} key: set PEERD_BENCH_KEY or ${keyName}, or use --provider=ollama for local inference`);
+    throw new Error(`no ${provider} key: set MCDOLLAR_BENCH_KEY or ${keyName}, or use --provider=ollama for local inference`);
   }
   return { provider, model, keyless, key, settingsPatch };
 };
@@ -70,7 +70,7 @@ export const configureOm2wProvider = async (send, config, actorSurface = '') => 
 };
 
 /**
- * launchPeerd defaults to intercepting the Ollama wire even without a responder.
+ * launchMcdollar defaults to intercepting the Ollama wire even without a responder.
  * Only explicit smoke runs may use that fixture; a real local benchmark must
  * reach the configured daemon instead of receiving a fabricated smoke answer.
  * @param {(options: any) => Promise<any>} launch

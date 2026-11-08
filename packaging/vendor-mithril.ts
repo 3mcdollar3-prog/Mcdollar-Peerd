@@ -1,4 +1,4 @@
-// Rebuild peerd's narrow Mithril distribution from an exact upstream release.
+// Rebuild mcdollar's narrow Mithril distribution from an exact upstream release.
 // This is a vendor-time tool only; it never ships in the extension.
 
 import { createHash } from 'node:crypto';
@@ -19,7 +19,7 @@ const UMD_FOOTER = 'if (typeof module !== "undefined") module["exports"] = m\n'
 const REQUEST_START = 'var _25 = function($window, oncompletion) {\n';
 const REQUEST_END = 'var request = _25(typeof window !== "undefined" ? window : null, mountRedraw.redraw)\n';
 const REQUEST_EXPORT = 'm.request = request.request\n';
-const OUTPUT_HEADER = `// Mithril ${VERSION} - peerd ESM vendor build. See SOURCE.txt for provenance.\n`
+const OUTPUT_HEADER = `// Mithril ${VERSION} - mcdollar ESM vendor build. See SOURCE.txt for provenance.\n`
   + '// Original UMD wrapper/export and the m.request XHR subsystem are stripped;\n'
   + '// every remaining upstream body byte is preserved.\n';
 

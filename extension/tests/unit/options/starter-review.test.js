@@ -54,7 +54,7 @@ describe('packaged starters', () => {
       expect(calls.some(call => call.type === 'import/apply')).toBe(false);
     } finally { try { view?.close(); } finally { m.route.param = originalParam; } }
   });
-  it('after an add peerd confirms, Go to Library leads and the line says that another add makes a second copy', async () => {
+  it('after an add mcdollar confirms, Go to Library leads and the line says that another add makes a second copy', async () => {
     const view = mount(StarterReview, { starter:'csv-lab', send:async (/** @type {{type:string}} */ message) =>
       message.type === 'import/inspect' ? {ok:true,summary:{kind:'app',size:2,fileCount:2}} : {ok:true,kind:'app',id:'app-copy'} });
     try {
@@ -109,15 +109,15 @@ describe('packaged starters', () => {
       await until(() => !!button(view.root, 'Add to Library'));
       const text = view.root.textContent ?? '';
       expect(view.root.querySelector('h3')?.textContent).toBe('Tables and charts');
-      expect(text).toContain('Comes with peerd. It runs on this device and needs no network.');
-      for (const jargon of ['Peerd', 'App', 'bundle bytes', 'files;', 'packaged', 'local copy']) expect(text.includes(jargon)).toBe(false);
+      expect(text).toContain('Comes with mcdollar. It runs on this device and needs no network.');
+      for (const jargon of ['Mcdollar', 'App', 'bundle bytes', 'files;', 'packaged', 'local copy']) expect(text.includes(jargon)).toBe(false);
       button(view.root, 'Add to Library')?.click(); await flush();
-      expect(view.root.querySelector('[role="alert"]')?.textContent).toBe('peerd could not add the app to your Library. Reload the page, then try again.');
+      expect(view.root.querySelector('[role="alert"]')?.textContent).toBe('mcdollar could not add the app to your Library. Reload the page, then try again.');
     } finally { view.close(); }
     const unchecked = reviewOf({ok:false,error:'raw inspection text'});
     try {
       await until(() => !!unchecked.root.querySelector('[role="alert"]'));
-      expect(unchecked.root.querySelector('[role="alert"]')?.textContent).toBe('peerd could not check this app. Reload the page, then try again.');
+      expect(unchecked.root.querySelector('[role="alert"]')?.textContent).toBe('mcdollar could not check this app. Reload the page, then try again.');
       expect(button(unchecked.root, 'Add to Library')).toBe(undefined);
     } finally { unchecked.close(); }
   });
@@ -133,12 +133,12 @@ describe('packaged starters', () => {
         button(view.root, 'Add to Library')?.click(); await flush();
         expect(applied).toBe(1);
         expect(button(view.root, 'Add to Library')).toBe(undefined);
-        expect(view.root.textContent).toContain('peerd is not sure the app was added. Check your Library before you add it again.');
+        expect(view.root.textContent).toContain('mcdollar is not sure the app was added. Check your Library before you add it again.');
         expect(/Refresh|reconcile/.test(view.root.textContent ?? '')).toBe(false);
         // The add may still have happened, so the line is a neutral status, never an alert.
         expect(view.root.querySelector('[role="alert"]')).toBe(null);
         expect(view.root.querySelector('[role="status"]')?.textContent)
-          .toBe('peerd is not sure the app was added. Check your Library before you add it again.');
+          .toBe('mcdollar is not sure the app was added. Check your Library before you add it again.');
         expect(view.root.textContent?.includes('starter was not added')).toBe(false);
       } finally { view.close(); }
     }

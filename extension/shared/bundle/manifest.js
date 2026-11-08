@@ -3,13 +3,13 @@
 //
 // The manifest is the addressable root of a bundle. It commits to the
 // ordered list of chunk hashes, so the manifest hash transitively covers
-// every byte. The content hash (the peerd:// address) is
+// every byte. The content hash (the mcdollar:// address) is
 // SHA-256(JCS(manifest without sig)) — stable whether or not the bundle
 // is signed.
 //
 // why signing is NOT here: identity (Ed25519/did:key) is the dweb wedge
 // and stays in the dweb module — store packages prune that module, and
-// .peerd artifact exports (DESIGN-10) are deliberately UNSIGNED in v1
+// .mcdollar artifact exports (DESIGN-10) are deliberately UNSIGNED in v1
 // (publisher/sig already optional in the manifest shape). The dweb's
 // content/manifest.js layers the signature over the base built here.
 
@@ -37,7 +37,7 @@ const withoutSig = (manifest) => {
 export const canonicalManifestBytes = (manifest) =>
   utf8(canonicalize(withoutSig(manifest)));
 
-// The peerd:// content hash: SHA-256 of the canonical manifest sans sig.
+// The mcdollar:// content hash: SHA-256 of the canonical manifest sans sig.
 /** @param {Manifest} manifest */
 export const manifestHash = async (manifest) =>
   sha256hex(canonicalManifestBytes(manifest));
@@ -65,7 +65,7 @@ export const manifestHash = async (manifest) =>
 export const buildManifest = async ({
   payload,
   type = 'app',
-  mime = 'application/peerd-app',
+  mime = 'application/mcdollar-app',
   entry,
   meta,
   bundle,
@@ -96,7 +96,7 @@ export const buildManifest = async ({
  * Verify a chunk list against the manifest's commitments: count, per-
  * chunk size + SHA-256, and the total payload size. This is the
  * signature-free half of bundle verification (the self-verifying part
- * of a .peerd file); authorship, when present, is checked by the
+ * of a .mcdollar file); authorship, when present, is checked by the
  * distribution-side verifyManifest.
  *
  * @param {{ size?: number, chunks?: Array<{ hash: string, size: number }> }} manifest

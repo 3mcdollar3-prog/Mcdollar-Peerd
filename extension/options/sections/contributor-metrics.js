@@ -100,7 +100,7 @@ export const ContributorMetricsSection = {
     return m('.contributor-metrics', [
       m('.provider-card.contributor-disclosure', [
         m('h3', 'Optional, content-free contribution'),
-        m('p', 'peerd works fully without Contributor Metrics. Nothing is collected until you press Enable below.'),
+        m('p', 'mcdollar works fully without Contributor Metrics. Nothing is collected until you press Enable below.'),
         m('h4', 'Included'),
         m('ul', [
           m('li', 'Requested and resolved code or tool mode, plus reviewed fallback and failure categories.'),
@@ -146,7 +146,7 @@ export const ContributorMetricsSection = {
       status?.diagnostic
         ? m('.provider-card', [
             m('h3', 'Read-only local state'),
-            m('p.error', 'This build found a newer or invalid Contributor Metrics record. It has not rewritten or deleted it. Update peerd or disable and clear it deliberately.'),
+            m('p.error', 'This build found a newer or invalid Contributor Metrics record. It has not rewritten or deleted it. Update mcdollar or disable and clear it deliberately.'),
             m('code', status.diagnostic),
           ])
         : null,

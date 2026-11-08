@@ -20,7 +20,7 @@ import {
   inspectTabToolCall,
   normalizeBrowserChildPolicyNotices,
   resolveTargetTab,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 import { controllerOperationAllowedInPermissionMode } from '/shared/controller-kernel-quota.js';
 import { createPagePacingAuthority } from './page-pacing-authority.js';
 

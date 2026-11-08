@@ -1,8 +1,8 @@
 // @ts-check
 import { describe, it, expect } from '../../../framework.js';
 import { loadPackagedStarter } from '/shared/starter-catalog.js';
-import { openEnvelope } from '/peerd-engine/export.js';
-import { composeApp } from '/peerd-engine/app-compose.js';
+import { openEnvelope } from '/mcdollar-engine/export.js';
+import { composeApp } from '/mcdollar-engine/app-compose.js';
 /** @param {string} key */
 const runStarter = async key => {
   const opened = await openEnvelope(await loadPackagedStarter(key));

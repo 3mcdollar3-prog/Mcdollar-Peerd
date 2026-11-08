@@ -1,6 +1,6 @@
-# Contributing to peerd
+# Contributing to mcdollar
 
-Thanks for helping out. peerd is a browser-native AI agent with no hosted agent
+Thanks for helping out. mcdollar is a browser-native AI agent with no hosted agent
 backend, account, or telemetry. It supports user-configured cloud and local
 providers.
 That requirement applies to every change. It is documented in the README,
@@ -9,7 +9,7 @@ telemetry, analytics, or an undeclared network service.**
 
 ## The one thing to know: there is no development build step
 
-peerd is vanilla JavaScript + ES modules. Chrome runs `extension/` directly;
+mcdollar is vanilla JavaScript + ES modules. Chrome runs `extension/` directly;
 there is no development bundler, transpiler, generated runtime tree, or watch
 process. The dev loop is edit, then reload the extension. Release packaging
 compacts only a disposable staging copy of authored cold-path modules. It does
@@ -34,7 +34,7 @@ regenerate. CI fails on drift.
 ## Read this first
 
 [`CLAUDE.md`](CLAUDE.md) is the architecture orientation: the codebase is five
-`peerd-*` modules, one per letter of the wordmark. Skim it before anything
+`mcdollar-*` modules, one per letter of the wordmark. Skim it before anything
 non-trivial. The code is the spec. There is no separate current design-doc corpus.
 
 ## Tests: three surfaces, different jobs
@@ -71,7 +71,7 @@ Most are enforced by `bun run lint` (ESLint autofixes much of it with
 - Vanilla JS, ES modules, **no new build step and no npm runtime dependency** in
   the extension. Third-party code lives in `vendor/` with a `SOURCE.txt`.
 - A module's `index.js` is its public API; import across modules only through it.
-- `peerd-distributed` is stricter. Nothing outside that module imports it,
+- `mcdollar-distributed` is stricter. Nothing outside that module imports it,
   including its `index.js`. Use `shared/dweb-interface.js` and
   `shared/dweb-loader.js`.
 - Comments explain **why**, not what.

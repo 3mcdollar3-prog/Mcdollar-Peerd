@@ -3,7 +3,7 @@ import {
   AppDefaultMissingError,
   createAppClient,
 } from '../../extension/background/app-client.js';
-import { makeWriteGuard, StoreReadOnlyError } from '../../extension/peerd-runtime/lifecycle/write-guard.js';
+import { makeWriteGuard, StoreReadOnlyError } from '../../extension/mcdollar-runtime/lifecycle/write-guard.js';
 import { createAppDwebAuthority } from '../../extension/background/app-dweb-authority.js';
 
 const blockedAppGuard = (reason: string) => {

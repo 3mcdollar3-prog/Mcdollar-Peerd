@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { makeKernelVmMetaRoute } from '../../extension/background/kernel-utility-routes.js';
 
-const sender = { id: 'peerd', url: 'chrome-extension://peerd/engine-tabs/vm-tab/index.html' };
+const sender = { id: 'mcdollar', url: 'chrome-extension://mcdollar/engine-tabs/vm-tab/index.html' };
 
 describe('native kernel VM metadata route', () => {
   test('waits for hydrated settings and returns the exact v1 record without feature startup', async () => {

@@ -1,5 +1,5 @@
 /* js-tab — page chrome only. The editor + file tree + CodeMirror
-   styles live in peerd-engine/editor.js (injected at createEditor
+   styles live in mcdollar-engine/editor.js (injected at createEditor
    time via a <style> tag) so any tab that mounts the editor module
    gets them automatically. */
 
@@ -144,7 +144,7 @@ html, body {
 .export-btn:active { transform: translateY(1px); }
 .export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* peerd:std cheat sheet — a ghost <details> dropdown, same monochrome family
+/* mcdollar:std cheat sheet — a ghost <details> dropdown, same monochrome family
    as the export button. The panel is fixed under the toolbar so it overlays
    the editor without reflowing it. */
 .std-cheat { position: relative; }
@@ -203,7 +203,7 @@ html, body {
   background: var(--bg); color: var(--fg-muted); cursor: not-allowed;
 }
 
-/* ---- Editor mount (peerd-engine/editor owns its internals) ---------- */
+/* ---- Editor mount (mcdollar-engine/editor owns its internals) ---------- */
 /* flex-grow is the split ratio (default 6:4); notebook-tab.js's resizer
    overrides flexGrow on both panes as you drag, persisted to localStorage. */
 

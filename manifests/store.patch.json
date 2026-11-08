@@ -1,8 +1,8 @@
 {
-  "name": "peerd",
+  "name": "mcdollar",
   "browser_specific_settings": {
     "gecko": {
-      "id": "peerd@peerd.ai",
+      "id": "mcdollar@mcdollar.ai",
       "strict_min_version": "154.0"
     }
   }

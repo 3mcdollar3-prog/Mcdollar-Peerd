@@ -2,11 +2,11 @@ import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { createAppRoomAuthority, AppRoomAuthorityChangedError } from '../../extension/offscreen/app-room-authority.js';
 import { publishFailureError } from '../../extension/shared/publish-transaction.js';
-import { generateIdentity } from '../../extension/peerd-distributed/identity/keypair.js';
-import { buildManifest } from '../../extension/peerd-distributed/content/manifest.js';
-import { packBundle } from '../../extension/peerd-distributed/content/bundle.js';
-import { formatPeerdUri } from '../../extension/peerd-distributed/content/uri.js';
-import { prepareAppBundle } from '../../extension/peerd-distributed/apps/loader.js';
+import { generateIdentity } from '../../extension/mcdollar-distributed/identity/keypair.js';
+import { buildManifest } from '../../extension/mcdollar-distributed/content/manifest.js';
+import { packBundle } from '../../extension/mcdollar-distributed/content/bundle.js';
+import { formatMcdollarUri } from '../../extension/mcdollar-distributed/content/uri.js';
+import { prepareAppBundle } from '../../extension/mcdollar-distributed/apps/loader.js';
 import { fromBase64 } from '../../extension/shared/bundle/bytes.js';
 import { appSeedHandoff } from '../../extension/shared/app-seed-handoff.js';
 
@@ -60,7 +60,7 @@ test('offscreen update carries exact conflict and publication receipts and trust
   const files = { 'index.html': readFileSync(new URL('../../extension/tests/runner.html', import.meta.url)) };
   const payload = packBundle({ entry: 'index.html', files });
   const { manifest, hash } = await buildManifest({ payload, type: 'app', identity });
-  const app = await prepareAppBundle({ uri: formatPeerdUri({ did: identity.did, hash }), manifest, payload });
+  const app = await prepareAppBundle({ uri: formatMcdollarUri({ did: identity.did, hash }), manifest, payload });
   const update = source.slice(source.indexOf("case 'dweb/base-host/update-app':"));
   const callback = section('announce: async', '\n              },', update)
     .replace(/^announce: /, '') + '\n}';
@@ -121,7 +121,7 @@ test('retired reseed compensates through the network, not its host wrapper', asy
   await invoke(null);
   expect(removed).toEqual([{ slug: 'app-slug', publisher: 'publisher' }]);
   const previous = { name: 'App', description: '', seq: 6,
-    head: { version_id: 'old-hash', content_addr: 'peerd://old-hash', size: 12 } };
+    head: { version_id: 'old-hash', content_addr: 'mcdollar://old-hash', size: 12 } };
   await invoke(previous);
   expect(published).toHaveLength(1);
   expect(published[0].head).toEqual(previous.head);

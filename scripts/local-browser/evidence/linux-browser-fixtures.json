@@ -58,7 +58,7 @@
                 "query": "copper",
                 "title": "Copper widget",
                 "typedQuery": "copper",
-                "url": "https://git-fixture.peerd.test/item/copper-widget?case=search-navigation&q=copper&mutation=0"
+                "url": "https://git-fixture.mcdollar.test/item/copper-widget?case=search-navigation&q=copper&mutation=0"
               }
             },
             {
@@ -113,7 +113,7 @@
                 "query": "copper",
                 "title": "Copper widget",
                 "typedQuery": "copper",
-                "url": "https://git-fixture.peerd.test/item/copper-widget?case=mutation-replan&q=copper&mutation=1"
+                "url": "https://git-fixture.mcdollar.test/item/copper-widget?case=mutation-replan&q=copper&mutation=1"
               }
             },
             {
@@ -199,7 +199,7 @@
                 "query": "copper",
                 "title": "Copper widget",
                 "typedQuery": "copper",
-                "url": "https://git-fixture.peerd.test/item/copper-widget?case=search-navigation&q=copper&mutation=0"
+                "url": "https://git-fixture.mcdollar.test/item/copper-widget?case=search-navigation&q=copper&mutation=0"
               }
             },
             {
@@ -275,7 +275,7 @@
                 "query": "copper",
                 "title": "Copper widget",
                 "typedQuery": "copper",
-                "url": "https://git-fixture.peerd.test/item/copper-widget?case=mutation-replan&q=copper&mutation=1"
+                "url": "https://git-fixture.mcdollar.test/item/copper-widget?case=mutation-replan&q=copper&mutation=1"
               }
             },
             {

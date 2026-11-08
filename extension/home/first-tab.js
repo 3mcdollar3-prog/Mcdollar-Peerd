@@ -1,11 +1,11 @@
 // @ts-check
-// home/first-tab.js - pure rules for "Keep peerd as the first tab": the
+// home/first-tab.js - pure rules for "Keep mcdollar as the first tab": the
 // one-time offer after the first setup (on Home or in the side panel), the
 // one-time hint in the pinned tab, and the live state that Home's tab icon
 // and title show.
 //
 // A pinned tab shows only its icon, so the icon carries the state: a ring
-// while peerd works, and a dot when a reply came while you were elsewhere.
+// while mcdollar works, and a dot when a reply came while you were elsewhere.
 // No sends, no DOM: home.js applies the results. Bun tests pin each rule.
 
 /** @typedef {'idle'|'working'|'reply'} TabPresence */
@@ -148,5 +148,5 @@ export const presenceIcon = (presence) => presence === 'working'
  * @param {TabPresence} presence @param {string} idleTitle @param {boolean} firefox
  */
 export const presenceTitle = (presence, idleTitle, firefox) => firefox ? idleTitle
-  : presence === 'working' ? 'peerd is working…'
-    : presence === 'reply' ? 'peerd has a reply' : idleTitle;
+  : presence === 'working' ? 'mcdollar is working…'
+    : presence === 'reply' ? 'mcdollar has a reply' : idleTitle;

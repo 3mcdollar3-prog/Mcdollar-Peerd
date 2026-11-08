@@ -35,7 +35,7 @@ import {
   gitRemoteOwnsRequest,
   normalizeGitRemote,
   smartHttpAuthHeader,
-} from '/peerd-engine/authority.js';
+} from '/mcdollar-engine/authority.js';
 export { decodeRepositoryRpcValue, encodeRepositoryRpcValue };
 
 /** @typedef {Error & {code?:string,outcomeKnown?:boolean,repositoryHostDispatched?:boolean}} RepositoryError */
@@ -201,7 +201,7 @@ export const makeRepositoryFacade = (invoke, coordinate) => {
     service[name] = (/** @type {string} */ id, /** @type {any[]} */ ...args) =>
       invoke(method, [appRef(id), ...args]);
   }
-  return (/** @type {ReturnType<typeof import('../peerd-engine/repository.js').createRepositoryService>
+  return (/** @type {ReturnType<typeof import('../mcdollar-engine/repository.js').createRepositoryService>
     & {readonly appFiles:ReturnType<typeof makeAppFilesFacade>}} */ (
     /** @type {unknown} */ (Object.freeze({
       ...service,
@@ -210,13 +210,13 @@ export const makeRepositoryFacade = (invoke, coordinate) => {
   ));
 };
 
-/** @param {()=>Promise<ReturnType<typeof import('../peerd-engine/repository.js').createRepositoryService>>} loader
+/** @param {()=>Promise<ReturnType<typeof import('../mcdollar-engine/repository.js').createRepositoryService>>} loader
  * @param {{loadTimeoutMs?:number}} [options]
  */
 export const createDeferredRepositoryClient = (loader, { loadTimeoutMs = 1e4 } = {}) => {
   const code = 'repository-local-load-failed';
   const unavailable = () => repositoryError(code, code, true, undefined);
-  /** @type {Promise<ReturnType<typeof import('../peerd-engine/repository.js').createRepositoryService>>|null} */
+  /** @type {Promise<ReturnType<typeof import('../mcdollar-engine/repository.js').createRepositoryService>>|null} */
   let pending = null;
   const load = () => {
     if (!pending) pending = Promise.resolve().then(loader).catch(() => {

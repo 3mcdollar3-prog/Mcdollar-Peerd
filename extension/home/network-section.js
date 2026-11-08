@@ -4,7 +4,7 @@
 // A live window onto the always-on base network: who you're connected to, by
 // what real path (the IPv6 bet, on screen), and the lobby/DHT facts. The
 // centerpiece is an animated radial peer graph in the WebTorrent spirit — YOU
-// at the hub, peers orbiting, each in its own peerd brand color — but honest
+// at the hub, peers orbiting, each in its own mcdollar brand color — but honest
 // about a browser mesh: nodes are dids/names, NOT IPs (WebRTC hides peer IPs),
 // and each edge shows its TRUE ICE path (direct IPv6 / IPv4-STUN / relay).
 //
@@ -34,7 +34,7 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 
 // --- brand color per peer (random per did, cached for the session) -----------
 // Mirrors the commons participant rail (owner direction 2026-06-12: every dweb
-// peer gets a peerd brand color, chosen at random client-side — the sanctioned
+// peer gets a mcdollar brand color, chosen at random client-side — the sanctioned
 // exception to "one accent on monochrome", because the peers ARE the content).
 // Cached in a module Map so a peer keeps its color across the 3s refresh and any
 // graph rebuild. p·cyan e·red e·amber r·green d·magenta.
@@ -348,7 +348,7 @@ const PeerGraph = () => {
     view(vnode) {
       const selfLabel = vnode.attrs.selfLabel || 'You';
       const count = (vnode.attrs.peers || []).length;
-      return m('svg.peerd-net-graph', {
+      return m('svg.mcdollar-net-graph', {
         viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'xMidYMid meet',
         role: 'img', 'aria-label': `Network graph: you and ${count} peer${count === 1 ? '' : 's'}`,
       }, [
@@ -365,16 +365,16 @@ const PeerGraph = () => {
  * @param {string} k
  * @param {string} v
  */
-const fact = (k, v) => m('.peerd-net-fact', [
-  m('span.peerd-net-fact-k', k),
-  m('span.peerd-net-fact-v', v),
+const fact = (k, v) => m('.mcdollar-net-fact', [
+  m('span.mcdollar-net-fact-k', k),
+  m('span.mcdollar-net-fact-v', v),
 ]);
 
 /** @param {unknown} result @param {'start'|'stop'} action */
 const lifecycleFailure = (result, action) =>
   /** @type {{outcomeKnown?:boolean}} */ (result)?.outcomeKnown === false
-    ? `Peerd could not confirm whether the network ${action} finished. Its current status was re-read; check it before trying again.`
-    : `Peerd could not ${action} the network. Check your connection and try again.`;
+    ? `Mcdollar could not confirm whether the network ${action} finished. Its current status was re-read; check it before trying again.`
+    : `Mcdollar could not ${action} the network. Check your connection and try again.`;
 
 /**
  * The Network section, mounted on the home page (DWEB_ENABLED only).
@@ -419,7 +419,7 @@ export const NetworkSection = () => {
         return true;
       } catch (cause) {
         if (epoch >= appliedEpoch) {
-          error = 'Peerd could not refresh network status. Retry the status check.';
+          error = 'Mcdollar could not refresh network status. Retry the status check.';
         }
         void cause;
         return false;
@@ -497,33 +497,33 @@ export const NetworkSection = () => {
     view(vnode) {
       const send = vnode.attrs.send;
       if (loading && !info) {
-        return m('.peerd-net', m('.peerd-net-empty', 'Finding your way into the network…'));
+        return m('.mcdollar-net', m('.mcdollar-net-empty', 'Finding your way into the network…'));
       }
       if (!info) {
-        return m('.peerd-net', m('.peerd-net-offline', [
+        return m('.mcdollar-net', m('.mcdollar-net-offline', [
           m('p', error ?? 'Network status is unavailable.'),
-          m('button.peerd-net-btn', {
+          m('button.mcdollar-net-btn', {
             disabled: !!refreshInFlight,
             onclick: () => refresh(send),
           }, refreshInFlight ? 'Checking…' : 'Retry status'),
         ]));
       }
       if (info.running === false) {
-        return m('.peerd-net', m('.peerd-net-offline', [
+        return m('.mcdollar-net', m('.mcdollar-net-offline', [
           m('p', error && error !== 'unavailable'
             ? `The network isn’t live yet (${error}).`
             : 'The network isn’t live yet. It comes up on unlock and stays on in the background, '
               + 'so your apps keep their connections even with no tab open.'),
           transitionUnknown === 'start' ? m.fragment({}, [
-            m('button.peerd-net-btn', {
+            m('button.mcdollar-net-btn', {
               disabled: starting || !!refreshInFlight,
               onclick: () => refresh(send),
             }, refreshInFlight ? 'Checking…' : 'Recheck network status'),
-            m('button.peerd-net-btn.secondary', {
+            m('button.mcdollar-net-btn.secondary', {
               disabled: starting || !!refreshInFlight,
               onclick: () => start(send),
             }, starting ? 'Finishing…' : 'Finish same start'),
-          ]) : m('button.peerd-net-btn', {
+          ]) : m('button.mcdollar-net-btn', {
             disabled: starting || !!refreshInFlight,
             onclick: () => start(send),
           }, starting ? 'Starting…' : 'Start the network'),
@@ -536,8 +536,8 @@ export const NetworkSection = () => {
       const peers = info.peers || [];
       /** @type {Peer[]} */
       const graphPeers = boot ? [boot, ...peers] : peers;
-      return m('.peerd-net', [
-        m('.peerd-net-facts', [
+      return m('.mcdollar-net', [
+        m('.mcdollar-net-facts', [
           fact('You', short(info.did)),
           fact('Lobby', info.lobby || '—'),
           fact('Peers', `${info.peerCount} · ${info.linkedCount} direct`),
@@ -545,32 +545,32 @@ export const NetworkSection = () => {
         ]),
         m(PeerGraph, { peers: graphPeers, selfLabel: 'You' }),   // no wrapper — sits on the page bg
         peers.length === 0 && !boot
-          ? m('.peerd-net-empty', 'You’re the first one here. The network is live and listening, '
+          ? m('.mcdollar-net-empty', 'You’re the first one here. The network is live and listening, '
               + 'and peers appear as they come online, each link showing its true path.')
-          : m('ul.peerd-net-list', graphPeers.map((p) => {
+          : m('ul.mcdollar-net-list', graphPeers.map((p) => {
             const pi = pathInfo(p);
             const isBoot = p.kind === 'bootstrap';
-            return m('li.peerd-net-row', { key: p.did }, [
-              m('span.peerd-net-swatch', { style: `background:${colorOf(p.did)}` }),
-              m('span.peerd-net-name', labelOf(p)),
-              m('span.peerd-net-did', isBoot ? '' : short(p.did)),
-              m('span.peerd-net-path', { class: `peerd-net-path--${pi.kind}` }, pi.label),
+            return m('li.mcdollar-net-row', { key: p.did }, [
+              m('span.mcdollar-net-swatch', { style: `background:${colorOf(p.did)}` }),
+              m('span.mcdollar-net-name', labelOf(p)),
+              m('span.mcdollar-net-did', isBoot ? '' : short(p.did)),
+              m('span.mcdollar-net-path', { class: `mcdollar-net-path--${pi.kind}` }, pi.label),
             ]);
           })),
         // Kill switch — symmetric to "Start the network" in the offline view.
         // Drops every live connection and persists dweb off (won't auto-restart
         // on unlock) — docs/specs/FEATURE-FIRST-CLASS-MESSAGING.md §2.
         transitionUnknown === 'stop' ? m.fragment({}, [
-          m('button.peerd-net-btn', {
+          m('button.mcdollar-net-btn', {
             disabled: stopping || !!refreshInFlight,
             style: 'margin-top:10px; font-size:12px; opacity:.75;',
             onclick: () => refresh(send),
           }, refreshInFlight ? 'Checking…' : 'Recheck network status'),
-          m('button.peerd-net-btn.secondary', {
+          m('button.mcdollar-net-btn.secondary', {
             disabled: stopping || !!refreshInFlight,
             onclick: () => stop(send),
           }, stopping ? 'Finishing…' : 'Finish same stop'),
-        ]) : m('button.peerd-net-btn', {
+        ]) : m('button.mcdollar-net-btn', {
           disabled: stopping || !!refreshInFlight,
           style: 'margin-top:10px; font-size:12px; opacity:.75;',
           onclick: () => stop(send),

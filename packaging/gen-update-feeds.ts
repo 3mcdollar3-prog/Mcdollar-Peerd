@@ -6,11 +6,11 @@
 //
 // Both point at the GitHub Release assets for the given version
 // (https://github.com/<repo>/releases/download/v<version>/…). The release
-// workflow regenerates and attaches them on every tag. The peerd-site
+// workflow regenerates and attaches them on every tag. The mcdollar-site
 // repository downloads those assets and serves them at:
 //
-//   https://peerd.ai/updates/chrome-preview.xml
-//   https://peerd.ai/updates/firefox-preview.json
+//   https://mcdollar.ai/updates/chrome-preview.xml
+//   https://mcdollar.ai/updates/firefox-preview.json
 //
 // (the preview manifests hard-code those URLs — see
 // manifests/preview.patch.json). Serve with a SHORT TTL (~5 min): Chrome
@@ -23,7 +23,7 @@
 import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ARTIFACTS_DIR, MANIFESTS_DIR, readJson, readVersion, parseArgs } from './lib.ts';
-const DEFAULT_REPO = 'NotASithLord/peerd';
+const DEFAULT_REPO = 'NotASithLord/mcdollar';
 
 export const genUpdateFeeds = ({
   version, repo, outDir = ARTIFACTS_DIR,
@@ -39,7 +39,7 @@ export const genUpdateFeeds = ({
   const chromeXml = `<?xml version="1.0" encoding="UTF-8"?>
 <gupdate xmlns="http://www.google.com/update2/response" protocol="2.0">
   <app appid="${chromeAppId}">
-    <updatecheck codebase="${releaseBase}/peerd-preview-chrome.crx" version="${version}"/>
+    <updatecheck codebase="${releaseBase}/mcdollar-preview-chrome.crx" version="${version}"/>
   </app>
 </gupdate>
 `;
@@ -51,7 +51,7 @@ export const genUpdateFeeds = ({
         updates: [
           {
             version,
-            update_link: `${releaseBase}/peerd-preview-firefox.xpi`,
+            update_link: `${releaseBase}/mcdollar-preview-firefox.xpi`,
             applications: { gecko: { strict_min_version: geckoMin } },
           },
         ],

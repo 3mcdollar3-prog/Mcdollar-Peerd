@@ -38,7 +38,7 @@ describe('Contributor Metrics human UI', () => {
     m.mount(root, { view: () => m(ContributorMetricsSection, { send }) });
     try {
       await settle();
-      expect(root.textContent).toContain('peerd works fully without Contributor Metrics');
+      expect(root.textContent).toContain('mcdollar works fully without Contributor Metrics');
       expect(root.textContent).toContain('Included');
       expect(root.textContent).toContain('Never included');
       expect(root.textContent).toContain('URLs, origins, hosts');
@@ -232,8 +232,8 @@ describe('Contributor Metrics human UI', () => {
       const feedback = Array.from(root.querySelectorAll('.task-feedback'));
       expect(feedback.length).toBe(2);
       expect(feedback.map((entry) => entry.closest('.message')?.textContent)).toEqual([
-        'peerdDone.did this work?workeddidn’t work',
-        'peerdAlso done.did this work?workeddidn’t work',
+        'mcdollarDone.did this work?workeddidn’t work',
+        'mcdollarAlso done.did this work?workeddidn’t work',
       ]);
     } finally {
       m.mount(root, null);

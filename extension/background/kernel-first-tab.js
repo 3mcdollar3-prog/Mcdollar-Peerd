@@ -40,18 +40,18 @@ import { makeSerialLane } from '../shared/cold-util.js';
  * }} FirstTabTabOwner
  */
 
-// The windows peerd already handled in this browser session. storage.session
+// The windows mcdollar already handled in this browser session. storage.session
 // is empty after a browser restart or an update, which is how a boot tells
 // restored windows (keep what the browser restored) from new ones.
 export const FIRST_TAB_WINDOWS_KEY = 'firstTab.windows.v1';
 // The windows that still have their pinned Home tab, in storage.local. An
-// update closes peerd's tabs and empties storage.session, but the window ids
+// update closes mcdollar's tabs and empties storage.session, but the window ids
 // stay. A browser start writes it again, because the ids change then.
 export const FIRST_TAB_KEPT_KEY = 'firstTab.kept.v1';
 // The windows where the user closed or unpinned the tab, each with the
 // addresses of its tabs. Reopen Closed Window brings a window back under a new
-// id, so its tabs are how peerd knows it. why storage.session: it stays in
-// memory, so peerd keeps no list of your tabs on disk.
+// id, so its tabs are how mcdollar knows it. why storage.session: it stays in
+// memory, so mcdollar keeps no list of your tabs on disk.
 export const FIRST_TAB_DECLINED_KEY = 'firstTab.declined.v1';
 const MAX_WINDOWS = 256;
 const MAX_DECLINED = 32;
@@ -186,7 +186,7 @@ export const attachKernelFirstTab = ({
     await writeHandled([...await readHandled() ?? [], ...windows.map((window) => window.id)]);
   });
 
-  // An update closes peerd's tabs. Each window that still had its tab gets it
+  // An update closes mcdollar's tabs. Each window that still had its tab gets it
   // again, and no other window does.
   const restoreAfterUpdate = () => whenOn(async () => {
     const kept = await readKept();
@@ -198,7 +198,7 @@ export const attachKernelFirstTab = ({
   // A browser start: tidy what the browser restored, then note which windows
   // have their tab. Chrome can put the pinned tabs of every window into its
   // one startup window. Firefox can reopen a window only for its pinned tabs.
-  // These are peerd's own pages, so closing the extra ones loses nothing.
+  // These are mcdollar's own pages, so closing the extra ones loses nothing.
   const browserStarted = () => whenOn(async () => {
     await settle();
     const windows = await normalWindows();

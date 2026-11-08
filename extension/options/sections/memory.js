@@ -12,10 +12,10 @@
 //
 // /init starts an agent flow whose progress notes and draft-confirmation
 // modal ride the PANEL port — the copy here says so honestly: open the
-// peerd panel and watch the chat for the draft.
+// mcdollar panel and watch the chat for the draft.
 
 import m from '/vendor/mithril/mithril.js';
-import { countLines, ALWAYS_LOADED_LINE_BUDGET } from '/peerd-runtime/options.js';
+import { countLines, ALWAYS_LOADED_LINE_BUDGET } from '/mcdollar-runtime/options.js';
 import { mutationFailureCopy } from '../mutation-custody.js';
 import { rowController } from '../components/settings-row.js';
 
@@ -171,9 +171,9 @@ export const MemoryView = {
       m('.memory-actions', [
         m('button.secondary', {
           disabled: ui.memBusy || ui.memUncertain,
-          title: 'Scan the active workspace and draft a project AGENTS.md — the draft arrives in the peerd panel for you to confirm, so open the panel first',
+          title: 'Scan the active workspace and draft a project AGENTS.md — the draft arrives in the mcdollar panel for you to confirm, so open the panel first',
           onclick: () => act({ type: 'memory/init' },
-            '/init started — open the peerd panel and watch the chat for the draft to confirm.'),
+            '/init started — open the mcdollar panel and watch the chat for the draft to confirm.'),
         }, 'Draft project memory (/init)'),
         hasUserDoc ? null : m('button.secondary', {
           disabled: ui.memBusy || ui.memUncertain,
@@ -223,7 +223,7 @@ export const MemoryView = {
         : docs.length === 0
           ? m('.memory-empty', m('p.muted',
               'No memory yet. Run /init to draft project notes from the active workspace, '
-              + 'add a user note above, or just tell peerd to "remember" something in chat.'))
+              + 'add a user note above, or just tell mcdollar to "remember" something in chat.'))
           : docs.map((/** @type {MemoryDoc} */ d) => m(MemoryDocCard, { key: d.id, doc: d, send, onChanged: reload })),
 
       // Auto-memory toggle — relocated from "Agent behavior": the
@@ -238,11 +238,11 @@ export const MemoryView = {
         busyKey: 'autoMemoryBusy',
         disabled: ui.autoMemoryUncertain,
         summary: autoMemoryOn
-          ? 'peerd proposes notes when a chat wraps up. Nothing is saved without your approval.'
-          : 'peerd never proposes notes. You can still ask it to remember things, or edit memory here.',
+          ? 'mcdollar proposes notes when a chat wraps up. Nothing is saved without your approval.'
+          : 'mcdollar never proposes notes. You can still ask it to remember things, or edit memory here.',
         why: autoMemoryOn
-          ? 'On. When a chat wraps up (you archive it or switch away after a real conversation), peerd makes one small background model call to propose durable notes about you and your ongoing work. Proposals appear above for your approval - nothing is ever saved without it. Calls respect the session spend limit (Costs page).'
-          : 'Off. peerd never proposes memory notes from finished chats. You can still ask it to remember things, or edit memory directly on this page.',
+          ? 'On. When a chat wraps up (you archive it or switch away after a real conversation), mcdollar makes one small background model call to propose durable notes about you and your ongoing work. Proposals appear above for your approval - nothing is ever saved without it. Calls respect the session spend limit (Costs page).'
+          : 'Off. mcdollar never proposes memory notes from finished chats. You can still ask it to remember things, or edit memory directly on this page.',
         apply: async () => {
           let reply;
           try {

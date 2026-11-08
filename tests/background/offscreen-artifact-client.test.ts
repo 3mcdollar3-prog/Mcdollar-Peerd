@@ -17,11 +17,11 @@ import {
   admitArtifactChannelOffer,
   artifactChannelRequestAllowed,
 } from '../../extension/shared/artifact-channel.js';
-import * as artifactCodec from '../../extension/peerd-engine/export.js';
+import * as artifactCodec from '../../extension/mcdollar-engine/export.js';
 import { appSeedHandoff } from '../../extension/shared/app-seed-handoff.js';
 import { packTransportBundle } from '../../extension/shared/bundle/transport.js';
-import { buildManifest } from '../../extension/peerd-distributed/content/manifest.js';
-import { generateIdentity } from '../../extension/peerd-distributed/identity/keypair.js';
+import { buildManifest } from '../../extension/mcdollar-distributed/content/manifest.js';
+import { generateIdentity } from '../../extension/mcdollar-distributed/identity/keypair.js';
 
 const supervisorSource = readFileSync(
   join(EXTENSION_DIR, 'offscreen/supervisor-channels.js'), 'utf8',
@@ -90,7 +90,7 @@ describe('demand-only artifact codec channel', () => {
     expect(leaseDepth).toBe(0);
     const opened = await client.openEnvelope(envelope);
     expect(opened.files['asset.bin']).toEqual(bytes);
-    expect(await client.exportFilename('Binary', 'app')).toContain('.peerd');
+    expect(await client.exportFilename('Binary', 'app')).toContain('.mcdollar');
   });
 
   test('reconstructs stable codec errors and refuses ambiguous hosts', async () => {
@@ -165,13 +165,13 @@ describe('demand-only artifact codec channel', () => {
       withHost: async () => { throw new Error('must not lease'); },
       listWindowClients: async () => { throw new Error('must not enumerate offscreen'); },
       createChannel: () => { throw new Error('must not create a channel'); },
-      importLocal: () => import('../../extension/peerd-engine/export.js'),
+      importLocal: () => import('../../extension/mcdollar-engine/export.js'),
       withLocalLifetime: async (operation, options) => {
         lifetimeOptions.push(options);
         return operation();
       },
     });
-    await expect(local.exportFilename('Local', 'app')).resolves.toContain('.peerd');
+    await expect(local.exportFilename('Local', 'app')).resolves.toContain('.mcdollar');
     expect(lifetimeOptions).toEqual([{
       outcomeKnownOnLoss: true,
       code: 'artifact-firefox-background-lost',
@@ -391,8 +391,8 @@ describe('demand-only artifact codec channel', () => {
       ok: false,
       error: { name: 'ArtifactHostBusyError', outcomeKnown: true, retryable: true },
     });
-    releaseFirst('app.peerd');
-    await expect(first).resolves.toMatchObject({ ok: true, value: 'app.peerd' });
+    releaseFirst('app.mcdollar');
+    await expect(first).resolves.toMatchObject({ ok: true, value: 'app.mcdollar' });
 
     const oversize = createArtifactOfferAcceptor({
       createRun: createRunFrom(() => 'x'.repeat(20 * 1024)),
@@ -447,7 +447,7 @@ describe('demand-only artifact codec channel', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(hostPort).not.toBeNull();
     expect(cancelled).toBe(1);
-    expect(ARTIFACT_CHANNEL_CANCEL).toBe('peerd/artifact-cancel');
+    expect(ARTIFACT_CHANNEL_CANCEL).toBe('mcdollar/artifact-cancel');
   });
 
   test('timeout and channel loss both release the bounded host lease', async () => {
@@ -514,7 +514,7 @@ describe('demand-only artifact codec channel', () => {
       }],
       newId: () => 'artifact-reused-identity',
     });
-    await expect(client.exportFilename('First', 'app')).resolves.toContain('.peerd');
+    await expect(client.exportFilename('First', 'app')).resolves.toContain('.mcdollar');
     await expect(client.exportFilename('Second', 'app'))
       .rejects.toThrow('identity invalid or reused');
     expect(sends).toBe(1);

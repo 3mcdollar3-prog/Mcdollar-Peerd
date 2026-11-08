@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { createAppToolAuthority } from '../../extension/background/app-tool-authority.js';
-import { executeControllerAppTool } from '../../extension/peerd-runtime/controller-app-tools.js';
+import { executeControllerAppTool } from '../../extension/mcdollar-runtime/controller-app-tools.js';
 
 const context = (overrides: Record<string, any> = {}) => ({
   session: { sessionId: 'session-1' },

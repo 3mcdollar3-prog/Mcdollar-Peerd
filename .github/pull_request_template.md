@@ -1,5 +1,5 @@
 <!--
-Thanks for contributing to peerd! Keep PRs small and focused.
+Thanks for contributing to mcdollar! Keep PRs small and focused.
 For anything non-trivial, open an issue first (see CONTRIBUTING.md).
 -->
 

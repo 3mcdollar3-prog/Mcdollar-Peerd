@@ -36,7 +36,7 @@ export const PeerNetworkStatus = () => {
         : result?.running && result.rendezvous === 'up'
         ? 'Looking for peers. No direct peer connections yet. You can continue.'
         : result?.running
-        ? 'No peer connections. The introduction service is unavailable; Peerd will keep trying. You can continue.'
+        ? 'No peer connections. The introduction service is unavailable; Mcdollar will keep trying. You can continue.'
         : 'Peer network is offline. You can continue and reconnect later.';
     } catch { label = 'Connection status unavailable. You can continue and check again later.'; }
     finally {

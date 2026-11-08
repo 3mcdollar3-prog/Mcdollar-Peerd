@@ -5,7 +5,7 @@
 #   osv               known-vulnerability scan of the resolved dependency tree
 #   dependency-review the PR-time diff gate: a new dependency carrying a known
 #                     advisory (or a copyleft license) fails the PR
-#   invariants        peerd-SPECIFIC architectural rules that no generic scanner
+#   invariants        mcdollar-SPECIFIC architectural rules that no generic scanner
 #                     knows about (packaging/check-invariants.ts)
 #
 # Actions are SHA-pinned for the same reason as the packaging workflow: a
@@ -145,7 +145,7 @@ jobs:
           deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0, LGPL-2.1, LGPL-3.0
 
   invariants:
-    name: peerd security invariants
+    name: mcdollar security invariants
     runs-on: ubuntu-latest
     steps:
       - name: Harden runner (audit egress and source writes)

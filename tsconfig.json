@@ -37,11 +37,11 @@
     // extension modules; mirrors the resolver plugin in tests/setup.ts.
     "paths": {
       "/shared/*": ["./extension/shared/*"],
-      "/peerd-runtime/*": ["./extension/peerd-runtime/*"],
-      "/peerd-engine/*": ["./extension/peerd-engine/*"],
-      "/peerd-egress/*": ["./extension/peerd-egress/*"],
-      "/peerd-provider/*": ["./extension/peerd-provider/*"],
-      "/peerd-distributed/*": ["./extension/peerd-distributed/*"],
+      "/mcdollar-runtime/*": ["./extension/mcdollar-runtime/*"],
+      "/mcdollar-engine/*": ["./extension/mcdollar-engine/*"],
+      "/mcdollar-egress/*": ["./extension/mcdollar-egress/*"],
+      "/mcdollar-provider/*": ["./extension/mcdollar-provider/*"],
+      "/mcdollar-distributed/*": ["./extension/mcdollar-distributed/*"],
       "/vendor/*": ["./extension/vendor/*"],
       "/background/*": ["./extension/background/*"],
       "/sidepanel/*": ["./extension/sidepanel/*"],

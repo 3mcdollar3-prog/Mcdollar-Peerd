@@ -102,7 +102,7 @@ const render = ({ extensionDir, artifactsDir }) => {
   if (extensionDir) args.push(`--extension=${extensionDir}`);
   if (artifactsDir) args.push(`--artifacts=${artifactsDir}`);
   return spawnSync('bun', args, { cwd: ROOT, stdio: 'inherit',
-    env: { ...process.env, PEERD_VISUAL_BASE_RENDER: extensionDir ? '1' : '0' } }).status;
+    env: { ...process.env, MCDOLLAR_VISUAL_BASE_RENDER: extensionDir ? '1' : '0' } }).status;
 };
 const materialiseBase = () => {
   if (!baseRef) return false;

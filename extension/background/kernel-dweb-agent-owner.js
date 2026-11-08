@@ -4,7 +4,7 @@ import { effectReceiptFields } from './host-effect-verdict.js';
 
 import { makeDwebInboundRateCap } from './dweb-inbound-rate-cap.js';
 
-export const DWEB_AGENT_ROOM = 'peerd-agent';
+export const DWEB_AGENT_ROOM = 'mcdollar-agent';
 const NO_REPORT = 'NO_REPORT';
 
 /** @param {Record<string,any>} deps */
@@ -50,7 +50,7 @@ export const createKernelDwebAgentOwner = (deps) => {
       await deps.ensureFeature();
       return deps.sendMessage({
         type: 'dweb/base-host/room', roomId: DWEB_AGENT_ROOM,
-        op: 'join', name: 'peerd agent',
+        op: 'join', name: 'mcdollar agent',
       });
     }).catch(() => null);
     if (response?.ok && enabled()) roomJoined = true;

@@ -42,7 +42,7 @@ export class FirefoxChildRequestGuardUnavailableError extends Error {
   }
 }
 
-export const FIREFOX_DRIVEN_CHILD_MARKERS_KEY = 'peerd.firefoxDrivenChildren.v1';
+export const FIREFOX_DRIVEN_CHILD_MARKERS_KEY = 'mcdollar.firefoxDrivenChildren.v1';
 export const FIREFOX_DRIVEN_CHILD_IDS_KEY = `${FIREFOX_DRIVEN_CHILD_MARKERS_KEY}.ids`;
 
 /**

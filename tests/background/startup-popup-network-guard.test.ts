@@ -6,7 +6,7 @@ import {
 import {
   buildPrivateNetworkBlockRules,
   CHROME_DNR_RESOURCE_TYPES,
-} from '../../extension/peerd-egress/denylist/dnr-rules.js';
+} from '../../extension/mcdollar-egress/denylist/dnr-rules.js';
 import { PRIVATE_NETWORK_RULE_DIGESTS } from '../../extension/shared/private-network-rule-ids.js';
 
 const rule = (id: number, tabIds: number[], action = 'block') => ({

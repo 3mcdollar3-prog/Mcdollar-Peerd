@@ -5,7 +5,7 @@
 Build the first demo around **validated API operations first**, then a small
 decision model choosing from observed page actions. A small local language model
 supplies field values, selects and parameterizes reusable operations, and helps
-derive or repair a client. Peerd owns the browser, permissions, cancellation,
+derive or repair a client. Mcdollar owns the browser, permissions, cancellation,
 and outcome evidence. A visual browser specialist is the next fallback to
 evaluate, not a capability obtained by changing the text helper's model name.
 
@@ -44,7 +44,7 @@ the browser directly. Local inference eliminates per-call API charges; websites
 still require their normal network access, and downloading the weights is an
 initial network operation.
 
-## What the Peerd review found
+## What the Mcdollar review found
 
 The review started from main commit
 `dbf9208202d848d06c464a6221a2920952082dfd`. The following are architectural
@@ -53,13 +53,13 @@ findings; the linked code remains authoritative as the project changes.
 | Area | Existing foundation and implication |
 | --- | --- |
 | Browser ownership | Isolated actors execute through host-owned tab and origin authority. A decision process can remain outside that boundary and return the existing tool protocol. See [kernel authority](../../extension/background/kernel-turn-authority-adapter.js). |
-| Observation | Accessibility-tree and DOM-walk snapshots both expose opaque element refs. This is a useful substrate for bounded action classification. See [DOM surface](../../extension/peerd-runtime/dom/index.js) and its serializers. |
+| Observation | Accessibility-tree and DOM-walk snapshots both expose opaque element refs. This is a useful substrate for bounded action classification. See [DOM surface](../../extension/mcdollar-runtime/dom/index.js) and its serializers. |
 | Action surfaces | The web actor supports discrete tools and a code surface. This experiment explicitly requires the discrete tools. It returns no selectors or executable page code. |
-| Local inference | [Ollama](../../extension/peerd-provider/adapters/ollama.js) and [WebGPU](../../extension/peerd-provider/adapters/local-webgpu.js) adapters already exist. A decision model's custom head is a separate runtime concern; treating its weights as an ordinary chat model would be incorrect. |
+| Local inference | [Ollama](../../extension/mcdollar-provider/adapters/ollama.js) and [WebGPU](../../extension/mcdollar-provider/adapters/local-webgpu.js) adapters already exist. A decision model's custom head is a separate runtime concern; treating its weights as an ordinary chat model would be incorrect. |
 | Model routing defect | The production actor minting path ignored the configured web actor model. This branch applies an explicit pin to tab-backed web actors and remints a binding when the pin changes or clears. API and engine actors retain the owner's model. Automatic cross-provider selection remains separate work. |
-| Repeated work | [Site clients](../../extension/peerd-runtime/site-clients/index.js) already support reusable, origin-bound operations. Preserve this implementation and its credential/permission checks when adding learned workflows. |
+| Repeated work | [Site clients](../../extension/mcdollar-runtime/site-clients/index.js) already support reusable, origin-bound operations. Preserve this implementation and its credential/permission checks when adding learned workflows. |
 | Evaluation | The existing Online-Mind2Web trajectory/export path is reusable. This branch allows keyless Ollama configuration and explicitly disables model interception in real runs. A successful wire fixture is not a successful model benchmark. |
-| Freshness gap | The [ref registry](../../extension/peerd-runtime/dom/ref-registry.js) increments snapshot generation, but dispatch does not require that generation. A later snapshot can assign a familiar ref to another element. Production action receipts should bind document identity and observation generation through final dispatch. |
+| Freshness gap | The [ref registry](../../extension/mcdollar-runtime/dom/ref-registry.js) increments snapshot generation, but dispatch does not require that generation. A later snapshot can assign a familiar ref to another element. Production action receipts should bind document identity and observation generation through final dispatch. |
 | Coverage gaps | Current discrete controls do not cover all hover, drag, scroll, keyboard, visual-only, or cross-frame interactions. DOM-walk event synthesis can also differ from trusted browser input. Keep the initial task distribution within verified coverage. |
 
 The prototype's second snapshot reduces inference-time stale actions. It is
@@ -78,7 +78,7 @@ The review checked primary model cards, code, and benchmark artifacts on
 | [WebJev](https://github.com/lexmount/WebJev) | Browser adaptation mattered: 47/122 gradable tasks versus 20/120 for Jev-1.13, despite similar generic decision scores. | The selected task subset is not the full source benchmarks. Its roughly 35B total parameters do not fit a 16 GB machine simply because only about 3B are active. |
 | [Jev ultrafast](https://github.com/browser-use/jev-ultrafast) | A decision model plus a text helper can reduce sequential text generation during control. | A reported 7.073-second flight flow is a narrow hosted-model experiment, with setup and verification outside the reported task timing. It is not Mac throughput or broad success evidence. |
 | [Clef-Flash MLX](https://huggingface.co/mlx-community/clef-flash-4bit) | A custom decision head can run in a local MLX server. Its card reports roughly 7.2 GB at a 4k input on a much larger M5 Max machine. | The remaining memory margin and latency on a 16 GB MacBook need measurement. Standard chat serving is not a substitute for the custom head. |
-| [Fara-1.5](https://arxiv.org/html/2606.20785v2) | A small visual browser model is a credible comparison: the paper reports 80.8% WebVoyager and 57.3% Online-Mind2Web. | Different harnesses and budgets prevent ranking it directly against AIM's table. The reported scores are not 4-bit Mac measurements, and Peerd needs an appropriate visual action surface. |
+| [Fara-1.5](https://arxiv.org/html/2606.20785v2) | A small visual browser model is a credible comparison: the paper reports 80.8% WebVoyager and 57.3% Online-Mind2Web. | Different harnesses and budgets prevent ranking it directly against AIM's table. The reported scores are not 4-bit Mac measurements, and Mcdollar needs an appropriate visual action surface. |
 | [Fara1.5 MLX 8-bit](https://huggingface.co/mlx-community/Fara1.5-4B-8bit) | The conversion reports a working vision path and about 6.15 GB peak memory on an M2 Pro with 32 GB, for small fidelity tests. [GGUF](https://huggingface.co/bartowski/Fara1.5-4B-GGUF) and [OptiQ mixed 4/8-bit](https://huggingface.co/mlx-community/Fara1.5-4B-OptiQ-4bit) also exist. | The card explicitly excludes end-to-end browser evaluation. Use an image-capable runtime; the text-only MLX path cannot establish browser capability. File sizes are not total memory. |
 | [OpenWebRL-4B](https://arxiv.org/html/2606.02031v2) | The visual RL model reports 67.0% Online-Mind2Web, 74.1% WebVoyager and 64.0% DeepShop with its own harness. Released weights make it a credible comparison. | No exact RL-checkpoint Mac quantization with browser evidence was established in this review. An available SFT quantization is a different model, and cross-paper results are not a paired ranking. |
 | [Decision Index](https://huggingface.co/datasets/multimodalart/decision-index-leaderboard) | Useful for locating candidate decision models and checking released artifacts. | Generic classification accuracy does not rank closed-loop browser reliability. |
@@ -94,7 +94,7 @@ points toward Pomerado's reusable-API angle. Direct post retrieval was incomplet
 so this review makes no engagement-count claim. Pomerado's own
 [comparison](https://pomerado.ai/) uses pre-created APIs and token-cost accounting.
 Treat that as evidence for amortizing repeated interactions; include discovery,
-validation, repair, and elapsed time in Peerd's comparison. A first-run browser
+validation, repair, and elapsed time in Mcdollar's comparison. A first-run browser
 agent and a pre-built API are different starting conditions.
 
 ## Pomerado and the reusable-client path
@@ -111,18 +111,18 @@ The [local host boundary](https://github.com/Pomerado/pomerado/blob/main/typescr
 explicitly excludes hosted HTTP recording/replay, automatic repair, saved login
 profiles and managed anti-bot handling. The core contains HTTP interfaces, but
 the bundled local host does not supply their transport. Reusable Playwright
-programs and Peerd's stored HTTP clients overlap in purpose while executing
+programs and Mcdollar's stored HTTP clients overlap in purpose while executing
 through different boundaries.
 
-Peerd already has capture, model-authored JavaScript client bodies, durable
+Mcdollar already has capture, model-authored JavaScript client bodies, durable
 same-origin storage, confirmation before persistence, and a sealed execution
 worker with only origin-bound `site.fetch`. The useful addition is a clearer
 **derive → review → test → reuse → invalidate/repair** lifecycle, retaining
-Peerd's authenticated browser and capability controls. It is not necessary to
+Mcdollar's authenticated browser and capability controls. It is not necessary to
 replace the existing actor with a separate MCP browser owner.
 
-The implementation is in the site-client [core](../../extension/peerd-runtime/site-clients/core.js),
-[store](../../extension/peerd-runtime/site-clients/store.js), and
+The implementation is in the site-client [core](../../extension/mcdollar-runtime/site-clients/core.js),
+[store](../../extension/mcdollar-runtime/site-clients/store.js), and
 [authority](../../extension/background/site-client-tool-authority.js). Optional
 named operations have input/output contracts and declared expected examples.
 Saving remains a reviewable draft. Explicit validation executes the declared
@@ -159,7 +159,7 @@ flowchart TD
   A["Goal and current origin"] --> B{"Validated API match?"}
   B -->|"Yes"| C["Named operation and checked input"]
   B -->|"No / stale"| D["Observed DOM action choices"]
-  C --> E["Peerd authority and execution"]
+  C --> E["Mcdollar authority and execution"]
   D --> F["Local decision model"]
   F --> G["Text helper when needed"]
   G --> H["Fresh observation check"]
@@ -186,11 +186,11 @@ mutations. A reused actor begins a new evidence episode for each new goal.
 
 Initial navigation uses an explicit URL already present in the user goal.
 Subsequent destinations come from observed links. The decision process does not
-invent a URL, selector, target ref, or browser script. Existing Peerd origin,
+invent a URL, selector, target ref, or browser script. Existing Mcdollar origin,
 permission, cancellation, and tab-ownership checks still run on every action.
 The policy's DONE choice is only a completion claim. It is never the test judge.
 
-[serve.mjs](serve.mjs) presents an Ollama-compatible model wire to Peerd and
+[serve.mjs](serve.mjs) presents an Ollama-compatible model wire to Mcdollar and
 forwards inference only to literal loopback endpoints. It rejects redirects,
 unconfigured browser origins, invalid hosts, concurrent work, and oversized
 requests. It exposes a helper model and a separate virtual browser model.
@@ -198,7 +198,7 @@ Native Ollama requests use an explicit effective helper context and disable
 thinking. Both helper uses share that context to avoid repeated runner reloads.
 
 The virtual model retains a larger CPU-side conversation than the actual
-decision model receives. This avoids Peerd compacting a modest verification
+decision model receives. This avoids Mcdollar compacting a modest verification
 exchange between its two snapshots. The actual decision input remains separately
 bounded and token-checked. Very long conversations can still reach compaction;
 a changed pending transcript is refused. The constants and budgets live in the
@@ -214,7 +214,7 @@ browser dispatch, and the backend lock prevents concurrent model execution.
 ## Run on an Apple Silicon Mac
 
 Use a clean development checkout and a separate test browser profile. Follow
-Peerd's normal unpacked-extension setup; regenerate development files with
+Mcdollar's normal unpacked-extension setup; regenerate development files with
 `bun run gen:dev`. Use native arm64 Python 3.11 or later. Install Bun, Node,
 Python, Ollama, and Apple's command-line
 build tools through their normal installation paths if they are not present.
@@ -260,7 +260,7 @@ Stop or move any existing daemon occupying the bridge port using its normal
 application controls. The scripts do not kill other processes or reconfigure
 an existing Ollama installation.
 
-### 3. Connect the bridge to Peerd
+### 3. Connect the bridge to Mcdollar
 
 Read the unpacked extension's actual ID from `chrome://extensions`. Substitute
 that ID for `EXTENSION_ID` below; the allowlist accepts an exact extension origin.
@@ -270,16 +270,16 @@ node scripts/local-browser/serve.mjs \
   --extension-origin=chrome-extension://EXTENSION_ID
 ```
 
-In Peerd's provider settings, choose Ollama with host
+In Mcdollar's provider settings, choose Ollama with host
 `http://127.0.0.1:11434`, select `qwen3.5:2b-q4_K_M` for the main chat, and set
-**Web actor model** to `peerd-local-browser`. In behavior settings select the
+**Web actor model** to `mcdollar-local-browser`. In behavior settings select the
 web actor's **tools** surface. Start a fresh chat and grant the ordinary Act
 permissions appropriate to the task. The explicit web actor pin is important;
 the virtual model's transcript window is intended for the browser policy.
 
 Try a short, reversible task with an explicit starting URL and an independently
 checkable result. Keep one task active. The small helper's ability to handle
-Peerd's general orchestration prompt remains part of the real-model evaluation;
+Mcdollar's general orchestration prompt remains part of the real-model evaluation;
 a dedicated browser entry flow with a compact delegation prompt is a worthwhile
 next optimization.
 
@@ -365,7 +365,7 @@ use deterministic owned-task checks for a zero-API-cost demo.
 2. **Demonstrate recovery.** Change a label or reorder controls during inference.
    Show the stale decision being discarded and the task completing without
    touching a decoy. Make the perturbation visible and reproducible.
-3. **Demonstrate reuse.** Convert a successful parameterized flow using Peerd's
+3. **Demonstrate reuse.** Convert a successful parameterized flow using Mcdollar's
    existing site-client machinery, validate it on a second input, then repeat.
    Count creation and repair costs separately from warmed repeat executions.
 4. **Publish the denominator.** Report verified pass@1, retries, wall-clock task

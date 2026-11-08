@@ -153,7 +153,7 @@ describe('sealed App semantic routes', () => {
       agent: { kind: 'bound-app', profile: 'developer', surface: 'code', name: 'Builder' },
     });
     await expect(state.run('app/get-meta', {
-      app: state.apps.a, manifestText, paths: ['/peerd.json', '/src/index.html'],
+      app: state.apps.a, manifestText, paths: ['/mcdollar.json', '/src/index.html'],
       dwebEnabled: true,
     })).resolves.toMatchObject({
       ok: true, entryFile: 'src/index.html',
@@ -162,9 +162,9 @@ describe('sealed App semantic routes', () => {
     });
     expect(state.apps.a.entryFile).toBe('src/index.html');
     await expect(state.run('app/get-meta', {
-      app: state.apps.a, manifestText, paths: ['/peerd.json'], dwebEnabled: true,
+      app: state.apps.a, manifestText, paths: ['/mcdollar.json'], dwebEnabled: true,
     })).resolves.toEqual({
-      ok: false, error: 'peerd.json entry is missing: src/index.html',
+      ok: false, error: 'mcdollar.json entry is missing: src/index.html',
     });
   });
 

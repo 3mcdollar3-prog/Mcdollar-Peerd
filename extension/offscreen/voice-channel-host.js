@@ -4,7 +4,7 @@ import browser from '/shared/browser-api.js';
 import {
   VOICE_CHANNEL_PROTOCOL, VOICE_CHANNEL_RESULT, parseVoiceChannelOffer,
 } from '/shared/voice-channel.js';
-import { createVoiceHostRuntime } from '/peerd-runtime/voice-host.js';
+import { createVoiceHostRuntime } from '/mcdollar-runtime/voice-host.js';
 import { backgroundScriptUrl } from './sender-checks.js';
 
 const runtime = createVoiceHostRuntime({

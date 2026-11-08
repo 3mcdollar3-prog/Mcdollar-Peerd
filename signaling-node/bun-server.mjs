@@ -1,8 +1,8 @@
-// peerd signaling node — Bun shell.
+// mcdollar signaling node — Bun shell.
 //
-// "peerd is the runtime, server-side." This is a server peerd: it runs the
+// "mcdollar is the runtime, server-side." This is a server mcdollar: it runs the
 // SAME signalingStep reducer the browser client and the Cloudflare Worker
-// use (../extension/peerd-distributed/transport/signaling.js). This file
+// use (../extension/mcdollar-distributed/transport/signaling.js). This file
 // is only the shell — it binds a WebSocket, feeds the reducer events, and
 // runs the reducer's actions. Aggregate admission is Bun process-local.
 //
@@ -17,7 +17,7 @@
 import {
   signalingStep,
   initialSignalingState, sparsePublicProfile,
-} from '../extension/peerd-distributed/transport/signaling.js';
+} from '../extension/mcdollar-distributed/transport/signaling.js';
 
 import { createAdmissionBudget, validRoomKey } from './admission-budget.js';
 
@@ -118,7 +118,7 @@ export const createSignalingServer = ({ port = 8799, hostname, limits, now = Dat
     port, ...(hostname ? { hostname } : {}),
     fetch(req, server) {
       const url = new URL(req.url);
-      if (url.pathname !== '/rendezvous') return new Response('peerd signaling node');
+      if (url.pathname !== '/rendezvous') return new Response('mcdollar signaling node');
       if (req.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return new Response('expected websocket', { status: 426 });
       const key = url.searchParams.get('key');
       if (!validRoomKey(key)) return new Response('invalid room key', { status: 400 });

@@ -24,7 +24,7 @@ afterEach(() => {
 });
 
 const makeRoot = (): string => {
-  const root = mkdtempSync(join(tmpdir(), 'peerd-artifact-minify-'));
+  const root = mkdtempSync(join(tmpdir(), 'mcdollar-artifact-minify-'));
   temporaryRoots.push(root);
   return root;
 };
@@ -294,14 +294,14 @@ describe('release artifact JavaScript minification', () => {
     const entry = join(root, 'errors.js');
     writeFileSync(entry, `
       import { TypedError } from ${JSON.stringify(join(extension, 'shared/errors.js'))};
-      import * as fetchErrors from ${JSON.stringify(join(extension, 'peerd-egress/fetch/errors.js'))};
-      import * as vaultErrors from ${JSON.stringify(join(extension, 'peerd-egress/vault/errors.js'))};
-      import * as engineErrors from ${JSON.stringify(join(extension, 'peerd-engine/errors.js'))};
-      import * as providerErrors from ${JSON.stringify(join(extension, 'peerd-provider/errors.js'))};
-      import * as runtimeErrors from ${JSON.stringify(join(extension, 'peerd-runtime/errors.js'))};
-      import * as attachmentErrors from ${JSON.stringify(join(extension, 'peerd-runtime/loop/attachments.js'))};
-      import * as pdfErrors from ${JSON.stringify(join(extension, 'peerd-runtime/pdf/errors.js'))};
-      import * as voiceErrors from ${JSON.stringify(join(extension, 'peerd-runtime/voice/errors.js'))};
+      import * as fetchErrors from ${JSON.stringify(join(extension, 'mcdollar-egress/fetch/errors.js'))};
+      import * as vaultErrors from ${JSON.stringify(join(extension, 'mcdollar-egress/vault/errors.js'))};
+      import * as engineErrors from ${JSON.stringify(join(extension, 'mcdollar-engine/errors.js'))};
+      import * as providerErrors from ${JSON.stringify(join(extension, 'mcdollar-provider/errors.js'))};
+      import * as runtimeErrors from ${JSON.stringify(join(extension, 'mcdollar-runtime/errors.js'))};
+      import * as attachmentErrors from ${JSON.stringify(join(extension, 'mcdollar-runtime/loop/attachments.js'))};
+      import * as pdfErrors from ${JSON.stringify(join(extension, 'mcdollar-runtime/pdf/errors.js'))};
+      import * as voiceErrors from ${JSON.stringify(join(extension, 'mcdollar-runtime/voice/errors.js'))};
       const modules = [fetchErrors, vaultErrors, engineErrors, providerErrors,
         runtimeErrors, attachmentErrors, pdfErrors, voiceErrors];
       export const errorTags = modules.flatMap((module) => Object.entries(module))
@@ -332,7 +332,7 @@ describe('release artifact JavaScript minification', () => {
       plugins: [{
         name: 'extension-root-imports',
         setup(builder) {
-          builder.onResolve({ filter: /^\/(?:shared|peerd-)/ }, ({ path }) => ({
+          builder.onResolve({ filter: /^\/(?:shared|mcdollar-)/ }, ({ path }) => ({
             path: join(extension, path.slice(1)),
           }));
         },

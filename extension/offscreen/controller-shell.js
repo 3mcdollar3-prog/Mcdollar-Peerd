@@ -73,7 +73,7 @@ export const makeSealedControllerLoader = ({
   const load = () => {
     if (loading) return loading;
     const attempt = new Promise((resolve, reject) => {
-      const worker = createWorker(workerUrl, { type: 'module', name: 'peerd-controller' });
+      const worker = createWorker(workerUrl, { type: 'module', name: 'mcdollar-controller' });
       const { port1, port2 } = createChannel();
       /** @type {Map<string, {
        *   resolve: (value: any) => void,

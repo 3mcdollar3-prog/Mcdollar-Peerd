@@ -7,8 +7,8 @@
 //   - Agent commands arrive via chrome.runtime.onMessage from the SW;
 //     we run them through the persistent bash via the marker protocol
 //     and reply with { exitCode, stdout, stderr, durationMs }.
-//   - HTTP marker (peerd-fetch) calls back to the SW via runtime
-//     sendMessage to use the same peerd-egress denylist + audit as
+//   - HTTP marker (mcdollar-fetch) calls back to the SW via runtime
+//     sendMessage to use the same mcdollar-egress denylist + audit as
 //     the web tools.
 //
 // The VM's identity (vmId, name, disk overlay key) is read from the
@@ -30,12 +30,12 @@ import {
   stubsBash,
   runControlOp,
   bannerText,
-  peerdNetBash,
+  mcdollarNetBash,
   aptShimsBash,
   friendlyFetchError,
-} from '/peerd-engine/index.js';
+} from '/mcdollar-engine/index.js';
 import { base64ToBytes } from '/shared/util.js';
-import { mountPullInPeerd } from '/shared/pull-in-peerd.js';
+import { mountPullInMcdollar } from '/shared/pull-in-mcdollar.js';
 import { stripChunk } from '/engine-tabs/vm-tab/marker-strip.js';
 import { ERRFILE_PREFIX, buildWrappedCommand, parseRunCapture } from '/engine-tabs/vm-tab/run-capture.js';
 import { buildFirefoxWebVmNote } from '/engine-tabs/vm-tab/firefox-webvm-note.js';
@@ -68,7 +68,7 @@ const STOCK_DEBIAN_IMAGE = 'wss://disks.webvm.io/debian_large_20230522_504487533
 // with no persistent cache — kept only as a fallback.
 const STOCK_DEBIAN_IMAGE_HTTP = STOCK_DEBIAN_IMAGE.replace(/^wss:\/\//, 'https://');
 // The per-URL TOFU fingerprint store key now lives in
-// peerd-engine/image-pin.js (imported above) — the SW's artifact
+// mcdollar-engine/image-pin.js (imported above) — the SW's artifact
 // export/import routes read the same key to carry the pin inside
 // vm-recipe envelopes (DESIGN-10). Pins stay global, not per-VM:
 // a published image URL must never change bytes for ANY consumer
@@ -99,19 +99,19 @@ let vmDevMode = false;
 const bootLogLines = [];
 
 // why: no header bar to update -- status now lives in the tab title
-// ("peerd · <name>" while booting; "peerd · <name>" steady once ready).
+// ("mcdollar · <name>" while booting; "mcdollar · <name>" steady once ready).
 // Failed VMs surface in the boot card's is-failed styling, which the
 // caller toggles via DOM.bootCard.classList.
 const setStatus = (/** @type {string} */ text, /** @type {string} */ kind = '') => {
   if (!vmName) return;
   if (kind === 'failed') {
-    document.title = `peerd · ${vmName} — ${text}`;
+    document.title = `mcdollar · ${vmName} — ${text}`;
     DOM.bootCard.classList.add('is-failed');
   } else if (kind === 'ready') {
-    document.title = `peerd · ${vmName}`;
+    document.title = `mcdollar · ${vmName}`;
     DOM.bootCard.classList.remove('is-failed');
   } else {
-    document.title = `peerd · ${vmName} — ${text}`;
+    document.title = `mcdollar · ${vmName} — ${text}`;
   }
 };
 
@@ -172,7 +172,7 @@ const loadCheerpx = () => {
 };
 
 // ---------------------------------------------------------------------------
-// Bash wrappers (peerd-fetch + curl/wget/git as bash functions, staged
+// Bash wrappers (mcdollar-fetch + curl/wget/git as bash functions, staged
 // via DataDevice then `source`d). Identical semantics to the previous
 // offscreen adapter -- the page they run in changed; the bash didn't.
 // ---------------------------------------------------------------------------
@@ -185,98 +185,98 @@ const WRAPPERS_BASH = `
 # (if ! cmd; [ ! -f x ]) is unaffected -- only the !history footgun goes away.
 set +H
 
-# ---- peerd-egress wrappers (bash functions) ------------------------------
+# ---- mcdollar-egress wrappers (bash functions) ------------------------------
 # Timeout for a single bridged request, in seconds (configurable). Bumped from
 # the old hard 30s so large archive/package downloads don't die mid-stream; the
 # poll loop sleeps 0.05s, so ticks = seconds * 20.
-: "\${PEERD_HTTP_TIMEOUT:=120}"
-PEERD_HTTP_TIMEOUT_TICKS=$(( PEERD_HTTP_TIMEOUT * 20 ))
-export PEERD_HTTP_TIMEOUT PEERD_HTTP_TIMEOUT_TICKS
+: "\${MCDOLLAR_HTTP_TIMEOUT:=120}"
+MCDOLLAR_HTTP_TIMEOUT_TICKS=$(( MCDOLLAR_HTTP_TIMEOUT * 20 ))
+export MCDOLLAR_HTTP_TIMEOUT MCDOLLAR_HTTP_TIMEOUT_TICKS
 
-# peerd-fetch URL [OUT] — the GET fast path (cached host-side). Unchanged wire
-# (___PEERD_HTTP___), body-only response.
-peerd-fetch() {
+# mcdollar-fetch URL [OUT] — the GET fast path (cached host-side). Unchanged wire
+# (___MCDOLLAR_HTTP___), body-only response.
+mcdollar-fetch() {
   local url="$1"
   local out="$2"
   if [ -z "$url" ]; then
-    echo "peerd-fetch: usage: peerd-fetch URL [OUTPUT]" >&2
+    echo "mcdollar-fetch: usage: mcdollar-fetch URL [OUTPUT]" >&2
     return 2
   fi
   local id="\${RANDOM}\${RANDOM}\${RANDOM}$$"
-  printf '___PEERD_HTTP___:%s:%s\\n' "$id" "$url"
+  printf '___MCDOLLAR_HTTP___:%s:%s\\n' "$id" "$url"
   local n=0
-  while [ ! -f "/peerd-data/peerddone\${id}" ]; do
+  while [ ! -f "/mcdollar-data/mcdollardone\${id}" ]; do
     sleep 0.05
     n=$((n + 1))
-    if [ "$n" -gt "$PEERD_HTTP_TIMEOUT_TICKS" ]; then
-      echo "peerd-fetch: timed out after \${PEERD_HTTP_TIMEOUT}s waiting for response (id=\${id})" >&2
+    if [ "$n" -gt "$MCDOLLAR_HTTP_TIMEOUT_TICKS" ]; then
+      echo "mcdollar-fetch: timed out after \${MCDOLLAR_HTTP_TIMEOUT}s waiting for response (id=\${id})" >&2
       return 124
     fi
   done
-  if [ -f "/peerd-data/peerderr\${id}" ]; then
-    cat "/peerd-data/peerderr\${id}" >&2
+  if [ -f "/mcdollar-data/mcdollarerr\${id}" ]; then
+    cat "/mcdollar-data/mcdollarerr\${id}" >&2
     return 1
   fi
   # why: CheerpX denies writes to /dev/null and /dev/stdout. Map the common
   # "discard" idiom (curl -o /dev/null) to a real discard, and /dev/stdout
   # (or "-") to plain stdout, instead of failing on the redirect.
   if [ -z "$out" ] || [ "$out" = "-" ] || [ "$out" = "/dev/stdout" ]; then
-    cat "/peerd-data/peerdresp\${id}"
+    cat "/mcdollar-data/mcdollarresp\${id}"
   elif [ "$out" = "/dev/null" ]; then
     : # discard the body; the fetch itself still succeeded
   else
-    cat "/peerd-data/peerdresp\${id}" > "$out"
+    cat "/mcdollar-data/mcdollarresp\${id}" > "$out"
   fi
 }
-export -f peerd-fetch
+export -f mcdollar-fetch
 
-# __peerd_emit_req OUT FAIL SHOW_STATUS — the rich path. Reads a wire blob on
-# stdin (the line-oriented PEERDREQ1 format from vm-net/http-bridge.js),
-# base64s it, emits the ___PEERD_REQ___ marker, waits, then surfaces the
-# response body + status. Sets PEERD_LAST_STATUS.
-__peerd_emit_req() {
+# __mcdollar_emit_req OUT FAIL SHOW_STATUS — the rich path. Reads a wire blob on
+# stdin (the line-oriented MCDOLLARREQ1 format from vm-net/http-bridge.js),
+# base64s it, emits the ___MCDOLLAR_REQ___ marker, waits, then surfaces the
+# response body + status. Sets MCDOLLAR_LAST_STATUS.
+__mcdollar_emit_req() {
   local out="$1" fail="$2" show_status="$3"
   local payload id n
   payload="$(base64 -w0)"
   id="\${RANDOM}\${RANDOM}\${RANDOM}$$"
-  printf '___PEERD_REQ___:%s:%s\\n' "$id" "$payload"
+  printf '___MCDOLLAR_REQ___:%s:%s\\n' "$id" "$payload"
   n=0
-  while [ ! -f "/peerd-data/peerddone\${id}" ]; do
+  while [ ! -f "/mcdollar-data/mcdollardone\${id}" ]; do
     sleep 0.05
     n=$((n + 1))
-    if [ "$n" -gt "$PEERD_HTTP_TIMEOUT_TICKS" ]; then
-      echo "peerd-http: timed out after \${PEERD_HTTP_TIMEOUT}s (id=\${id})" >&2
+    if [ "$n" -gt "$MCDOLLAR_HTTP_TIMEOUT_TICKS" ]; then
+      echo "mcdollar-http: timed out after \${MCDOLLAR_HTTP_TIMEOUT}s (id=\${id})" >&2
       return 124
     fi
   done
-  PEERD_LAST_STATUS=""
-  if [ -f "/peerd-data/peerdmeta\${id}" ]; then
-    PEERD_LAST_STATUS="$(grep -Eo '"status":[0-9]+' "/peerd-data/peerdmeta\${id}" | grep -Eo '[0-9]+')"
+  MCDOLLAR_LAST_STATUS=""
+  if [ -f "/mcdollar-data/mcdollarmeta\${id}" ]; then
+    MCDOLLAR_LAST_STATUS="$(grep -Eo '"status":[0-9]+' "/mcdollar-data/mcdollarmeta\${id}" | grep -Eo '[0-9]+')"
   fi
-  if [ -f "/peerd-data/peerderr\${id}" ]; then
-    cat "/peerd-data/peerderr\${id}" >&2
+  if [ -f "/mcdollar-data/mcdollarerr\${id}" ]; then
+    cat "/mcdollar-data/mcdollarerr\${id}" >&2
     return 1
   fi
-  if [ "$show_status" = 1 ]; then printf '%s' "\${PEERD_LAST_STATUS:-000}"; fi
-  if [ "$fail" = 1 ] && [ -n "$PEERD_LAST_STATUS" ] && [ "$PEERD_LAST_STATUS" -ge 400 ]; then
-    echo "peerd-http: HTTP $PEERD_LAST_STATUS" >&2
+  if [ "$show_status" = 1 ]; then printf '%s' "\${MCDOLLAR_LAST_STATUS:-000}"; fi
+  if [ "$fail" = 1 ] && [ -n "$MCDOLLAR_LAST_STATUS" ] && [ "$MCDOLLAR_LAST_STATUS" -ge 400 ]; then
+    echo "mcdollar-http: HTTP $MCDOLLAR_LAST_STATUS" >&2
     return 22
   fi
   if [ -z "$out" ] || [ "$out" = "-" ] || [ "$out" = "/dev/stdout" ]; then
-    cat "/peerd-data/peerdresp\${id}"
+    cat "/mcdollar-data/mcdollarresp\${id}"
   elif [ "$out" = "/dev/null" ]; then
     :
   else
-    cat "/peerd-data/peerdresp\${id}" > "$out"
+    cat "/mcdollar-data/mcdollarresp\${id}" > "$out"
   fi
 }
-export -f __peerd_emit_req
+export -f __mcdollar_emit_req
 
-# __peerd_emit_headers "Name: Value"... — emit each header as a wire H line,
+# __mcdollar_emit_headers "Name: Value"... — emit each header as a wire H line,
 # stripping CR/LF/TAB from name AND value (they're the wire delimiters, so a
 # value containing one would inject a forged line; the codec scrubs too).
 # Shared by curl + wget so the security-relevant strip lives in ONE place.
-__peerd_emit_headers() {
+__mcdollar_emit_headers() {
   local _h _n _v
   for _h in "$@"; do
     _n="\${_h%%:*}"; _v="\${_h#*:}"; _v="\${_v# }"
@@ -284,7 +284,7 @@ __peerd_emit_headers() {
     printf 'H\\t%s\\t%s\\n' "$_n" "$_v"
   done
 }
-export -f __peerd_emit_headers
+export -f __mcdollar_emit_headers
 
 # curl — now a real HTTP client over the bridge: methods, headers, body, fail,
 # write-out %{http_code}. A plain header-less GET still takes the cached fast path.
@@ -319,20 +319,20 @@ curl() {
       *) if [ -z "$url" ]; then url="https://$1"; fi; shift ;;
     esac
   done
-  if [ -z "$url" ]; then echo "peerd-curl: no URL provided" >&2; return 2; fi
+  if [ -z "$url" ]; then echo "mcdollar-curl: no URL provided" >&2; return 2; fi
   if [ "$guess_out" = 1 ]; then out="$(basename "$url")"; fi
   if [ -z "$method" ]; then if [ "$has_body" = 1 ]; then method="POST"; else method="GET"; fi; fi
   if [ "$method" = "GET" ] && [ "$has_body" = 0 ] && [ \${#hdrs[@]} -eq 0 ]; then
-    peerd-fetch "$url" "$out"
+    mcdollar-fetch "$url" "$out"
     return $?
   fi
   {
-    printf 'PEERDREQ1\\n'
+    printf 'MCDOLLARREQ1\\n'
     printf 'M\\t%s\\n' "$method"
     printf 'U\\t%s\\n' "$url"
-    __peerd_emit_headers "\${hdrs[@]}"
+    __mcdollar_emit_headers "\${hdrs[@]}"
     if [ "$has_body" = 1 ]; then printf 'B\\t'; printf '%s' "$body" | base64 -w0; printf '\\n'; fi
-  } | __peerd_emit_req "$out" "$fail" "$show_status"
+  } | __mcdollar_emit_req "$out" "$fail" "$show_status"
 }
 export -f curl
 
@@ -355,23 +355,23 @@ wget() {
       *) if [ -z "$url" ]; then url="https://$1"; fi; shift ;;
     esac
   done
-  if [ -z "$url" ]; then echo "peerd-wget: no URL provided" >&2; return 2; fi
+  if [ -z "$url" ]; then echo "mcdollar-wget: no URL provided" >&2; return 2; fi
   if [ -z "$out" ]; then out="$(basename "$url")"; fi
   if [ "$method" = "GET" ] && [ "$has_body" = 0 ] && [ \${#hdrs[@]} -eq 0 ]; then
-    peerd-fetch "$url" "$out"
+    mcdollar-fetch "$url" "$out"
     return $?
   fi
   {
-    printf 'PEERDREQ1\\n'; printf 'M\\t%s\\n' "$method"; printf 'U\\t%s\\n' "$url"
-    __peerd_emit_headers "\${hdrs[@]}"
+    printf 'MCDOLLARREQ1\\n'; printf 'M\\t%s\\n' "$method"; printf 'U\\t%s\\n' "$url"
+    __mcdollar_emit_headers "\${hdrs[@]}"
     if [ "$has_body" = 1 ]; then printf 'B\\t'; printf '%s' "$body" | base64 -w0; printf '\\n'; fi
-  } | __peerd_emit_req "$out" 0 0
+  } | __mcdollar_emit_req "$out" 0 0
 }
 export -f wget
 
 # git clone — SNAPSHOT clone of ANY ref on github/gitlab (and a best-effort
 # github/gitlab-layout guess for self-hosted hosts), host-side default-branch + auth.
-# The host runs the tested archive planner (peerd://git-clone control op) and
+# The host runs the tested archive planner (mcdollar://git-clone control op) and
 # returns the zip; we unzip it. No .git/history/push — see VM-NETWORKING.md.
 git() {
   if [ "$1" != "clone" ]; then
@@ -390,18 +390,18 @@ git() {
       *) if [ -z "$url" ]; then url="$1"; elif [ -z "$dir" ]; then dir="$1"; fi; shift ;;
     esac
   done
-  if [ -z "$url" ]; then echo "peerd-git: clone requires an https URL" >&2; return 2; fi
-  case "$url" in https://*) ;; *) echo "peerd-git: only https clone URLs are supported (no ssh/git protocol in the sandbox)" >&2; return 2 ;; esac
+  if [ -z "$url" ]; then echo "mcdollar-git: clone requires an https URL" >&2; return 2; fi
+  case "$url" in https://*) ;; *) echo "mcdollar-git: only https clone URLs are supported (no ssh/git protocol in the sandbox)" >&2; return 2 ;; esac
   if [ -z "$dir" ]; then dir="$(basename "\${url%.git}")"; fi
-  local tmp="/tmp/peerd-clone-$$.zip" extract="/tmp/peerd-clone-$$-x" errf="/tmp/peerd-clone-$$.err"
+  local tmp="/tmp/mcdollar-clone-$$.zip" extract="/tmp/mcdollar-clone-$$-x" errf="/tmp/mcdollar-clone-$$.err"
   local json
   if [ -n "$ref" ]; then json="{\\"url\\":\\"$url\\",\\"ref\\":\\"$ref\\"}"; else json="{\\"url\\":\\"$url\\"}"; fi
   {
-    printf 'PEERDREQ1\\n'; printf 'M\\tGET\\n'; printf 'U\\tpeerd://git-clone\\n'
+    printf 'MCDOLLARREQ1\\n'; printf 'M\\tGET\\n'; printf 'U\\tmcdollar://git-clone\\n'
     printf 'B\\t'; printf '%s' "$json" | base64 -w0; printf '\\n'
-  } | __peerd_emit_req "$tmp" 0 0 2>>"$errf"
+  } | __mcdollar_emit_req "$tmp" 0 0 2>>"$errf"
   if [ ! -s "$tmp" ]; then
-    echo "peerd-git: clone failed for $url" >&2
+    echo "mcdollar-git: clone failed for $url" >&2
     [ -f "$errf" ] && cat "$errf" >&2
     rm -f "$tmp" "$errf"
     return 1
@@ -424,58 +424,58 @@ git() {
 export -f git
 
 # ---- package-manager shims (one core boilerplate) -----------------------
-# Every shim resolves + downloads HOST-side (peerd://<op>) and installs the
+# Every shim resolves + downloads HOST-side (mcdollar://<op>) and installs the
 # staged files offline. The shared plumbing is factored here; each shim keeps
 # only its arg-parsing + the install action (which genuinely differs per tool).
 
-# __peerd_json_pkgs PKG... — build {"packages":[...]} (+ optional pyTags from
-# the PEERD_PYTAGS global). Package specs don't contain quotes/backslashes in
+# __mcdollar_json_pkgs PKG... — build {"packages":[...]} (+ optional pyTags from
+# the MCDOLLAR_PYTAGS global). Package specs don't contain quotes/backslashes in
 # practice, so no escaping — the host re-validates every name anyway.
-__peerd_json_pkgs() {
+__mcdollar_json_pkgs() {
   local out='{"packages":[' first=1 a
   for a in "$@"; do
     if [ "$first" = 1 ]; then first=0; else out="$out,"; fi
     out="$out\\"$a\\""
   done
   out="$out]"
-  if [ -n "$PEERD_PYTAGS" ]; then out="$out,\\"pyTags\\":[$PEERD_PYTAGS]"; fi
+  if [ -n "$MCDOLLAR_PYTAGS" ]; then out="$out,\\"pyTags\\":[$MCDOLLAR_PYTAGS]"; fi
   out="$out}"
   printf '%s' "$out"
 }
-export -f __peerd_json_pkgs
+export -f __mcdollar_json_pkgs
 
-# __peerd_pkg_fetch OP JSON OUTFILE — the shared wire plumbing: emit a
-# peerd://OP control request with the JSON body, staging the TSV manifest
+# __mcdollar_pkg_fetch OP JSON OUTFILE — the shared wire plumbing: emit a
+# mcdollar://OP control request with the JSON body, staging the TSV manifest
 # (name\\tversion\\tpath) into OUTFILE. Returns non-zero (printing any host
 # error) if nothing came back. NB: the marker must reach the PTY, so callers
 # invoke this directly — never via $(...), which would capture the marker.
-__peerd_pkg_fetch() {
+__mcdollar_pkg_fetch() {
   local op="$1" json="$2" out="$3" errf="$3.err"
   {
-    printf 'PEERDREQ1\\n'; printf 'M\\tGET\\n'; printf 'U\\tpeerd://%s\\n' "$op"
+    printf 'MCDOLLARREQ1\\n'; printf 'M\\tGET\\n'; printf 'U\\tmcdollar://%s\\n' "$op"
     printf 'B\\t'; printf '%s' "$json" | base64 -w0; printf '\\n'
-  } | __peerd_emit_req "$out" 0 0 2>>"$errf"
+  } | __mcdollar_emit_req "$out" 0 0 2>>"$errf"
   if [ ! -s "$out" ]; then
     [ -f "$errf" ] && cat "$errf" >&2
     rm -f "$errf"; return 1
   fi
   rm -f "$errf"; return 0
 }
-export -f __peerd_pkg_fetch
+export -f __mcdollar_pkg_fetch
 
-# __peerd_node_add TOOL PKG... — resolve+download npm packages host-side and
+# __mcdollar_node_add TOOL PKG... — resolve+download npm packages host-side and
 # extract them into ./node_modules. Shared by npm/yarn/pnpm (same registry).
-__peerd_node_add() {
+__mcdollar_node_add() {
   local tool="$1"; shift
   local -a specs=()
-  local PEERD_PYTAGS=""
+  local MCDOLLAR_PYTAGS=""
   while [ $# -gt 0 ]; do case "$1" in -*) shift ;; *) specs+=("$1"); shift ;; esac; done
   if [ \${#specs[@]} -eq 0 ]; then
     echo "$tool: name packages explicitly (e.g. $tool add <pkg>); package.json install isn't supported yet" >&2
     return 2
   fi
-  local manifest="/tmp/peerd-node-$$.tsv" errf="/tmp/peerd-node-$$.err"
-  if ! __peerd_pkg_fetch npm-install "$(__peerd_json_pkgs "\${specs[@]}")" "$manifest"; then
+  local manifest="/tmp/mcdollar-node-$$.tsv" errf="/tmp/mcdollar-node-$$.err"
+  if ! __mcdollar_pkg_fetch npm-install "$(__mcdollar_json_pkgs "\${specs[@]}")" "$manifest"; then
     echo "$tool: install failed" >&2; rm -f "$manifest"; return 1
   fi
   mkdir -p node_modules 2>>"$errf"
@@ -499,48 +499,48 @@ __peerd_node_add() {
   rm -f "$manifest" "$errf"
   return 0
 }
-export -f __peerd_node_add
+export -f __mcdollar_node_add
 
 # npm / yarn / pnpm — same npm registry, same node_modules install. We intercept
 # add|install (named packages only — no package.json; VM-NETWORKING.md) and pass
 # every other subcommand through to a real binary if the image ships one.
 npm() {
   case "$1" in
-    install|i|add) shift; __peerd_node_add npm "$@" ;;
+    install|i|add) shift; __mcdollar_node_add npm "$@" ;;
     *) if [ -x /usr/bin/npm ]; then /usr/bin/npm "$@"; return $?; fi
-       echo "peerd-npm: only 'npm install <pkg...>' is supported in this sandbox" >&2; return 2 ;;
+       echo "mcdollar-npm: only 'npm install <pkg...>' is supported in this sandbox" >&2; return 2 ;;
   esac
 }
 export -f npm
 yarn() {
   case "$1" in
-    add|install) shift; __peerd_node_add yarn "$@" ;;
+    add|install) shift; __mcdollar_node_add yarn "$@" ;;
     *) if [ -x /usr/bin/yarn ]; then /usr/bin/yarn "$@"; return $?; fi
-       echo "peerd-yarn: only 'yarn add <pkg...>' is supported in this sandbox" >&2; return 2 ;;
+       echo "mcdollar-yarn: only 'yarn add <pkg...>' is supported in this sandbox" >&2; return 2 ;;
   esac
 }
 export -f yarn
 pnpm() {
   case "$1" in
-    add|install|i) shift; __peerd_node_add pnpm "$@" ;;
+    add|install|i) shift; __mcdollar_node_add pnpm "$@" ;;
     *) if [ -x /usr/bin/pnpm ]; then /usr/bin/pnpm "$@"; return $?; fi
-       echo "peerd-pnpm: only 'pnpm add <pkg...>' is supported in this sandbox" >&2; return 2 ;;
+       echo "mcdollar-pnpm: only 'pnpm add <pkg...>' is supported in this sandbox" >&2; return 2 ;;
   esac
 }
 export -f pnpm
 
 # pip install <pkg...> | -r requirements.txt — PURE-PYTHON wheels
-# (peerd://pip-install), installed offline with the image's pip.
+# (mcdollar://pip-install), installed offline with the image's pip.
 pip() {
   if [ "$1" != "install" ]; then
     if [ -x /usr/bin/pip3 ]; then /usr/bin/pip3 "$@"; return $?; fi
     if [ -x /usr/bin/pip ]; then /usr/bin/pip "$@"; return $?; fi
-    echo "peerd-pip: only 'pip install <pkg...>' is supported in this sandbox" >&2
+    echo "mcdollar-pip: only 'pip install <pkg...>' is supported in this sandbox" >&2
     return 2
   fi
   shift
   local -a specs=()
-  local PEERD_PYTAGS='"i686"'
+  local MCDOLLAR_PYTAGS='"i686"'
   while [ $# -gt 0 ]; do
     case "$1" in
       -r|--requirement)
@@ -556,14 +556,14 @@ pip() {
       *) specs+=("$1"); shift ;;
     esac
   done
-  if [ \${#specs[@]} -eq 0 ]; then echo "peerd-pip: name packages or use -r requirements.txt" >&2; return 2; fi
-  local manifest="/tmp/peerd-pip-$$.tsv" errf="/tmp/peerd-pip-$$.err"
-  if ! __peerd_pkg_fetch pip-install "$(__peerd_json_pkgs "\${specs[@]}")" "$manifest"; then
-    echo "peerd-pip: install failed" >&2; rm -f "$manifest"; return 1
+  if [ \${#specs[@]} -eq 0 ]; then echo "mcdollar-pip: name packages or use -r requirements.txt" >&2; return 2; fi
+  local manifest="/tmp/mcdollar-pip-$$.tsv" errf="/tmp/mcdollar-pip-$$.err"
+  if ! __mcdollar_pkg_fetch pip-install "$(__mcdollar_json_pkgs "\${specs[@]}")" "$manifest"; then
+    echo "mcdollar-pip: install failed" >&2; rm -f "$manifest"; return 1
   fi
   local name version file wheels=""
   while IFS=$'\\t' read -r name version file; do [ -n "$name" ] && wheels="$wheels $file"; done < "$manifest"
-  if [ -z "$wheels" ]; then echo "peerd-pip: nothing staged to install" >&2; rm -f "$manifest" "$errf"; return 1; fi
+  if [ -z "$wheels" ]; then echo "mcdollar-pip: nothing staged to install" >&2; rm -f "$manifest" "$errf"; return 1; fi
   # Install each pure-Python wheel by UNZIPPING it into a writable
   # site-packages -- deliberately NOT via pip. On CheerpX pip install fails
   # two ways: (1) its distro detection opens /dev/null for WRITE, which
@@ -580,10 +580,10 @@ dest = None
 for d in cands:
     try:
         os.makedirs(d, exist_ok=True)
-        t = os.path.join(d, ".peerd_w"); open(t, "w").close(); os.remove(t); dest = d; break
+        t = os.path.join(d, ".mcdollar_w"); open(t, "w").close(); os.remove(t); dest = d; break
     except Exception: pass
 if not dest:
-    print("peerd-pip: no writable site-packages dir", file=sys.stderr); sys.exit(1)
+    print("mcdollar-pip: no writable site-packages dir", file=sys.stderr); sys.exit(1)
 rc = 0
 for whl in sys.argv[1:]:
     try:
@@ -592,7 +592,7 @@ for whl in sys.argv[1:]:
         if b.startswith("pkgstage_") and b.count("_") >= 2: b = b.split("_", 2)[2]
         print("installed " + (b[:-4] if b.endswith(".whl") else b))
     except Exception as e:
-        print("peerd-pip: failed to unpack", os.path.basename(whl), e, file=sys.stderr); rc = 1
+        print("mcdollar-pip: failed to unpack", os.path.basename(whl), e, file=sys.stderr); rc = 1
 sys.exit(rc)
 ' $wheels 2>>"$errf"
   local rc=$?
@@ -602,17 +602,17 @@ sys.exit(rc)
 }
 export -f pip
 
-# gem install <name…> — PURE-RUBY gems (peerd://gem-install), installed offline
+# gem install <name…> — PURE-RUBY gems (mcdollar://gem-install), installed offline
 # with the image's gem. No native extensions, no Bundler/Gemfile.
 gem() {
   if [ "$1" != "install" ] && [ "$1" != "i" ]; then
     if [ -x /usr/bin/gem ]; then /usr/bin/gem "$@"; return $?; fi
-    echo "peerd-gem: only 'gem install <name...>' is supported in this sandbox" >&2
+    echo "mcdollar-gem: only 'gem install <name...>' is supported in this sandbox" >&2
     return 2
   fi
   shift
   local -a specs=()
-  local PEERD_PYTAGS=""
+  local MCDOLLAR_PYTAGS=""
   while [ $# -gt 0 ]; do
     case "$1" in
       -v|--version) shift 2 ;;
@@ -620,17 +620,17 @@ gem() {
       *) specs+=("$1"); shift ;;
     esac
   done
-  if [ \${#specs[@]} -eq 0 ]; then echo "peerd-gem: name gems explicitly (gem install <name>)" >&2; return 2; fi
-  local manifest="/tmp/peerd-gem-$$.tsv" errf="/tmp/peerd-gem-$$.err"
-  if ! __peerd_pkg_fetch gem-install "$(__peerd_json_pkgs "\${specs[@]}")" "$manifest"; then
-    echo "peerd-gem: install failed" >&2; rm -f "$manifest"; return 1
+  if [ \${#specs[@]} -eq 0 ]; then echo "mcdollar-gem: name gems explicitly (gem install <name>)" >&2; return 2; fi
+  local manifest="/tmp/mcdollar-gem-$$.tsv" errf="/tmp/mcdollar-gem-$$.err"
+  if ! __mcdollar_pkg_fetch gem-install "$(__mcdollar_json_pkgs "\${specs[@]}")" "$manifest"; then
+    echo "mcdollar-gem: install failed" >&2; rm -f "$manifest"; return 1
   fi
   local name version file gems=""
   while IFS=$'\\t' read -r name version file; do [ -n "$name" ] && gems="$gems $file"; done < "$manifest"
   local gembin="" c
   for c in /usr/bin/gem /usr/local/bin/gem; do [ -x "$c" ] && { gembin="$c"; break; }; done
   if [ -z "$gembin" ]; then
-    echo "peerd-gem: no gem binary in the VM to install the staged gems ($gems)" >&2
+    echo "mcdollar-gem: no gem binary in the VM to install the staged gems ($gems)" >&2
     rm -f "$manifest" $gems; return 1
   fi
   "$gembin" install --local --ignore-dependencies --no-document $gems 2>>"$errf"
@@ -640,13 +640,13 @@ gem() {
   return $rc
 }
 export -f gem
-# ---- end peerd-egress wrappers ------------------------------------------
+# ---- end mcdollar-egress wrappers ------------------------------------------
 
 ${stubsBash()}
 
 ${aptShimsBash()}
 
-${peerdNetBash()}
+${mcdollarNetBash()}
 `;
 
 // ---------------------------------------------------------------------------
@@ -659,7 +659,7 @@ ${peerdNetBash()}
 // bun-tested (imported above). Keep only the marker MINT here.
 
 const makeMarker = () =>
-  `___PEERD_${Math.random().toString(36).slice(2, 12)}_${Date.now().toString(36)}___`;
+  `___MCDOLLAR_${Math.random().toString(36).slice(2, 12)}_${Date.now().toString(36)}___`;
 
 const shellEscape = (/** @type {any} */ s) => `'${String(s).replace(/'/g, `'\\''`)}'`;
 
@@ -748,7 +748,7 @@ const handleShellByte = (/** @type {string} */ text) => {
   let i = 0;
   while (i < buf.length) {
     // findNextMarker returns the EARLIEST of the GET fast-path marker
-    // (___PEERD_HTTP___) and the rich-request marker (___PEERD_REQ___), so the
+    // (___MCDOLLAR_HTTP___) and the rich-request marker (___MCDOLLAR_REQ___), so the
     // two coexist without the scanner missing one behind the other.
     const found = findNextMarker(buf, i);
     if (!found) {
@@ -811,7 +811,7 @@ const swFetch = (req) => browser.runtime.sendMessage({
   gitAuth: req.auth === 'git' || undefined,
 });
 
-// peerd:// control ops — host-side orchestration the VM can't do itself
+// mcdollar:// control ops — host-side orchestration the VM can't do itself
 // (git-clone, pkg installs). The tested flow lives in vm-net/control-ops.js
 // (pure, IO injected); here we just bind the IO to swFetch + the DataDevice
 // stage. `auth:'git'` is set ONLY inside runControlOp's git-clone path, on URLs
@@ -838,26 +838,26 @@ const handleControlOp = (/** @type {any} */ request, /** @type {any} */ ctx) => 
 // without waiting): it caps BOTH the in-flight fetch concurrency (to one, so no
 // unbounded fan-out of 50MB-buffering fetches) AND the queued-job COUNT (so the
 // pending-closure chain can't grow without limit). Beyond the cap we shed load
-// by staging an immediate error so the VM's poll sees /peerderr instead of
+// by staging an immediate error so the VM's poll sees /mcdollarerr instead of
 // hanging. Keeps the prevFetchPaths cleanup (assumes sequential) correct.
 const MAX_BRIDGE_QUEUE = 512;
 let bridgeQueue = Promise.resolve();
 let bridgeDepth = 0;
 
 // Stage an error response for a request we won't run (load-shed), so the VM's
-// peerd-fetch poll resolves instead of timing out.
+// mcdollar-fetch poll resolves instead of timing out.
 const stageBridgeError = async (/** @type {any} */ parsed, /** @type {string} */ msg) => {
   const sid = parsed.id.replace(/[^a-zA-Z0-9]/g, '');
   if (!sid) return;
   try {
-    await dataDev.writeFile(`/peerderr${sid}`, new TextEncoder().encode(msg));
-    await dataDev.writeFile(`/peerddone${sid}`, new Uint8Array([0x6f, 0x6b, 0x0a]));
+    await dataDev.writeFile(`/mcdollarerr${sid}`, new TextEncoder().encode(msg));
+    await dataDev.writeFile(`/mcdollardone${sid}`, new Uint8Array([0x6f, 0x6b, 0x0a]));
   } catch { /* best effort */ }
 };
 
 const serveVmHttp = (/** @type {any} */ parsed) => {
   if (bridgeDepth >= MAX_BRIDGE_QUEUE) {
-    return stageBridgeError(parsed, 'peerd-fetch: too many concurrent requests (load-shed)\n');
+    return stageBridgeError(parsed, 'mcdollar-fetch: too many concurrent requests (load-shed)\n');
   }
   bridgeDepth++;
   const job = bridgeQueue.then(() => serveVmHttpInner(parsed)).finally(() => { bridgeDepth--; });
@@ -868,9 +868,9 @@ const serveVmHttp = (/** @type {any} */ parsed) => {
 // Unified handler for both marker kinds. `parsed` is the structured descriptor
 // from parseMarkerLine: a GET fast-path {kind:'get',id,url} or a rich
 // {kind:'req',id,request}. The GET path keeps its exact legacy semantics
-// (body-only, >=400 → error, no meta file) so peerd-fetch is untouched; the
+// (body-only, >=400 → error, no meta file) so mcdollar-fetch is untouched; the
 // rich path returns status + headers + body so curl -i/-f/-w, POST, and the
-// peerd:// control ops work.
+// mcdollar:// control ops work.
 const serveVmHttpInner = async (/** @type {any} */ parsed) => {
   const sid = parsed.id.replace(/[^a-zA-Z0-9]/g, '');
   if (!sid) return;
@@ -891,14 +891,14 @@ const serveVmHttpInner = async (/** @type {any} */ parsed) => {
   let metaObj = null;
   let respMeta = '';
   try {
-    if (rich && request.url.startsWith('peerd://')) {
+    if (rich && request.url.startsWith('mcdollar://')) {
       // stage(): write a file the VM keeps (NOT tracked in prevFetchPaths, so it
       // survives the next request's cleanup) — used to drop wheels/tarballs into
       // the VM for the offline install tail. The shim removes them when done.
       const stage = async (/** @type {string} */ name, /** @type {any} */ bytes) => {
         const devPath = `/pkgstage_${sid}_${name}`;
         await dataDev.writeFile(devPath, bytes);
-        return `/peerd-data/pkgstage_${sid}_${name}`;
+        return `/mcdollar-data/pkgstage_${sid}_${name}`;
       };
       const r = /** @type {any} */ (await handleControlOp(request, { sid, stage }));
       bodyBytes = r.bodyBytes ?? null;
@@ -909,26 +909,26 @@ const serveVmHttpInner = async (/** @type {any} */ parsed) => {
       const resp = await swFetch(request);
       respMeta = `ok=${resp?.ok} status=${resp?.status} bodyLen=${resp?.bodyB64?.length ?? 0}${resp?.fromCache ? ` cache=${resp.fromCache}` : ''}`;
       if (!resp || (resp.error && resp.bodyB64 == null)) {
-        errMsg = `peerd-fetch: ${resp?.error ? friendlyFetchError(resp.error) : 'request failed'}\n`;
+        errMsg = `mcdollar-fetch: ${resp?.error ? friendlyFetchError(resp.error) : 'request failed'}\n`;
       } else if (!rich && (!resp.ok || resp.status >= 400)) {
         // GET fast path: legacy behavior — a >=400 is an error, body discarded.
-        errMsg = resp.error ? `peerd-fetch: ${friendlyFetchError(resp.error)}\n` : `peerd-fetch: HTTP ${resp.status}\n`;
+        errMsg = resp.error ? `mcdollar-fetch: ${friendlyFetchError(resp.error)}\n` : `mcdollar-fetch: HTTP ${resp.status}\n`;
       } else {
         bodyBytes = resp.bodyB64 != null ? base64ToBytes(resp.bodyB64) : new Uint8Array(0);
         metaObj = { status: resp.status, statusText: resp.statusText, headers: resp.headers ?? {} };
       }
     }
   } catch (e) {
-    errMsg = `peerd-fetch: ${(/** @type {{ message?: string }} */ (e))?.message ?? String(e)}\n`;
+    errMsg = `mcdollar-fetch: ${(/** @type {{ message?: string }} */ (e))?.message ?? String(e)}\n`;
     respMeta = `threw: ${(/** @type {{ message?: string }} */ (e))?.message ?? String(e)}`;
   }
   const fetchMs = Date.now() - t0;
   const outcome = errMsg ? `ERR ${errMsg.trim()}` : `OK ${bodyBytes?.byteLength ?? 0}B`;
 
-  const respPath = `/peerdresp${sid}`;
-  const errPath = `/peerderr${sid}`;
-  const metaPath = `/peerdmeta${sid}`;
-  const donePath = `/peerddone${sid}`;
+  const respPath = `/mcdollarresp${sid}`;
+  const errPath = `/mcdollarerr${sid}`;
+  const metaPath = `/mcdollarmeta${sid}`;
+  const donePath = `/mcdollardone${sid}`;
   const written = [];
   let stagingMs = -1;
   const stageStart = Date.now();
@@ -941,7 +941,7 @@ const serveVmHttpInner = async (/** @type {any} */ parsed) => {
       written.push(errPath);
     }
     // The rich path always stages a meta file (status + headers) so the
-    // peerd-http wrapper can expose them; the GET fast path never does.
+    // mcdollar-http wrapper can expose them; the GET fast path never does.
     if (rich && metaObj) {
       await dataDev.writeFile(metaPath, new TextEncoder().encode(encodeResponseMeta(metaObj)));
       written.push(metaPath);
@@ -1009,17 +1009,17 @@ const runViaShell = async (/** @type {string} */ cmd, /** @type {any} */ opts = 
 
 const installWrappers = async () => {
   const encoder = new TextEncoder();
-  const stagingName = `/peerdwrappers${Date.now().toString(36)}`;
+  const stagingName = `/mcdollarwrappers${Date.now().toString(36)}`;
   // why NO `set -x` prepend: it stays ON in the PERSISTENT shell and then traces
-  // EVERY later interactive command — including peerd's own ___PEERD_*___
+  // EVERY later interactive command — including mcdollar's own ___MCDOLLAR_*___
   // completion markers and the http/pkg-fetch bridge plumbing — so one `pip
-  // install` reads as 40 lines of `+ __peerd_emit_req …`. devMode instead just
+  // install` reads as 40 lines of `+ __mcdollar_emit_req …`. devMode instead just
   // makes the one-time install/verify output VISIBLE at boot (the `silent` flag
   // below); off by default it stays captured-but-hidden (parsed for [verify],
   // never dumped). Your own commands are never traced either way.
   const wrappersSrc = WRAPPERS_BASH;
   await dataDev.writeFile(stagingName, encoder.encode(wrappersSrc));
-  const stagedPath = `/peerd-data${stagingName}`;
+  const stagedPath = `/mcdollar-data${stagingName}`;
   const script = [
     `echo "[diag] uid=$(id -u) user=$(whoami) HOME=$HOME"`,
     `echo "[diag] BASH_VERSION=$BASH_VERSION"`,
@@ -1027,7 +1027,7 @@ const installWrappers = async () => {
     '',
     `source ${stagedPath}`,
     '',
-    'for __f in peerd-fetch curl wget git; do',
+    'for __f in mcdollar-fetch curl wget git; do',
     '  __t="$(type -t "$__f")"',
     '  if [ "$__t" = "function" ]; then',
     '    echo "[verify] ok:$__f"',
@@ -1036,14 +1036,14 @@ const installWrappers = async () => {
     '  fi',
     'done',
     'unset __f __t',
-    'echo "[peerd-egress] bash function wrappers installed"',
+    'echo "[mcdollar-egress] bash function wrappers installed"',
   ].join('\n');
   return runViaShell(script, { silent: !vmDevMode });
 };
 
 // ---------------------------------------------------------------------------
 // Base-image integrity pin (TOFU) — the imperative shell around
-// peerd-engine/image-pin.js.
+// mcdollar-engine/image-pin.js.
 //
 // THE TRUST BOUNDARY, stated plainly: CheerpX's HttpBytesDevice /
 // CloudDevice stream the rootfs block-by-block from inside the vendored
@@ -1122,7 +1122,7 @@ const verifyImagePin = async (/** @type {string} */ url) => {
 };
 
 // ---------------------------------------------------------------------------
-// Export — download this VM as a .peerd recipe (DESIGN-10). The SW
+// Export — download this VM as a .mcdollar recipe (DESIGN-10). The SW
 // reads the registry record + the stored image pin; the recipe carries
 // the base-image URL + TOFU pin so the receiver pins BEFORE first boot.
 // The disk overlay deliberately does NOT travel (100s of MB–GBs).
@@ -1173,7 +1173,7 @@ const boot = async () => {
   vmId = record.id;
   vmName = record.name;
   diskOverlayKey = record.diskOverlayKey;
-  document.title = `peerd · ${vmName}`;
+  document.title = `mcdollar · ${vmName}`;
   // Export needs a loaded record (the SW reads it by id); unhide only
   // once one exists so the button can never fire against nothing.
   DOM.exportBtn.hidden = false;
@@ -1294,7 +1294,7 @@ const boot = async () => {
     cx = await Linux.create({
       mounts: [
         { type: 'ext2', path: '/', dev: overlayDev },
-        { type: 'dir', path: '/peerd-data', dev: dataDev },
+        { type: 'dir', path: '/mcdollar-data', dev: dataDev },
       ],
     });
     trace('info', 'Linux.create ok');
@@ -1333,7 +1333,7 @@ const boot = async () => {
 
   // 9. Install wrappers (silent)
   try {
-    trace('info', 'installing peerd-egress wrappers');
+    trace('info', 'installing mcdollar-egress wrappers');
     const install = await installWrappers();
     const verifyLines = install.stdout.split('\n')
       .map((/** @type {string} */ l) => l.trim())
@@ -1368,7 +1368,7 @@ const boot = async () => {
   trace('info', 'ready');
 
   // why: frame the networking model up front so the raw-socket ceiling and the
-  // HTTP-native capabilities aren't a surprise (and `peerd-net` is discoverable).
+  // HTTP-native capabilities aren't a surprise (and `mcdollar-net` is discoverable).
   emitToTerminal(`\r\n${bannerText()}\r\n\r\n`);
 
   // 11. Announce ourselves so the SW can map vmId → tabId
@@ -1443,7 +1443,7 @@ const mountTerminal = () => {
   // Opening banner — the live shell continues the boot console's look:
   // the wordmark letters in their module colors (24-bit ANSI; same five
   // as styles.css :root) on an otherwise-dim line. why: the wordmark and
-  // the orb are peerd's only color carriers (brand rule, CLAUDE.md) —
+  // the orb are mcdollar's only color carriers (brand rule, CLAUDE.md) —
   // the orb leaves with the boot card, the wordmark takes over in here.
   const BRAND = [
     ['p', '0;183;235'],   // cyan
@@ -1535,11 +1535,11 @@ browser.runtime.onMessage.addListener(/** @type {any} */ ((/** @type {any} */ ms
 
         case 'vm/write-file': {
           const bytes = base64ToBytes(msg.b64);
-          const stagingName = `/peerd${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+          const stagingName = `/mcdollar${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
           try {
             await dataDev.writeFile(stagingName, bytes);
             const dir = msg.path.replace(/\/[^/]*$/, '') || '/';
-            const stagedPath = `/peerd-data${stagingName}`;
+            const stagedPath = `/mcdollar-data${stagingName}`;
             const cmd = `mkdir -p ${shellEscape(dir)} && cp ${shellEscape(stagedPath)} ${shellEscape(msg.path)}`;
             const r = await runViaShell(cmd, { silent: true });
             try { await dataDev.delete(stagingName); } catch { /* ignore */ }
@@ -1597,9 +1597,9 @@ self.addEventListener('unhandledrejection', (e) => {
 // vm-tab.js runs again, CheerpX re-mounts the same IDB overlay so the
 // disk state is preserved. No reboot button needed.
 
-// A peerd-owned tab carries the trigger to pull the side panel in — so you can
+// A mcdollar-owned tab carries the trigger to pull the side panel in — so you can
 // keep chatting from this VM without a round-trip back to home. Mounted before
 // boot so it's there during the (slow) disk stream and even if boot fails.
-mountPullInPeerd();
+mountPullInMcdollar();
 
 boot();

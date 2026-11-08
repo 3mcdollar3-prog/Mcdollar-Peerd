@@ -42,7 +42,7 @@ test('constructor observer preserves native construction, subclassing, failures 
   }
   const context = { WebSocket: Native, RTCPeerConnection: Native,
     location: { href: 'chrome-extension://fixture/offscreen/offscreen.html' },
-    __peerdConsentTransportObserved: (payload: string) => records.push(JSON.parse(payload)) };
+    __mcdollarConsentTransportObserved: (payload: string) => records.push(JSON.parse(payload)) };
   runInNewContext(OBSERVER_SOURCE, context);
   const options = { iceServers: [] };
   const rtc = new context.RTCPeerConnection(options);
@@ -142,7 +142,7 @@ const pausedWorker = (injectFails = false) => {
         if (params.expression === '1') return { result: { value: 1 } };
         if (injectFails) return { exceptionDetails: { text: 'injection refused' } };
         installed = true;
-        emit('Runtime.bindingCalled', { name: '__peerdConsentTransportObserved', payload: '{"kind":"observer-ready"}' });
+        emit('Runtime.bindingCalled', { name: '__mcdollarConsentTransportObserved', payload: '{"kind":"observer-ready"}' });
         return { result: { value: true } };
       }
       if (method === 'Debugger.resume') { if (!injectFails) expect(installed).toBe(true); applicationRuns++; }
@@ -199,7 +199,7 @@ test('enabled Page preload covers the runtime-created current document before of
     emit('Target.attachedToTarget', { sessionId, targetInfo, waitingForDebugger });
   };
   const ready = (sessionId: string) => emit('Runtime.bindingCalled', {
-    name: '__peerdConsentTransportObserved', payload: JSON.stringify({ kind: 'observer-ready',
+    name: '__mcdollarConsentTransportObserved', payload: JSON.stringify({ kind: 'observer-ready',
       href: targets.get(sessionId).url || `${origin}offscreen/offscreen.html` }),
   }, sessionId);
   const connection = {
@@ -278,7 +278,7 @@ test('RTC canary requires native construction and close, while retaining failure
     }
     const context = { RTCPeerConnection: Native,
       location: { href: 'chrome-extension://fixture/offscreen/offscreen.html' },
-      __peerdConsentTransportObserved: (payload: string) => records.push({ ...JSON.parse(payload), sessionId: 'host' }) };
+      __mcdollarConsentTransportObserved: (payload: string) => records.push({ ...JSON.parse(payload), sessionId: 'host' }) };
     runInNewContext(OBSERVER_SOURCE, context);
     if (failure === 'none') expect(runInNewContext(RTC_CANARY_SOURCE, context)).toBe(true);
     else {
@@ -347,7 +347,7 @@ const teardownObserver = async (blockedMethod: string) => {
         else target('late'); // An event already queued when teardown starts.
       }
       if (method === 'Page.addScriptToEvaluateOnNewDocument') emit('Runtime.bindingCalled', {
-        name: '__peerdConsentTransportObserved',
+        name: '__mcdollarConsentTransportObserved',
         payload: JSON.stringify({ kind: 'observer-ready', href: 'chrome-extension://fixture/home/home.html' }),
       }, sessionId);
       return {};
@@ -462,7 +462,7 @@ const retirementObserver = async (barrierBudgetMs = 30_000, ownsWorkerStartupPau
   const emit = (method: string, params: any, sessionId?: string) => {
     for (const listener of [...listeners]) listener(method, params, { sessionId });
   };
-  const ready = (sessionId: string) => emit('Runtime.bindingCalled', { name: '__peerdConsentTransportObserved',
+  const ready = (sessionId: string) => emit('Runtime.bindingCalled', { name: '__mcdollarConsentTransportObserved',
     payload: JSON.stringify({ kind: 'observer-ready', href: targets.get(sessionId).url }) }, sessionId);
   const target = (sessionId: string, waitingForDebugger = false, type = sessionId === 'home' ? 'page' : 'worker') => {
     const targetInfo = { targetId: sessionId, type,
@@ -641,7 +641,7 @@ test('a destroyed observed target cancels its drain and replacement must pass th
   expect(JSON.stringify(fixture.evidence)).toBe(snapshot);
   await new Promise(resolve => setTimeout(resolve, 60));
   expect(JSON.stringify(fixture.evidence)).toBe(snapshot);
-  fixture.emit('Runtime.bindingCalled', { name: '__peerdConsentTransportObserved',
+  fixture.emit('Runtime.bindingCalled', { name: '__mcdollarConsentTransportObserved',
     payload: JSON.stringify({ kind: 'WebSocket', href: 'chrome-extension://fixture/offscreen/controller-worker.js' }) }, 'old');
   expect(() => assertNoTransport(fixture.evidence.events, 'retired realm')).toThrow('transport before consent');
   await fixture.observer.close();

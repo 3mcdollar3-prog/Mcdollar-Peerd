@@ -49,12 +49,12 @@ const bunLock = (packages: Record<string, unknown>): string => JSON.stringify({
 describe('Dependabot security automation policy', () => {
   test('accepts authenticated dependency-version-only package changes', () => {
     const base = JSON.stringify({
-      name: 'peerd',
+      name: 'mcdollar',
       version: '0.5.0',
       devDependencies: { eslint: '10.4.0', typescript: '^6.0.3' },
     });
     const head = JSON.stringify({
-      name: 'peerd',
+      name: 'mcdollar',
       version: '0.5.0',
       devDependencies: { eslint: '10.4.1', typescript: '^6.0.3' },
     });
@@ -62,8 +62,8 @@ describe('Dependabot security automation policy', () => {
   });
 
   test('rejects package scripts hidden in a dependency update', () => {
-    const base = JSON.stringify({ name: 'peerd', scripts: { test: 'bun test' }, devDependencies: { eslint: '10.4.0' } });
-    const head = JSON.stringify({ name: 'peerd', scripts: { test: 'curl bad.test' }, devDependencies: { eslint: '10.4.1' } });
+    const base = JSON.stringify({ name: 'mcdollar', scripts: { test: 'bun test' }, devDependencies: { eslint: '10.4.0' } });
+    const head = JSON.stringify({ name: 'mcdollar', scripts: { test: 'curl bad.test' }, devDependencies: { eslint: '10.4.1' } });
     expect(() => validatePackageJsonChange(base, head, ['eslint'])).toThrow('outside dependency version maps');
   });
 
@@ -336,7 +336,7 @@ describe('Dependabot security automation policy', () => {
   }, 20_000);
 
   test.each(['bun', 'github_actions'])('accepts only the exact generated %s patch on a fresh privileged runner', async (ecosystem) => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-dependabot-policy-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-dependabot-policy-'));
     const today = new Date().toISOString().slice(0, 10);
     const dependency = ecosystem === 'bun' ? 'eslint' : 'actions/checkout';
     const source = 'CodeMirror source\n';
@@ -350,7 +350,7 @@ describe('Dependabot security automation policy', () => {
     };
     try {
       write(root, 'package.json', `${JSON.stringify({
-        name: 'peerd',
+        name: 'mcdollar',
         version: '0.5.0',
         devDependencies: { eslint: '1.0.0' },
       }, null, 2)}\n`);
@@ -359,7 +359,7 @@ describe('Dependabot security automation policy', () => {
       write(root, 'extension/manifest.json', `${JSON.stringify({
         manifest_version: 3,
         version: '0.5.0',
-        name: 'peerd',
+        name: 'mcdollar',
         background: { service_worker: 'background/vault-kernel-preview.js' },
       }, null, 2)}\n`);
       const buildConfigPath = 'extension/shared/build-config.js';
@@ -391,7 +391,7 @@ describe('Dependabot security automation policy', () => {
 
       if (ecosystem === 'bun') {
         write(root, 'package.json', `${JSON.stringify({
-          name: 'peerd',
+          name: 'mcdollar',
           version: '0.5.0',
           devDependencies: { eslint: '1.0.1' },
         }, null, 2)}\n`);
@@ -404,7 +404,7 @@ describe('Dependabot security automation policy', () => {
       const headSha = git(root, 'rev-parse', 'HEAD');
 
       write(root, 'package.json', `${JSON.stringify({
-        name: 'peerd',
+        name: 'mcdollar',
         version: '0.5.1',
         devDependencies: { eslint: ecosystem === 'bun' ? '1.0.1' : '1.0.0' },
       }, null, 2)}\n`);
@@ -418,7 +418,7 @@ describe('Dependabot security automation policy', () => {
       write(root, 'extension/manifest.json', `${JSON.stringify({
         manifest_version: 3,
         version: '0.5.1',
-        name: 'peerd',
+        name: 'mcdollar',
         background: { service_worker: 'background/vault-kernel-preview.js' },
       }, null, 2)}\n`);
 

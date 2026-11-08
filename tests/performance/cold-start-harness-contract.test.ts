@@ -29,7 +29,7 @@ describe('cold-start browser harness contract', () => {
 
   test('derives the worker target from the exact packaged manifest entry', async () => {
     const module = await import('../../scripts/bench/cold-service-worker.mjs');
-    const root = mkdtempSync(join(tmpdir(), 'peerd-cold-entry-contract-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-cold-entry-contract-'));
     mkdirSync(join(root, 'background'));
     writeFileSync(join(root, 'manifest.json'), JSON.stringify({
       background: { service_worker: 'background/vault-kernel.js', type: 'module' },
@@ -58,9 +58,9 @@ describe('cold-start browser harness contract', () => {
     expect(text.match(/reply\.state\?\.vault\?\.initialized !== false/g)).toHaveLength(2);
     expect(text).toContain("state.state?.vault?.initialized === false");
     expect(text).toContain("state.state.vault.locked === true");
-    expect(text).not.toContain('peerdBootStage');
-    expect(text).not.toContain('peerdBootModule');
-    expect(text).not.toContain('peerdStaticShellPainted');
+    expect(text).not.toContain('mcdollarBootStage');
+    expect(text).not.toContain('mcdollarBootModule');
+    expect(text).not.toContain('mcdollarStaticShellPainted');
   });
 
   test('does not silently switch a required lane onto the not-yet-required pair gate', () => {

@@ -86,8 +86,8 @@ describe('sidepanel protected-tab starter', () => {
   });
 
   it('fences a stuck starter send across double-click and reload', async () => {
-    localStorage.removeItem('peerd.draft.new');
-    localStorage.removeItem('peerd.unconfirmed-send.new');
+    localStorage.removeItem('mcdollar.draft.new');
+    localStorage.removeItem('mcdollar.unconfirmed-send.new');
     /** @type {any[]} */
     const calls = [];
     /** @type {(cause:Error)=>void} */
@@ -119,7 +119,7 @@ describe('sidepanel protected-tab starter', () => {
       expect(calls.length).toBe(1);
       expect(calls[0].operationId).toBeTruthy();
       expect(calls[0].sessionId).toBe(null);
-      expect(localStorage.getItem('peerd.unconfirmed-send.new'))
+      expect(localStorage.getItem('mcdollar.unconfirmed-send.new'))
         .toContain(calls[0].operationId);
       rejectStarter(Object.assign(new Error('receipt lost'), { outcomeKnown: false }));
       await flush();
@@ -142,12 +142,12 @@ describe('sidepanel protected-tab starter', () => {
       expect(calls[1].checkOnly).toBe(true);
       expect(calls[1].operationId).toBe(calls[0].operationId);
       expect(calls.filter((message) => !message.checkOnly).length).toBe(1);
-      expect(localStorage.getItem('peerd.unconfirmed-send.new')).toBe(null);
+      expect(localStorage.getItem('mcdollar.unconfirmed-send.new')).toBe(null);
     } finally {
       m.mount(root, null);
       root.remove();
-      localStorage.removeItem('peerd.draft.new');
-      localStorage.removeItem('peerd.unconfirmed-send.new');
+      localStorage.removeItem('mcdollar.draft.new');
+      localStorage.removeItem('mcdollar.unconfirmed-send.new');
     }
   });
 });

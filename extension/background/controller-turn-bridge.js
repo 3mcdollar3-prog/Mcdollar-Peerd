@@ -22,7 +22,7 @@ import {
   stampLifecycleToolResult,
 } from './host-effect-verdict.js';
 import { semanticCallAuditEntry } from './semantic-call-audit.js';
-import { parsePodShell, podGitRemoteIntents } from '/peerd-engine/authority.js';
+import { parsePodShell, podGitRemoteIntents } from '/mcdollar-engine/authority.js';
 import { bindRepositoryToolAuthority } from './repository-tool-authority.js';
 import { bindVmToolAuthority } from './vm-tool-authority.js';
 import { bindNotebookToolAuthority } from './notebook-tool-authority.js';
@@ -59,7 +59,7 @@ import {
 
 const TURN_EVENT_QUEUE_CAP = 8;
 const MAX_MODEL_TOOL_CALLS_PER_TURN = 6_400;
-const OPAQUE_PREFIX = 'peerd-controller-opaque:';
+const OPAQUE_PREFIX = 'mcdollar-controller-opaque:';
 const ABORT_CLEANUP_OPERATIONS = new Set([
   'turn.model.cancel-inference', 'turn.model.cancel-local',
   'turn.abort.finalize', 'turn.finalize',
@@ -1532,7 +1532,7 @@ export const makeControllerTurnBridge = ({
     const run = runs.get(payload.runId);
     if (run.sessionId !== payload.sessionId) return null;
     return {
-      ownerId: 'peerd-authority-kernel', sessionId: payload.sessionId,
+      ownerId: 'mcdollar-authority-kernel', sessionId: payload.sessionId,
       instanceId: null, origin: null, target: 'orchestrator-turn', replayClass: 'E',
     };
   };
@@ -2083,7 +2083,7 @@ export const makeControllerTurnBridge = ({
             origins: [origin],
             summary: intent.op === 'push'
               ? `Allow this one Pod job to push code and commit history to ${target}?`
-              : `Allow this one Pod job to ${intent.op} ${target} through peerd's audited Git transport?`,
+              : `Allow this one Pod job to ${intent.op} ${target} through mcdollar's audited Git transport?`,
             }, run.signal), HOST_EFFECT_OUTCOME.confirmation,
           ));
           if (result?.ok === true

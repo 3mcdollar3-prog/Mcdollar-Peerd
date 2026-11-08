@@ -14,7 +14,7 @@ import {
 import {
   CONTRIBUTOR_CHANNEL_OFFER, CONTRIBUTOR_CHANNEL_PROTOCOL, parseContributorOffer,
 } from '../../extension/shared/contributor-channel.js';
-import { emptyContributorLocalState } from '../../extension/peerd-runtime/observability/contributor-metrics.js';
+import { emptyContributorLocalState } from '../../extension/mcdollar-runtime/observability/contributor-metrics.js';
 import {
   makeKernelFirefoxContributor,
 } from '../../extension/background/kernel-firefox-contributor-addon.js';

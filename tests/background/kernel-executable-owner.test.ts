@@ -398,7 +398,7 @@ describe('kernel executable owner', () => {
   });
 
   test('Chrome channel creation refuses forged senders before client lookup', async () => {
-    const optionsSender = { url: 'chrome-extension://peerd/options.html' };
+    const optionsSender = { url: 'chrome-extension://mcdollar/options.html' };
     let lookups = 0;
     const channel = new MessageChannel();
     const offers: any[] = [];

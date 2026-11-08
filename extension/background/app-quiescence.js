@@ -57,7 +57,7 @@ export const createAppQuiescence = ({
     } finally {
       if (closed) {
         tracker.ensureTab(appId, {
-          active: false, groupTitle: 'peerd',
+          active: false, groupTitle: 'mcdollar',
           ...(ownerSessionId ? { ownerSessionId } : {}),
         }).catch(() => {});
       } else {

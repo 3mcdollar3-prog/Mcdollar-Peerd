@@ -11,7 +11,7 @@ import { describe, test, expect } from 'bun:test';
 import { CATALOG } from './index.ts';
 import { runScenario } from './harness.ts';
 
-describe('peerd red-team suite', () => {
+describe('mcdollar red-team suite', () => {
   for (const s of CATALOG) {
     describe(`${s.id}, ${s.title}`, () => {
       test(`scoped probes hold: ${s.claim}`, async () => {

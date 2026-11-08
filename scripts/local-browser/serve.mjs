@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Opt-in Ollama-compatible development bridge. No remote fallback, telemetry,
-// browser control, or credentials; page actions still execute inside Peerd.
+// browser control, or credentials; page actions still execute inside Mcdollar.
 import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
 import {
@@ -70,7 +70,7 @@ export function createBridgeServer({
         return reply(404, { error: 'model not configured' });
       }
       if (request.url === '/api/show') {
-        return reply(200, { model_info: { 'peerd.context_length': body.model === BRIDGE_MODEL
+        return reply(200, { model_info: { 'mcdollar.context_length': body.model === BRIDGE_MODEL
           ? BRIDGE_TRANSPORT_CONTEXT : HELPER_CONTEXT }, capabilities: ['tools'],
         ...(body.model === helperModel ? { parameters: `num_ctx ${HELPER_CONTEXT}` } : {}) });
       }

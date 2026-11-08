@@ -1,7 +1,7 @@
 // @ts-check
 // Disposable Firefox Notebook compiler host.
 
-import { linkSingleModuleWorkerDetailed } from '/peerd-engine/index.js';
+import { linkSingleModuleWorkerDetailed } from '/mcdollar-engine/index.js';
 
 self.addEventListener('message', async (event) => {
   const message = event.data;

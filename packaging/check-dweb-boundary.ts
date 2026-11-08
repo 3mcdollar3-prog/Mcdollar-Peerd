@@ -1,5 +1,5 @@
 // Dweb import-boundary check (spec §2/§3) — fails CI if anything
-// outside extension/peerd-distributed/ references the dweb module.
+// outside extension/mcdollar-distributed/ references the dweb module.
 //
 // The invariant: core code programs against /shared/dweb-interface.js;
 // the ONLY sanctioned reference to the module's path is the gated dynamic
@@ -9,14 +9,14 @@
 // doesn't see dynamic import() — this does.
 //
 // What counts as a reference:
-//   - a static import/export-from whose specifier names peerd-distributed
-//   - a dynamic import(...) whose literal names peerd-distributed
-//   - ANY string literal containing a /peerd-distributed/ path (catches
+//   - a static import/export-from whose specifier names mcdollar-distributed
+//   - a dynamic import(...) whose literal names mcdollar-distributed
+//   - ANY string literal containing a /mcdollar-distributed/ path (catches
 //     fetch()/scripting paths and other indirect loads)
 //   - the bare module-directory name ANYWHERE, including in a comment
 //
 // why comments count: verify-store-artifact.ts greps the SHIPPED bytes for
-// the substring `peerd-distributed`, with no regard for quoting or syntax,
+// the substring `mcdollar-distributed`, with no regard for quoting or syntax,
 // so a file that merely MENTIONS the path in a `// see …` comment fails the
 // store posture check. Without this pattern the two gates disagree and the
 // disagreement surfaces at package time in CI rather than here. Name the
@@ -30,17 +30,17 @@ import { join, relative } from 'node:path';
 import { readdirSync, statSync } from 'node:fs';
 import { EXTENSION_DIR, REPO_ROOT } from './lib.ts';
 
-const DWEB_DIR = 'peerd-distributed';
+const DWEB_DIR = 'mcdollar-distributed';
 // The one file allowed to name the module path (dynamic, flag-gated).
 const ALLOWED = new Set(['shared/dweb-loader.js']);
 
 const PATTERNS: Array<{ name: string; re: RegExp }> = [
-  { name: 'static import/export', re: /\bfrom\s+['"][^'"]*peerd-distributed[^'"]*['"]/ },
-  { name: 'side-effect import', re: /\bimport\s+['"][^'"]*peerd-distributed[^'"]*['"]/ },
-  { name: 'dynamic import', re: /\bimport\(\s*['"][^'"]*peerd-distributed[^'"]*['"]/ },
-  { name: 'path string literal', re: /['"]\/?peerd-distributed\/[^'"]*['"]/ },
+  { name: 'static import/export', re: /\bfrom\s+['"][^'"]*mcdollar-distributed[^'"]*['"]/ },
+  { name: 'side-effect import', re: /\bimport\s+['"][^'"]*mcdollar-distributed[^'"]*['"]/ },
+  { name: 'dynamic import', re: /\bimport\(\s*['"][^'"]*mcdollar-distributed[^'"]*['"]/ },
+  { name: 'path string literal', re: /['"]\/?mcdollar-distributed\/[^'"]*['"]/ },
   // Last, so a real import above reports as an import rather than as this.
-  { name: 'bare mention (store verifier greps raw bytes)', re: /peerd-distributed/ },
+  { name: 'bare mention (store verifier greps raw bytes)', re: /mcdollar-distributed/ },
 ];
 
 const walk = (dir: string, out: string[] = []): string[] => {
@@ -76,7 +76,7 @@ for (const file of walk(EXTENSION_DIR)) {
 
 if (violations.length > 0) {
   console.error(
-    'DWEB BOUNDARY VIOLATION — code outside extension/peerd-distributed/ '
+    'DWEB BOUNDARY VIOLATION — code outside extension/mcdollar-distributed/ '
     + 'references the dweb module. Program against '
     + '/shared/dweb-interface.js and obtain the client via '
     + '/shared/dweb-loader.js instead (see PACKAGING.md):\n',
@@ -84,4 +84,4 @@ if (violations.length > 0) {
   for (const v of violations) console.error('  ' + v);
   process.exit(1);
 }
-console.log('dweb boundary OK — no references outside peerd-distributed/');
+console.log('dweb boundary OK — no references outside mcdollar-distributed/');

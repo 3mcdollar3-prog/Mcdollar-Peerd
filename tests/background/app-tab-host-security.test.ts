@@ -13,8 +13,8 @@ describe('App tab required-actor and runtime lifecycle contracts', () => {
       [{ ok: false, error: 'credit balance SECRET-PROVIDER-TEXT' }, mapError('insufficient_quota').replace(/\p{Dash_Punctuation}/gu, '-'), false],
       [{ ok: false, error: 'provider-usage-limit:SECRET-PROVIDER-TEXT' }, 'The App actor did not reply. Try again.', false],
       [{ ok: false, error: 'provider-http-500:SECRET-PROVIDER-TEXT' }, 'The App actor did not reply. Try again.', false],
-      [{ ok: false, error: 'vault-locked', outcomeKnown: true }, 'Vault is locked. Unlock it in the peerd panel, then send again.', false],
-      [{ ok: false, error: 'vault-locked', outcomeKnown: false }, 'Peerd could not confirm whether the App actor received that message.', true],
+      [{ ok: false, error: 'vault-locked', outcomeKnown: true }, 'Vault is locked. Unlock it in the mcdollar panel, then send again.', false],
+      [{ ok: false, error: 'vault-locked', outcomeKnown: false }, 'Mcdollar could not confirm whether the App actor received that message.', true],
     ] as const) {
       const lines: string[] = [];
       let calls = 0;
@@ -45,7 +45,7 @@ describe('App tab required-actor and runtime lifecycle contracts', () => {
     run('data/state.json', { code: 'app-file-invalid-json' });
     expect(context.saveMessage.textContent).toBe('data/state.json is not valid JSON, so it is not saved yet. Fix the JSON to save it.');
     run('index.html', { error: 'vault-locked' });
-    expect(context.saveMessage.textContent).toContain('Unlock it in the peerd panel, then retry.');
+    expect(context.saveMessage.textContent).toContain('Unlock it in the mcdollar panel, then retry.');
     expect(context.saveMessage.textContent).not.toContain('free browser storage');
     run('index.html', { error: 'vault-locked', outcomeKnown: false });
     expect(context.saveMessage.textContent).toContain('could not confirm');
@@ -204,17 +204,17 @@ describe('App tab required-actor and runtime lifecycle contracts', () => {
     expect(html).toContain('Direct conversation · scoped to this App');
     expect(host).toContain("message.textContent = text");
     expect(host).toContain('actorChatInput.disabled = failure?.outcomeKnown === false');
-    expect(host).toContain('Delivery unconfirmed · inspect the actor in peerd');
+    expect(host).toContain('Delivery unconfirmed · inspect the actor in mcdollar');
     expect(host).toContain('makeUiRuntimeClient({ browser })');
     expect(host).not.toContain('browser.runtime.sendMessage');
     expect(host).not.toContain('message.innerHTML =');
 
     const agentApiStart = runner.indexOf('const agentApi = Object.freeze({');
-    const peerdGlobalStart = runner.indexOf("Object.defineProperty(window, 'peerd'", agentApiStart);
-    const agentApi = runner.slice(agentApiStart, peerdGlobalStart);
+    const mcdollarGlobalStart = runner.indexOf("Object.defineProperty(window, 'mcdollar'", agentApiStart);
+    const agentApi = runner.slice(agentApiStart, mcdollarGlobalStart);
     expect(agentApi).toContain('open()');
     expect(agentApi).toContain('navigator.userActivation?.isActive');
-    expect(agentApi).toContain("{ peerd: 'app:agent:open' }");
+    expect(agentApi).toContain("{ mcdollar: 'app:agent:open' }");
     expect(agentApi).toContain('expose(definition)');
     expect(agentApi).not.toContain('request(');
     expect(agentApi).not.toContain('provider');

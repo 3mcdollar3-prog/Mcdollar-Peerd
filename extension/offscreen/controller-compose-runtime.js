@@ -4,7 +4,7 @@ import {
   neutralizeFence,
   parseComposer,
   wrapUntrusted,
-} from '/peerd-runtime/controller.js';
+} from '/mcdollar-runtime/controller.js';
 import { expandComposerCommand } from '/shared/composer-parser.js';
 import { controllerPayloadBytes } from '/shared/structured-clone-size.js';
 import {
@@ -28,7 +28,7 @@ const escAttr = (/** @type {unknown} */ value) => String(value)
   .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
   .replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const filePayload = (/** @type {string} */ path, /** @type {string} */ content) =>
-  `<peerd_file path="${escAttr(path)}">\n${neutralizeFence(content)}\n</peerd_file>`;
+  `<mcdollar_file path="${escAttr(path)}">\n${neutralizeFence(content)}\n</mcdollar_file>`;
 const tabPayload = (/** @type {any} */ value) => wrapUntrusted({
   origin: value.origin,
   tool: 'at_tab',

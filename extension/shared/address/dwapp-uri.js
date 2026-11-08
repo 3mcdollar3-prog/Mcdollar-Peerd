@@ -7,7 +7,7 @@
 // web+dwapp:// carries the identical payload for a future browser handoff.
 // The fixed authority roundtrips through browser URL parsing. Keys stay in the
 // case-sensitive path; ports, credentials, query and fragment are forbidden.
-// Existing peerd:// stays separate.
+// Existing mcdollar:// stays separate.
 
 import { decodeDidKey, encodeDidKey } from './did.js';
 

@@ -3,7 +3,7 @@
 import {
   canonicalSiteClientJson, normalizeSiteClientContracts, normalizeSiteOrigin,
   validateSiteClientValue,
-} from '../../extension/peerd-runtime/site-clients/core.js';
+} from '../../extension/mcdollar-runtime/site-clients/core.js';
 
 // A bounded 32k JSON value can occupy 192k after lossless ASCII escaping.
 export const MAX_API_RECEIPT_CHARS = 256_000;
@@ -51,7 +51,7 @@ export const inspectToolReceipt = raw => {
           || Object.hasOwn(parsed, 'outcomeKnown') || Object.hasOwn(parsed, 'outcomeKind'))) value = parsed;
     } catch { /* A plain tool string can happen to begin with a brace. */ }
   }
-  // Peerd's OpenAI formatter forwards content only. The production agent loop
+  // Mcdollar's OpenAI formatter forwards content only. The production agent loop
   // stops before another call on unknown outcomes, and persists this exact
   // host-authored sentinel for any later resumed transcript.
   const wireUnknown = raw === 'outcome_unknown: Verify the target before retrying.'
@@ -201,7 +201,7 @@ const assertFieldText = text => {
 };
 
 /**
- * The helper proposes one normal Peerd tool. It receives no execution channel.
+ * The helper proposes one normal Mcdollar tool. It receives no execution channel.
  * Generated modules may only be proposed through the existing confirmed-write
  * tool; arbitrary generated site_client_run code is never accepted here.
  */

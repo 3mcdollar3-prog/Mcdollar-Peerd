@@ -109,7 +109,7 @@ describe('release feed publication hook', () => {
     expect(chrome).toContain('bun run test:e2e:site-client-store:staged');
     expect(pkg.scripts['test:e2e:site-client-store']).toContain('--channel=store --browser=chrome');
     expect(pkg.scripts['test:e2e:site-client-store']).toContain('test:e2e:site-client-store:staged');
-    expect(pkg.scripts['test:e2e:site-client-store:staged']).toContain('PEERD_REQUIRE_SITE_CAPTURE_TAP=1');
+    expect(pkg.scripts['test:e2e:site-client-store:staged']).toContain('MCDOLLAR_REQUIRE_SITE_CAPTURE_TAP=1');
     expect(pkg.scripts['test:e2e:site-client-store:staged']).toContain('--only=site-client-vertical');
     const localRelease = readFileSync(
       join(import.meta.dir, '..', '..', 'packaging', 'release.ts'),
@@ -127,9 +127,9 @@ describe('release feed publication hook', () => {
     expect(notify).toContain('needs: release');
     expect(notify).toContain('environment: release-notify');
     expect(notify).not.toContain('environment: release\n');
-    expect(notify).toContain('secrets.PEERD_SITE_DISPATCH_TOKEN');
-    expect(notify).toContain('repos/NotASithLord/peerd-site/dispatches');
-    expect(notify).toContain('-f event_type=peerd-release');
+    expect(notify).toContain('secrets.MCDOLLAR_SITE_DISPATCH_TOKEN');
+    expect(notify).toContain('repos/NotASithLord/mcdollar-site/dispatches');
+    expect(notify).toContain('-f event_type=mcdollar-release');
     expect(notify).toContain('-F "client_payload[tag]=$GITHUB_REF_NAME"');
     expect(notify).toContain('for attempt in 1 2 3');
     expect(notify).toContain('sleep "$delay"');

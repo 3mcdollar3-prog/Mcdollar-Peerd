@@ -15,15 +15,15 @@
 // Chrome can turn advanced automation off). The result header names the
 // channel so the model and the user reading the transcript can tell a
 // real AX tree from the fallback. The pure serializer + ref registry live
-// in peerd-runtime/dom. Output is wrapped <untrusted_web_content> like
+// in mcdollar-runtime/dom. Output is wrapped <untrusted_web_content> like
 // every other DOM tool.
 
 import {
   captureSnapshot,
   resolveTargetTab,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 
-/** @typedef {import('/peerd-runtime/dom/snapshot-diff.js').SnapRef} SnapRef */
+/** @typedef {import('/mcdollar-runtime/dom/snapshot-diff.js').SnapRef} SnapRef */
 /**
  * The harness ref registry (createRefRegistry). why: it's injected onto ctx
  * by the SW (buildToolContext) but isn't on the ToolContext typedef, so DOM

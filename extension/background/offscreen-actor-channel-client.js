@@ -11,7 +11,7 @@ import {
 } from '/shared/actor-channel-protocol.js';
 import { sameDocumentUrlIgnoringHash } from '/shared/sender-trust.js';
 
-const ACTOR_CHANNEL_OFFER = 'peerd/actor-channel';
+const ACTOR_CHANNEL_OFFER = 'mcdollar/actor-channel';
 
 export { makeSemanticControllerClient } from './offscreen-controller-client.js';
 

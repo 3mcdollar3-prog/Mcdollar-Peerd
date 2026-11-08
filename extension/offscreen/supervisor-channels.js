@@ -26,7 +26,7 @@ import {
 } from '../shared/repository-channel.js';
 import { backgroundScriptUrl } from './sender-checks.js';
 
-const ACTOR_CHANNEL_OFFER = 'peerd/actor-channel';
+const ACTOR_CHANNEL_OFFER = 'mcdollar/actor-channel';
 const ACTOR_CHANNEL_PROTOCOL = 1;
 export { isServiceWorkerSender, isTrustedSender } from './sender-checks.js';
 
@@ -67,7 +67,7 @@ export const admitRepositoryCancellation = (event, workerUrl) => {
 
 /** @param {any} event @param {string} workerUrl @param {(lease:any)=>boolean} ownsLease */
 export const admitLocalModelChannelOffer = (event, workerUrl, ownsLease) => {
-  if (event?.data?.type !== 'peerd/local-model-channel') {
+  if (event?.data?.type !== 'mcdollar/local-model-channel') {
     return { matched: false, ok: false, offer: null };
   }
   const source = /** @type {{scriptURL?:unknown}|null} */ (event.source ?? null);
@@ -111,7 +111,7 @@ export const createServiceWorkerChannels = ({
   moduleLoadTimeoutMs = 10_000,
   createVaultAuthorityWorker = () => new Worker(
     browser.runtime.getURL('offscreen/vault-authority-worker.js'),
-    { type: 'module', name: 'peerd-vault-authority' },
+    { type: 'module', name: 'mcdollar-vault-authority' },
   ),
 }) => {
   const bounded = (/** @type {()=>Promise<any>} */ load, /** @type {string} */ code) =>
@@ -156,7 +156,7 @@ export const createServiceWorkerChannels = ({
       try { port?.close(); } catch { /* invalid/closed */ }
       return;
     }
-    if (event.data?.type === 'peerd/controller-channel' && event.ports?.length === 1) {
+    if (event.data?.type === 'mcdollar/controller-channel' && event.ports?.length === 1) {
       const lease = event.data.lease;
       if (getFeatureLeaseHost()?.ownsLease?.('controller', lease) !== true) {
         event.ports[0].close();
@@ -372,7 +372,7 @@ export const createServiceWorkerChannels = ({
       );
       return;
     }
-    if (event.data?.type === 'peerd/contributor-channel') {
+    if (event.data?.type === 'mcdollar/contributor-channel') {
       const port = event.ports?.[0];
       if (!loadContributorParser || !loadContributor) {
         try { port?.close(); } catch {}

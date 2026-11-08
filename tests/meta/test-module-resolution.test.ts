@@ -7,8 +7,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 describe('test module resolution', () => {
   test('imports live copied modules from their exact extension and verifier roots', async () => {
     const roots = [
-      mkdtempSync(join(tmpdir(), 'peerd-module-resolution-')),
-      mkdtempSync(join(tmpdir(), 'peerd-verify-resolution-')),
+      mkdtempSync(join(tmpdir(), 'mcdollar-module-resolution-')),
+      mkdtempSync(join(tmpdir(), 'mcdollar-verify-resolution-')),
     ];
     try {
       const files = [

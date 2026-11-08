@@ -6,7 +6,7 @@
 // (PROTOCOL §4.2). Tampering is detectable at chunk granularity. Pure
 // functions; crypto.subtle.digest is ambient (same as the vault uses
 // crypto.subtle directly). Lives in shared/ (not the dweb module)
-// because .peerd artifact exports use the same chunking and must work
+// because .mcdollar artifact exports use the same chunking and must work
 // in store packages, which prune the dweb module.
 
 import { toHex } from './bytes.js';

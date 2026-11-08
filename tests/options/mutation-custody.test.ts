@@ -3,7 +3,7 @@ import { mutationFailureCopy, unknownMutationCopy } from '../../extension/option
 
 const action = 'changing memory';
 const fallback = 'The memory change could not be completed.';
-const unlockGuidance = 'Vault is locked. Unlock it in the peerd panel, then try again.';
+const unlockGuidance = 'Vault is locked. Unlock it in the mcdollar panel, then try again.';
 const siteMessage = 'Use the current vault unlock method.';
 const cases: ReadonlyArray<{
   name: string; reply: unknown; messages?: Record<string, string>; expected: string;

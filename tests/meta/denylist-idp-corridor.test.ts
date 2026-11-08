@@ -1,11 +1,11 @@
 import { describe, test, expect } from 'bun:test';
-import { flattenCategorisedDenylist } from '../../extension/peerd-egress/denylist/denylist.js';
+import { flattenCategorisedDenylist } from '../../extension/mcdollar-egress/denylist/denylist.js';
 import {
   denylistBlockDomains,
   denylistSessionRuleUpdate,
-} from '../../extension/peerd-egress/denylist/dnr-rules.js';
-import { knownIdpDomains, knownIdpSeeds } from '../../extension/peerd-runtime/actor/idp-registry.js';
-import seed from '../../extension/peerd-egress/denylist/default.json';
+} from '../../extension/mcdollar-egress/denylist/dnr-rules.js';
+import { knownIdpDomains, knownIdpSeeds } from '../../extension/mcdollar-runtime/actor/idp-registry.js';
+import seed from '../../extension/mcdollar-egress/denylist/default.json';
 
 // The sign-in corridor, asserted ACROSS module boundaries over the REAL data.
 //

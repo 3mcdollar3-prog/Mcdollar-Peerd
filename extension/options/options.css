@@ -1,4 +1,4 @@
-/* peerd options page — full-tab settings surface.
+/* mcdollar options page — full-tab settings surface.
  *
  * styles.css (linked first) was written for the ~400px side panel and
  * carries all the component styling this page reuses (provider cards,
@@ -354,7 +354,7 @@
    grid while it is on, and a page per app and per maker. Surfaces stay
    monochrome; the only colour is each letter avatar's brand tone (set inline
    from a token). The type scale mirrors the design-system classes the frames
-   use, scoped to Discover. (The flat .peerd-disc-row list below is Contacts.) */
+   use, scoped to Discover. (The flat .mcdollar-disc-row list below is Contacts.) */
 .disc-home .type-hero { font-family: var(--font-display); font-size: clamp(32px, 4vw, 54px); line-height: 1; font-weight: 700; letter-spacing: -0.05em; }
 .disc-home .type-page-title { font-size: 18px; line-height: 1.45; font-weight: 600; }
 .disc-home .type-heading { font-size: 16px; line-height: 1.45; font-weight: 700; }
@@ -539,7 +539,7 @@ button.linklike.disc-app-maker { padding: 0; font-size: 13px; text-align: left; 
 .disc-safety-icon { flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--elev2); color: var(--text); display: flex; align-items: center; justify-content: center; }
 .disc-safety-text { padding-top: 6px; min-width: 0; overflow-wrap: anywhere; }
 .disc-chip--strong { align-self: flex-start; margin-top: 4px; padding: 3px 10px; border: 1px solid var(--border-strong); border-radius: 999px; }
-/* The app says it: what the app asks of peerd, as chips that wrap. */
+/* The app says it: what the app asks of mcdollar, as chips that wrap. */
 .disc-says h3, .disc-says p { margin: 0; }
 .disc-says-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .disc-says-chips li { padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--text); }
@@ -588,13 +588,13 @@ button.linklike.disc-app-maker { max-width: 100%; }
 button.disc-danger { background: transparent; color: var(--danger-ink); border-color: var(--danger); font-weight: 600; }
 button.disc-danger:hover { background: color-mix(in srgb, var(--danger) 10%, transparent); }
 /* Block confirm: the shared modal shell, sized like the frame. */
-.disc-block.peerd-modal { width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; box-sizing: border-box; padding: 24px; border-radius: var(--r4); display: flex; flex-direction: column; gap: 14px; }
+.disc-block.mcdollar-modal { width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; box-sizing: border-box; padding: 24px; border-radius: var(--r4); display: flex; flex-direction: column; gap: 14px; }
 .disc-block h2, .disc-block p { margin: 0; overflow-wrap: anywhere; }
-.disc-block .peerd-modal-actions { margin: 0; flex-wrap: wrap; }
+.disc-block .mcdollar-modal-actions { margin: 0; flex-wrap: wrap; }
 .disc-block .disc-btn { min-height: 44px; }
 
 /* Share dialog: the shared modal shell, sized like the frame. */
-.disc-share.peerd-modal { width: min(500px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; box-sizing: border-box; padding: 24px; border-radius: var(--r4); display: flex; flex-direction: column; gap: 14px; }
+.disc-share.mcdollar-modal { width: min(500px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; box-sizing: border-box; padding: 24px; border-radius: var(--r4); display: flex; flex-direction: column; gap: 14px; }
 .disc-share p { margin: 0; overflow-wrap: anywhere; }
 .disc-share-head { display: flex; align-items: center; gap: 12px; }
 .disc-share-head h2 { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; }
@@ -608,28 +608,28 @@ button.disc-danger:hover { background: color-mix(in srgb, var(--danger) 10%, tra
    The peers/network-info view + the animated radial peer graph. Peer dots carry
    their per-did brand color (set inline); everything else is monochrome but for
    the honest path-colored edges + the magenta (d·distributed) "You" hub. */
-.peerd-net { display: flex; flex-direction: column; gap: 14px; }
+.mcdollar-net { display: flex; flex-direction: column; gap: 14px; }
 
-.peerd-net-facts {
+.mcdollar-net-facts {
   display: flex; flex-wrap: wrap; gap: 8px 18px;
   padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius);
   background: var(--bg-elev); font-size: 12.5px;
 }
-.peerd-net-fact { display: flex; align-items: baseline; gap: 6px; }
-.peerd-net-fact-k { color: var(--fg-muted); }
-.peerd-net-fact-v { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
-.peerd-net-badge {
+.mcdollar-net-fact { display: flex; align-items: baseline; gap: 6px; }
+.mcdollar-net-fact-k { color: var(--fg-muted); }
+.mcdollar-net-fact-v { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+.mcdollar-net-badge {
   font-size: 11px; padding: 1px 7px; border-radius: 999px;
   border: 1px solid var(--border); color: var(--fg-muted);
 }
-.peerd-net-badge--up   { color: var(--ok);    border-color: var(--ok); }
-.peerd-net-badge--wait { color: var(--warn);  border-color: var(--warn); }
-.peerd-net-badge--down { color: var(--danger); border-color: var(--danger); }
+.mcdollar-net-badge--up   { color: var(--ok);    border-color: var(--ok); }
+.mcdollar-net-badge--wait { color: var(--warn);  border-color: var(--warn); }
+.mcdollar-net-badge--down { color: var(--danger); border-color: var(--danger); }
 
 /* The graph sits directly on the page background — no box. Centered: it's
    capped at max-width, so `auto` side margins keep the hub mid-column instead
    of pinned to the left. */
-.peerd-net-graph { display: block; width: 100%; max-width: 560px; height: auto; margin: 4px auto; }
+.mcdollar-net-graph { display: block; width: 100%; max-width: 560px; height: auto; margin: 4px auto; }
 
 /* The "You" hub — neutral fill, a pulsing distributed-magenta ring. */
 .pn-self { fill: var(--bg); stroke: var(--magenta); stroke-width: 2; }
@@ -657,50 +657,50 @@ button.disc-danger:hover { background: color-mix(in srgb, var(--danger) 10%, tra
 @keyframes pn-flow { to { stroke-dashoffset: -11; } }
 @keyframes pn-blink { 0%, 100% { opacity: 0.18; } 50% { opacity: 0.5; } }
 
-.peerd-net-empty {
+.mcdollar-net-empty {
   padding: 16px; text-align: center; color: var(--fg-muted); font-size: 13px;
   border: 1px dashed var(--border); border-radius: var(--radius);
 }
-.peerd-net-offline {
+.mcdollar-net-offline {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
   padding: 22px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev);
 }
-.peerd-net-offline p { margin: 0; color: var(--fg-muted); font-size: 13px; }
-.peerd-net-btn {
+.mcdollar-net-offline p { margin: 0; color: var(--fg-muted); font-size: 13px; }
+.mcdollar-net-btn {
   padding: 5px 12px; border-radius: var(--radius); border: 1px solid var(--border);
   background: transparent; color: var(--fg); font-size: 12.5px; cursor: pointer;
 }
-.peerd-net-btn:hover { background: var(--bg-elev); }
-.peerd-net-btn:disabled { opacity: 0.6; cursor: default; }
+.mcdollar-net-btn:hover { background: var(--bg-elev); }
+.mcdollar-net-btn:disabled { opacity: 0.6; cursor: default; }
 
 /* The peer roster (list mirror of the graph — also the a11y fallback). */
-.peerd-net-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.peerd-net-row {
+.mcdollar-net-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.mcdollar-net-row {
   display: grid; grid-template-columns: 14px 1fr auto auto; align-items: center; gap: 10px;
   padding: 7px 10px; border-radius: var(--radius); font-size: 13px;
 }
-.peerd-net-row:hover { background: var(--bg-elev); }
-.peerd-net-swatch { width: 10px; height: 10px; border-radius: 50%; }
-.peerd-net-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.peerd-net-did { color: var(--fg-muted); font-family: var(--font-mono); font-size: 11px; }
-.peerd-net-path { font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--fg-muted); white-space: nowrap; }
-.peerd-net-path--direct { color: var(--ok); border-color: var(--ok); }
-.peerd-net-path--stun   { color: var(--cyan); border-color: var(--cyan); }
-.peerd-net-path--relay  { color: var(--warn); border-color: var(--warn); }
-.peerd-net-path--bootstrap { color: var(--fg-muted); border-color: var(--border); }
+.mcdollar-net-row:hover { background: var(--bg-elev); }
+.mcdollar-net-swatch { width: 10px; height: 10px; border-radius: 50%; }
+.mcdollar-net-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mcdollar-net-did { color: var(--fg-muted); font-family: var(--font-mono); font-size: 11px; }
+.mcdollar-net-path { font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--fg-muted); white-space: nowrap; }
+.mcdollar-net-path--direct { color: var(--ok); border-color: var(--ok); }
+.mcdollar-net-path--stun   { color: var(--cyan); border-color: var(--cyan); }
+.mcdollar-net-path--relay  { color: var(--warn); border-color: var(--warn); }
+.mcdollar-net-path--bootstrap { color: var(--fg-muted); border-color: var(--border); }
 
 /* Discover — the dweb app store list (apps peers are sharing). Mirrors the
    roster's row rhythm: a meta column (name + publisher) + a trailing action. */
-.peerd-disc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.peerd-disc-row {
+.mcdollar-disc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.mcdollar-disc-row {
   display: flex; align-items: center; gap: 10px;
   padding: 8px 11px; border-radius: var(--radius); border: 1px solid var(--border);
 }
-.peerd-disc-row:hover { background: var(--bg-elev); }
-.peerd-disc-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.peerd-disc-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.peerd-disc-pub { color: var(--fg-muted); font-family: var(--font-mono); font-size: 11px; }
-.peerd-disc-err { color: var(--danger); font-size: 11px; }
+.mcdollar-disc-row:hover { background: var(--bg-elev); }
+.mcdollar-disc-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.mcdollar-disc-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mcdollar-disc-pub { color: var(--fg-muted); font-family: var(--font-mono); font-size: 11px; }
+.mcdollar-disc-err { color: var(--danger); font-size: 11px; }
 
 @media (prefers-reduced-motion: reduce) {
   .pn-self-ring, .pn-edge--connecting, .pn-intro-edge { animation: none; }
@@ -756,7 +756,7 @@ button.disc-danger:hover { background: color-mix(in srgb, var(--danger) 10%, tra
 }
 .set-band-sub { font-size: 10px; color: var(--fg-muted); }
 /* The safety band is the ONE raised, ruled group — a user skimming for "what can
-   peerd do to me" finds those rows without reading any copy. */
+   mcdollar do to me" finds those rows without reading any copy. */
 .set-band.is-safety .set-band-rows {
   background: var(--elev);
   border-left: 2px solid var(--text);

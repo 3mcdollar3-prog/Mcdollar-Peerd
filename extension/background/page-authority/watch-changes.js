@@ -16,7 +16,7 @@ import {
   originOfUrl,
   resolveTargetTab,
   scriptingTarget,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 
 /** @param {any} args @param {any} ctx */
 export const drainOwnedDomChangesAuthority = async (args, ctx) => {
@@ -49,8 +49,8 @@ function watchInjected() {
       || ((n.innerText || '').trim().slice(0, 40));
     return (role || t) + (label ? ' "' + label + '"' : '');
   }
-  if (window.__peerd_watch) {
-    return { started: false, changes: window.__peerd_watch.drain() };
+  if (window.__mcdollar_watch) {
+    return { started: false, changes: window.__mcdollar_watch.drain() };
   }
   var added = new Set(), removed = new Set(), attr = new Set();
   var obs = new MutationObserver(function (muts) {
@@ -68,7 +68,7 @@ function watchInjected() {
     childList: true, subtree: true, attributes: true,
     attributeFilter: ['aria-expanded', 'aria-checked', 'aria-disabled', 'disabled', 'value', 'class', 'hidden', 'aria-hidden', 'aria-selected'],
   });
-  window.__peerd_watch = {
+  window.__mcdollar_watch = {
     obs: obs,
     drain: function () {
       var r = {

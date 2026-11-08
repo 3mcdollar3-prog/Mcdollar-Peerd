@@ -224,7 +224,7 @@ describe('sidepanel.attachments', () => {
         [...root.querySelectorAll('button')].find((entry) => entry.textContent === 'Check delivery')
       );
       expect(check).toBeTruthy();
-      const persistedFence = localStorage.getItem('peerd.unconfirmed-send.new') ?? '';
+      const persistedFence = localStorage.getItem('mcdollar.unconfirmed-send.new') ?? '';
       expect(persistedFence).toContain('"hadAttachments":true');
       expect(persistedFence.includes('attachments')).toBe(false);
       expect(persistedFence.includes('data')).toBe(false);
@@ -244,8 +244,8 @@ describe('sidepanel.attachments', () => {
 
   it('a settling send cannot clear another chat delivery fence', async () => {
     for (const id of ['new', 'A', 'B']) {
-      localStorage.removeItem(`peerd.draft.${id}`);
-      localStorage.removeItem(`peerd.unconfirmed-send.${id}`);
+      localStorage.removeItem(`mcdollar.draft.${id}`);
+      localStorage.removeItem(`mcdollar.unconfirmed-send.${id}`);
     }
     let settleA = (/** @type {any} */ _reply) => {};
     const send = () => new Promise((resolve) => { settleA = resolve; });
@@ -258,9 +258,9 @@ describe('sidepanel.attachments', () => {
       textarea.dispatchEvent(new Event('input', { bubbles: true }));
       need(root, 'form.input-bar')
         .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-      await until(() => localStorage.getItem('peerd.unconfirmed-send.A'));
+      await until(() => localStorage.getItem('mcdollar.unconfirmed-send.A'));
 
-      localStorage.setItem('peerd.unconfirmed-send.B', JSON.stringify({
+      localStorage.setItem('mcdollar.unconfirmed-send.B', JSON.stringify({
         operationId: 'send.from-b', text: 'send from B', goal: false,
         sessionId: 'B', hadAttachments: false, source: 'composer',
       }));
@@ -270,16 +270,16 @@ describe('sidepanel.attachments', () => {
       expect(root.textContent).toContain('Check delivery');
 
       settleA({ ok: true });
-      await until(() => localStorage.getItem('peerd.unconfirmed-send.A') === null);
+      await until(() => localStorage.getItem('mcdollar.unconfirmed-send.A') === null);
       await flush();
-      expect(localStorage.getItem('peerd.unconfirmed-send.B')).toContain('send.from-b');
+      expect(localStorage.getItem('mcdollar.unconfirmed-send.B')).toContain('send.from-b');
       expect(root.textContent).toContain('Check delivery');
       expect(need(root, '.send-btn', HTMLButtonElement).disabled).toBe(true);
     } finally {
       unmount();
       for (const id of ['new', 'A', 'B']) {
-        localStorage.removeItem(`peerd.draft.${id}`);
-        localStorage.removeItem(`peerd.unconfirmed-send.${id}`);
+        localStorage.removeItem(`mcdollar.draft.${id}`);
+        localStorage.removeItem(`mcdollar.unconfirmed-send.${id}`);
       }
     }
   });
@@ -340,7 +340,7 @@ describe('sidepanel.attachments', () => {
   });
 
   it('reload recovery says to reattach files whose bytes were not persisted', async () => {
-    localStorage.setItem('peerd.unconfirmed-send.new', JSON.stringify({
+    localStorage.setItem('mcdollar.unconfirmed-send.new', JSON.stringify({
       operationId: 'send.reloaded', text: 'review this document', goal: false,
       sessionId: null, hadAttachments: true, source: 'composer',
     }));
@@ -355,17 +355,17 @@ describe('sidepanel.attachments', () => {
       expect(root.textContent?.includes('restored text and files')).toBe(false);
     } finally {
       unmount();
-      localStorage.removeItem('peerd.unconfirmed-send.new');
-      localStorage.removeItem('peerd.draft.new');
+      localStorage.removeItem('mcdollar.unconfirmed-send.new');
+      localStorage.removeItem('mcdollar.draft.new');
     }
   });
 
   for (const order of ['rejection-first', 'state-first']) {
     it(`keeps a first-message draft when the new session arrives ${order}`, async () => {
-      localStorage.removeItem('peerd.draft.new');
-      localStorage.removeItem('peerd.draft.created-session');
-      localStorage.removeItem('peerd.unconfirmed-send.new');
-      localStorage.removeItem('peerd.unconfirmed-send.created-session');
+      localStorage.removeItem('mcdollar.draft.new');
+      localStorage.removeItem('mcdollar.draft.created-session');
+      localStorage.removeItem('mcdollar.unconfirmed-send.new');
+      localStorage.removeItem('mcdollar.unconfirmed-send.created-session');
       let rejectSend = (/** @type {unknown} */ _reason) => {};
       const sent = [];
       const send = (/** @type {Msg} */ msg) => {
@@ -395,24 +395,24 @@ describe('sidepanel.attachments', () => {
         }
         expect(need(root, 'textarea', HTMLTextAreaElement).value)
           .toBe('first message survives');
-        expect(localStorage.getItem('peerd.draft.created-session'))
+        expect(localStorage.getItem('mcdollar.draft.created-session'))
           .toBe('first message survives');
-        expect(localStorage.getItem('peerd.unconfirmed-send.created-session'))
+        expect(localStorage.getItem('mcdollar.unconfirmed-send.created-session'))
           .toContain('first message survives');
       } finally {
         unmount();
-        localStorage.removeItem('peerd.draft.new');
-        localStorage.removeItem('peerd.draft.created-session');
-        localStorage.removeItem('peerd.unconfirmed-send.new');
-        localStorage.removeItem('peerd.unconfirmed-send.created-session');
+        localStorage.removeItem('mcdollar.draft.new');
+        localStorage.removeItem('mcdollar.draft.created-session');
+        localStorage.removeItem('mcdollar.unconfirmed-send.new');
+        localStorage.removeItem('mcdollar.unconfirmed-send.created-session');
       }
     });
   }
 
   it('staged attachments do NOT bleed into another chat on switch', async () => {
     for (const id of ['new', 'A', 'B']) {
-      localStorage.removeItem(`peerd.draft.${id}`);
-      localStorage.removeItem(`peerd.unconfirmed-send.${id}`);
+      localStorage.removeItem(`mcdollar.draft.${id}`);
+      localStorage.removeItem(`mcdollar.unconfirmed-send.${id}`);
     }
     // Cross-session leak: a file staged in chat A must not ride chat B's send.
     /** @type {Msg[]} */
@@ -447,8 +447,8 @@ describe('sidepanel.attachments', () => {
     } finally {
       unmount();
       for (const id of ['new', 'A', 'B']) {
-        localStorage.removeItem(`peerd.draft.${id}`);
-        localStorage.removeItem(`peerd.unconfirmed-send.${id}`);
+        localStorage.removeItem(`mcdollar.draft.${id}`);
+        localStorage.removeItem(`mcdollar.unconfirmed-send.${id}`);
       }
     }
   });

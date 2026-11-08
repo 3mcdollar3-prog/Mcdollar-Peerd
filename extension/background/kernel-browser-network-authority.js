@@ -8,12 +8,12 @@ import {
   DENYLIST_RESOURCE_TYPES,
   denylistSessionRuleUpdate,
   PRIVATE_NETWORK_RULE_IDS,
-} from '/peerd-egress/kernel-network.js';
+} from '/mcdollar-egress/kernel-network.js';
 import {
   browserNetworkGuardUnavailableResult,
   classifyBrowserAutomationTarget,
   knownIdpDomains,
-} from '/peerd-runtime/kernel-network.js';
+} from '/mcdollar-runtime/kernel-network.js';
 import { createBrowserNetworkCustody } from './browser-network-custody.js';
 import { createBrowserOriginCustody } from './browser-origin-custody.js';
 import { makeDenylistNetGuard } from './denylist-net-guard.js';

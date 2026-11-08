@@ -33,7 +33,7 @@ export const StateRuntimeFailure = {
   /** @param {{attrs:{retry?:()=>void,lead?:any}}} vnode */
   view: ({ attrs }) => [
     attrs.lead ?? null,
-    m('h2', 'Peerd is taking longer to start'),
+    m('h2', 'Mcdollar is taking longer to start'),
     m('p', 'No action was run. Retry the secure background connection.'),
     m('button.primary', { type: 'button', onclick: attrs.retry }, 'Retry'),
   ],
@@ -91,7 +91,7 @@ export const App = {
       actorIsolation,
       m('.body', unlocked
         ? [
-            // The one-time "Keep peerd as the first tab" offer (sidepanel.js).
+            // The one-time "Keep mcdollar as the first tab" offer (sidepanel.js).
             view === 'chat' ? firstTabPrompt : null,
             view === 'chat'   ? m(ChatView, {
               state, send, voiceManager, uiActions, surface: 'sidepanel', activeTabStatus,
@@ -107,16 +107,16 @@ export const App = {
 };
 
 /**
- * Inline brand wordmark — five colored blocks matching peerd.ai. The
+ * Inline brand wordmark — five colored blocks matching mcdollar.ai. The
  * blocks abut (no gap); outer corners are rounded via CSS. The
  * letters are lowercase mono and inherit white from `.block`. Same
  * construction as the website's hero/nav wordmark, scaled down to
  * fit the side-panel top bar (22px blocks by default).
  *
- * `aria-label="peerd"` so screen readers announce the brand without
+ * `aria-label="mcdollar"` so screen readers announce the brand without
  * spelling out the per-letter spans.
  *
- * On first mount it plays the two-phase "manifest" intro from peerd.ai:
+ * On first mount it plays the two-phase "manifest" intro from mcdollar.ai:
  * the letters type out left-to-right behind a terminal cursor, then the
  * blocks colorize. Pure CSS, runs once — the router now diffs the header in
  * place across /chat↔/chats (Root is one shared component), so this node is
@@ -144,7 +144,7 @@ const Wordmark = () => {
       // else: unchanged since last redraw — keep phase so the CSS animation
       // for it isn't interrupted by an unrelated redraw.
       prevActive = active;
-      return m(`.wordmark.wordmark--${phase}`, { 'aria-label': 'peerd', role: 'img' }, [
+      return m(`.wordmark.wordmark--${phase}`, { 'aria-label': 'mcdollar', role: 'img' }, [
         m('.block.b-p',  'p'),
         m('.block.b-e',  'e'),
         m('.block.b-e2', 'e'),
@@ -170,13 +170,13 @@ const TopBar = {
       m('.topbar-brand', [
         m(Wordmark, { optionsActive }),
         // Channel indicator (§12): the preview package wears a small badge so
-        // nobody has to guess which peerd they're in ("why doesn't peerd
+        // nobody has to guess which mcdollar they're in ("why doesn't mcdollar
         // have the dweb" — because it's the store package). CHANNEL is a
         // build-time literal; this node is dead code in store artifacts.
         CHANNEL === 'preview'
           ? m('span.channel-badge', {
               class: optionsActive ? 'is-exiting' : '',
-              title: 'peerd preview — dweb preview package',
+              title: 'mcdollar preview — dweb preview package',
             }, 'preview')
           : null,
       ]),
@@ -239,7 +239,7 @@ const TopBar = {
           title: 'Settings',
           onclick: () => openOptions(),
         }, icon('set')),
-        // Close the panel. The toolbar action OPENS peerd (the side panel by
+        // Close the panel. The toolbar action OPENS mcdollar (the side panel by
         // default, or Home via the frontDoorView setting) — only Chrome's
         // native action-click toggle ever closes it — so the panel keeps its
         // own dismiss; this reuses the SW's sidepanel/close (Chrome-only,
@@ -316,7 +316,7 @@ export const NoticeBar = {
 // non-read action), OR for a persistent code or memory write (the always-on
 // lethal-trifecta gates, which render the exact proposed contents). Three answers map to
 // the ConfirmAnswer union the dispatcher expects: yes_once / yes_session
-// / no. Reuses the .peerd-modal styling.
+// / no. Reuses the .mcdollar-modal styling.
 /** @type {Record<string, string>} */
 const ACTION_CLASS_LABEL = {
   workspace_write: 'a workspace write',
@@ -468,7 +468,7 @@ export const ConfirmModal = {
       if (!host) host = 'an unverified site';
       const isPasskey = prompt.method === 'passkey';
       const provider = prompt.provider ? String(prompt.provider) : '';
-      // An UNVERIFIED sso: peerd took origin-named consent but could NOT prove the
+      // An UNVERIFIED sso: mcdollar took origin-named consent but could NOT prove the
       // button leads to a known IdP. Soften the copy — keep the origin hero, but do
       // not vouch for the destination.
       const unverified = prompt.method === 'sso' && prompt.verified === false;
@@ -478,13 +478,13 @@ export const ConfirmModal = {
       let idpHost = '';
       try { idpHost = new URL(idpOrigin).host; } catch { /* malformed means no approvable verified destination */ }
       const missingVerifiedDestination = prompt.method === 'sso' && prompt.verified === true && !idpHost;
-      return m('.peerd-modal-backdrop', [
-        m('.peerd-modal.confirm-modal.login-modal', confirmationDialogAttrs('peerd-confirm-title', () => answer('no'), dialogState), [
-          m('h3#peerd-confirm-title', 'Approve sign-in'),
+      return m('.mcdollar-modal-backdrop', [
+        m('.mcdollar-modal.confirm-modal.login-modal', confirmationDialogAttrs('mcdollar-confirm-title', () => answer('no'), dialogState), [
+          m('h3#mcdollar-confirm-title', 'Approve sign-in'),
           m('.login-hero', [
             m('.badge', icon('lock', 18)),
             m('.ht', [
-              m('.scheme', 'peerd is signing you in to'),
+              m('.scheme', 'mcdollar is signing you in to'),
               m('.host', host),
             ]),
           ]),
@@ -493,7 +493,7 @@ export const ConfirmModal = {
             isPasskey
               ? 'Continue with a passkey'
               : unverified
-                ? `Continue with ${provider || 'your provider'} — peerd could not verify where this leads`
+                ? `Continue with ${provider || 'your provider'} — mcdollar could not verify where this leads`
                 : `Continue with ${provider || 'your provider'}`,
           ]),
           idpHost ? m('.login-destination', [
@@ -503,11 +503,11 @@ export const ConfirmModal = {
           m('.login-reassure', [
             m('.ok', icon('check', 15)),
             m('span', unverified
-              ? `peerd never sees your password and could not confirm this button’s destination — only continue if you trust ${host}. You finish signing in yourself.`
-              : `peerd never sees your password. You finish signing in yourself — with your device${provider ? ` or ${provider}` : ''}.`),
+              ? `mcdollar never sees your password and could not confirm this button’s destination — only continue if you trust ${host}. You finish signing in yourself.`
+              : `mcdollar never sees your password. You finish signing in yourself — with your device${provider ? ` or ${provider}` : ''}.`),
           ]),
           timeoutHint,
-          m('.peerd-modal-actions', [
+          m('.mcdollar-modal-actions', [
             m('button.secondary', { type: 'button', 'data-confirm-reject': '', onclick: () => answer('no') }, 'Cancel'),
             m('button', {
               type: 'button',
@@ -529,9 +529,9 @@ export const ConfirmModal = {
     // the wording; fall back to the raw sideEffect for older prompts.
     const kind = (prompt.actionClass ? ACTION_CLASS_LABEL[prompt.actionClass] : undefined)
       ?? (prompt.sideEffect === 'mutate_external' ? 'a side-effecting' : 'a page');
-    return m('.peerd-modal-backdrop', [
-      m('.peerd-modal.confirm-modal', confirmationDialogAttrs('peerd-confirm-title', () => answer('no'), dialogState), [
-        m('h3#peerd-confirm-title', isMemory ? 'Confirm memory write' : isSiteClient ? 'Confirm site client' : 'Confirm action'),
+    return m('.mcdollar-modal-backdrop', [
+      m('.mcdollar-modal.confirm-modal', confirmationDialogAttrs('mcdollar-confirm-title', () => answer('no'), dialogState), [
+        m('h3#mcdollar-confirm-title', isMemory ? 'Confirm memory write' : isSiteClient ? 'Confirm site client' : 'Confirm action'),
         isMemory
           ? [
               m('p.muted', { style: 'margin:0 0 8px;' },
@@ -643,7 +643,7 @@ export const ConfirmModal = {
               'A helper asked for this, and a helper can be steered by the content it reads - so this one can only be approved a single time.')
           : null,
         timeoutHint,
-        m('.peerd-modal-actions', [
+        m('.mcdollar-modal-actions', [
           m('button.secondary', { type: 'button', 'data-confirm-reject': '', onclick: () => answer('no') }, 'Reject'),
           // why prompt.ephemeral hides it rather than disabling it: an actor's
           // yes_session is downgraded to yes_once server-side (DESIGN-17 — an

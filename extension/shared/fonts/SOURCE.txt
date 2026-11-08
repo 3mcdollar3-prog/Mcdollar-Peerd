@@ -1,4 +1,4 @@
-peerd brand fonts — vendored to match peerd.ai (JetBrains Mono + Geist Mono).
+mcdollar brand fonts — vendored to match mcdollar.ai (JetBrains Mono + Geist Mono).
 
 These are static font assets (no runtime code). The site (site/index.html)
 loads the same families from Google Fonts; under the MV3 CSP the extension

@@ -1,36 +1,36 @@
 <p align="center">
   <br>
-  <img src="docs/store/assets/peerd-wordmark.svg" alt="peerd" width="240" height="48">
+  <img src="docs/store/assets/mcdollar-wordmark.svg" alt="mcdollar" width="240" height="48">
   <br>
   <br>
 </p>
 
-[![CI](https://github.com/NotASithLord/peerd/actions/workflows/package-and-release.yml/badge.svg)](https://github.com/NotASithLord/peerd/actions/workflows/package-and-release.yml)
-[![types: ts-check coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/peerd/main/badges/tscheck.json)](packaging/check-tscheck.ts)
-[![Functional Tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/peerd/main/badges/functional-tests.json)](tests)
-[![In-Browser Chrome](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/peerd/main/badges/inbrowser-chrome.json)](scripts/cdp/run-inbrowser-tests.mjs)
-[![In-Browser Gecko](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/peerd/main/badges/inbrowser-gecko.json)](scripts/firefox/run-runtime-tests.mjs)
-[![E2E side panel](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/peerd/main/badges/e2e-chrome.json)](scripts/cdp/run-e2e-verify.mjs)
-[![Red Team](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/peerd/main/badges/red-team.json)](docs/security/RED-TEAM-RESULTS.md)
-[![App source: no development build and unbundled](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/peerd/main/badges/no-build.json)](CONTRIBUTING.md)
-[![Vendored code](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/peerd/main/badges/vendor-integrity.json)](extension/vendor/vendor.lock.json)
-[![Actions pinned](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/peerd/main/badges/actions-pinned.json)](packaging/check-action-pins.ts)
+[![CI](https://github.com/NotASithLord/mcdollar/actions/workflows/package-and-release.yml/badge.svg)](https://github.com/NotASithLord/mcdollar/actions/workflows/package-and-release.yml)
+[![types: ts-check coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/tscheck.json)](packaging/check-tscheck.ts)
+[![Functional Tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/functional-tests.json)](tests)
+[![In-Browser Chrome](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/inbrowser-chrome.json)](scripts/cdp/run-inbrowser-tests.mjs)
+[![In-Browser Gecko](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/inbrowser-gecko.json)](scripts/firefox/run-runtime-tests.mjs)
+[![E2E side panel](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/e2e-chrome.json)](scripts/cdp/run-e2e-verify.mjs)
+[![Red Team](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/red-team.json)](docs/security/RED-TEAM-RESULTS.md)
+[![App source: no development build and unbundled](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/no-build.json)](CONTRIBUTING.md)
+[![Vendored code](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/vendor-integrity.json)](extension/vendor/vendor.lock.json)
+[![Actions pinned](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NotASithLord/mcdollar/main/badges/actions-pinned.json)](packaging/check-action-pins.ts)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Manifest%20V3-Chrome%20%26%20Firefox-informational.svg)](#install)
 [![Security policy](https://img.shields.io/badge/security-policy-blue.svg)](SECURITY.md)
 
 # The first web-native AI agent harness
 
-peerd is the first general-purpose agent runtime built directly on browser primitives: Workers, origins, sandboxing, OPFS, WASM/WASI, WebRTC, WebAuthn, and WebExtensions. It runs completely inside Chrome and Firefox, with your tabs, signed-in sessions, web apps, and local compute.
+mcdollar is the first general-purpose agent runtime built directly on browser primitives: Workers, origins, sandboxing, OPFS, WASM/WASI, WebRTC, WebAuthn, and WebExtensions. It runs completely inside Chrome and Firefox, with your tabs, signed-in sessions, web apps, and local compute.
 
-**While agent platforms are trying to pull the browser into the harness. peerd pulls the harness into the browser.**
+**While agent platforms are trying to pull the browser into the harness. mcdollar pulls the harness into the browser.**
 
 For actual inference you can choose a supported hosted model provider, a local model using localhost, or check out preliminary support for local WebGPU models (we're keeping an eye on WebNN as well).
 
-No peerd account, hosted browser, or tool-server connection is required. Current
-builds send no product telemetry to peerd.
+No mcdollar account, hosted browser, or tool-server connection is required. Current
+builds send no product telemetry to mcdollar.
 
-[Install](#install) · [peerd.ai](https://peerd.ai) ·
+[Install](#install) · [mcdollar.ai](https://mcdollar.ai) ·
 [Architecture](#architecture) · [Security](SECURITY.md)
 
 ## Features
@@ -47,7 +47,7 @@ builds send no product telemetry to peerd.
 - **Keeps useful context.** Sessions, memory, skills, goals, and browser-native
   repository history live in the extension.
 - **Uses the model you choose.** The live provider inventory is defined in
-  [`registry.js`](extension/peerd-provider/registry.js), including BYOK cloud
+  [`registry.js`](extension/mcdollar-provider/registry.js), including BYOK cloud
   adapters and keyless local options.
 - **Connects browsers directly.** Preview builds add signed identity,
   browser-to-browser discovery, dwapps, and agent-to-agent communication over
@@ -59,14 +59,14 @@ Local agents can access your whole computer. Remote agents live in someone
 else's. The browser is the alternative: local capability behind security
 boundaries hardened over three decades.
 
-peerd uses those boundaries. Page work goes to separate actors with only the
+mcdollar uses those boundaries. Page work goes to separate actors with only the
 tools for that tab or environment. Credentials, network rules, confirmations,
 and audit stay with the extension. Its defense-in-depth design assumes unsafe
 content will eventually get past a filter.
 
 ## Browser support
 
-peerd supports Chromium and Firefox. Firefox runs actors in dedicated workers
+mcdollar supports Chromium and Firefox. Firefox runs actors in dedicated workers
 and uses visible Notebooks for JavaScript compute. Features that need Chrome's
 offscreen document host are removed from Firefox controls and model tools before
 use. Firefox preview builds omit dweb until Firefox has a mesh host.
@@ -85,7 +85,7 @@ The code is the source of truth for current behavior. Start with
 
 ## Security model
 
-peerd uses browser isolation, narrow tool exposure, service-worker policy gates,
+mcdollar uses browser isolation, narrow tool exposure, service-worker policy gates,
 and explicit egress controls. The main agent delegates environment work to
 keyless actors. On Chrome and Firefox, non-orchestrator agent loops run in
 separate dedicated worker heaps. If the browser cannot prove that boundary,
@@ -120,20 +120,20 @@ bun run package -- --channel=preview --browser=firefox --no-sign
 ```
 
 Open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**,
-and select `artifacts/peerd-preview-firefox.xpi`. Temporary add-ons must be
+and select `artifacts/mcdollar-preview-firefox.xpi`. Temporary add-ons must be
 loaded again after Firefox restarts. Browser and channel transforms are defined
 by the packaging scripts.
 
 ### Release packages
 
-See [GitHub Releases](https://github.com/NotASithLord/peerd/releases) for current
+See [GitHub Releases](https://github.com/NotASithLord/mcdollar/releases) for current
 artifacts. Store and preview builds differ. Store builds omit the dweb. Preview
 builds include it and may enable additional automation features. The packaging
 code is the authority for each browser and channel.
 
 ## First run
 
-1. Open peerd from the browser toolbar.
+1. Open mcdollar from the browser toolbar.
 2. Create and unlock the local vault. Passphrase unlock is always available.
    Passkey unlock depends on WebAuthn PRF support in the browser and device.
 3. Complete the short profile onboarding.
@@ -151,11 +151,11 @@ its `index.js`.
 
 | Module | Role |
 |---|---|
-| [`peerd-provider`](extension/peerd-provider/) | Model adapters and response formatting |
-| [`peerd-egress`](extension/peerd-egress/) | Vault, network policy, denylist, and audit |
-| [`peerd-engine`](extension/peerd-engine/) | WebVM, Notebook, App, and headless execution |
-| [`peerd-runtime`](extension/peerd-runtime/) | Agent loop, actors, tools, sessions, memory, and permissions |
-| [`peerd-distributed`](extension/peerd-distributed/) | Preview-only peer-to-peer network and dwapps |
+| [`mcdollar-provider`](extension/mcdollar-provider/) | Model adapters and response formatting |
+| [`mcdollar-egress`](extension/mcdollar-egress/) | Vault, network policy, denylist, and audit |
+| [`mcdollar-engine`](extension/mcdollar-engine/) | WebVM, Notebook, App, and headless execution |
+| [`mcdollar-runtime`](extension/mcdollar-runtime/) | Agent loop, actors, tools, sessions, memory, and permissions |
+| [`mcdollar-distributed`](extension/mcdollar-distributed/) | Preview-only peer-to-peer network and dwapps |
 
 The extension chassis lives in `background/`, `offscreen/`, `sidepanel/`,
 `engine-tabs/`, `permissions/`, `shared/`, and related support directories.
@@ -250,6 +250,6 @@ dependencies also sit out a quarantine window before they can enter the lock,
 set by `minimumReleaseAge` in [`bunfig.toml`](bunfig.toml), alongside a
 malware scan on install.
 
-peerd is licensed under the [Apache License 2.0](LICENSE). Vendored components
+mcdollar is licensed under the [Apache License 2.0](LICENSE). Vendored components
 retain their own licenses. CheerpX is a proprietary runtime provided by Leaning
-Technologies and is not covered by peerd's Apache license.
+Technologies and is not covered by mcdollar's Apache license.

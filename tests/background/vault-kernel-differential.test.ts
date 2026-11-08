@@ -11,8 +11,8 @@ import {
 } from '../../extension/background/vault-kernel-core.js';
 import { normalizeSettingsPatch } from '../../extension/background/settings-patch.js';
 import { normalizeVaultAutoLockPatch } from '../../extension/background/settings-patch.js';
-import { purgeVaultBlob } from '../../extension/peerd-egress/vault/purge.js';
-import { createVault } from '../../extension/peerd-egress/vault/vault.js';
+import { purgeVaultBlob } from '../../extension/mcdollar-egress/vault/purge.js';
+import { createVault } from '../../extension/mcdollar-egress/vault/vault.js';
 import {
   PrfNotEnrolledError,
   PrfUnlockFailedError,
@@ -21,7 +21,7 @@ import {
   VaultLockedError,
   VaultNotInitializedError,
   WrongPassphraseError,
-} from '../../extension/peerd-egress/vault/errors.js';
+} from '../../extension/mcdollar-egress/vault/errors.js';
 import { base64ToBytes } from '../../extension/shared/util.js';
 
 const PRF = new Uint8Array(32).fill(0x51);
@@ -195,7 +195,7 @@ describe('vault authority kernel boot and UI contract', () => {
       { firstParty: true, surface: 'sidepanel' },
     )).toEqual({
       ok: false,
-      error: 'Peerd could not confirm whether the requested change finished. Refresh to reconcile before trying again.',
+      error: 'Mcdollar could not confirm whether the requested change finished. Refresh to reconcile before trying again.',
       code: 'vault-authority-timeout',
       outcomeKnown: false,
       outcomeKind: 'unknown',
@@ -227,7 +227,7 @@ describe('vault authority kernel boot and UI contract', () => {
     retired = true;
     expect(await invoke()).toEqual({
       ok: false,
-      error: 'Peerd could not confirm whether the requested change finished. Refresh to reconcile before trying again.',
+      error: 'Mcdollar could not confirm whether the requested change finished. Refresh to reconcile before trying again.',
       code: 'kernel-generation-retired',
       outcomeKnown: false,
       outcomeKind: 'transport-lost',

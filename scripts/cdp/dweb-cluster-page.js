@@ -1,9 +1,9 @@
 // Browser-only fixture; served by dweb-cluster-node.mjs, never packaged.
-import { generateIdentity, joinRoom, sha256hex, unpackTransportBundle } from '/peerd-distributed/index.js';
-import { createBaseNetwork } from '/peerd-distributed/base-network.js';
-import { makeDhtDialer } from '/peerd-distributed/transport/dht-dialer.js';
-import { makeMeshDispatch } from '/peerd-runtime/actor/a2a-dispatch.js';
-import { createConversationRegistry } from '/peerd-runtime/actor/conversation-registry.js';
+import { generateIdentity, joinRoom, sha256hex, unpackTransportBundle } from '/mcdollar-distributed/index.js';
+import { createBaseNetwork } from '/mcdollar-distributed/base-network.js';
+import { makeDhtDialer } from '/mcdollar-distributed/transport/dht-dialer.js';
+import { makeMeshDispatch } from '/mcdollar-runtime/actor/a2a-dispatch.js';
+import { createConversationRegistry } from '/mcdollar-runtime/actor/conversation-registry.js';
 
 import { createEventLoopObservation } from '/__event-loop.js';
 

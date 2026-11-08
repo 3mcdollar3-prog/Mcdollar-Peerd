@@ -43,7 +43,7 @@ export const escapeAttr = (s) => String(s)
 
 /**
  * Display-only removal of the untrusted-content fence WRAPPER tags, keeping the
- * inner body. The mirror of wrapUntrusted (peerd-runtime/tools/prompt-wrap.js):
+ * inner body. The mirror of wrapUntrusted (mcdollar-runtime/tools/prompt-wrap.js):
  * the MODEL receives the fenced text (its "treat as data" boundary), but the
  * human should never see the literal <untrusted_*> delimiters in a rendered
  * tool-result card. PURE + render-only — returns a new string, never mutates
@@ -139,7 +139,7 @@ export const sha256Hex = async (text) => {
  * why it lives in shared/ rather than beside its first caller: three unrelated
  * surfaces now need it (provider retry backoff, the adapters' rate-limit
  * backoff, and per-origin action pacing), and `no-restricted-imports` forbids
- * deep-importing peerd-provider/connect-timeout.js from outside that module.
+ * deep-importing mcdollar-provider/connect-timeout.js from outside that module.
  * One implementation, importable from every context.
  *
  * @param {number} ms

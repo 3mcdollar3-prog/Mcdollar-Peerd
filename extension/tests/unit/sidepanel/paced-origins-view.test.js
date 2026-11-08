@@ -1,7 +1,7 @@
 // @ts-check
 // Settings → Paced sites: the only surface that can forget a pacing rule (#234).
 //
-// Why these claims and not the rendering: forgetting a rule makes peerd act
+// Why these claims and not the rendering: forgetting a rule makes mcdollar act
 // FASTER on a site that already asked it to slow down, so this page is the one
 // place that direction is reachable at all. What has to hold is (1) nothing
 // destructive happens on a single click - both Forget and Forget all arm a
@@ -76,7 +76,7 @@ describe('sidepanel.paced-origins view', () => {
     } finally { unmount(); }
   });
 
-  it('shows a pause that is still running, which is why peerd is refusing right now', async () => {
+  it('shows a pause that is still running, which is why mcdollar is refusing right now', async () => {
     const live = [{ ...ROWS[0], notBeforeMs: Date.now() + 40_000 }];
     const { root, unmount } = mount(() => ({ ok: true, origins: live, state: { ready: true, ok: true } }));
     try {
@@ -93,7 +93,7 @@ describe('sidepanel.paced-origins view', () => {
     } finally { unmount(); }
   });
 
-  it('says peerd does not work around limits, so the page cannot be read as an evasion switch', async () => {
+  it('says mcdollar does not work around limits, so the page cannot be read as an evasion switch', async () => {
     const { root, unmount } = mount();
     try {
       await settle();
@@ -103,11 +103,11 @@ describe('sidepanel.paced-origins view', () => {
     } finally { unmount(); }
   });
 
-  it('says so plainly when no site has asked peerd to slow down', async () => {
+  it('says so plainly when no site has asked mcdollar to slow down', async () => {
     const { root, unmount } = mount(() => ({ ok: true, origins: [], state: { ready: true, ok: true } }));
     try {
       await settle();
-      expect((root.textContent ?? '').includes('No site has asked peerd to slow down')).toBe(true);
+      expect((root.textContent ?? '').includes('No site has asked mcdollar to slow down')).toBe(true);
     } finally { unmount(); }
   });
 
@@ -211,7 +211,7 @@ describe('sidepanel.paced-origins view', () => {
       await settle();
       const text = root.textContent ?? '';
       expect(text.includes('could not read its pacing record')).toBe(true);
-      expect(text.includes('No site has asked peerd to slow down')).toBe(false);
+      expect(text.includes('No site has asked mcdollar to slow down')).toBe(false);
       expect(buttons(root, 'Start a fresh record').length).toBe(1);
     } finally { unmount(); }
   });

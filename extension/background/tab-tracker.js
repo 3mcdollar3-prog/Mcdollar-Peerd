@@ -2,7 +2,7 @@
 // Track each tab-hosted engine instance across service-worker restarts.
 
 import browser from '/shared/browser-api.js';
-import { VM_TAB_PATH, VMTabClosedError, NOTEBOOK_TAB_PATH, POD_TAB_PATH } from '/peerd-engine/background.js';
+import { VM_TAB_PATH, VMTabClosedError, NOTEBOOK_TAB_PATH, POD_TAB_PATH } from '/mcdollar-engine/background.js';
 
 /** @typedef {Object} TabTrackerConfig
  * @property {string} tabPath
@@ -280,7 +280,7 @@ const timeout = (ms, msg) => new Promise((_, reject) => {
 });
 
 /**
- * Group all peerd instance tabs under one collapsible tab group.
+ * Group all mcdollar instance tabs under one collapsible tab group.
  * chrome.tabGroups is best-effort; failure is non-fatal.
  * @param {number} tabId @param {string} title
  * @param {import('webextension-polyfill').TabGroups.Color} color

@@ -1,18 +1,18 @@
 {
-  "name": "peerd",
+  "name": "mcdollar",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.0",
   "version": "0.10.0",
   "description": "Browser-native AI agent harness. Source runs directly with no development build step; Bun is used for tests and release tooling.",
   "license": "Apache-2.0",
-  "homepage": "https://peerd.ai",
+  "homepage": "https://mcdollar.ai",
   "repository": {
     "type": "git",
-    "url": "https://github.com/NotASithLord/peerd"
+    "url": "https://github.com/NotASithLord/mcdollar"
   },
   "bugs": {
-    "url": "https://github.com/NotASithLord/peerd/issues"
+    "url": "https://github.com/NotASithLord/mcdollar/issues"
   },
   "scripts": {
     "test": "bun test ./tests --timeout 15000",
@@ -20,7 +20,7 @@
     "test:watch": "bun test ./tests --watch",
     "red-team": "bun test ./tests/red-team",
     "red-team:report": "bun tests/red-team/report.ts",
-    "test:netproc": "bun tests/peerd-distributed/netproc/run-cluster.ts",
+    "test:netproc": "bun tests/mcdollar-distributed/netproc/run-cluster.ts",
     "test:twopeer": "bun scripts/cdp/run-dweb-twopeer.mjs",
     "test:cluster": "bun scripts/cdp/run-dweb-cluster.mjs",
     "test:twopeer:a2a": "A2A=1 bun scripts/cdp/run-dweb-twopeer.mjs",
@@ -38,7 +38,7 @@
     "test:e2e:controller-faults": "bun scripts/cdp/controller-recycle-fault.mjs",
     "test:e2e:read-doc": "bun scripts/cdp/read-doc-store-lane.mjs",
     "test:e2e:site-client-store": "bun packaging/package.ts --channel=store --browser=chrome && bun run test:e2e:site-client-store:staged",
-    "test:e2e:site-client-store:staged": "PEERD_REQUIRE_SITE_CAPTURE_TAP=1 bun scripts/cdp/run-e2e-verify.mjs --only=site-client-vertical --extension=artifacts/staging/store-chrome --artifacts=scripts/cdp/artifacts/site-client-store",
+    "test:e2e:site-client-store:staged": "MCDOLLAR_REQUIRE_SITE_CAPTURE_TAP=1 bun scripts/cdp/run-e2e-verify.mjs --only=site-client-vertical --extension=artifacts/staging/store-chrome --artifacts=scripts/cdp/artifacts/site-client-store",
     "test:e2e:dweb-lifecycle": "bun scripts/cdp/feature-lease-dweb-lifecycle.mjs",
     "bench:vault-kernel": "bun scripts/cdp/bench-vault-kernel-passkey.mjs",
     "test:firefox": "bun scripts/firefox/run-runtime-tests.mjs",

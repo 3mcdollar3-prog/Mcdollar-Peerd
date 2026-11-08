@@ -104,7 +104,7 @@ describe('kernel recovery custody', () => {
       },
     });
     await expect(custody.resume()).rejects.toThrow('vault locked');
-    expect(alarms).toEqual([['peerd-schedule', { when: 31_000 }]]);
+    expect(alarms).toEqual([['mcdollar-schedule', { when: 31_000 }]]);
     await expect(custody.resume()).resolves.toEqual({ loaded: true });
   });
 
@@ -141,6 +141,6 @@ describe('kernel recovery custody', () => {
     await expect(custody.resume()).resolves.toEqual({ loaded: true });
     shouldFail = true;
     await expect(custody.resume()).rejects.toThrow('runtime unavailable');
-    expect(alarms.at(-1)).toEqual(['peerd-schedule', { when: 31_000 }]);
+    expect(alarms.at(-1)).toEqual(['mcdollar-schedule', { when: 31_000 }]);
   });
 });

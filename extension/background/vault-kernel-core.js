@@ -30,7 +30,7 @@ const MEMORY_STORE = 'agents_memory';
 const MAX_DOC_CHARS = 24_000;
 const normalizePeerName = (/** @type {unknown} */ value) => {
   const clean = typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, 32).trim() : '';
-  return clean || 'peerd';
+  return clean || 'mcdollar';
 };
 const normalizeFacts = (/** @type {unknown} */ value) => {
   if (value == null) return { ok: true, callMe: '', notes: '' };
@@ -75,7 +75,7 @@ export const createKernelProfileAuthority = ({ idb, sessions, now = Date.now }) 
           result = { error: 'profile-record-invalid' }; return;
         }
         result = stored ?? {
-          id: PROFILE_ID, peerName: 'peerd', createdAt: now(), onboardingComplete: false,
+          id: PROFILE_ID, peerName: 'mcdollar', createdAt: now(), onboardingComplete: false,
         };
         if (!stored) handles[PROFILE_STORE].put(result);
       };
@@ -407,7 +407,7 @@ export const makeIndexedVaultRoutes = ({ routes, posture, vault, pushState }) =>
 export const resolveVaultAutoLockMs = (value, fallback) =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
 
-const KERNEL_OUTCOME_UNKNOWN_MESSAGE = 'Peerd could not confirm whether the requested change '
+const KERNEL_OUTCOME_UNKNOWN_MESSAGE = 'Mcdollar could not confirm whether the requested change '
   + 'finished. Refresh to reconcile before trying again.';
 
 const unknownOutcome = (outcomeKind = 'unknown') => ({

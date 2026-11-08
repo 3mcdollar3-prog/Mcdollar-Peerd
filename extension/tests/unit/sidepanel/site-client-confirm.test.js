@@ -42,7 +42,7 @@ describe('sidepanel site-client confirmation', () => {
       expect(root.textContent.includes('a signed-in browser session was observed')).toBe(true);
       expect(root.textContent.includes('learned from observed site requests')).toBe(true);
       expect(root.textContent.includes('capture-cdp')).toBe(false);
-      expect([...root.querySelectorAll('.peerd-modal-actions button')].map((button) => button.textContent))
+      expect([...root.querySelectorAll('.mcdollar-modal-actions button')].map((button) => button.textContent))
         .toEqual(['Reject', 'Save client']);
     } finally { unmount(); }
   });
@@ -56,7 +56,7 @@ describe('sidepanel site-client confirmation', () => {
     try {
       expect(root.querySelector('[aria-label="Site-client deletion"]')?.textContent.includes('deletes')).toBe(true);
       expect(root.querySelector('[aria-label="Proposed site-client code"]')).toBe(null);
-      expect([...root.querySelectorAll('.peerd-modal-actions button')].map((button) => button.textContent))
+      expect([...root.querySelectorAll('.mcdollar-modal-actions button')].map((button) => button.textContent))
         .toEqual(['Reject', 'Delete client']);
     } finally { unmount(); }
   });
@@ -79,7 +79,7 @@ describe('sidepanel site-client confirmation', () => {
       expect(root.querySelector('script')).toBe(null);
       expect(root.textContent.includes('not every future result')).toBe(true);
       expect(root.querySelector('[aria-label="Proposed site-client code"]')?.textContent).toBe(proposal.body);
-      const save = /** @type {HTMLElement} */ (root.querySelector('.peerd-modal-actions button:last-child'));
+      const save = /** @type {HTMLElement} */ (root.querySelector('.mcdollar-modal-actions button:last-child'));
       save.focus();
       save.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
       expect(document.activeElement).toBe(root.querySelector('summary'));
@@ -119,7 +119,7 @@ describe('sidepanel site-client confirmation', () => {
     });
     try {
       const modal = /** @type {HTMLElement} */ (root.querySelector('.confirm-modal'));
-      const actions = /** @type {HTMLElement} */ (root.querySelector('.peerd-modal-actions'));
+      const actions = /** @type {HTMLElement} */ (root.querySelector('.mcdollar-modal-actions'));
       expect(modal.textContent.includes(endpoints[59]?.path ?? '')).toBe(true);
       expect([...actions.querySelectorAll('button')].map((button) => button.textContent))
         .toEqual(['Reject', 'Save client']);
@@ -142,7 +142,7 @@ describe('sidepanel site-client confirmation', () => {
       const dialog = /** @type {HTMLElement} */ (root.querySelector('[role="dialog"]'));
       const buttons = /** @type {HTMLElement[]} */ ([...dialog.querySelectorAll('button')]);
       expect(dialog.getAttribute('aria-modal')).toBe('true');
-      expect(dialog.getAttribute('aria-labelledby')).toBe('peerd-confirm-title');
+      expect(dialog.getAttribute('aria-labelledby')).toBe('mcdollar-confirm-title');
       expect(document.activeElement).toBe(buttons[0]);
       buttons[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }));
       expect(document.activeElement).toBe(buttons.at(-1));

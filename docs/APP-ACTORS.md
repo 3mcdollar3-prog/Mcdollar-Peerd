@@ -10,11 +10,11 @@ directly to that tab's bound App actor and continues the same durable actor
 conversation; it does not proxy through the orchestrator. The side panel remains
 the broader orchestrator workspace for cross-App or browser-wide work.
 
-An App can make this feel native by putting an **Ask peerd** or **Work with
-peerd** button in its own UI:
+An App can make this feel native by putting an **Ask mcdollar** or **Work with
+mcdollar** button in its own UI:
 
 ```js
-askPeerdButton.addEventListener('click', () => window.peerd.agent.open());
+askMcdollarButton.addEventListener('click', () => window.mcdollar.agent.open());
 ```
 
 `open()` works only during a real user activation and can only reveal the
@@ -52,7 +52,7 @@ instructions.
 
 When asked to build an App, the orchestrator creates a minimal App shell, opens
 it in the background, and delegates the build goal to that App's actor. The
-default `peerd.json` creates a code-surface developer actor but grants no live
+default `mcdollar.json` creates a code-surface developer actor but grants no live
 runtime operations. This is enough for ordinary Apps whose actor only edits and
 versions files.
 
@@ -76,10 +76,10 @@ If the App benefits from live collaboration, its actor adds a semantic adapter:
 ```
 
 Both runtime methods must be declared together. Their implementation lives in
-the App, not in peerd:
+the App, not in mcdollar:
 
 ```js
-window.peerd?.agent?.expose({
+window.mcdollar?.agent?.expose({
   observe: () => ({
     kind: 'document',
     version: documentVersion,
@@ -111,10 +111,10 @@ window.peerd?.agent?.expose({
 Offline Apps can persist bounded JSON without receiving an OPFS handle:
 
 ```js
-const documentState = await window.peerd.data.get('document') ?? { text: '' };
-await window.peerd.data.set('document', { text: editor.value, version: 2 });
-const savedKeys = await window.peerd.data.list();
-await window.peerd.data.delete('old-draft');
+const documentState = await window.mcdollar.data.get('document') ?? { text: '' };
+await window.mcdollar.data.set('document', { text: editor.value, version: 2 });
+const savedKeys = await window.mcdollar.data.list();
+await window.mcdollar.data.delete('old-draft');
 ```
 
 Keys are short safe names and map only to `data/<key>.json` in this App's
@@ -149,13 +149,13 @@ remote after host confirmation. A person can do the same from Library under
 **History & Git**. Library also exposes **Import Git**; the orchestrator uses the
 same primitive with `sandbox_create({ kind: "app", gitUrl, gitRef })`.
 
-A conforming Git repository places `peerd.json` and its entry file at the root.
+A conforming Git repository places `mcdollar.json` and its entry file at the root.
 Cloning preserves its branch, commit graph, remote, text files, and binary bytes;
 opening it attaches the same root-pinned bound actor described above. A dwapp
 manifest retains its `dweb` capability when imported in a dweb-enabled build.
 
 Git versions bytes in the working tree, not arbitrary in-memory UI state. Apps
-can keep user documents or other durable content in the `peerd.data` files
+can keep user documents or other durable content in the `mcdollar.data` files
 above, separated from JavaScript and assets, and checkpoint it at a meaningful
 user- or actor-requested boundary. Rendering or changing volatile state alone
 is never described as a save. Fetch never merges into the active branch, push
@@ -187,12 +187,12 @@ sandbox.
   unrestricted command dispatcher.
 - Validate action names and parameters inside the App.
 - Return bounded JSON snapshots and mutation receipts or state versions.
-- Use `peerd.agent.open()` only to reveal the host UI; never emulate a prompt
+- Use `mcdollar.agent.open()` only to reveal the host UI; never emulate a prompt
   transport or place a provider client in the App.
 - Do not expose secrets, provider calls, network access, or actor tools.
 - App publisher instructions are subordinate, provenance-labelled role context;
   they are not user-authored system instructions.
-- Changing `peerd.json` retires the stale actor generation and attaches a new
+- Changing `mcdollar.json` retires the stale actor generation and attaches a new
   digest- and authority-exact actor before the App resumes.
 
 For a distributed App, use `kind: "dwapp"`, include the `dweb` capability, and
@@ -202,7 +202,7 @@ working-tree behavior are documented in [DWAPP-BUNDLE.md](DWAPP-BUNDLE.md).
 The `dweb` capability belongs to the App's narrow parent bridge; it does not
 silently add raw mesh tools to the App actor. A game actor, for example, sees
 and changes lobby state through its declared `observe`/`act` vocabulary while
-the dwapp code implements the authenticated room protocol. Peerd's separate
+the dwapp code implements the authenticated room protocol. Mcdollar's separate
 `dweb` actor is the browser-wide mesh operator for discovery, install, share,
 moderation, and peer conversations. It uses the same common actor kernel and
 message contract with its own host-reviewed network profile. Authority never

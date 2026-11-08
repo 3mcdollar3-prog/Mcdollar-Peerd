@@ -4,10 +4,10 @@
 // why: the controller decides what a sandbox/script means; this adapter alone
 // may create engine records, open engine tabs, mount session storage, mint run
 // grants, or place spill bytes in the session-owned result store.
-import { normalizeGitRemote } from '/peerd-engine/authority.js';
+import { normalizeGitRemote } from '/mcdollar-engine/authority.js';
 import { sameCanonicalStructuredClone } from '/shared/canonical-clone-digest.js';
 
-const ENGINE_TAB_GROUP_TITLE = 'peerd';
+const ENGINE_TAB_GROUP_TITLE = 'mcdollar';
 const EXECUTION_AUTHORITY_ARGUMENT_BYTES = 8 * 1024 * 1024;
 
 const mismatch = () => Object.assign(new Error('execution authority mismatch'), {
@@ -226,7 +226,7 @@ export const createExecutionToolAuthority = ({ binding, ctx, signal, shared = {}
           const answer = await ctx.confirm({
             tool: binding.operation, kind: 'git_clone', sideEffect: 'write',
             origins: [new URL(remote.url).origin],
-            summary: `Clone ${remote.url} and instantiate its peerd.json as a browser App?`,
+            summary: `Clone ${remote.url} and instantiate its mcdollar.json as a browser App?`,
           }, abortSignal);
           if (answer !== true && answer !== 'yes_once' && answer !== 'yes_session') {
             return { ok: false, error: 'git_clone_declined' };
@@ -291,7 +291,7 @@ export const createExecutionToolAuthority = ({ binding, ctx, signal, shared = {}
         && ctx.operationGrant.has('turn.actor.message')
         && sessionKind !== 'actor' && ctx?.inbound !== true;
       const wantsActors = /\bactors\b/.test(code);
-      const wantsProvider = /\bpeerd\s*\.\s*provider\b/.test(code);
+      const wantsProvider = /\bmcdollar\s*\.\s*provider\b/.test(code);
       const wantsWorkspace = args.workspace === true;
       const actors = actorsAllowed && wantsActors;
       const provider = sessionKind !== 'spawned' && sessionKind !== 'actor'

@@ -1,6 +1,6 @@
 // @ts-check
 
-import { buildTemporalBlock, renderSystemPromptFromAssets } from '/peerd-runtime/controller.js';
+import { buildTemporalBlock, renderSystemPromptFromAssets } from '/mcdollar-runtime/controller.js';
 import { makeBoundedModuleLoader } from '/shared/bounded-module-load.js';
 import { RUNTIME_DISPATCH_CAPABILITY } from '/shared/kernel-runtime-policy.js';
 import {

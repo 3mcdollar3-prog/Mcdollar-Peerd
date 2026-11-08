@@ -90,29 +90,29 @@ describe('cold entry graphs', () => {
     const modules = [...measured.modulesSet];
     const forbidden = modules.filter((module) =>
       [
-        'peerd-runtime/index.js',
-        'peerd-provider/index.js',
-        'peerd-egress/index.js',
-        'peerd-engine/index.js',
-        'peerd-runtime/loop/agent-loop.js',
-        'peerd-runtime/tools/metadata/catalog.js',
-        'peerd-egress/vault/vault.js',
-        'peerd-egress/vault/argon2.js',
-        'peerd-engine/editor.js',
-        'peerd-engine/repository/repository-service.js',
-        'peerd-runtime/transfer/transfer.js',
-        'peerd-runtime/observability/contributor-metrics.js',
-        'peerd-runtime/observability/contributor-store.js',
-        'peerd-engine/export.js',
+        'mcdollar-runtime/index.js',
+        'mcdollar-provider/index.js',
+        'mcdollar-egress/index.js',
+        'mcdollar-engine/index.js',
+        'mcdollar-runtime/loop/agent-loop.js',
+        'mcdollar-runtime/tools/metadata/catalog.js',
+        'mcdollar-egress/vault/vault.js',
+        'mcdollar-egress/vault/argon2.js',
+        'mcdollar-engine/editor.js',
+        'mcdollar-engine/repository/repository-service.js',
+        'mcdollar-runtime/transfer/transfer.js',
+        'mcdollar-runtime/observability/contributor-metrics.js',
+        'mcdollar-runtime/observability/contributor-store.js',
+        'mcdollar-engine/export.js',
         'shared/backup-passphrase.js',
         'shared/argon2id.js',
         'vendor/codemirror/cm.js',
         'vendor/acorn/acorn.mjs',
       ].includes(module)
-      || module.startsWith('peerd-runtime/controller')
-      || module.startsWith('peerd-provider/adapters/')
-      || module.startsWith('peerd-egress/storage/')
-      || module.startsWith('peerd-egress/fetch/')
+      || module.startsWith('mcdollar-runtime/controller')
+      || module.startsWith('mcdollar-provider/adapters/')
+      || module.startsWith('mcdollar-egress/storage/')
+      || module.startsWith('mcdollar-egress/fetch/')
       || module.startsWith('shared/bundle/')
       || module.startsWith('vendor/argon2/'));
     expect(forbidden, 'Options acquired execution or authority modules').toEqual([]);
@@ -125,8 +125,8 @@ describe('cold entry graphs', () => {
       expect(measured.modules, `${name} rich modules`).toBeLessThanOrEqual(ceiling.modules);
       expect(measured.graphBytes, `${name} rich graph bytes`)
         .toBeLessThanOrEqual(ceiling.graphBytes);
-      expect(measured.modulesSet.has('peerd-provider/options.js')).toBe(false);
-      expect(measured.modulesSet.has('peerd-runtime/options.js')).toBe(false);
+      expect(measured.modulesSet.has('mcdollar-provider/options.js')).toBe(false);
+      expect(measured.modulesSet.has('mcdollar-runtime/options.js')).toBe(false);
     }
   });
 
@@ -185,15 +185,15 @@ describe('cold entry graphs', () => {
       'offscreen/semantic-route-host.js',
       'offscreen/artifact-host.js',
       'offscreen/artifact-worker.js',
-      'peerd-engine/repository/repository-service.js',
+      'mcdollar-engine/repository/repository-service.js',
       'vendor/isomorphic-git/index.js',
       'background/direct-actor-host.js',
       'offscreen/actor-runner.js',
-      'peerd-runtime/controller-tool-projection.js',
-      'peerd-runtime/controller-actor-tools.js',
-      'peerd-runtime/controller-schedule-tools.js',
-      'peerd-runtime/runtime-capabilities.js',
-      'peerd-provider/adapters/anthropic.js',
+      'mcdollar-runtime/controller-tool-projection.js',
+      'mcdollar-runtime/controller-actor-tools.js',
+      'mcdollar-runtime/controller-schedule-tools.js',
+      'mcdollar-runtime/runtime-capabilities.js',
+      'mcdollar-provider/adapters/anthropic.js',
     ]) {
       expect(measured.modulesSet.has(forbidden), `native kernel imports ${forbidden}`).toBe(false);
     }
@@ -210,22 +210,22 @@ describe('cold entry graphs', () => {
     // while their controller-owned tool semantics stay outside this graph.
     expect(measured.modulesSet.has('background/routes/contacts.js')).toBe(true);
     expect(measured.modulesSet.has('shared/semantic-demand-policy.js')).toBe(true);
-    expect(measured.modulesSet.has('peerd-engine/app-manifest.js')).toBe(true);
-    expect(measured.modulesSet.has('peerd-runtime/semantic.js')).toBe(false);
-    expect(measured.modulesSet.has('peerd-runtime/contacts/aggregate.js')).toBe(true);
+    expect(measured.modulesSet.has('mcdollar-engine/app-manifest.js')).toBe(true);
+    expect(measured.modulesSet.has('mcdollar-runtime/semantic.js')).toBe(false);
+    expect(measured.modulesSet.has('mcdollar-runtime/contacts/aggregate.js')).toBe(true);
   });
 
   test('Chrome custody proxies do not import the resident vault implementation', async () => {
     for (const entry of [nativeKernelEntry, previewKernelEntry]) {
       const measured = await nativeKernelStats(entry);
       expect(measured.modulesSet.has('background/vault-authority-client.js')).toBe(true);
-      expect(measured.modulesSet.has('peerd-egress/kernel-storage.js')).toBe(true);
+      expect(measured.modulesSet.has('mcdollar-egress/kernel-storage.js')).toBe(true);
       for (const file of [
-        'peerd-egress/vault/vault.js',
-        'peerd-egress/vault/keys.js',
-        'peerd-egress/vault/blob-migration.js',
-        'peerd-egress/vault/enroll-options.js',
-        'peerd-egress/vault/kdf.js',
+        'mcdollar-egress/vault/vault.js',
+        'mcdollar-egress/vault/keys.js',
+        'mcdollar-egress/vault/blob-migration.js',
+        'mcdollar-egress/vault/enroll-options.js',
+        'mcdollar-egress/vault/kdf.js',
       ]) {
         expect(measured.modulesSet.has(file), `${entry} imports resident vault owner ${file}`)
           .toBe(false);
@@ -236,23 +236,23 @@ describe('cold entry graphs', () => {
     const worker = await collectStaticModuleGraph(
       EXTENSION_DIR, join(EXTENSION_DIR, 'offscreen/vault-authority-runtime.js'),
     );
-    expect(worker.has(join(EXTENSION_DIR, 'peerd-egress/vault/vault.js'))).toBe(true);
+    expect(worker.has(join(EXTENSION_DIR, 'mcdollar-egress/vault/vault.js'))).toBe(true);
   });
 
   test('Chrome spill storage does not import semantic text formatting', async () => {
     for (const entry of [nativeKernelEntry, previewKernelEntry]) {
       const measured = await nativeKernelStats(entry);
-      expect(measured.modulesSet.has('peerd-runtime/tools/result-store.js')).toBe(true);
-      expect(measured.modulesSet.has('peerd-runtime/tools/result-store-policy.js')).toBe(true);
-      expect(measured.modulesSet.has('peerd-runtime/tools/web/spill.js')).toBe(false);
+      expect(measured.modulesSet.has('mcdollar-runtime/tools/result-store.js')).toBe(true);
+      expect(measured.modulesSet.has('mcdollar-runtime/tools/result-store-policy.js')).toBe(true);
+      expect(measured.modulesSet.has('mcdollar-runtime/tools/web/spill.js')).toBe(false);
     }
     // why: storage shares limits with actor tools, not their BM25 and paging
     // presentation; the semantic read tool must retain its implementation.
     const semantic = await collectStaticModuleGraph(
-      EXTENSION_DIR, join(EXTENSION_DIR, 'peerd-runtime/tools/defs/read-page.js'),
+      EXTENSION_DIR, join(EXTENSION_DIR, 'mcdollar-runtime/tools/defs/read-page.js'),
     );
-    expect(semantic.has(join(EXTENSION_DIR, 'peerd-runtime/tools/web/spill.js'))).toBe(true);
-    expect(semantic.has(join(EXTENSION_DIR, 'peerd-runtime/tools/result-store-policy.js'))).toBe(true);
+    expect(semantic.has(join(EXTENSION_DIR, 'mcdollar-runtime/tools/web/spill.js'))).toBe(true);
+    expect(semantic.has(join(EXTENSION_DIR, 'mcdollar-runtime/tools/result-store-policy.js'))).toBe(true);
   });
 
   test('demand runtimes do not inherit the composer policy family', async () => {
@@ -277,7 +277,7 @@ describe('cold entry graphs', () => {
   test('the full Preview worker never hosts the distributed implementation', async () => {
     const measured = await nativeKernelStats(previewKernelEntry);
     expect(measured.modulesSet.has('shared/dweb-loader.js')).toBe(false);
-    expect([...measured.modulesSet].some((file) => file.startsWith('peerd-distributed/')))
+    expect([...measured.modulesSet].some((file) => file.startsWith('mcdollar-distributed/')))
       .toBe(false);
   });
 
@@ -309,7 +309,7 @@ describe('cold entry graphs', () => {
       .toBe(true);
     expect(measured.modulesSet.has('background/vault-kernel-firefox.js')).toBe(true);
     expect(measured.modulesSet.has('background/kernel-firefox-runtime-modules.js')).toBe(true);
-    expect(measured.modulesSet.has('peerd-runtime/observability/contributor-metrics.js'))
+    expect(measured.modulesSet.has('mcdollar-runtime/observability/contributor-metrics.js'))
       .toBe(false);
   });
 
@@ -319,12 +319,12 @@ describe('cold entry graphs', () => {
       .not.toContain('background/kernel-browser-network-runtime.js');
     expect(measured.modulesSet.has('background/kernel-browser-network-runtime.js')).toBe(false);
     expect(measured.modulesSet.has('background/kernel-browser-network-authority.js')).toBe(true);
-    expect(measured.modulesSet.has('peerd-egress/kernel-network.js')).toBe(true);
-    expect(measured.modulesSet.has('peerd-runtime/kernel-network.js')).toBe(true);
-    expect(measured.modulesSet.has('peerd-egress/denylist/dnr-rules.js')).toBe(true);
-    expect(measured.modulesSet.has('peerd-runtime/tools/browser-automation-policy.js')).toBe(true);
-    expect(measured.modulesSet.has('peerd-runtime/actor/idp-registry.js')).toBe(true);
-    expect(measured.modulesSet.has('peerd-egress/background.js')).toBe(true);
+    expect(measured.modulesSet.has('mcdollar-egress/kernel-network.js')).toBe(true);
+    expect(measured.modulesSet.has('mcdollar-runtime/kernel-network.js')).toBe(true);
+    expect(measured.modulesSet.has('mcdollar-egress/denylist/dnr-rules.js')).toBe(true);
+    expect(measured.modulesSet.has('mcdollar-runtime/tools/browser-automation-policy.js')).toBe(true);
+    expect(measured.modulesSet.has('mcdollar-runtime/actor/idp-registry.js')).toBe(true);
+    expect(measured.modulesSet.has('mcdollar-egress/background.js')).toBe(true);
   });
 
   test('Preview Chrome alone owns the downloaded-update graph', async () => {
@@ -411,15 +411,15 @@ describe('cold entry graphs', () => {
 
   test('vault shells cannot pull semantic or privileged feature graphs into first paint', async () => {
     const forbidden = [
-      'peerd-runtime/loop/',
-      'peerd-runtime/tools/',
-      'peerd-runtime/actor/',
-      'peerd-provider/adapters/',
-      'peerd-engine/repository/',
+      'mcdollar-runtime/loop/',
+      'mcdollar-runtime/tools/',
+      'mcdollar-runtime/actor/',
+      'mcdollar-provider/adapters/',
+      'mcdollar-engine/repository/',
       'vendor/isomorphic-git/',
-      'peerd-runtime/doc/',
-      'peerd-runtime/pdf/',
-      'peerd-distributed/',
+      'mcdollar-runtime/doc/',
+      'mcdollar-runtime/pdf/',
+      'mcdollar-distributed/',
     ];
     for (const name of ['sidepanel', 'home'] as const) {
       const { modulesSet } = await stats(name);
@@ -448,8 +448,8 @@ describe('cold entry graphs', () => {
       'offscreen/dweb-base.js',
       'shared/repository-channel.js',
       'shared/cold-util.js',
-      'peerd-engine/export.js',
-      'peerd-engine/repository/repository-service.js',
+      'mcdollar-engine/export.js',
+      'mcdollar-engine/repository/repository-service.js',
       'vendor/isomorphic-git/index.js',
     ];
     for (const file of forbidden) {
@@ -469,8 +469,8 @@ describe('cold entry graphs', () => {
     const relativeSet = (graph: Set<string>) => new Set(
       [...graph].map((file) => relative(EXTENSION_DIR, file)),
     );
-    expect(relativeSet(hostGraph).has('peerd-engine/export.js')).toBe(false);
-    expect(relativeSet(workerGraph).has('peerd-engine/export.js')).toBe(true);
+    expect(relativeSet(hostGraph).has('mcdollar-engine/export.js')).toBe(false);
+    expect(relativeSet(workerGraph).has('mcdollar-engine/export.js')).toBe(true);
   });
 
   test('the document supervisor is light and only its disposable Worker reaches conversion', async () => {
@@ -485,10 +485,10 @@ describe('cold entry graphs', () => {
     const relativeSet = (graph: Set<string>) => new Set(
       [...graph].map((file) => relative(EXTENSION_DIR, file)),
     );
-    expect(relativeSet(hostGraph).has('peerd-runtime/doc/convert.js')).toBe(false);
-    expect(relativeSet(workerGraph).has('peerd-runtime/offscreen.js')).toBe(false);
-    expect(relativeSet(workerGraph).has('peerd-runtime/tools/metadata/catalog.js')).toBe(false);
-    expect(relativeSet(workerGraph).has('peerd-runtime/doc/convert.js')).toBe(true);
+    expect(relativeSet(hostGraph).has('mcdollar-runtime/doc/convert.js')).toBe(false);
+    expect(relativeSet(workerGraph).has('mcdollar-runtime/offscreen.js')).toBe(false);
+    expect(relativeSet(workerGraph).has('mcdollar-runtime/tools/metadata/catalog.js')).toBe(false);
+    expect(relativeSet(workerGraph).has('mcdollar-runtime/doc/convert.js')).toBe(true);
   });
 
   test('HTML boots through the measured shell entries and exposes a static visible status', () => {
@@ -513,9 +513,9 @@ describe('cold entry graphs', () => {
 
   test('packaged-page smoke requires an actionable vault gate, not a placeholder stage', () => {
     const probe = readFileSync(join(EXTENSION_DIR, '../scripts/cdp/check-packaged-pages.mjs'), 'utf8');
-    expect(probe).toContain("peerdBootStage === 'vault-ready'");
+    expect(probe).toContain("mcdollarBootStage === 'vault-ready'");
     expect(probe).toContain(".gate-card button:not([disabled])");
-    expect(probe).not.toContain('&& !!document.documentElement.dataset.peerdBootStage');
+    expect(probe).not.toContain('&& !!document.documentElement.dataset.mcdollarBootStage');
   });
 
   test('every fixed lazy module and worker asset is explicitly inventoried and resolves', async () => {
@@ -530,9 +530,9 @@ describe('cold entry graphs', () => {
     expect(PACKAGED_LAZY_MODULE_ENTRIES).toContain('offscreen/artifact-host.js');
     expect(PACKAGED_LAZY_MODULE_ENTRIES).toContain('offscreen/repository-app-files.js');
     expect(PACKAGED_LAZY_MODULE_ENTRIES).toContain('offscreen/artifact-worker.js');
-    expect(PACKAGED_LAZY_MODULE_ENTRIES).toContain('peerd-engine/artifact.js');
+    expect(PACKAGED_LAZY_MODULE_ENTRIES).toContain('mcdollar-engine/artifact.js');
     expect(PACKAGED_LAZY_MODULE_ENTRIES).toContain('offscreen/document-conversion-worker.js');
-    expect(PACKAGED_LAZY_MODULE_ENTRIES).toContain('peerd-egress/ui.js');
+    expect(PACKAGED_LAZY_MODULE_ENTRIES).toContain('mcdollar-egress/ui.js');
     expect(PACKAGED_LAZY_MODULE_ENTRIES.filter((entry) =>
       entry === 'offscreen/artifact-host.js')).toHaveLength(1);
     expect(PACKAGED_LAZY_MODULE_ENTRIES).toContain('offscreen/dweb-base.js');

@@ -2,7 +2,7 @@
 // offscreen job-runner — the headless sealed-Worker substrate behind script.
 // Exercised against a REAL worker; `sendToSW` is stubbed to stand in for the
 // SW's audited routes (sw/web-fetch, actor/spawn). Pins the load-bearing
-// behavior: code returns its value, console accumulates, peerd.egress.fetch
+// behavior: code returns its value, console accumulates, mcdollar.egress.fetch
 // relays through the SAME route the tab uses (with method/body), and errors
 // surface.
 
@@ -22,8 +22,8 @@ import {
   MODULE_SYNTAX_ERROR_CODE,
   REMOTE_MODULE_IMPORTS_UNAVAILABLE_CODE,
   UNSUPPORTED_NATIVE_MODULE_IMPORT_CODE,
-} from '/peerd-engine/index.js';
-import { ACTORS_ADDRESS_MAX_CHARS, ACTORS_GOAL_MAX_CHARS } from '/peerd-runtime/index.js';
+} from '/mcdollar-engine/index.js';
+import { ACTORS_ADDRESS_MAX_CHARS, ACTORS_GOAL_MAX_CHARS } from '/mcdollar-runtime/index.js';
 
 const deferred = () => {
   /** @type {(value?: unknown) => void} */
@@ -100,17 +100,17 @@ describe('offscreen job-runner (real sealed worker)', () => {
   it('stamps a genuine runtime import policy refusal in the host relay', async () => {
     const r = await runJob({
       code: [
-        `await peerd.self.writeFile('bad.js', 'export const load = (url) => import(url);');`,
-        `return await peerd.self.import('bad.js');`,
+        `await mcdollar.self.writeFile('bad.js', 'export const load = (url) => import(url);');`,
+        `return await mcdollar.self.import('bad.js');`,
       ].join('\n'),
     }, { sendToSW: async () => ({ ok: false }) });
     expect(r.errorCode).toBe(UNSUPPORTED_NATIVE_MODULE_IMPORT_CODE);
     expect(String(r.error)).toContain('cannot run this import form');
   });
 
-  it('a caught peerd.self.import attempt still ends the run with the host policy', async () => {
+  it('a caught mcdollar.self.import attempt still ends the run with the host policy', async () => {
     const r = await runJob({
-      code: `try { await peerd.self.import('bad.js'); } catch {}
+      code: `try { await mcdollar.self.import('bad.js'); } catch {}
 throw new Error('unrelated failure');`,
     }, { sendToSW: async () => ({ ok: false }) });
     expect(r.errorCode).toBe(UNSUPPORTED_NATIVE_MODULE_IMPORT_CODE);
@@ -128,11 +128,11 @@ throw new Error('unrelated failure');`,
     expect(String(r.error).includes('import resolution failed')).toBe(false);
   });
 
-  it('relays peerd.egress.fetch through the SAME audited route (sw/web-fetch), with method/body', async () => {
+  it('relays mcdollar.egress.fetch through the SAME audited route (sw/web-fetch), with method/body', async () => {
     /** @type {{ url?: string, method?: string, body?: string } | null} */
     let seen = null;
     const r = await runJob(
-      { code: 'const res = await peerd.egress.fetch("https://api.example/x", { method: "POST", body: "b" }); return await res.text();' },
+      { code: 'const res = await mcdollar.egress.fetch("https://api.example/x", { method: "POST", body: "b" }); return await res.text();' },
       {
         sendToSW: async (type, payload) => {
           if (type === 'sw/web-fetch') { seen = payload; return { ok: true, status: 200, bodyB64: btoa('pong') }; }
@@ -152,8 +152,8 @@ throw new Error('unrelated failure');`,
     const r = await runJob(
       {
         code: [
-          'for (let i = 0; i < 55; i += 1) await peerd.self.listFiles();',
-          'try { await peerd.egress.fetch("https://trace.example/x"); } catch {}',
+          'for (let i = 0; i < 55; i += 1) await mcdollar.self.listFiles();',
+          'try { await mcdollar.egress.fetch("https://trace.example/x"); } catch {}',
           'return "done";',
         ].join('\n'),
       },
@@ -330,7 +330,7 @@ throw new Error('unrelated failure');`,
     // available; it acquires on the first actual outward relay and is refused
     // there while the two dedicated relay runs are holding the lane.
     const refusedEgress = await runJob(
-      { code: 'return await peerd.egress.fetch("https://example.com");' },
+      { code: 'return await mcdollar.egress.fetch("https://example.com");' },
       { sendToSW },
     );
     expect(String(refusedEgress.error)).toContain('capability-relaying runs already in flight');
@@ -632,14 +632,14 @@ throw new Error('unrelated failure');`,
   // passes web-extract-core's extractMarkdownLocal); stubbed here so the test
   // pins the host-relay + realm-surface shape in isolation. The REAL pipeline
   // (and host parity) runs in notebook-tab/notebook-extract.test.js.
-  it("peerd.egress.fetch(url, { extract: 'markdown' }) returns markdown for an HTML response", async () => {
+  it("mcdollar.egress.fetch(url, { extract: 'markdown' }) returns markdown for an HTML response", async () => {
     /** @type {{ html?: string, url?: string } | null} */
     let extractorSaw = null;
     const html = '<html><body><article>Long article body</article></body></html>';
     const r = await runJob(
       {
         code: [
-          'const res = await peerd.egress.fetch("https://site.example/post", { extract: "markdown" });',
+          'const res = await mcdollar.egress.fetch("https://site.example/post", { extract: "markdown" });',
           'return { text: await res.text(), extracted: res.extracted, contentType: res.contentType };',
         ].join('\n'),
       },
@@ -664,7 +664,7 @@ throw new Error('unrelated failure');`,
     const r = await runJob(
       {
         code: [
-          'const res = await peerd.egress.fetch("https://api.example/data.json", { extract: "markdown" });',
+          'const res = await mcdollar.egress.fetch("https://api.example/data.json", { extract: "markdown" });',
           'return { body: await res.text(), extracted: res.extracted };',
         ].join('\n'),
       },
@@ -689,9 +689,9 @@ throw new Error('unrelated failure');`,
     expect(String(r.error)).toContain('boom');
   });
 
-  it('peerd:std imports resolve in a headless job', async () => {
+  it('mcdollar:std imports resolve in a headless job', async () => {
     const r = await runJob(
-      { code: 'import { mean } from "peerd:std";\nreturn mean([2, 4, 6]);' },
+      { code: 'import { mean } from "mcdollar:std";\nreturn mean([2, 4, 6]);' },
       { sendToSW: async () => ({ ok: true }) },
     );
     expect(r.error).toBe(null);
@@ -699,12 +699,12 @@ throw new Error('unrelated failure');`,
   });
 
   // The idiomatic form the agent writes for headless math: a STATIC top-level
-  // `import { … } from 'peerd:std'` (resolved via buildEntry's builtins, same as
+  // `import { … } from 'mcdollar:std'` (resolved via buildEntry's builtins, same as
   // a Notebook). Pins math PARITY between script and js_notebook — the headless
   // worker must reach the same stdlib helpers the visible Notebook does.
-  it('peerd:std STATIC imports resolve in a headless job (math parity with notebooks)', async () => {
+  it('mcdollar:std STATIC imports resolve in a headless job (math parity with notebooks)', async () => {
     const r = await runJob(
-      { code: 'import { mean, median, sum } from "peerd:std";\nreturn { m: mean([2, 4, 6]), md: median([5, 1, 9, 3]), s: sum([10, 20, 30]) };' },
+      { code: 'import { mean, median, sum } from "mcdollar:std";\nreturn { m: mean([2, 4, 6]), md: median([5, 1, 9, 3]), s: sum([10, 20, 30]) };' },
       { sendToSW: async () => ({ ok: true }) },
     );
     expect(r.error).toBe(null);
@@ -714,17 +714,17 @@ throw new Error('unrelated failure');`,
     expect(v.s).toBe(60);
   });
 
-  // peerd:wasi END TO END in the real substrate: builtin resolution in the
+  // mcdollar:wasi END TO END in the real substrate: builtin resolution in the
   // sealed worker, the vendored shim linking, a wasm module actually executing.
   // The module is a hand-assembled wasm32-wasi command (fd_write "hello from
   // wasm\n" to stdout, proc_exit 0) — regenerate with tests/engine-tabs/notebook-tab/
   // wasi-test-module.ts buildHelloModule('hello from wasm\n').
-  it('peerd:wasi runs a wasm32-wasi module inside a headless job', async () => {
+  it('mcdollar:wasi runs a wasm32-wasi module inside a headless job', async () => {
     const helloWasmB64 = 'AGFzbQEAAAABEANgBH9/f38Bf2ABfwBgAAACRgIWd2FzaV9zbmFwc2hvdF9wcmV2aWV3MQhmZF93cml0ZQAAFndhc2lfc25hcHNob3RfcHJldmlldzEJcHJvY19leGl0AAEDAgECBQMBAAEHEwIGbWVtb3J5AgAGX3N0YXJ0AAIKIQEfAEEAQRA2AgBBBEEQNgIAQQFBAEEBQQwQABpBABABCwsWAQBBEAsQaGVsbG8gZnJvbSB3YXNtCg==';
     const r = await runJob(
       {
         code: [
-          'import { runWasi } from "peerd:wasi";',
+          'import { runWasi } from "mcdollar:wasi";',
           `const bytes = Uint8Array.from(atob("${helloWasmB64}"), (c) => c.charCodeAt(0));`,
           'const run = await runWasi(bytes, { files: { "seed.txt": "kept" } });',
           'return { exitCode: run.exitCode, stdout: run.stdout, seed: run.files["seed.txt"] };',
@@ -739,13 +739,13 @@ throw new Error('unrelated failure');`,
     expect(v.seed).toBe('kept');   // the virtual FS round-trips through the run
   });
 
-  it('peerd:wasi refuses incompatible command shape before a Wasm start section executes', async () => {
+  it('mcdollar:wasi refuses incompatible command shape before a Wasm start section executes', async () => {
     // why: valid Wasm can run code during instantiation, before exported _start.
     // One () => () function traps; section 8 selects it as the binary start.
     const bytes = [0,97,115,109,1,0,0,0, 1,4,1,96,0,0, 3,2,1,0,
       8,1,0, 10,5,1,3,0,0,11];
     const r = await runJob({ code: [
-      'import { runWasi } from "peerd:wasi";',
+      'import { runWasi } from "mcdollar:wasi";',
       `const bytes = new Uint8Array(${JSON.stringify(bytes)});`,
       'const module = await WebAssembly.compile(bytes);',
       'let trapped = false;',
@@ -759,13 +759,13 @@ throw new Error('unrelated failure');`,
 
   // The runtime self-test fixture, headless: demoModule() must be importable
   // and runnable from a headless job through the SAME builtin resolver chain
-  // the live agent uses — pins "peerd:wasi is reachable from script" as a CI
+  // the live agent uses — pins "mcdollar:wasi is reachable from script" as a CI
   // fact (a field session reported it unreachable; this is the regression net).
-  it('peerd:wasi demoModule() self-test runs green inside a headless job', async () => {
+  it('mcdollar:wasi demoModule() self-test runs green inside a headless job', async () => {
     const r = await runJob(
       {
         code: [
-          'import { runWasi, demoModule } from "peerd:wasi";',
+          'import { runWasi, demoModule } from "mcdollar:wasi";',
           'const run = await runWasi(demoModule());',
           'return { exitCode: run.exitCode, stdout: run.stdout };',
         ].join('\n'),
@@ -781,12 +781,12 @@ throw new Error('unrelated failure');`,
   // The a2a run is the dweb actor's MESH-ONLY surface (cynical-swarm HIGH): its
   // tool allow-set grants no egress and no delegation, so the same sealed worker
   // run with { a2a:true } must NOT be able to re-grant itself either via the
-  // peerd.* surface — the host refuses those relays.
-  it('an a2a run is denied egress — peerd.egress.fetch never reaches sw/web-fetch', async () => {
+  // mcdollar.* surface — the host refuses those relays.
+  it('an a2a run is denied egress — mcdollar.egress.fetch never reaches sw/web-fetch', async () => {
     /** @type {{ type: string, payload: any }[]} */
     const calls = [];
     const r = await runJob(
-      { code: 'try { await peerd.egress.fetch("https://evil.example/x"); return "REACHED"; } catch (e) { return "blocked:" + e.message; }',
+      { code: 'try { await mcdollar.egress.fetch("https://evil.example/x"); return "REACHED"; } catch (e) { return "blocked:" + e.message; }',
         a2a: true, ownerSessionId: 'dweb' },
       { sendToSW: async (type, payload) => { calls.push({ type, payload }); return { ok: true, status: 200, bodyB64: btoa('x') }; } },
     );
@@ -795,11 +795,11 @@ throw new Error('unrelated failure');`,
     expect(r.usedEgress).toBeFalsy();
   });
 
-  it('an a2a run is denied delegation — peerd.runtime.runAgent never reaches actor/spawn', async () => {
+  it('an a2a run is denied delegation — mcdollar.runtime.runAgent never reaches actor/spawn', async () => {
     /** @type {{ type: string, payload: any }[]} */
     const calls = [];
     const r = await runJob(
-      { code: 'try { await peerd.runtime.runAgent({ task: "x" }); return "REACHED"; } catch (e) { return "blocked:" + e.message; }',
+      { code: 'try { await mcdollar.runtime.runAgent({ task: "x" }); return "REACHED"; } catch (e) { return "blocked:" + e.message; }',
         a2a: true, ownerSessionId: 'dweb' },
       { sendToSW: async (type, payload) => { calls.push({ type, payload }); return { ok: true, result: 'y' }; } },
     );
@@ -881,21 +881,21 @@ throw new Error('unrelated failure');`,
     expect(r.retryable).toBe(false);
   });
 
-  // design 7.3 — headless peerd.distributed.* must fail FAST. The runner forces
+  // design 7.3 — headless mcdollar.distributed.* must fail FAST. The runner forces
   // the distributed cap off (this host has no 'distributed-request' handler),
   // so the in-realm shim throws immediately; the host relay's refusal is the
-  // second wall. Pre-fix a touch of peerd.distributed.* hung to the job
+  // second wall. Pre-fix a touch of mcdollar.distributed.* hung to the job
   // wall-clock. Exercised against the REAL worker: if either wall regresses AND
   // the forced-off profile is dropped, the run times out at timeoutMs and the
   // assertions below fail — the hang cannot come back silently.
-  it('headless peerd.distributed.whoami() rejects immediately — even when caller caps ask for it', async () => {
+  it('headless mcdollar.distributed.whoami() rejects immediately — even when caller caps ask for it', async () => {
     const t0 = performance.now();
     const r = await runJob(
       // why the cast: caps.distributed is deliberately NOT on runJob's typedef
       // (it is not a caller knob headless) — this passes it anyway to pin that
       // a wider caller profile still cannot re-open the lane.
       /** @type {any} */ ({
-        code: 'try { await peerd.distributed.whoami(); return "REACHED"; } catch (e) { return "blocked:" + e.message; }',
+        code: 'try { await mcdollar.distributed.whoami(); return "REACHED"; } catch (e) { return "blocked:" + e.message; }',
         caps: { distributed: true },
         timeoutMs: 5000,
       }),
@@ -1007,7 +1007,7 @@ throw new Error('unrelated failure');`,
       {
         code: [
           'await actors.call("vm-1", "one");',
-          'return await peerd.self.import("bad.js");',
+          'return await mcdollar.self.import("bad.js");',
         ].join('\n'),
         actors: true, ownerSessionId: 'chat-1', runId: 'run-policy-custody',
       },
@@ -1118,7 +1118,7 @@ throw new Error('unrelated failure');`,
     const calls = [];
     const r = await runJob(
       {
-        code: 'const r = await peerd.provider.call({ prompt: "classify: good or bad?" }); return r.text;',
+        code: 'const r = await mcdollar.provider.call({ prompt: "classify: good or bad?" }); return r.text;',
         caps: { provider: true }, ownerSessionId: 'chat-1', runId: 'run-p1',
       },
       {
@@ -1147,7 +1147,7 @@ throw new Error('unrelated failure');`,
     /** @type {any[]} */
     const calls = [];
     const r = await runJob(
-      { code: 'try { await peerd.provider.call({ prompt: "x" }); return "REACHED"; } catch (e) { return "blocked:" + e.message; }' },
+      { code: 'try { await mcdollar.provider.call({ prompt: "x" }); return "REACHED"; } catch (e) { return "blocked:" + e.message; }' },
       { sendToSW: async (type, payload) => { calls.push({ type, payload }); return { ok: true, value: { text: 'y' } }; } },
     );
     expect(calls.some((c) => c.type === 'script/model-call')).toBe(false);
@@ -1160,7 +1160,7 @@ throw new Error('unrelated failure');`,
     // owner-bound runId); the host wall already refuses when the trusted job
     // params are incomplete, even though the realm surface was minted.
     const r = await runJob(
-      { code: 'try { await peerd.provider.call({ prompt: "x" }); return "reached"; } catch (e) { return e.message; }',
+      { code: 'try { await mcdollar.provider.call({ prompt: "x" }); return "reached"; } catch (e) { return e.message; }',
         caps: { provider: true }, ownerSessionId: 'chat-1' },
       { sendToSW: async () => ({ ok: true, value: { text: 'y' } }) },
     );
@@ -1173,7 +1173,7 @@ throw new Error('unrelated failure');`,
         code: [
           'const out = [];',
           'for (const row of ["a", "b"]) {',
-          '  try { out.push((await peerd.provider.call({ prompt: row })).text); }',
+          '  try { out.push((await mcdollar.provider.call({ prompt: row })).text); }',
           '  catch (e) { out.push("skipped: " + e.message); }',
           '}',
           'return out;',
@@ -1199,7 +1199,7 @@ throw new Error('unrelated failure');`,
   it('provider: abortJob(runId) terminates a run mid sub-call — the meter survives', async () => {
     const pending = runJob(
       {
-        code: 'await peerd.provider.call({ prompt: "long" }); return "never";',
+        code: 'await mcdollar.provider.call({ prompt: "long" }); return "never";',
         caps: { provider: true }, ownerSessionId: 'chat-1', runId: 'run-p-abort', timeoutMs: 30000,
       },
       {
@@ -1315,12 +1315,12 @@ describe('headless remote module imports (audited resolver path)', () => {
           try { await fn(); attempts[name] = 'unexpected success'; }
           catch (error) { attempts[name] = String(error && error.message || error); }
         };
-        await tryCall('egress', () => peerd.egress.fetch('https://sink.example/'));
-        await tryCall('opfs', () => peerd.self.readFile('canary.txt'));
-        await tryCall('subagent', () => peerd.runtime.runAgent({ task: 'leak' }));
-        await tryCall('provider', () => peerd.provider.call({ prompt: 'leak' }));
-        await tryCall('page', () => peerd.page.snapshot({}));
-        await tryCall('dweb', () => peerd.distributed.peers());
+        await tryCall('egress', () => mcdollar.egress.fetch('https://sink.example/'));
+        await tryCall('opfs', () => mcdollar.self.readFile('canary.txt'));
+        await tryCall('subagent', () => mcdollar.runtime.runAgent({ task: 'leak' }));
+        await tryCall('provider', () => mcdollar.provider.call({ prompt: 'leak' }));
+        await tryCall('page', () => mcdollar.page.snapshot({}));
+        await tryCall('dweb', () => mcdollar.distributed.peers());
         await tryCall('actors', () => actors.list());
         return attempts;
       };
@@ -1422,11 +1422,11 @@ describe('headless remote module imports (audited resolver path)', () => {
     expect(r.usedEgress).toBeFalsy();
   });
 
-  it('peerd.self.import gets the same host-owned refusal without egress', async () => {
+  it('mcdollar.self.import gets the same host-owned refusal without egress', async () => {
     /** @type {{ type: string, payload: any }[]} */
     const calls = [];
     const r = await runJob(
-      { code: "return await peerd.self.import('https://mods.example/lazy.js');" },
+      { code: "return await mcdollar.self.import('https://mods.example/lazy.js');" },
       { sendToSW: servingSW({ 'https://mods.example/lazy.js': 'export const x = 42;' }, calls) },
     );
     expect(r.errorCode).toBe(UNSUPPORTED_NATIVE_MODULE_IMPORT_CODE);

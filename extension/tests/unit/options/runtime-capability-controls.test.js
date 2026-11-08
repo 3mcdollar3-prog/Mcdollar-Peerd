@@ -251,7 +251,7 @@ for (const closing of ['Cancel', 'Escape', 'backdrop']) {
           .find((button) => button.textContent === 'Upgrade to on-device (Moonshine)'));
         trigger.focus(); trigger.click();
         await settle();
-        const dialog = /** @type {HTMLElement} */ (root.querySelector('.peerd-modal'));
+        const dialog = /** @type {HTMLElement} */ (root.querySelector('.mcdollar-modal'));
         const cancel = /** @type {HTMLButtonElement} */ (dialog.querySelector('button.secondary'));
         const approve = /** @type {HTMLButtonElement} */ (dialog.querySelector('button:not(.secondary)'));
         const link = /** @type {HTMLAnchorElement} */ (dialog.querySelector('a'));
@@ -268,9 +268,9 @@ for (const closing of ['Cancel', 'Escape', 'backdrop']) {
         m.redraw.sync();
         if (closing === 'Escape') dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
         else if (closing === 'Cancel') cancel.click();
-        else /** @type {HTMLElement} */ (root.querySelector('.peerd-modal-backdrop')).click();
+        else /** @type {HTMLElement} */ (root.querySelector('.mcdollar-modal-backdrop')).click();
         await settle();
-        expect(root.querySelector('.peerd-modal')).toBe(null);
+        expect(root.querySelector('.mcdollar-modal')).toBe(null);
         expect(document.activeElement).toBe(trigger);
         expect(enables).toBe(0);
         expect(sent).toEqual([]);
@@ -298,7 +298,7 @@ for (const closing of ['Cancel', 'Escape', 'backdrop']) {
         // why: the shipped trigger is disabled. Render its existing state branch
         // without changing integrity values, the store or the download guard.
         prior.focus(); ui.confirmOpen = true; m.redraw.sync();
-        const dialog = /** @type {HTMLElement} */ (root.querySelector('.peerd-modal'));
+        const dialog = /** @type {HTMLElement} */ (root.querySelector('.mcdollar-modal'));
         const cancel = /** @type {HTMLButtonElement} */ (dialog.querySelector('button.secondary'));
         const approve = /** @type {HTMLButtonElement} */ (dialog.querySelector('button:not(.secondary)'));
         expect(dialog.getAttribute('aria-modal')).toBe('true');
@@ -316,9 +316,9 @@ for (const closing of ['Cancel', 'Escape', 'backdrop']) {
         m.redraw.sync();
         if (closing === 'Escape') dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
         else if (closing === 'Cancel') cancel.click();
-        else /** @type {HTMLElement} */ (root.querySelector('.peerd-modal-backdrop')).click();
+        else /** @type {HTMLElement} */ (root.querySelector('.mcdollar-modal-backdrop')).click();
         await settle();
-        expect(root.querySelector('.peerd-modal')).toBe(null);
+        expect(root.querySelector('.mcdollar-modal')).toBe(null);
         expect(document.activeElement).toBe(prior);
         expect(trigger.disabled).toBe(true);
         expect(sent).toEqual([]);

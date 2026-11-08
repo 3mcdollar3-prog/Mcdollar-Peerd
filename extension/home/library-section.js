@@ -9,7 +9,7 @@
 // METADATA only (never OPFS file bodies), and all filtering/sorting is
 // client-side over that small list. Open/delete route through the SW's
 // appClient so tab lifecycle + OPFS teardown match the agent's tools.
-// Export reuses the existing export/artifact route (a .peerd bundle —
+// Export reuses the existing export/artifact route (a .mcdollar bundle —
 // the same content-addressed format the dweb transfers).
 //
 // Brand rule: an otherwise-monochrome surface with the sanctioned splash of
@@ -82,8 +82,8 @@ const isSeeded = (app) => !!(app?.shared || app?.dweb?.version_id || app?.dweb?.
 /** @param {unknown} cause @param {string} action */
 const mutationFailureCopy = (cause, action) =>
   /** @type {{outcomeKnown?:boolean}} */ (cause)?.outcomeKnown === false
-    ? `Peerd could not confirm whether ${action} finished. Refresh to reconcile before trying again.`
-    : `Peerd could not ${action}. Try again.`;
+    ? `Mcdollar could not confirm whether ${action} finished. Refresh to reconcile before trying again.`
+    : `Mcdollar could not ${action}. Try again.`;
 
 /** @param {unknown} cause */
 const outcomeUnknown = (cause) =>
@@ -117,7 +117,7 @@ const recordRepositoryFailure = (vnode, app, cause, action, transportLost = fals
   const unknown = transportLost || outcomeUnknown(cause);
   if (unknown) vnode.state.repositoryUnconfirmed.add(app.id);
   vnode.state.error = unknown
-    ? `Peerd could not confirm whether ${action} finished. Recheck Git, inspect the result, then explicitly allow another change.`
+    ? `Mcdollar could not confirm whether ${action} finished. Recheck Git, inspect the result, then explicitly allow another change.`
     : mutationFailureCopy(cause, action);
 };
 
@@ -138,7 +138,7 @@ const downloadEnvelope = (filename, envelope) => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = filename || 'app.peerd';
+  a.download = filename || 'app.mcdollar';
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -239,7 +239,7 @@ export const LibrarySection = {
     // so it appears here at once. Decoupled page-level bus — the sections share no
     // store.
     vnode.state._onInstalled = () => LibrarySection.refresh(vnode);
-    window.addEventListener('peerd:app-installed', vnode.state._onInstalled);
+    window.addEventListener('mcdollar:app-installed', vnode.state._onInstalled);
     // Poll for newer versions of installed dweb apps while the Library is open, so a
     // peer's reshare surfaces an "update" badge without a manual refresh. Light: one
     // cross-reference call, dweb-only, paused when the tab is hidden.
@@ -265,7 +265,7 @@ export const LibrarySection = {
   /** @param {{ state: any }} vnode */
   onremove(vnode) {
     document.removeEventListener('mousedown', vnode.state._onDocDown);
-    window.removeEventListener('peerd:app-installed', vnode.state._onInstalled);
+    window.removeEventListener('mcdollar:app-installed', vnode.state._onInstalled);
     document.removeEventListener('visibilitychange', vnode.state._onVisible);
     window.removeEventListener('focus', vnode.state._onVisible);
     if (vnode.state._updTimer) clearInterval(vnode.state._updTimer);
@@ -434,7 +434,7 @@ export const LibrarySection = {
     try {
       const r = await vnode.attrs.send({ type: 'export/artifact', kind: 'app', id: app.id });
       if (r?.ok && r.envelope) downloadEnvelope(r.filename, r.envelope);
-      else vnode.state.error = 'Peerd could not export this App. Try again.';
+      else vnode.state.error = 'Mcdollar could not export this App. Try again.';
     } catch {
       vnode.state.error = 'The export service stopped responding. Nothing was downloaded; try again.';
     } finally {
@@ -569,10 +569,10 @@ export const LibrarySection = {
     ui.error = null; ui.busyId = app.id;
     try {
       const r = await vnode.attrs.send({ type: 'apps/repository/diff', appId: app.id, from: oid, to: null });
-      if (!r?.ok) ui.error = 'Peerd could not load this diff. Try again.';
+      if (!r?.ok) ui.error = 'Mcdollar could not load this diff. Try again.';
       else ui.repositoryDiffs[key] = r.diff;
     } catch {
-      ui.error = 'Peerd could not load this diff. Try again.';
+      ui.error = 'Mcdollar could not load this diff. Try again.';
     } finally {
       ui.busyId = null;
       m.redraw();
@@ -840,7 +840,7 @@ export const LibrarySection = {
       },
     }, [
       m('strong', 'Import an App from Git'),
-      m('p.muted', 'Clone an HTTPS repository containing peerd.json or index.html. A conforming dwapp keeps its dweb capability and actor role.'),
+      m('p.muted', 'Clone an HTTPS repository containing mcdollar.json or index.html. A conforming dwapp keeps its dweb capability and actor role.'),
       m('div.library-git-import-row', [
         m('input', {
           type: 'url', required: true, spellcheck: false,
@@ -962,7 +962,7 @@ export const LibrarySection = {
                 // immutable dweb.seed field (no new record field needed).
                 app.dweb?.seed
                   ? m('span', {
-                      title: 'A built-in app, shipped with peerd',
+                      title: 'A built-in app, shipped with mcdollar',
                       style: 'margin-left:6px; padding:0 5px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; border:1px solid currentColor; border-radius:4px; opacity:.5; vertical-align:middle;',
                     }, 'Built-in')
                   : null,
@@ -1086,7 +1086,7 @@ export const LibrarySection = {
       ]),
       // The share dialog: name the app's dweb NAMESPACE. Editable on first share
       // (pre-filled from the name), LOCKED on reshare (the slug is the app's stable
-      // identity — changing it forks a new app). Shows the full peerd:// handle so
+      // identity — changing it forks a new app). Shows the full mcdollar:// handle so
       // the user sees exactly what peers will discover.
       ui.shareEditId === app.id ? LibrarySection.shareDialog(vnode, app) : null,
       ui.repositoryOpenId === app.id ? LibrarySection.repositoryPanel(vnode, app) : null,
@@ -1119,7 +1119,7 @@ export const LibrarySection = {
           if (e.key === 'Escape') { LibrarySection.cancelShare(vnode); m.redraw(); }
         },
       }),
-      m('.muted', { style: 'font-size:11px; font-family:monospace; word-break:break-all; margin-bottom:6px;' }, `peerd://${pubSuffix}/${slug || '…'}`),
+      m('.muted', { style: 'font-size:11px; font-family:monospace; word-break:break-all; margin-bottom:6px;' }, `mcdollar://${pubSuffix}/${slug || '…'}`),
       m('.muted', { style: 'font-size:11px; margin-bottom:6px;' },
         'Sharing publishes every working-tree file, including data/*.json. Remove private data before continuing.'),
       m('.library-actions', { style: 'gap:6px;' }, [

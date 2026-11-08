@@ -20,7 +20,7 @@ try {
 // real offer, abort, streamer and vendored generation loop unchanged.
 const source = readFileSync('extension/offscreen/local-model.js', 'utf8')
   .replace("'./muse-glimmer-stream.js'", JSON.stringify(pathToFileURL(resolve('extension/offscreen/muse-glimmer-stream.js')).href));
-const temporary = mkdtempSync(join(tmpdir(), 'peerd-local-stop-'));
+const temporary = mkdtempSync(join(tmpdir(), 'mcdollar-local-stop-'));
 const fixturePath = join(temporary, 'local-model.mjs');
 writeFileSync(fixturePath, `${source}
 export const configureFixture = (runtime, tokens, weights) => {

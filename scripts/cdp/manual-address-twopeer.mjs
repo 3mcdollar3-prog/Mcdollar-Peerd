@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { packageArtifact } from '../../packaging/package.ts';
 import { acceptanceRuntimeInput } from './acceptance-runtime-input.mjs';
-import { launchPeerd, attach, evalIn, rpc, unlockAndReady, waitFor, capturePage } from './e2e-harness.mjs';
+import { launchMcdollar, attach, evalIn, rpc, unlockAndReady, waitFor, capturePage } from './e2e-harness.mjs';
 import { digestTree, PRODUCTION_PREVIEW_CHROME_BACKGROUND_ENTRY } from './passkey-signup-lane.mjs';
 import { GIT_FIXTURE_TLS_KEY, GIT_FIXTURE_TLS_CERT, GIT_FIXTURE_SPKI_SHA256_BASE64 } from '../acceptance/git-smart-http-fixture.mjs';
 
@@ -21,7 +21,7 @@ const wasmExecution = process.env.P2P_WASM_EXECUTION === '1';
 const randomDiscovery = process.env.P2P_RANDOM_DISCOVERY === '1';
 const output = join(repo, cancellation ? (randomDiscovery ? 'artifacts/catalog-install-cancellation-twopeer' : wasmExecution ? 'artifacts/wasm-install-cancellation-twopeer' : 'artifacts/install-cancellation-twopeer') : randomDiscovery ? (wasmExecution ? 'artifacts/random-wasm-twopeer' : 'artifacts/random-js-twopeer') : wasmExecution ? 'artifacts/discovered-wasm-twopeer' : 'artifacts/manual-address-twopeer');
 mkdirSync(output, { recursive: true });
-const temp = mkdtempSync(join(tmpdir(), 'peerd-manual-address-'));
+const temp = mkdtempSync(join(tmpdir(), 'mcdollar-manual-address-'));
 const sockets = new Set(), servers = [], checks = [];
 let ctx, publisher, signaling, stage = 'starting', failed = false, tunnels = 0;
 const evidence = { randomDiscovery, appRuntime: wasmExecution ? 'wasm' : 'javascript', scope: wasmExecution
@@ -117,7 +117,7 @@ try {
   const tlsPort = await listen(tlsServer({ key: GIT_FIXTURE_TLS_KEY, cert: GIT_FIXTURE_TLS_CERT }, socket => bridge(socket, track(connect(signalPort, '127.0.0.1')))));
   const proxy = httpServer((_req, res) => { res.writeHead(403); res.end(); });
   proxy.on('connect', (req, client, head) => {
-    if (req.url !== 'bootstrap.peerd.ai:443' || req.headers['proxy-authorization']) { client.end('HTTP/1.1 403 Forbidden\r\n\r\n'); return; }
+    if (req.url !== 'bootstrap.mcdollar.ai:443' || req.headers['proxy-authorization']) { client.end('HTTP/1.1 403 Forbidden\r\n\r\n'); return; }
     tunnels++;
     const target = track(connect(tlsPort, '127.0.0.1'));
     target.once('connect', () => { client.write('HTTP/1.1 200 Connection Established\r\n\r\n'); if (head.length) target.write(head); bridge(client, target); });
@@ -139,7 +139,7 @@ try {
   if (supplied) evidence.scope = evidence.scope.replace('Actual packaged Preview', 'Actual supplied runtime');
   evidence.runtimeVersion = JSON.parse(readFileSync(join(tree, 'manifest.json'))).version;
   const originalDigest = await digestTree(tree);
-  ctx = await bounded('launch actual Home', () => launchPeerd({ extensionDir: tree, panelPath: 'home/home.html', expectedBackgroundEntry: PRODUCTION_PREVIEW_CHROME_BACKGROUND_ENTRY,
+  ctx = await bounded('launch actual Home', () => launchMcdollar({ extensionDir: tree, panelPath: 'home/home.html', expectedBackgroundEntry: PRODUCTION_PREVIEW_CHROME_BACKGROUND_ENTRY,
     interceptModel: false, enforceWebSecurity: true, webRtcLoopbackAcceptance: true,
     proxyServer: { url: `http://127.0.0.1:${proxyPort}`, certificateSpkiSha256: GIT_FIXTURE_SPKI_SHA256_BASE64 } }), 45_000);
   await bounded('initialize vault', () => unlockAndReady(ctx.page), 160_000);
@@ -199,17 +199,17 @@ try {
   await bounded('publisher domains', async () => { await publisher.send('Runtime.enable'); await publisher.send('Page.enable'); await publisher.send('Page.navigate', { url: `http://127.0.0.1:${httpPort}/` }); });
   await until('publisher document', () => evalIn(publisher, `location.origin === 'http://127.0.0.1:${httpPort}' && document.readyState === 'complete'`));
   const published = await bounded('publish real signed bundle', () => evalIn(publisher, `(async () => {
-    const { generateIdentity, joinRoom } = await import('/peerd-distributed/index.js');
-    const { createBaseNetwork } = await import('/peerd-distributed/base-network.js');
-    const { createChannelClient } = await import('/peerd-distributed/content/transfer.js');
+    const { generateIdentity, joinRoom } = await import('/mcdollar-distributed/index.js');
+    const { createBaseNetwork } = await import('/mcdollar-distributed/base-network.js');
+    const { createChannelClient } = await import('/mcdollar-distributed/content/transfer.js');
     const { formatDwappUri } = await import('/shared/address/dwapp-uri.js');
     const identity = await generateIdentity();
-    const room = await joinRoom({ identity, roomId: 'peerd/base/1', url: 'ws://127.0.0.1:${signalPort}/rendezvous', iceServers: [] });
+    const room = await joinRoom({ identity, roomId: 'mcdollar/base/1', url: 'ws://127.0.0.1:${signalPort}/rendezvous', iceServers: [] });
     const base = await createBaseNetwork({ identity, mesh: room.mesh, meta: () => ({ name: 'manual-address-publisher' }) });
     // (module (func (export "answer") (result i32) i32.const 42))
     const wasm = Uint8Array.from([0,97,115,109,1,0,0,0,1,5,1,96,0,1,127,3,2,1,0,7,10,1,6,97,110,115,119,101,114,0,0,10,6,1,4,0,65,42,11]);
     const html = '<!doctype html><title>Manual address acceptance</title><h1>Explicit Open executed this App</h1>'
-      + (${wasmExecution} ? '<script>(async () => { const bytes = peerd.assets.bytes("answer.wasm"); const {instance} = await WebAssembly.instantiate(bytes); parent.postMessage({peerdWasmAcceptance: {answer: instance.exports.answer(), bytes: Array.from(bytes), extensionApi: typeof globalThis.chrome?.runtime}}, "*"); })();</script>' : ${randomDiscovery} ? '<script>parent.postMessage({peerdWasmAcceptance: {answer: [20,22].reduce((sum,n) => sum+n,0), bytes: null, extensionApi: typeof globalThis.chrome?.runtime}}, "*");</script>' : '');
+      + (${wasmExecution} ? '<script>(async () => { const bytes = mcdollar.assets.bytes("answer.wasm"); const {instance} = await WebAssembly.instantiate(bytes); parent.postMessage({mcdollarWasmAcceptance: {answer: instance.exports.answer(), bytes: Array.from(bytes), extensionApi: typeof globalThis.chrome?.runtime}}, "*"); })();</script>' : ${randomDiscovery} ? '<script>parent.postMessage({mcdollarWasmAcceptance: {answer: [20,22].reduce((sum,n) => sum+n,0), bytes: null, extensionApi: typeof globalThis.chrome?.runtime}}, "*");</script>' : '');
     const files = { 'index.html': html, ...(${wasmExecution} ? { 'answer.wasm': wasm } : {}) };
     const app = await base.publishApp({ name: 'Manual address acceptance', entry: 'index.html', files });
     const catalog = ${randomDiscovery} ? await base.publishMeta({ slug: 'native-wasm', name: 'Manual address acceptance',
@@ -277,11 +277,11 @@ try {
   else check('inspection binds exact signer hash and decoded size', inspection.includes(published.publisher) && inspection.includes(published.hash) && inspection.includes(`${published.decodedBytes} bytes`), inspection);
   if (randomDiscovery) check(`Surprise me opens the received ${wasmExecution ? 'WASM' : 'JavaScript'} App`, inspection.includes('Manual address acceptance') && inspection.includes(wasmExecution ? 'WebAssembly' : 'JavaScript'), inspection);
   check('inspection does not install a user or peer catalog record', JSON.stringify(userApps((await call({ type: 'apps/list' })).apps)) === JSON.stringify(baselineIds));
-  // The bundle has no peerd.json, so an install gets the dwapp default: the peer network, nothing more.
+  // The bundle has no mcdollar.json, so an install gets the dwapp default: the peer network, nothing more.
   const says = await evaluate(ctx.page, `(() => { const says = document.querySelector('.disc-page .disc-says');
     return says && { chips: [...says.querySelectorAll('li')].map(chip => chip.textContent), text: says.textContent }; })()`);
   if (!randomDiscovery) check('The app says it reads the verified files of the inspected link', JSON.stringify(says?.chips) === '["Uses the peer network"]'
-    && says.text.includes('checked when peerd looked at it.'), says);
+    && says.text.includes('checked when mcdollar looked at it.'), says);
   const query = () => invoke(publisher, 'function(did) { return window.manualPublisher.query(did); }', [receiver.did]);
   const before = await query(); evidence.beforeInstallContent = before;
   check('inspection does not seed bytes (explicit negative response)', before?.t === 'NOMANIFEST' && before.hash === published.hash, before);
@@ -321,7 +321,7 @@ try {
   const catalog = await call({ type: 'apps/list' });
   const installed = catalog.apps.filter(app => app.dweb?.uri === published.uri && app.dweb?.hash === published.hash && app.dweb?.publisher === published.publisher);
   check('one exact installed catalog record', installed.length === 1 && userApps(catalog.apps).length === baselineIds.length + 1, installed);
-  check('the install records what its verified files ask of peerd, bound to their hash',
+  check('the install records what its verified files ask of mcdollar, bound to their hash',
     JSON.stringify(installed[0].dweb?.declared) === JSON.stringify({ hash: published.hash, dweb: true, instructions: false, observeAct: false }),
     installed[0].dweb?.declared);
   evidence.installedAppId = installed[0].id;
@@ -350,8 +350,8 @@ try {
         addEventListener('message', event => {
           const frame = document.querySelector('iframe');
           if (event.origin === 'null' && frame && event.source === frame.contentWindow
-              && event.data?.peerdWasmAcceptance) {
-            globalThis.__wasmAcceptance = { ...event.data.peerdWasmAcceptance, origin: event.origin,
+              && event.data?.mcdollarWasmAcceptance) {
+            globalThis.__wasmAcceptance = { ...event.data.mcdollarWasmAcceptance, origin: event.origin,
               sandbox: frame.getAttribute('sandbox') };
           }
         });

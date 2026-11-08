@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 const makeRepository = (): string => {
-  const root = mkdtempSync(join(tmpdir(), 'peerd-copy-hygiene-'));
+  const root = mkdtempSync(join(tmpdir(), 'mcdollar-copy-hygiene-'));
   temporaryRoots.push(root);
   const git = (...args: string[]) => execFileSync('git', args, { cwd: root, stdio: 'ignore' });
   git('init');

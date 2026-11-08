@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { captureSessionAuthority, withSessionAuthorityMutation } from '../../extension/shared/session-authority-epoch.js';
-import { createSessionStore } from '../../extension/peerd-runtime/sessions/store.js';
+import { createSessionStore } from '../../extension/mcdollar-runtime/sessions/store.js';
 import { createKernelSessionReader } from '../../extension/background/kernel-session-reader.js';
 import { bindCurrentChat } from '../../extension/shared/current-session-binding.js';
-import { makeGoalRunner } from '../../extension/peerd-runtime/loop/goal-runner.js';
+import { makeGoalRunner } from '../../extension/mcdollar-runtime/loop/goal-runner.js';
 
 describe('host session authority epoch', () => {
   test.each(['rich', 'cold'])('%s permission writes invalidate before storage and through failure', async (kind) => {

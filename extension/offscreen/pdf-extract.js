@@ -12,7 +12,7 @@
 // installed, 'auto' escalates to OCR: each page is rasterized and its glyphs
 // recognized with Tesseract (the driver is vendored in vendor/tesseract/; the
 // heavy core WASM + English language model are the opt-in, SRI-pinned runtime
-// download wired in peerd-runtime/pdf/ocr-store.js). When OCR isn't installed a
+// download wired in mcdollar-runtime/pdf/ocr-store.js). When OCR isn't installed a
 // scanned PDF returns its (empty) text layer plus a clear "looks scanned" note
 // so the agent reports the gap honestly. OCR is strictly fail-closed: until the
 // driver is vendored AND the asset SRIs are pinned, escalation falls back to the
@@ -30,7 +30,7 @@ import browser from '/shared/browser-api.js';
 import {
   chooseEngine, looksScanned, createOcrStore,
   PdfParseError, MAX_SPILL_TEXT_CHARS,
-} from '/peerd-runtime/offscreen.js';
+} from '/mcdollar-runtime/offscreen.js';
 import { boundedPdfInfo, extractBoundedPdfTextLayer } from './pdf-text-layer.js';
 import { abortError, throwIfAborted } from '/shared/abort.js';
 
@@ -57,7 +57,7 @@ const getOcrStore = () => (ocrStore ??= createOcrStore());
 // tesseract.js — the OCR driver. VENDORED code (like pdf.js itself), NOT a
 // runtime download: extension/vendor/tesseract/{tesseract.esm.min.js,
 // worker.min.js}. The two HEAVY assets — the core WASM and the English language
-// model — ARE the opt-in, SRI-pinned runtime download (peerd-runtime/pdf/
+// model — ARE the opt-in, SRI-pinned runtime download (mcdollar-runtime/pdf/
 // ocr-store.js). Lazy like pdf.js: most sessions never OCR, so the driver stays
 // off the offscreen startup path and is paid once, on the first scanned PDF.
 // A load failure remains caught by extractViaOcr's caller and falls back to the

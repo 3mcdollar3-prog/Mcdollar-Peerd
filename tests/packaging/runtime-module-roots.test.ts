@@ -54,7 +54,7 @@ describe('fixed runtime module roots', () => {
   });
 
   test('Node harness graphs may exclude external imports without weakening browser graphs', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-local-script-graph-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-local-script-graph-'));
     temporaryRoots.push(root);
     writeFileSync(join(root, 'entry.mjs'), "import 'node:fs';\nimport './local.mjs';\n");
     writeFileSync(join(root, 'local.mjs'), 'export const local = true;\n');
@@ -77,9 +77,9 @@ describe('fixed runtime module roots', () => {
   });
 
   test('the Notebook linker exposes its fixed Rollup root to packaging', async () => {
-    const file = join(EXTENSION, 'peerd-engine/single-module-linker.js');
+    const file = join(EXTENSION, 'mcdollar-engine/single-module-linker.js');
     const source = readFileSync(file, 'utf8');
-    const edges = await fixedRuntimeModuleEdges(source, 'peerd-engine/single-module-linker.js');
+    const edges = await fixedRuntimeModuleEdges(source, 'mcdollar-engine/single-module-linker.js');
     expect(edges).toContainEqual({
       kind: 'dynamic-import', specifier: '/vendor/rollup/rollup.browser.js',
       rootRelative: true,
@@ -242,7 +242,7 @@ describe('fixed runtime module roots', () => {
   });
 
   test('an unavailable edge exemption never transfers to a second caller', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-runtime-exemption-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-runtime-exemption-'));
     temporaryRoots.push(root);
     mkdirSync(join(root, 'home'), { recursive: true });
     writeFileSync(join(root, 'home/home.js'), "import('./eval-section.js');\n");
@@ -257,7 +257,7 @@ describe('fixed runtime module roots', () => {
   });
 
   test('a target-specific runtime root cannot be omitted or point at a missing graph', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-runtime-root-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-runtime-root-'));
     temporaryRoots.push(root);
     mkdirSync(join(root, 'offscreen'), { recursive: true });
     writeFileSync(join(root, 'offscreen/source.js'), "import('./preview-only.js');\n");

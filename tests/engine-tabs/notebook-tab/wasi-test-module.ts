@@ -1,5 +1,5 @@
 // wasi-test-module.ts — hand-assembled wasm32-wasi COMMAND modules for the
-// peerd:wasi tests.
+// mcdollar:wasi tests.
 //
 // why hand-assembled: the repo has no wasm toolchain (and must not grow one for
 // a test fixture — no build step is the house rule). These builders emit the

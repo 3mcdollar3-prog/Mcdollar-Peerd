@@ -30,12 +30,12 @@ export const composerUnavailableCopy = (composer, { compact = false } = {}) => {
   if (composer?.reason === 'controller-not-ready') {
     return compact
       ? 'Starting up. Try again in a moment.'
-      : 'peerd is starting up. Try again in a moment.';
+      : 'mcdollar is starting up. Try again in a moment.';
   }
   if (composer?.reason === 'settings-unavailable') {
     return compact
       ? 'Provider settings are temporarily unavailable.'
-      : 'Provider settings could not be loaded. Reopen peerd to retry.';
+      : 'Provider settings could not be loaded. Reopen mcdollar to retry.';
   }
   if (composer?.reason === 'vault-locked') {
     return compact

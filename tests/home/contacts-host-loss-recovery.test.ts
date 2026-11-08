@@ -10,7 +10,7 @@ describe('Contacts native-demand host-loss acceptance', () => {
     expect(source).toContain("code: 'contacts-ui-timeout'");
     expect(source).toContain("}, listPending ? 'Retrying…' : 'Retry')");
     expect(source).toContain('contacts === null && !listFailure');
-    // The user reads neutral words and checks the list; peerd reads it again by itself.
+    // The user reads neutral words and checks the list; mcdollar reads it again by itself.
     expect(source).toContain('Check the list before you try again.');
     expect(source).toContain('one post-operation read, never a mutation replay');
     expect(source).toContain('refresh(send, timeoutMs, true)');

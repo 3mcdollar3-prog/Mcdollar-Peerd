@@ -52,7 +52,7 @@ export const createKernelMemoryInitProbe = ({
       } catch {
         return { tab: null, warning: '/init skipped the browser page because its current document could not be verified.' };
       }
-      const documentId = target?.peerdDocumentId ?? target?.documentId;
+      const documentId = target?.mcdollarDocumentId ?? target?.documentId;
       if (!target || typeof target.id !== 'number' || typeof target.url !== 'string'
           || typeof documentId !== 'string') {
         return { tab: null, warning: '/init skipped the browser page because browser policy refused the target.' };
@@ -66,7 +66,7 @@ export const createKernelMemoryInitProbe = ({
         const result = response?.result;
         if (!result) return { tab: tabResult };
         const stillLive = await step(Promise.resolve(resolveTab({ id: target.id })));
-        const stillDocumentId = stillLive?.peerdDocumentId ?? stillLive?.documentId;
+        const stillDocumentId = stillLive?.mcdollarDocumentId ?? stillLive?.documentId;
         if (stillLive?.url !== target.url || stillDocumentId !== documentId) {
           return { tab: null, warning: '/init skipped the browser page because its current document changed.' };
         }

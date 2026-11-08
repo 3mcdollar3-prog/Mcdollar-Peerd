@@ -66,7 +66,7 @@ const assertRunning = (job) => {
 /** @param {Job} job @param {Record<string,any>} input */
 const runWorkers = (job, input) => new Promise((resolve, reject) => {
   assertRunning(job);
-  const worker = new Worker(new URL('./wasmer-worker.js', import.meta.url), { type: 'module', name: `peerd-wasmer-${job.id}` });
+  const worker = new Worker(new URL('./wasmer-worker.js', import.meta.url), { type: 'module', name: `mcdollar-wasmer-${job.id}` });
   const terminate = worker.terminate.bind(worker);
   /** @type {Map<number,Worker>} */ const threads = new Map();
   let starts = 0;
@@ -100,7 +100,7 @@ const runWorkers = (job, input) => new Promise((resolve, reject) => {
             || threads.size >= MAX_WORKERS || ++starts > MAX_WORKER_STARTS) {
           throw new WasmerHostError('Wasmer worker request exceeds its fixed capability.');
         }
-        const thread = new Worker(new URL('./wasmer-thread-worker.js', import.meta.url), { type: 'module', name: `peerd-wasmer-thread-${job.id}-${message.id}` });
+        const thread = new Worker(new URL('./wasmer-thread-worker.js', import.meta.url), { type: 'module', name: `mcdollar-wasmer-thread-${job.id}-${message.id}` });
         threads.set(message.id, thread);
         job.children.add(thread);
         thread.addEventListener('message', (reply) => {
@@ -130,7 +130,7 @@ const runWorkers = (job, input) => new Promise((resolve, reject) => {
  * The caller holds the Pod workspace queue through snapshot, run, and persistence.
  * @param {Job} job
  * @param {any} args
- * @param {ReturnType<typeof import('../../peerd-engine/opfs.js').opfsHelpers>} workspace
+ * @param {ReturnType<typeof import('../../mcdollar-engine/opfs.js').opfsHelpers>} workspace
  */
 export const runPodWasmer = async (job, args, workspace) => {
   assertRunning(job);

@@ -1,6 +1,6 @@
 // @ts-check
 
-/** @typedef {import('../peerd-runtime/tools/hooks/compile.js').UserHookRecord} UserHookRecord */
+/** @typedef {import('../mcdollar-runtime/tools/hooks/compile.js').UserHookRecord} UserHookRecord */
 
 const parseFrontmatter = (/** @type {string} */ text) => {
   const match = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(text);

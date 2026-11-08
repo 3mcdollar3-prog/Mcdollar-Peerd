@@ -640,9 +640,9 @@ describe('repository/local production composition', () => {
     expect(bytes(await graph('offscreen/kernel-repository-host.js'))).toBeLessThan(80_000);
     const localHost = await graph('offscreen/kernel-local-host.js');
     const localAuthority = await graph('background/kernel-local-control.js');
-    expect(localHost.has('peerd-provider/controller.js')).toBe(true);
-    expect(localAuthority.has('peerd-provider/controller.js')).toBe(false);
-    expect([...localAuthority].some((module) => module.includes('peerd-provider/adapters/')))
+    expect(localHost.has('mcdollar-provider/controller.js')).toBe(true);
+    expect(localAuthority.has('mcdollar-provider/controller.js')).toBe(false);
+    expect([...localAuthority].some((module) => module.includes('mcdollar-provider/adapters/')))
       .toBe(false);
   });
 });

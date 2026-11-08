@@ -84,7 +84,7 @@ const launch = async ({ chrome, mdns = true, allInterfaces = false, resourceMetr
     if (!await bytes.exists()) { errors.push(`HTTP 404: ${path}`); return new Response(null, { status: 404 }); }
     return new Response(bytes, { headers: { 'Content-Type': ['.js', '.mjs'].includes(extname(file)) ? 'text/javascript' : bytes.type } });
   } });
-  profile = mkdtempSync(join(tmpdir(), 'peerd-cluster-'));
+  profile = mkdtempSync(join(tmpdir(), 'mcdollar-cluster-'));
   browser = spawn(chrome, ['--headless=new', '--no-first-run', '--no-default-browser-check',
     '--disable-background-networking', '--disable-component-update',
     ...(allInterfaces ? ['--use-fake-device-for-media-stream'] : []),

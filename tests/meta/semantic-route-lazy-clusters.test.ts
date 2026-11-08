@@ -24,7 +24,7 @@ describe('digest-bound lazy semantic route clusters', () => {
     const modules = await modulesFor('offscreen/semantic-route-host.js');
     expect(modules.has('background/routes/actor-overview.js')).toBe(false);
     expect(modules.has('background/routes/contacts.js')).toBe(false);
-    expect(modules.has('peerd-provider/background.js')).toBe(false);
+    expect(modules.has('mcdollar-provider/background.js')).toBe(false);
     expect([...modules].some((file) => file.startsWith('offscreen/semantic-routes/')))
       .toBe(false);
   });
@@ -51,11 +51,11 @@ describe('digest-bound lazy semantic route clusters', () => {
 
   test('each literal cluster reaches only its own route family', async () => {
     const expected: Record<string, string> = {
-      apps: 'peerd-engine/app-manifest.js',
+      apps: 'mcdollar-engine/app-manifest.js',
       contacts: 'offscreen/semantic-routes/contacts.js',
-      contributor: 'peerd-runtime/observability/contributor-store.js',
+      contributor: 'mcdollar-runtime/observability/contributor-store.js',
       memory: 'offscreen/semantic-routes/memory.js',
-      providers: 'peerd-provider/metadata.js',
+      providers: 'mcdollar-provider/metadata.js',
     };
     for (const [cluster, ownRoute] of Object.entries(expected)) {
       const entry = `offscreen/semantic-routes/${cluster}.js`;

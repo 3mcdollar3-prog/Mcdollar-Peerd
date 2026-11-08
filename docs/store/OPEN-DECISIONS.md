@@ -32,14 +32,14 @@ WebAssembly execution API is tracked separately.
 
 ### Dweb
 
-The store package omits `peerd-distributed`. The preview package includes it.
+The store package omits `mcdollar-distributed`. The preview package includes it.
 Packaging and boundary checks verify that store artifacts contain no dweb code.
 
 ### Anti-bot behavior
 
-The non-evasion posture is fixed. peerd does not use fingerprint spoofing,
+The non-evasion posture is fixed. mcdollar does not use fingerprint spoofing,
 proxies, challenge solvers, or similar bypasses. Adaptive per-origin pacing from
-issue #234 is enforced: peerd honors a pause a site states, learns a slower
+issue #234 is enforced: mcdollar honors a pause a site states, learns a slower
 cadence for browser writes there, and ends the turn rather than waiting past its
 inline ceiling. Challenge handoff and assist-only behavior still need
 implementation and field testing. See

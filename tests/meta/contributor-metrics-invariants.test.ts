@@ -8,13 +8,13 @@ import { join } from 'node:path';
 import { EXTENSION_DIR } from '../../packaging/lib.ts';
 
 const metrics = readFileSync(join(
-  EXTENSION_DIR, 'peerd-runtime/observability/contributor-metrics.js',
+  EXTENSION_DIR, 'mcdollar-runtime/observability/contributor-metrics.js',
 ), 'utf8');
 const store = readFileSync(join(
-  EXTENSION_DIR, 'peerd-runtime/observability/contributor-store.js',
+  EXTENSION_DIR, 'mcdollar-runtime/observability/contributor-store.js',
 ), 'utf8');
 const feedback = readFileSync(join(
-  EXTENSION_DIR, 'peerd-runtime/observability/contributor-feedback.js',
+  EXTENSION_DIR, 'mcdollar-runtime/observability/contributor-feedback.js',
 ), 'utf8');
 const routes = readFileSync(join(
   EXTENSION_DIR, 'offscreen/semantic-routes/contributor.js',

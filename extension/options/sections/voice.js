@@ -20,7 +20,7 @@
 import m from '/vendor/mithril/mithril.js';
 import browser from '/shared/browser-api.js';
 import { confirmationDialogAttrs } from '/shared/ui-effects.js';
-import { createVoiceManager, detectVoiceCapability } from '/peerd-runtime/options.js';
+import { createVoiceManager, detectVoiceCapability } from '/mcdollar-runtime/options.js';
 import { mutationFailureCopy } from '../mutation-custody.js';
 import { resetRow } from './reset-row.js';
 // OCR shares this tab (both are heavy on-device model downloads), but lives in
@@ -129,10 +129,10 @@ export const VoiceSection = {
               ? 'Voice input is enabled. Moonshine transcription runs entirely on this device.'
               : activeEngine === 'web-speech'
                 ? `Voice input is enabled via the browser's Web Speech API. Audio is sent to ${cloudVendor} for transcription.${capability.moonshine ? ' Upgrade to on-device transcription below.' : ''}`
-                : 'Voice input is enabled. Click the mic next to any text field in the peerd panel, then speak.'
+                : 'Voice input is enabled. Click the mic next to any text field in the mcdollar panel, then speak.'
             : capability.webSpeech
-              ? `Talk to peerd instead of typing. Your browser's Web Speech API works instantly, but it typically sends your audio to ${cloudVendor} for transcription.`
-              : 'Talk to peerd instead of typing. This browser has no built-in speech API, so peerd uses the on-device Moonshine model. It downloads once (~250 MB) and then runs fully on this device.'),
+              ? `Talk to mcdollar instead of typing. Your browser's Web Speech API works instantly, but it typically sends your audio to ${cloudVendor} for transcription.`
+              : 'Talk to mcdollar instead of typing. This browser has no built-in speech API, so mcdollar uses the on-device Moonshine model. It downloads once (~250 MB) and then runs fully on this device.'),
 
         // Moonshine download progress (after opt-in).
         voiceStatus === 'downloading' ? m('div', [
@@ -215,7 +215,7 @@ export const VoiceSection = {
           m('p.muted', { style: 'margin:0 0 8px;' }, [
             'Web Speech needs no download, but it typically ',
             m('strong', 'sends your audio to the browser vendor\'s servers'),
-            ' for transcription. Moonshine downloads once (~250 MB, cached locally) so speech-to-text runs entirely on this device — peerd avoids the cloud round-trip.',
+            ' for transcription. Moonshine downloads once (~250 MB, cached locally) so speech-to-text runs entirely on this device — mcdollar avoids the cloud round-trip.',
           ]),
           m('button.secondary', {
             type: 'button',
@@ -270,12 +270,12 @@ export const VoiceSection = {
         // ---- Moonshine download confirmation modal ------------------------
         // Reached from "Upgrade to on-device" (Chrome) or "Enable voice"
         // (Firefox, where it's required). Always about the on-device model.
-        ui.voiceConfirmOpen ? m('.peerd-modal-backdrop', {
+        ui.voiceConfirmOpen ? m('.mcdollar-modal-backdrop', {
           onclick: (/** @type {Event} */ e) => { if (e.target === e.currentTarget) closeConfirmation(); },
-        }, m('.peerd-modal', confirmationDialogAttrs('voice-confirm-title', closeConfirmation, ui), [
+        }, m('.mcdollar-modal', confirmationDialogAttrs('voice-confirm-title', closeConfirmation, ui), [
           m('h3#voice-confirm-title', 'Download on-device voice model?'),
           m('p', [
-            'peerd will use ',
+            'mcdollar will use ',
             m('a', {
               href: 'https://github.com/moonshine-ai/moonshine',
               target: '_blank',
@@ -294,7 +294,7 @@ export const VoiceSection = {
             ? m('p.muted', { style: 'margin:8px 0 0;' },
                 'This browser has no built-in speech API, so the on-device model is required for voice.')
             : null,
-          m('.peerd-modal-actions', [
+          m('.mcdollar-modal-actions', [
             m('button.secondary', { type: 'button', 'data-confirm-reject': '', disabled: ui.voiceBusy, onclick: closeConfirmation }, 'Cancel'),
             m('button', {
               type: 'button',
@@ -344,7 +344,7 @@ const MicPermissionHelp = {
         'Extension pages can\'t always surface the microphone prompt in Chrome. '
         + 'Click the button below to open a dedicated grant page — your browser '
         + 'will show the permission prompt there, and the grant carries back to '
-        + 'every peerd surface (this page and the panel).'),
+        + 'every mcdollar surface (this page and the panel).'),
       m('p.muted', { style: 'font-size:12px; margin:0 0 8px;' },
         'If the grant page also fails to prompt, the most likely cause is your '
         + 'operating system blocking microphone access for the browser itself:'),

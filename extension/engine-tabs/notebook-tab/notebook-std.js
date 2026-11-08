@@ -1,10 +1,10 @@
 // @ts-check
-// notebook-tab/notebook-std.js — `peerd:std`, the Notebook standard library.
+// notebook-tab/notebook-std.js — `mcdollar:std`, the Notebook standard library.
 //
 // Imported EXPLICITLY in Notebook code — `import { table, chart, mean } from
-// 'peerd:std'`. The module resolver maps the bare `peerd:std` specifier to this
+// 'mcdollar:std'`. The module resolver maps the bare `mcdollar:std` specifier to this
 // file (see makeResolverDeps in notebook-tab.js + the `builtins` map in
-// module-resolver.js). why explicit and not an injected global: in peerd,
+// module-resolver.js). why explicit and not an injected global: in mcdollar,
 // dependencies are visible imports you can see and delete, never magic ambient
 // names (the spirit of DECISIONS #21 — and the owner's call, 2026-06-15).
 //
@@ -14,7 +14,7 @@
 // into a table or an SVG. Everything here is a pure function: no I/O, no
 // globals, no input mutation — which is what keeps Notebook runs reproducible
 // (DECISIONS #24). A run displays a value by RETURNING it, or via
-// peerd.self.display(value) for more than one output.
+// mcdollar.self.display(value) for more than one output.
 
 // ── display helpers — return descriptors the output pane renders ──────────
 
@@ -24,7 +24,7 @@
  * @param {unknown} rows
  */
 export const table = (rows) => ({
-  __peerd_display: 'table',
+  __mcdollar_display: 'table',
   rows: Array.isArray(rows) ? rows : [],
 });
 
@@ -40,7 +40,7 @@ export const table = (rows) => ({
  * @param {{ type?: string, data?: unknown, x?: unknown, y?: unknown, v?: unknown, title?: unknown }} [spec]
  */
 export const chart = (spec = {}) => ({
-  __peerd_display: 'chart',
+  __mcdollar_display: 'chart',
   type: typeof spec.type === 'string' && ['bar', 'line', 'scatter', 'heatmap'].includes(spec.type) ? spec.type : 'bar',
   data: Array.isArray(spec.data) ? spec.data : [],
   x: spec.x ?? null,
@@ -399,7 +399,7 @@ export const toCsv = (rows, { delimiter = ',' } = {}) => {
 
 // ── HTML string helpers — regex-grade, honestly named ─────────────────────
 // why regex, not a parser: the sealed worker has no DOMParser, and the
-// fetch-level extract (peerd.egress.fetch(url, { extract: 'markdown' }))
+// fetch-level extract (mcdollar.egress.fetch(url, { extract: 'markdown' }))
 // already covers "give me the readable page". These serve the FRAGMENT cases
 // at regex fidelity: fine on well-formed markup, but NOT a parser — nested
 // same-name tags, conditional comments, script-built markup, and exotic

@@ -13,7 +13,7 @@ import './seal-order-leaky.js';
 postMessage({
   type: 'order-result',
   consoleOutput,
-  result: /** @type {{ __peerdSealOrderProbe: unknown }} */ (
+  result: /** @type {{ __mcdollarSealOrderProbe: unknown }} */ (
     /** @type {unknown} */ (globalThis)
-  ).__peerdSealOrderProbe,
+  ).__mcdollarSealOrderProbe,
 });

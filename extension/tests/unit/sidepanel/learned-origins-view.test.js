@@ -1,5 +1,5 @@
 // @ts-check
-// Settings → Learned sites: the un-learn surface for the origins peerd decided
+// Settings → Learned sites: the un-learn surface for the origins mcdollar decided
 // the user has an account on.
 //
 // Why these claims and not the rendering: the list is the ONLY way to see or undo
@@ -62,8 +62,8 @@ describe('sidepanel.learned-origins view', () => {
       expect(text.includes('every port and its subdomains')).toBe(true);
       // The reason is why the site is treated as theirs — the raw enum would
       // leave a user with no way to judge whether the guess was wrong.
-      expect(text.includes('a sign-in form was on a page peerd read')).toBe(true);
-      expect(text.includes('you approved peerd sending data to it')).toBe(true);
+      expect(text.includes('a sign-in form was on a page mcdollar read')).toBe(true);
+      expect(text.includes('you approved mcdollar sending data to it')).toBe(true);
     } finally { unmount(); }
   });
 

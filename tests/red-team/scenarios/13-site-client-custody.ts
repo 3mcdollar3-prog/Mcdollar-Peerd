@@ -14,12 +14,12 @@ import {
   makeSiteClientOriginAuthorizer,
   makeSiteClientOriginGuard,
   mayUseSiteClientOrigin,
-} from '../../../extension/peerd-runtime/actor/origin-lock.js';
-import { actorTierGate } from '../../../extension/peerd-runtime/tools/gates.js';
-import { siteClientReadTool } from '../../../extension/peerd-runtime/tools/defs/site-client-read.js';
-import { siteClientRunTool } from '../../../extension/peerd-runtime/tools/defs/site-client-run.js';
+} from '../../../extension/mcdollar-runtime/actor/origin-lock.js';
+import { actorTierGate } from '../../../extension/mcdollar-runtime/tools/gates.js';
+import { siteClientReadTool } from '../../../extension/mcdollar-runtime/tools/defs/site-client-read.js';
+import { siteClientRunTool } from '../../../extension/mcdollar-runtime/tools/defs/site-client-run.js';
 import { executeSiteClientTool } from '../../helpers/site-client-tool.js';
-import { siteClientWriteTool } from '../../../extension/peerd-runtime/tools/defs/site-client-write.js';
+import { siteClientWriteTool } from '../../../extension/mcdollar-runtime/tools/defs/site-client-write.js';
 
 const foreignToolProbe = async (kind: 'read' | 'run' | 'write' | 'delete'): Promise<Probe> => {
   const effects: string[] = [];

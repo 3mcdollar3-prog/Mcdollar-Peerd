@@ -68,7 +68,7 @@ describe('build-tool dependency fixes', () => {
   });
 
   test.each(['file', 'directory'])('refuses extraction through a destination %s symlink', (kind) => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-zip-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-zip-'));
     try {
       const target = join(root, 'target');
       mkdirSync(target);

@@ -1,8 +1,8 @@
 // @ts-check
-// eval/om2w-actions — pure mapping from peerd tool calls to Online-Mind2Web
+// eval/om2w-actions — pure mapping from mcdollar tool calls to Online-Mind2Web
 // "Grammar A" action strings (schema online-mind2web-v2).
 //
-// The OM2W judge consumes an action_history of factual page actions. peerd's
+// The OM2W judge consumes an action_history of factual page actions. mcdollar's
 // turn/tool-use events carry { name, input }; this module decides (a) whether a
 // tool call IS a page action (reads/orchestration are not — the README:
 // "The action history should contain only the factual actions taken by the
@@ -19,7 +19,7 @@
 const clip = (s, max = 80) => (s.length > max ? `${s.slice(0, max - 1)}…` : s);
 
 /**
- * The page-action mapping for one peerd tool call, or null when the call is
+ * The page-action mapping for one mcdollar tool call, or null when the call is
  * not a page action (reads, delegation, compute — excluded from action_history).
  * @param {string} name  tool name from turn/tool-use
  * @param {Record<string, any>} [input]  tool args from turn/tool-use

@@ -2,12 +2,12 @@
 // not an expected passing assertion. No rendezvous, native ICE or wire shortcuts.
 import assert from 'node:assert/strict';
 import {createPrivateKey,createPublicKey} from 'node:crypto';
-import {importIdentity} from '../../extension/peerd-distributed/identity/keypair.js';
-import {memoryPair} from '../../extension/peerd-distributed/transport/channel.js';
-import {createSession} from '../../extension/peerd-distributed/transport/session.js';
-import {joinRoom} from '../../extension/peerd-distributed/transport/rooms.js';
-import {makeDhtDialer} from '../../extension/peerd-distributed/transport/dht-dialer.js';
-import {createBaseNetwork} from '../../extension/peerd-distributed/base-network.js';
+import {importIdentity} from '../../extension/mcdollar-distributed/identity/keypair.js';
+import {memoryPair} from '../../extension/mcdollar-distributed/transport/channel.js';
+import {createSession} from '../../extension/mcdollar-distributed/transport/session.js';
+import {joinRoom} from '../../extension/mcdollar-distributed/transport/rooms.js';
+import {makeDhtDialer} from '../../extension/mcdollar-distributed/transport/dht-dialer.js';
+import {createBaseNetwork} from '../../extension/mcdollar-distributed/base-network.js';
 
 // Public deterministic fixture identities, never production keys.
 const identities=await Promise.all(Array.from({length:5},async(_,i)=>{

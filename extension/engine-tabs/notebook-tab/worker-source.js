@@ -2,7 +2,7 @@
 // notebook-tab/worker-source.js — builds the sealed Notebook worker's source.
 //
 // SECURITY-CRITICAL + host-agnostic. This is the ONE place the worker realm is
-// assembled: the realm seal as the FIRST graph edge, the peerd.* capability surface,
+// assembled: the realm seal as the FIRST graph edge, the mcdollar.* capability surface,
 // the postMessage bridges (fetch / opfs / actor / display), and the entry
 // IIFE. BOTH hosts use it — the visible Notebook tab (notebook-tab.js) and the
 // headless offscreen job runner (offscreen/job-runner.js) — so the seal +
@@ -11,18 +11,18 @@
 //
 // Pure: returns { source, cache }. The caller injects `resolverDeps`
 // (readFile / makeBlobUrl / log) — OPFS + logging differ per host — and owns
-// blob-URL revocation via `cache`. The peerd:std builtin is added here so every
+// blob-URL revocation via `cache`. The mcdollar:std builtin is added here so every
 // host resolves it identically.
 
 import {
   buildEntry,
   isRemoteSpecifier,
   remoteModuleCapabilityBlockedMessage,
-} from '/peerd-engine/offscreen.js';
+} from '/mcdollar-engine/offscreen.js';
 
 // why absolute URLs: Chrome loads this graph natively. Firefox's package-selected
 // linker consumes the same URLs as trusted virtual entries and emits the seal
-// body before any agent module body. peerd:std loads after the seal and is pure.
+// body before any agent module body. mcdollar:std loads after the seal and is pure.
 // The URLs work on the extension origin and the HTTP in-browser harness.
 export const SEAL_MODULE_URL = new URL('./realm-seal.js', import.meta.url).href;
 const POD_SEAL_MODULE_URL = new URL('../pod-tab/pod-realm-seal.js', import.meta.url).href;
@@ -30,11 +30,11 @@ const STD_MODULE_URL = new URL('./notebook-std.js', import.meta.url).href;
 const WASI_MODULE_URL = new URL('./notebook-wasi.js', import.meta.url).href;
 
 // The bare-specifier → URL map both hosts feed the resolver. Do not let it
-// drift from buildEntry's builtins below. peerd:wasi is pure compute over
+// drift from buildEntry's builtins below. mcdollar:wasi is pure compute over
 // caller-built capabilities (its own
-// header has the security story), so exposing it everywhere peerd:std goes adds
+// header has the security story), so exposing it everywhere mcdollar:std goes adds
 // no authority to the realm.
-export const NOTEBOOK_BUILTINS = { 'peerd:std': STD_MODULE_URL, 'peerd:wasi': WASI_MODULE_URL };
+export const NOTEBOOK_BUILTINS = { 'mcdollar:std': STD_MODULE_URL, 'mcdollar:wasi': WASI_MODULE_URL };
 
 // The default capability profile — the surface every worker had before profiles
 // existed. A caller that passes nothing gets EXACTLY the historical worker.
@@ -47,11 +47,11 @@ export const NOTEBOOK_BUILTINS = { 'peerd:std': STD_MODULE_URL, 'peerd:wasi': WA
 // refuses the bridge message), so a seal escape alone doesn't re-open a lane.
 // caps.provider (design 5) is OFF by default EVERYWHERE: it spends the user's
 // paid key, so only the script tool mints it — per-run, and only when the code
-// actually references peerd.provider.
+// actually references mcdollar.provider.
 // why distributed defaults true: the wired base-network reads are the
 // historical tab surface (the Notebook host answers 'distributed-request');
 // the headless job runner forces it off — it has no handler, so without the
-// in-realm throw a touch of peerd.distributed.* would hang to the job
+// in-realm throw a touch of mcdollar.distributed.* would hang to the job
 // wall-clock (design 7.3).
 export const DEFAULT_WORKER_CAPS = Object.freeze({
   page: false, app: false, egress: true, subagent: true, opfs: true, provider: false, distributed: true,
@@ -69,8 +69,8 @@ export const REMOTE_MODULE_WORKER_CAPS = Object.freeze({
  * @param {string} userCode
  * @param {Object} opts
  * @param {string} [opts.entryPath]   resolver entry name (default 'notebook.js')
- * @param {string} opts.notebookId    realm id surfaced as peerd.self.id
- * @param {import('/peerd-engine/module-resolver.js').ResolverDeps} opts.resolverDeps  host-injected (fetchRemote only in egress-capable lanes — module-resolver.js)
+ * @param {string} opts.notebookId    realm id surfaced as mcdollar.self.id
+ * @param {import('/mcdollar-engine/module-resolver.js').ResolverDeps} opts.resolverDeps  host-injected (fetchRemote only in egress-capable lanes — module-resolver.js)
  * @param {boolean} [opts.a2a]   expose the `mesh` agent-to-agent client (capability-gated; the host relays a2a-request → SW a2a/call). Off by default.
  * @param {boolean} [opts.actors] expose the `actors` delegation client (capability-gated; the host relays actors-request → SW actors/call). Off by default.
  * @param {string} [opts.siteFetch] DESIGN-19: expose the `site` client PINNED to this origin (site.fetch → the host site-fetch-request relay → SW site-fetch/call). Off by default; when set, egress/opfs/subagent/page are all off (a site-client run's ONLY outward edge is the pinned fetch).
@@ -121,8 +121,8 @@ const NOTEBOOK_ID = ${JSON.stringify(notebookId)};
 // Posts a value to the host's output (rendered by output-render.js: a table /
 // chart descriptor → table / SVG, an array of rows → table, else JSON / text).
 // JSON-clone-safe values only; anything else degrades to a string. Surfaced to
-// author code as peerd.self.display (capability surface below).
-const __peerdDisplay = (value) => {
+// author code as mcdollar.self.display (capability surface below).
+const __mcdollarDisplay = (value) => {
   let safe;
   try { JSON.stringify(value); safe = value; }
   catch { safe = String(value); }
@@ -181,14 +181,14 @@ const makeBridge = (name, { timeoutMs, shape, timeoutMessage } = {}) => {
   return call;
 };
 
-// --- peerd.* OPFS proxy ---
+// --- mcdollar.* OPFS proxy ---
 const opfsRelay = makeBridge('opfs', { timeoutMs: 15000 });
 const opfsCall = (op, args) => opfsRelay({ op, args });
-// ── The peerd capability surface ────────────────────────────────────────
-// An artifact peerd builds (this Notebook today; Apps later) can call back into
-// peerd and COMPOSE it — runAgent is the seed of that. Capabilities are grouped
+// ── The mcdollar capability surface ────────────────────────────────────────
+// An artifact mcdollar builds (this Notebook today; Apps later) can call back into
+// mcdollar and COMPOSE it — runAgent is the seed of that. Capabilities are grouped
 // by the five modules ON PURPOSE: the module boundary doubles as the unit of
-// AUTHORITY (DECISIONS #21). peerd.self is the ONE non-module bucket: the realm's
+// AUTHORITY (DECISIONS #21). mcdollar.self is the ONE non-module bucket: the realm's
 // OWN plumbing (its id, its module loader, its private OPFS scratch).
 //
 // STATUS: most methods are PLACEHOLDERS that throw. WIRED today: egress.fetch,
@@ -198,25 +198,25 @@ const opfsCall = (op, args) => opfsRelay({ op, args });
 // READS, preview only — side-effect-free observation), all of self.
 //
 // SECURITY — READ BEFORE WIRING A PLACEHOLDER. This object is reachable from
-// UNTRUSTED code (artifacts peerd generated; eventually Apps over the dweb).
+// UNTRUSTED code (artifacts mcdollar generated; eventually Apps over the dweb).
 // Wiring a capability for apps WITHOUT a per-app grant + quota is a vulnerability:
 //   provider.call    → spends the user's API credits  → quota + explicit grant
 //   engine.spawn*    → resource exhaustion / fork-bomb → hard per-app caps
 //   runtime.runAgent → recursion (depth-capped); notify injects up → hostile input
 //   distributed.*    → signs / publishes as the user   → preview-only, review
 const notWired = (name) => () => {
-  throw new Error('peerd.' + name + '() is a placeholder - that capability is '
+  throw new Error('mcdollar.' + name + '() is a placeholder - that capability is '
     + 'not wired yet. See the capability map at the top of this block.');
 };
 
-globalThis.peerd = {
+globalThis.mcdollar = {
   // p · provider (cyan) — BYOK model access. call is WIRED capability-gated
   // (overridden below per the profile); listModels stays a placeholder.
   provider: {
     listModels: notWired('provider.listModels'),
     call:       notWired('provider.call'),
   },
-  // e · egress (red) — the audited network hole. WIRED. peerd.egress.fetch(url, {
+  // e · egress (red) — the audited network hole. WIRED. mcdollar.egress.fetch(url, {
   // method, headers, body }) rides the bridge to the host's audited webFetch
   // (SSRF + denylist + audit on every method). The seal blocks every other
   // network primitive (notebook-neutralizers.js).
@@ -226,7 +226,7 @@ globalThis.peerd = {
   // e · engine (amber) — execution environments. PLACEHOLDER. The sandbox
   // SPECTRUM (DECISIONS #25): runJob = headless own-code Worker (the MAIN agent
   // reaches it via the script tool); runUntrusted = headless opaque-origin iframe
-  // for untrusted code. The peerd.* (app-spawns-a-job) forms stay notWired until
+  // for untrusted code. The mcdollar.* (app-spawns-a-job) forms stay notWired until
   // per-app grant + quota exist.
   engine: {
     spawnNotebook: notWired('engine.spawnNotebook'),
@@ -262,27 +262,27 @@ globalThis.peerd = {
   // yours (realm-local plumbing). display() shows a value in this realm's output.
   self: {
     get id() { return NOTEBOOK_ID; },
-    import:    (specifier) => globalThis.__peerd_dynamic_import(specifier),
+    import:    (specifier) => globalThis.__mcdollar_dynamic_import(specifier),
     readFile:  (path) => opfsCall('read', { path }),
     writeFile: (path, content) => opfsCall('write', { path, content }),
     deleteFile: (path) => opfsCall('delete', { path }),
     listFiles: () => opfsCall('list', {}),
-    display:   (value) => { __peerdDisplay(value); return value; },
+    display:   (value) => { __mcdollarDisplay(value); return value; },
   },
 };
 
-// Compatibility relay for peerd.self.import. The host refuses this operation
+// Compatibility relay for mcdollar.self.import. The host refuses this operation
 // with the same stable policy error as native dynamic import syntax because a
 // packaged MV3 worker cannot complete the final blob-import hop.
-globalThis.__peerd_dynamic_import = async (opfsPath) => {
+globalThis.__mcdollar_dynamic_import = async (opfsPath) => {
   return opfsCall('compose-module', { path: opfsPath });
 };
 
-// --- peerd.runtime.runAgent (embedded agent) proxy ---
+// --- mcdollar.runtime.runAgent (embedded agent) proxy ---
 const actorRelay = makeBridge('actor');
 const actorCall = (args) => actorRelay({ args });
 
-// --- peerd.distributed.* (base-network read) proxy ---
+// --- mcdollar.distributed.* (base-network read) proxy ---
 // One message type ('distributed-request') fetches the whole base-network info
 // blob; the distributed.* methods above each slice what they need. The host
 // returns { ok, running, did, peers, presence } (or { ok:false, error }); we
@@ -292,7 +292,7 @@ const distributedRelay = makeBridge('distributed', {
 });
 const distributedInfo = () => distributedRelay({});
 
-// --- peerd.mesh.* (agent-to-agent) proxy — capability-gated (a2a) ---
+// --- mcdollar.mesh.* (agent-to-agent) proxy — capability-gated (a2a) ---
 // The code the dweb actor writes drives peers through this client; each call
 // leaves the sealed realm as an a2a-request the host relays to the SW a2a/call
 // route (consent + gated mesh op). Signing calls (call/cast/publishCard) the SW
@@ -308,7 +308,7 @@ ${a2a && !usedRemoteModules ? clientSources.mesh : ''}
 // per-call cap by construction, and the job wall-clock sits above it.
 ${actors && !usedRemoteModules ? clientSources.actors : ''}
 
-// --- peerd.provider.call (sub-model text call) — capability-gated (caps.provider) ---
+// --- mcdollar.provider.call (sub-model text call) — capability-gated (caps.provider) ---
 // Design 5: a pure text transform mid-script ({ system?, prompt | messages,
 // model?, maxTokens? } → { text }). No tools, no streaming — a sub-call that
 // could call tools would be an invisible agent loop (that is runAgent's lane).
@@ -323,13 +323,13 @@ const providerRelay = makeBridge('provider');
 // Re-type quota refusals in-realm: the bridge re-raises plain Errors, so the
 // SW's structured refusal arrives as a message string — restore the name so
 // catch (e) { e.name === 'ProviderQuotaError' } works, not just string-matching.
-globalThis.peerd.provider.call = (args) => providerRelay({ args: args ?? {} }).catch((e) => {
+globalThis.mcdollar.provider.call = (args) => providerRelay({ args: args ?? {} }).catch((e) => {
   if (e && typeof e.message === 'string' && e.message.indexOf('provider quota exceeded') === 0) e.name = 'ProviderQuotaError';
   throw e;
 });
 `) : `
-globalThis.peerd.provider.call = () => {
-  throw new Error(${JSON.stringify(usedRemoteModules ? capabilityBlocked('model calls') : 'peerd.provider.call is not available in this worker (no-provider capability profile).')});
+globalThis.mcdollar.provider.call = () => {
+  throw new Error(${JSON.stringify(usedRemoteModules ? capabilityBlocked('model calls') : 'mcdollar.provider.call is not available in this worker (no-provider capability profile).')});
 };
 `}
 // --- page.* (web-actor page control) proxy — capability-gated (caps.page) ---
@@ -343,8 +343,8 @@ ${profile.page ? (clientSources.page || `
 const pageRelay = makeBridge('page', { timeoutMs: 30000, timeoutMessage: (p) => 'page.' + p.method + ' timed out' });
 const pageCall = (method, args) => pageRelay({ method, args });
 // The Playwright-shaped API is a BARE \`page\` global (the tool description +
-// actor lore both use \`await page.goto(...)\`), mirrored on peerd.page for
-// discoverability. Exposing only peerd.page left \`page\` undefined → every
+// actor lore both use \`await page.goto(...)\`), mirrored on mcdollar.page for
+// discoverability. Exposing only mcdollar.page left \`page\` undefined → every
 // script ReferenceError'd before its first action.
 const __page = {
   goto:     (url) => pageCall('goto', { url }),
@@ -354,7 +354,7 @@ const __page = {
   content:  () => pageCall('content', {}),
 };
 globalThis.page = __page;
-globalThis.peerd.page = __page;
+globalThis.mcdollar.page = __page;
 `) : ''}
 // --- app.* (bound App runtime) proxy, capability-gated (caps.app) ---
 // The owner and App id never enter this realm. The offscreen host attaches the
@@ -369,7 +369,7 @@ const __app = {
   wait: (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(0, Math.min(5000, Number(ms) || 0)))),
 };
 globalThis.app = __app;
-globalThis.peerd.app = __app;
+globalThis.mcdollar.app = __app;
 `) : ''}${siteFetch && !usedRemoteModules ? (clientSources.site || `
 // --- site.* (DESIGN-19 site client) proxy — ONE origin-pinned fetch ---
 // A site-client run's ONLY outward edge: site.fetch(path, { method, headers, body })
@@ -388,32 +388,32 @@ const __site = {
   fetch: (pathOrUrl, init) => siteRelay({ pathOrUrl, method: (init && init.method) || 'GET', headers: (init && init.headers) || {}, body: init && init.body }),
 };
 globalThis.site = __site;
-globalThis.peerd.site = __site;
+globalThis.mcdollar.site = __site;
 `) : ''}${profile.egress ? '' : `
-// Capability profile: NO egress. peerd.egress.fetch throws in-realm; the host
+// Capability profile: NO egress. mcdollar.egress.fetch throws in-realm; the host
 // relay refuses any 'fetch-request' this realm still emits (global fetch is the
 // seal's bridge and cannot be removed here) — two walls, same refusal.
-globalThis.peerd.egress.fetch = () => {
-  throw new Error(${JSON.stringify(usedRemoteModules ? capabilityBlocked('network access') : 'peerd.egress.fetch is not available in this worker (no-egress capability profile).')});
+globalThis.mcdollar.egress.fetch = () => {
+  throw new Error(${JSON.stringify(usedRemoteModules ? capabilityBlocked('network access') : 'mcdollar.egress.fetch is not available in this worker (no-egress capability profile).')});
 };
 `}${profile.subagent ? '' : `
 // Capability profile: NO subagents.
-globalThis.peerd.runtime.runAgent = () => {
-  throw new Error(${JSON.stringify(usedRemoteModules ? capabilityBlocked('subagents') : 'peerd.runtime.runAgent is not available in this worker (no-subagent capability profile).')});
+globalThis.mcdollar.runtime.runAgent = () => {
+  throw new Error(${JSON.stringify(usedRemoteModules ? capabilityBlocked('subagents') : 'mcdollar.runtime.runAgent is not available in this worker (no-subagent capability profile).')});
 };
 `}${profile.opfs ? '' : `
 // Capability profile: NO OPFS. Files and dynamic imports are off; the host
 // relay refuses any 'opfs-request' as the second wall.
 const noOpfs = (name) => () => {
   throw new Error(${JSON.stringify(usedRemoteModules ? capabilityBlocked('Notebook files') : '')}
-    || ('peerd.self.' + name + ' is not available in this worker (no-opfs capability profile).'));
+    || ('mcdollar.self.' + name + ' is not available in this worker (no-opfs capability profile).'));
 };
-globalThis.peerd.self.readFile = noOpfs('readFile');
-globalThis.peerd.self.writeFile = noOpfs('writeFile');
-globalThis.peerd.self.deleteFile = noOpfs('deleteFile');
-globalThis.peerd.self.listFiles = noOpfs('listFiles');
-globalThis.peerd.self.import = noOpfs('import');
-globalThis.__peerd_dynamic_import = noOpfs('import');
+globalThis.mcdollar.self.readFile = noOpfs('readFile');
+globalThis.mcdollar.self.writeFile = noOpfs('writeFile');
+globalThis.mcdollar.self.deleteFile = noOpfs('deleteFile');
+globalThis.mcdollar.self.listFiles = noOpfs('listFiles');
+globalThis.mcdollar.self.import = noOpfs('import');
+globalThis.__mcdollar_dynamic_import = noOpfs('import');
 `}${profile.distributed ? '' : `
 // Capability profile: NO distributed. The base-network reads throw
 // synchronously in-realm; the host relay refuses any 'distributed-request'
@@ -422,12 +422,12 @@ globalThis.__peerd_dynamic_import = noOpfs('import');
 // wall-clock for a one-word answer.
 const noDistributed = (name) => () => {
   throw new Error(${JSON.stringify(usedRemoteModules ? capabilityBlocked('dweb reads') : '')}
-    || ('peerd.distributed.' + name + ' is not available in this worker (no-distributed capability profile).'));
+    || ('mcdollar.distributed.' + name + ' is not available in this worker (no-distributed capability profile).'));
 };
-globalThis.peerd.distributed.whoami = noDistributed('whoami');
-globalThis.peerd.distributed.status = noDistributed('status');
-globalThis.peerd.distributed.peers = noDistributed('peers');
-globalThis.peerd.distributed.presence = noDistributed('presence');
+globalThis.mcdollar.distributed.whoami = noDistributed('whoami');
+globalThis.mcdollar.distributed.status = noDistributed('status');
+globalThis.mcdollar.distributed.peers = noDistributed('peers');
+globalThis.mcdollar.distributed.presence = noDistributed('presence');
 `}${podCommand ? `
 // Pod JS gets local Web-standard JavaScript plus named, instance-rooted file
 // capabilities. Network access stays in the explicit shell curl command so
@@ -437,10 +437,10 @@ const stdin = ${JSON.stringify(podCommand.stdin ?? '')};
 const env = Object.freeze(${JSON.stringify(podCommand.env ?? {})});
 const cwd = ${JSON.stringify(podCommand.cwd ?? '/')};
 const pod = Object.freeze({
-  readFile: (path) => peerd.self.readFile(path),
-  writeFile: (path, content) => peerd.self.writeFile(path, content),
-  deleteFile: (path) => peerd.self.deleteFile(path),
-  listFiles: () => peerd.self.listFiles(),
+  readFile: (path) => mcdollar.self.readFile(path),
+  writeFile: (path, content) => mcdollar.self.writeFile(path, content),
+  deleteFile: (path) => mcdollar.self.deleteFile(path),
+  listFiles: () => mcdollar.self.listFiles(),
 });
 ` : ''}
 // ONE listener fans every '<name>-response' out to its bridge. Each bridge's
@@ -454,7 +454,7 @@ self.addEventListener('message', (ev) => {
 
 const __start = performance.now();
 (async () => {
-__PEERD_BODY__})()
+__MCDOLLAR_BODY__})()
   .then((value) => {
     let safe;
     try { JSON.stringify(value); safe = value; }
@@ -485,12 +485,12 @@ __PEERD_BODY__})()
   // preserves line positions (module-resolver re-inserts removed newlines), so
   // user line L sits at source line bodyLine + L - 1 — the offset mapWorkerError
   // needs to translate a blob-URL stack frame back to <entryPath>:<line>.
-  const markerAt = source.indexOf('__PEERD_BODY__');
+  const markerAt = source.indexOf('__MCDOLLAR_BODY__');
   const bodyLine = source.slice(0, markerAt).split('\n').length;
   // why a function replacement: a string replacement interprets `$&`/`$1` in
   // the BODY as substitution patterns and corrupts agent code containing them.
   return {
-    source: source.replace('__PEERD_BODY__', () => `${body}\n`),
+    source: source.replace('__MCDOLLAR_BODY__', () => `${body}\n`),
     cache,
     bodyLine,
     usedRemoteModules,
@@ -531,7 +531,7 @@ export const mapWorkerError = (
   }
   for (const [path, entry] of moduleCache ?? []) {
     if (!entry.blobUrl || entry.blobUrl === blobUrl) continue;
-    const sourceName = /^(?:https?:|peerd:|\/)/.test(path) ? path : `./${path}`;
+    const sourceName = /^(?:https?:|mcdollar:|\/)/.test(path) ? path : `./${path}`;
     out = out.split(`${entry.blobUrl}:`).join(`${sourceName}:`);
   }
   return out;

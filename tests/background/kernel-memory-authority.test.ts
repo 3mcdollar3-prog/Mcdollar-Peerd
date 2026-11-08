@@ -4,7 +4,7 @@ import {
   normalizeBody as richNormalizeBody,
   normalizeWorkspace as richNormalizeWorkspace,
   scopeId as richScopeId,
-} from '../../extension/peerd-runtime/memory/memory.js';
+} from '../../extension/mcdollar-runtime/memory/memory.js';
 import {
   normalizeBody,
   normalizeWorkspace,

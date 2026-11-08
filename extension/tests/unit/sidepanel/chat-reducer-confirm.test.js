@@ -88,7 +88,7 @@ describe('sidepanel.chat-reducer confirm settles (§4e)', () => {
     });
     expect(s.confirmEvents.length).toBe(2);
     expect(s.confirmEvents[0].id).toBe('p0');  // time-ordered, not append-ordered
-    expect(s.confirmEvents[0].text).toBe('Not approved - peerd wasn’t open to ask.');
+    expect(s.confirmEvents[0].text).toBe('Not approved - mcdollar wasn’t open to ask.');
     expect(s.confirmEvents[1].id).toBe('p1');
   });
 });

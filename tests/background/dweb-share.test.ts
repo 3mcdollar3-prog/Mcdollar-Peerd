@@ -31,7 +31,7 @@ describe('identity-bound dweb share', () => {
       sendMessage: async (message) => {
         messages.push(message);
         if (message.type === 'dweb/base-host/share-app') return shareSuccess(message, {
-          ok: true, uri: 'peerd://did/hash', publisher: 'did:key:zPeer', hash: 'hash',
+          ok: true, uri: 'mcdollar://did/hash', publisher: 'did:key:zPeer', hash: 'hash',
           slug: 'app', dwapp_id: 'dwapp', seq: 1, propagated: false,
         });
         if (message.type === 'dweb/base-host/commit-share') {
@@ -346,7 +346,7 @@ describe('identity-bound dweb share', () => {
         events.push('publish');
         publishStarted();
         await publishGate;
-        return shareSuccess(message, { ok: true, uri: 'peerd://bundle', publisher: 'did:key:zOld', hash: 'hash', slug: 'app', dwapp_id: 'dwapp', seq: 7 });
+        return shareSuccess(message, { ok: true, uri: 'mcdollar://bundle', publisher: 'did:key:zOld', hash: 'hash', slug: 'app', dwapp_id: 'dwapp', seq: 7 });
       },
     });
 
@@ -360,7 +360,7 @@ describe('identity-bound dweb share', () => {
     expect(persisted).toEqual({
       shared: true,
       dweb: {
-        uri: 'peerd://bundle', publisher: 'did:key:zOld', hash: 'hash', version_id: 'hash',
+        uri: 'mcdollar://bundle', publisher: 'did:key:zOld', hash: 'hash', version_id: 'hash',
         slug: 'app', dwapp_id: 'dwapp', seq: 7, local: true,
       },
     });
@@ -435,7 +435,7 @@ describe('identity-bound dweb share', () => {
         publication = message;
         events.push('publish');
         return shareSuccess(message, {
-          ok: true, uri: `peerd://did:key:zLocal/${publishedHash}`,
+          ok: true, uri: `mcdollar://did:key:zLocal/${publishedHash}`,
           publisher: 'did:key:zLocal', hash: publishedHash, slug: 'release-app',
           dwapp_id: 'dwapp', seq: 8, created: 1234,
         });
@@ -500,7 +500,7 @@ describe('identity-bound dweb share', () => {
           return { ok: true, committed: true };
         }
         if (message.type === 'dweb/base-host/unserve-content') return { ok: true, unserved: true };
-        return shareSuccess(message, { ok: true, uri: 'peerd://new', hash: 'new', slug: 'app', dwapp_id: 'd', seq: 2 });
+        return shareSuccess(message, { ok: true, uri: 'mcdollar://new', hash: 'new', slug: 'app', dwapp_id: 'd', seq: 2 });
       },
     });
     expect((await share('app-1', undefined)).ok).toBe(true);
@@ -552,7 +552,7 @@ describe('identity-bound dweb share', () => {
           return { ok: true, committed: true };
         }
         events.push('publish');
-        return shareSuccess(message, { ok: true, uri: 'peerd://bundle', publisher: 'did:key:zLocal', hash: 'hash', slug: 'app', dwapp_id: 'dwapp', seq: 1 });
+        return shareSuccess(message, { ok: true, uri: 'mcdollar://bundle', publisher: 'did:key:zLocal', hash: 'hash', slug: 'app', dwapp_id: 'dwapp', seq: 1 });
       },
     });
     expect(await share('app-1', undefined)).toMatchObject({ ok: true });
@@ -589,7 +589,7 @@ describe('identity-bound dweb share', () => {
       appRegistry: {
         get: async () => ({
           name: 'App', entryFile: 'index.html',
-          dweb: { hash: 'old', uri: 'peerd://old', size: 123, slug: 'app', local: true },
+          dweb: { hash: 'old', uri: 'mcdollar://old', size: 123, slug: 'app', local: true },
         }),
         update: async () => { throw new Error('disk'); },
       },
@@ -598,7 +598,7 @@ describe('identity-bound dweb share', () => {
         messages.push(message);
         if (message.type === 'dweb/base-host/rollback-share') return { ok: true, restored: true };
         return shareSuccess(message, {
-          ok: true, publisher: 'did:key:zOld', uri: 'peerd://new', hash: 'new',
+          ok: true, publisher: 'did:key:zOld', uri: 'mcdollar://new', hash: 'new',
           size: 456, slug: 'app', seq: 9,
         });
       },
@@ -625,7 +625,7 @@ describe('identity-bound dweb share', () => {
         if (message.type === 'dweb/base-host/commit-share') {
           return { ok: true, committed: true };
         }
-        return shareSuccess(message, { ok: true, uri: 'peerd://new', hash: 'new', slug: 'app', seq: 2 });
+        return shareSuccess(message, { ok: true, uri: 'mcdollar://new', hash: 'new', slug: 'app', seq: 2 });
       },
     });
 
@@ -655,7 +655,7 @@ describe('identity-bound dweb share', () => {
       sendMessage: async (message) => {
         messages.push(message);
         if (message.type === 'dweb/base-host/share-app') return shareSuccess(message, {
-          ok: true, uri: 'peerd://new', hash: 'new', slug: 'app', seq: 2,
+          ok: true, uri: 'mcdollar://new', hash: 'new', slug: 'app', seq: 2,
         });
         if (message.type === 'dweb/base-host/commit-share') {
           return { ok: false, error: 'share-rollback-in-progress' };
@@ -703,7 +703,7 @@ describe('identity-bound dweb share', () => {
       prepareRuntime: async () => ({ ok: true }),
       sendMessage: async (message) => {
         if (message.type === 'dweb/base-host/share-app') return shareSuccess(message, {
-          ok: true, uri: 'peerd://new', hash: 'new', slug: 'app', seq: 2,
+          ok: true, uri: 'mcdollar://new', hash: 'new', slug: 'app', seq: 2,
         });
         commits += 1;
         if (commits === 1) throw new Error('terminal reply lost');
@@ -745,7 +745,7 @@ describe('identity-bound dweb share', () => {
         }
         if (message.type === 'dweb/base-host/unserve-content') return { ok: true, unserved: true };
         return shareSuccess(message, {
-          ok: true, uri: 'peerd://local-new', hash: 'local-new', slug: 'installed',
+          ok: true, uri: 'mcdollar://local-new', hash: 'local-new', slug: 'installed',
           seq: 1,
         });
       },
@@ -769,13 +769,13 @@ describe('identity-bound dweb share', () => {
     const share = makeDwebShare({
       enabled: true, active: () => true, withDwebPublication, withIdentityMutation: makeLane(), withAppLifecycle,
       appRegistry: {
-        get: async () => ({ name: 'App', entryFile: 'index.html', dweb: { hash: 'old', uri: 'peerd://old', local: true } }),
+        get: async () => ({ name: 'App', entryFile: 'index.html', dweb: { hash: 'old', uri: 'mcdollar://old', local: true } }),
         update: async () => { throw new Error('disk'); },
       },
       prepareRuntime: async () => ({ ok: true }),
       sendMessage: async (message) => message.type === 'dweb/base-host/rollback-share'
         ? { ok: true, restored: false }
-        : shareSuccess(message, { ok: true, uri: 'peerd://new', hash: 'new', slug: 'app', seq: 4 }),
+        : shareSuccess(message, { ok: true, uri: 'mcdollar://new', hash: 'new', slug: 'app', seq: 4 }),
     });
 
     expect(await share('app-1', undefined)).toMatchObject({

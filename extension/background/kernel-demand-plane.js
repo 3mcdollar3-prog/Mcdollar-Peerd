@@ -23,8 +23,8 @@ import { createKernelTurnCustody } from './kernel-turn-custody.js';
 import { createLocalModelGenerationAuthority } from './local-model-generation-authority.js';
 import { makeKernelDemandRoutes } from './kernel-demand-routes.js';
 import { createProviderEgressAuthority } from './provider-egress-authority.js';
-import { HARDCODED_ALLOWLIST, makeSafeFetch } from '/peerd-egress/background.js';
-import { costOf, hasPricing } from '/peerd-provider/background.js';
+import { HARDCODED_ALLOWLIST, makeSafeFetch } from '/mcdollar-egress/background.js';
+import { costOf, hasPricing } from '/mcdollar-provider/background.js';
 import { createAuthorityEffectScheduler } from './authority-effect-scheduler.js';
 import { createAppDwebAuthority } from './app-dweb-authority.js';
 import { refreshDiscoverySetting } from './dweb-peer-policy.js';
@@ -421,7 +421,7 @@ export const createKernelDemandPlane = (deps) => {
       if (typeof documentId !== 'string'
           || typeof identity?.result !== 'string'
           || identity.result !== current?.url) return null;
-      return { ...current, peerdDocumentId: documentId };
+      return { ...current, mcdollarDocumentId: documentId };
     },
   });
   administrativeControl = createKernelAdministrativeControl({

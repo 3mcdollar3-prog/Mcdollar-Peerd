@@ -60,7 +60,7 @@ export const makeIdleDirectControllerLoader = ({
   let disposed = false;
 
   const createGeneration = () => {
-    const worker = createWorker(workerUrl, { type: 'module', name: 'peerd-controller' });
+    const worker = createWorker(workerUrl, { type: 'module', name: 'mcdollar-controller' });
     const { port1, port2 } = createChannel();
     /** @type {Map<string, {
      *   resolve: (value: any) => void,

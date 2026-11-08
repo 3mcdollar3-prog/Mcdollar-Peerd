@@ -16,7 +16,7 @@
 
 import m from '/vendor/mithril/mithril.js';
 
-/** @typedef {import('/peerd-runtime/todo/core.js').TodoItem} TodoItem */
+/** @typedef {import('/mcdollar-runtime/todo/core.js').TodoItem} TodoItem */
 
 export const TodoCard = {
   /** @param {{ attrs: { todos?: TodoItem[] | null, active?: boolean } }} vnode */

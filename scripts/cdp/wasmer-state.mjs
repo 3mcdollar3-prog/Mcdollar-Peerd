@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:net';
-import { evalIn, openWidePage, waitFor, sleep, launchPeerd, unlockAndReady, capturePage } from './e2e-harness.mjs';
+import { evalIn, openWidePage, waitFor, sleep, launchMcdollar, unlockAndReady, capturePage } from './e2e-harness.mjs';
 
 const ASSET_DIR = new URL('../../artifacts/wasmer-demo/', import.meta.url);
 const INTERPRETERS = [
@@ -96,15 +96,15 @@ const importProbe = (namespace, field, port = 0) => {
 
 export const WASMER_STATE = {
   name: 'pod-wasmer', kind: 'functional', phase: 'pre-unlock',
-  async run(parentContext, rec, { demo = false, launch = launchPeerd } = {}) {
+  async run(parentContext, rec, { demo = false, launch = launchMcdollar } = {}) {
     // why: disabling browser web security also disables cross-origin isolation.
     const ctx = await launch({ extensionDir: parentContext?.extensionDir, enforceWebSecurity: true, headless: !demo });
     let keepOpen = false;
     try {
       const interpreters = await Promise.all(INTERPRETERS.map(loadInterpreter));
       const pod = await evalIn(ctx.page, `(async () => {
-        const { createPodRegistry } = await import('/peerd-engine/background.js');
-        const { idbKV } = await import('/peerd-egress/background.js');
+        const { createPodRegistry } = await import('/mcdollar-engine/background.js');
+        const { idbKV } = await import('/mcdollar-egress/background.js');
         return createPodRegistry({ storage: idbKV('pods') }).create({ name: 'Wasmer multi-language IDE' });
       })()`, true);
       // why: the kernel starts the Pod host after the vault is ready.
@@ -171,7 +171,7 @@ export const WASMER_STATE = {
         // why: load fixed interpreter bytes through OPFS without a guest network grant.
         for (const interpreter of interpreters) {
           await evalIn(page, `(async () => {
-            const { opfsHelpers, POD_OPFS_ROOT } = await import('/peerd-engine/index.js');
+            const { opfsHelpers, POD_OPFS_ROOT } = await import('/mcdollar-engine/index.js');
             const workspace = opfsHelpers([POD_OPFS_ROOT, ${JSON.stringify(pod.id)}]);
             await workspace.write(${JSON.stringify(interpreter.path)}, Uint8Array.from(atob(${JSON.stringify(interpreter.bytes.toString('base64'))}), (c) => c.charCodeAt(0)));
           })()`, true);
@@ -254,7 +254,7 @@ export const WASMER_STATE = {
           const bytes = importProbe(namespace, field, name === 'socket' ? server.address().port : 0);
           await WebAssembly.compile(bytes);
           await evalIn(page, `(async () => {
-            const { opfsHelpers, POD_OPFS_ROOT } = await import('/peerd-engine/index.js');
+            const { opfsHelpers, POD_OPFS_ROOT } = await import('/mcdollar-engine/index.js');
             await opfsHelpers([POD_OPFS_ROOT, ${JSON.stringify(pod.id)}]).write(${JSON.stringify(`${name}.wasm`)}, new Uint8Array(${JSON.stringify([...bytes])}));
           })()`, true);
           const denied = await run(`wasmer ${name}.wasm`);
@@ -263,7 +263,7 @@ export const WASMER_STATE = {
               ? denied.exitCode !== 0 && /import/i.test(denied.stderr) && /"env"/.test(denied.stderr)
               : denied.exitCode === 58 && denied.stderr === '' && connections === 0, JSON.stringify(denied));
         } } finally { await new Promise((resolve) => server.close(resolve)); }
-        await put('outside.js', `const f = std.open('/peerd-pods/${pod.id}/primes.js', 'r'); print(f === null ? 'host workspace blocked' : 'host workspace exposed');`);
+        await put('outside.js', `const f = std.open('/mcdollar-pods/${pod.id}/primes.js', 'r'); print(f === null ? 'host workspace blocked' : 'host workspace exposed');`);
         const outside = await run('wasmer quickjs.wasm --std /workspace/outside.js');
         rec.check('the interpreter cannot read the host OPFS tree', outside.exitCode === 0
           && outside.stdout.trim() === 'host workspace blocked', JSON.stringify(outside));

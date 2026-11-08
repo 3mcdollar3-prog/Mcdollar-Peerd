@@ -235,7 +235,7 @@ describe('kernel browser network owner', () => {
   });
 
   test('admits only the exact installed App tab into network custody', async () => {
-    const appTabUrl = 'moz-extension://peerd/engine-tabs/app-tab/index.html';
+    const appTabUrl = 'moz-extension://mcdollar/engine-tabs/app-tab/index.html';
     const url = `${appTabUrl}#app-1?owner=session-1`;
     let config: any;
     let syncs = 0;
@@ -279,7 +279,7 @@ describe('kernel browser network owner', () => {
   });
 
   test('refuses App admission without exact rule verification', async () => {
-    const appTabUrl = 'moz-extension://peerd/engine-tabs/app-tab/index.html';
+    const appTabUrl = 'moz-extension://mcdollar/engine-tabs/app-tab/index.html';
     const url = `${appTabUrl}#app-1`;
     const owner = createKernelBrowserNetworkOwner({
       firefox: true, appTabUrl,

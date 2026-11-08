@@ -5,15 +5,15 @@ import {
   isDenylistedTab,
   originOfUrl,
   resolveTargetTab,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 import { isPrivateOrLocalHost } from '/shared/private-network.js';
-import { ALLOWED_METHODS, needsWebWriteConfirm } from '/peerd-engine/authority.js';
+import { ALLOWED_METHODS, needsWebWriteConfirm } from '/mcdollar-engine/authority.js';
 import { finalWebRequestConfirmation } from '/shared/web-request-confirmation.js';
 import { normalizeApiOrigin } from '/shared/api-origin.js';
 import { sameCanonicalStructuredClone } from '/shared/canonical-clone-digest.js';
 import { readBoundedResponseText } from '/shared/abort.js';
 import { pacingAuthorityRefusal } from './page-pacing-authority.js';
-import { withWebRequestAuthority } from '/peerd-egress/background.js';
+import { withWebRequestAuthority } from '/mcdollar-egress/background.js';
 
 const FETCH_TIMEOUT_MS = 20_000;
 const MAX_WEB_TEXT_CHARS = 2_000_000;

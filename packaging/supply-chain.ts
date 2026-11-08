@@ -1,6 +1,6 @@
 // Pure core for the supply-chain badges and the action-pin gate.
 //
-// Three facts about how code gets INTO peerd, each derived from repo state
+// Three facts about how code gets INTO mcdollar, each derived from repo state
 // rather than asserted in prose:
 //
 //   1. vendored files. Third-party runtime code lives in extension/vendor/ and

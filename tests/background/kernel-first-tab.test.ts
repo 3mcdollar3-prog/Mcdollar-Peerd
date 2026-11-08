@@ -11,7 +11,7 @@ import {
   windowTabsKey,
 } from '../../extension/background/kernel-first-tab.js';
 
-const HOME = 'chrome-extension://peerd-test/home/home.html';
+const HOME = 'chrome-extension://mcdollar-test/home/home.html';
 
 type Win = { id: number, type: string, incognito?: boolean };
 type Tab = { id: number, windowId: number, pinned: boolean, url: string, pendingUrl?: string, index?: number, active?: boolean };
@@ -310,7 +310,7 @@ describe('kernel first tab: closed tabs and updates', () => {
     return { fake, api, tabs, closedId: closed!.id };
   };
 
-  test('closing peerd\'s tab takes the window off the kept list, and custody still gets the event', async () => {
+  test('closing mcdollar\'s tab takes the window off the kept list, and custody still gets the event', async () => {
     const { fake, tabs, closedId } = await twoWindowsThenClose();
     expect(fake.local.get(FIRST_TAB_KEPT_KEY)).toEqual([1]);
     expect(tabs.seen).toEqual([`removed ${closedId}`]);
@@ -318,7 +318,7 @@ describe('kernel first tab: closed tabs and updates', () => {
 
   test('an update puts the tab back only in the windows that still had it', async () => {
     const { fake } = await twoWindowsThenClose();
-    // The update: unloading peerd closes its tabs and empties storage.session.
+    // The update: unloading mcdollar closes its tabs and empties storage.session.
     // storage.local and the window ids stay.
     fake.tabs.splice(0);
     fake.sessionStore.clear();
@@ -338,7 +338,7 @@ describe('kernel first tab: closed tabs and updates', () => {
     expect(fake.created).toHaveLength(created);
   });
 
-  test('unpinning peerd\'s tab counts as closing it, and pinning a Home tab again counts as keeping it', async () => {
+  test('unpinning mcdollar\'s tab counts as closing it, and pinning a Home tab again counts as keeping it', async () => {
     const fake = makeBrowser({ windows: [{ id: 1, type: 'normal' }] });
     const { api } = attach(fake);
     await api.coverEveryWindow();
@@ -448,7 +448,7 @@ describe('kernel first tab: Reopen Closed Window', () => {
     await flush();
   };
 
-  test('the window can close right after its tab, before peerd gets to either event', async () => {
+  test('the window can close right after its tab, before mcdollar gets to either event', async () => {
     const fake = makeBrowser({ windows: [{ id: 1, type: 'normal' }] });
     const { api } = attach(fake);
     await flush();
@@ -531,7 +531,7 @@ describe('kernel first tab: Reopen Closed Window', () => {
     expect(fake.local.get(FIRST_TAB_KEPT_KEY)).toEqual([3]);
   });
 
-  test('a window that is gone by the time peerd looks leaves no row', async () => {
+  test('a window that is gone by the time mcdollar looks leaves no row', async () => {
     const fake = makeBrowser({ windows: [{ id: 1, type: 'normal' }] });
     const { api } = attach(fake);
     await flush();

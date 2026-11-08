@@ -7,8 +7,8 @@
 import { describe, expect, test } from 'bun:test';
 import { makeKernelOriginCredentialRoutes } from '../../extension/background/kernel-credential-routes.js';
 import { createKernelKeyedOriginAuthority } from '../../extension/background/kernel-keyed-origin-authority.js';
-import { DPOP_KEY_STORE } from '../../extension/peerd-egress/dpop/keys.js';
-import { makeCredentialScope } from '../../extension/peerd-runtime/actor/origin-lock.js';
+import { DPOP_KEY_STORE } from '../../extension/mcdollar-egress/dpop/keys.js';
+import { makeCredentialScope } from '../../extension/mcdollar-runtime/actor/origin-lock.js';
 
 class FakeLockedError extends Error {}
 

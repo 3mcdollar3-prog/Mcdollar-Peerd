@@ -5,7 +5,7 @@ import { acceptVoiceChannelOffer } from '../../extension/offscreen/voice-channel
 import { parseVoiceCommand } from '../../extension/shared/voice-channel.js';
 
 const offer = {
-  type: 'peerd/voice-channel', protocol: 1, requestId: 'voice-request-0001',
+  type: 'mcdollar/voice-channel', protocol: 1, requestId: 'voice-request-0001',
   command: { type: 'voice/teardown' },
   lease: { scope: 'media-host', leaseId: 'lease-media-0001' },
 };

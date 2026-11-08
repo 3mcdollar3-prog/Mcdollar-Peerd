@@ -20,8 +20,8 @@
 import {
   type Scenario, type Probe, blocked, leaked, summarize,
 } from '../harness.ts';
-import { makeSafeFetch, originOf, isAllowed, HARDCODED_ALLOWLIST } from '../../../extension/peerd-egress/fetch/safe-fetch.js';
-import { EgressDeniedError } from '../../../extension/peerd-egress/fetch/errors.js';
+import { makeSafeFetch, originOf, isAllowed, HARDCODED_ALLOWLIST } from '../../../extension/mcdollar-egress/fetch/safe-fetch.js';
+import { EgressDeniedError } from '../../../extension/mcdollar-egress/fetch/errors.js';
 
 const PROVIDER = 'https://api.anthropic.com';
 

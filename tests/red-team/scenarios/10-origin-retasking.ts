@@ -32,11 +32,11 @@ import {
   type Scenario, type Probe, blocked, leaked, summarize,
 } from '../harness.ts';
 import { readFileSync } from 'node:fs';
-import { decideLanding, mayHoldCredentials } from '../../../extension/peerd-runtime/actor/landing-rule.js';
-import { classifyOriginSensitivity } from '../../../extension/peerd-runtime/actor/origin-sensitivity.js';
-import { decideNumericTabAuthority } from '../../../extension/peerd-runtime/actor/numeric-tab-authority.js';
-import { describeLandingStop } from '../../../extension/peerd-runtime/actor/origin-lock-report.js';
-import { isKnownIdp, isKnownIdpHost } from '../../../extension/peerd-runtime/actor/idp-registry.js';
+import { decideLanding, mayHoldCredentials } from '../../../extension/mcdollar-runtime/actor/landing-rule.js';
+import { classifyOriginSensitivity } from '../../../extension/mcdollar-runtime/actor/origin-sensitivity.js';
+import { decideNumericTabAuthority } from '../../../extension/mcdollar-runtime/actor/numeric-tab-authority.js';
+import { describeLandingStop } from '../../../extension/mcdollar-runtime/actor/origin-lock-report.js';
+import { isKnownIdp, isKnownIdpHost } from '../../../extension/mcdollar-runtime/actor/idp-registry.js';
 
 interface Case {
   vector: string;      // what the attacker does
@@ -243,7 +243,7 @@ const CORPUS: Case[] = [
     },
   },
   {
-    vector: 'landing on a host peerd cannot canonicalize (IP literal, trailing dot)',
+    vector: 'landing on a host mcdollar cannot canonicalize (IP literal, trailing dot)',
     seeks: 'slip past a check that only understands nameable origins',
     defense: 'origin lock (an unnameable page is FOREIGN to a bound actor)',
     check: () => {

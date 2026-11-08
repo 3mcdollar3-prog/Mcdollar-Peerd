@@ -19,8 +19,8 @@ import { join } from 'node:path';
 if (!(globalThis as any).browser && !(globalThis as any).chrome) {
   (globalThis as any).chrome = {
     runtime: {
-      id: 'peerd-bun-test',
-      getURL: (path: string) => `chrome-extension://peerd-bun-test/${path.replace(/^\/+/, '')}`,
+      id: 'mcdollar-bun-test',
+      getURL: (path: string) => `chrome-extension://mcdollar-bun-test/${path.replace(/^\/+/, '')}`,
     },
     // Some public background surfaces construct the lazy storage adapter
     // after another test has already caused browser-api.js to capture this
@@ -51,7 +51,7 @@ if (!(globalThis as any).browser && !(globalThis as any).chrome) {
 // the repository, so the live working directory is the stable source of truth.
 const extensionRoot = join(process.cwd(), 'extension');
 plugin({
-  name: 'peerd-leading-slash',
+  name: 'mcdollar-leading-slash',
   setup(build) {
     // Intercept only specifiers that map to a real file under
     // extension/. Genuine filesystem-absolute paths (or typos) return

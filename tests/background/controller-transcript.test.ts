@@ -5,8 +5,8 @@ import { createSessionTurnStore } from '../../extension/shared/session-turn-stor
 import { createControllerKernelQuota } from '../../extension/shared/controller-kernel-quota.js';
 import { controllerPayloadBytes } from '../../extension/shared/structured-clone-size.js';
 import { createSessionTranscriptPages, TRANSCRIPT_CHUNK_CHARS, TRANSCRIPT_PAGE_LIMIT } from '../../extension/shared/session-transcript.js';
-import { planTrim } from '../../extension/peerd-runtime/loop/trim.js';
-import { makeScriptedProviderAuthority } from '../peerd-provider/model-egress-fixture';
+import { planTrim } from '../../extension/mcdollar-runtime/loop/trim.js';
+import { makeScriptedProviderAuthority } from '../mcdollar-provider/model-egress-fixture';
 
 const SESSION_ID = 'persisted-large-transcript';
 const MODEL = 'claude-sonnet-4-6';

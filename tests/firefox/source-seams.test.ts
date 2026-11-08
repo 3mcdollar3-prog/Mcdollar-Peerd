@@ -38,7 +38,7 @@ describe('Firefox diagnostic artifact source seams', () => {
     });
     for (const candidate of [source, transpiler.transformSync(source)]) {
       const output = injectFirefoxLifetimeProbe(candidate);
-      expect(output).toContain('peerdFirefoxLifetimeProbe?.record(');
+      expect(output).toContain('mcdollarFirefoxLifetimeProbe?.record(');
       expect(output).toMatch(/\?\.onChanged\s*\(/);
     }
   });
@@ -53,7 +53,7 @@ describe('Firefox diagnostic artifact source seams', () => {
     });
     for (const candidate of [source, transpiler.transformSync(source)]) {
       const output = injectFirefoxKeepaliveLossFault(candidate);
-      expect(output).toContain('peerdFirefoxKeepaliveLossFault?.consume()');
+      expect(output).toContain('mcdollarFirefoxKeepaliveLossFault?.consume()');
       expect(output).toContain("Promise.reject(new Error('Firefox runtime test fault");
     }
     expect(() => injectFirefoxKeepaliveLossFault(readFileSync(join(import.meta.dir,

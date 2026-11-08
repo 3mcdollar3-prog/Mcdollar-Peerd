@@ -14,10 +14,10 @@ afterEach(() => {
 
 describe('update feed release assets', () => {
   test('writes only the two browser feeds into the requested artifact directory', () => {
-    const outDir = mkdtempSync(join(tmpdir(), 'peerd-update-feeds-'));
+    const outDir = mkdtempSync(join(tmpdir(), 'mcdollar-update-feeds-'));
     temporaryDirectories.push(outDir);
 
-    genUpdateFeeds({ version: '9.8.7', repo: 'example/peerd', outDir });
+    genUpdateFeeds({ version: '9.8.7', repo: 'example/mcdollar', outDir });
 
     expect(readdirSync(outDir).sort()).toEqual([
       'chrome-preview.xml',
@@ -27,7 +27,7 @@ describe('update feed release assets', () => {
     const chrome = readFileSync(join(outDir, 'chrome-preview.xml'), 'utf8');
     expect(chrome).toContain('version="9.8.7"');
     expect(chrome).toContain(
-      'https://github.com/example/peerd/releases/download/v9.8.7/peerd-preview-chrome.crx',
+      'https://github.com/example/mcdollar/releases/download/v9.8.7/mcdollar-preview-chrome.crx',
     );
 
     const firefox = JSON.parse(
@@ -40,7 +40,7 @@ describe('update feed release assets', () => {
     const update = Object.values(firefox.addons)[0].updates[0];
     expect(update.version).toBe('9.8.7');
     expect(update.update_link).toBe(
-      'https://github.com/example/peerd/releases/download/v9.8.7/peerd-preview-firefox.xpi',
+      'https://github.com/example/mcdollar/releases/download/v9.8.7/mcdollar-preview-firefox.xpi',
     );
   });
 });

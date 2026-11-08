@@ -118,7 +118,7 @@
     catch (_) { /* harmless */ }
     setStatus(
       '✓ Microphone access granted. You can close this tab and click '
-      + 'the mic in the peerd side panel.',
+      + 'the mic in the mcdollar side panel.',
       'ok',
     );
     btn.style.display = 'none';

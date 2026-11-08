@@ -1,6 +1,6 @@
 // @ts-check
 // notebook-tab/output-render.js — rich rendering of a run's output into the
-// output pane (the run's RETURN value, and any peerd.self.display(value) calls).
+// output pane (the run's RETURN value, and any mcdollar.self.display(value) calls).
 //
 // A Notebook reads as a notebook when DATA renders as data: an array of flat
 // objects becomes a table, a chart descriptor becomes an SVG plot, an
@@ -8,8 +8,8 @@
 // Output is a pure function of the value alone, so runs stay reproducible
 // (DECISIONS #24).
 //
-// peerd:std helpers (notebook-std.js) run in the worker (no DOM), so they return
-// display DESCRIPTORS — { __peerd_display: 'table' | 'chart', … } — and THIS
+// mcdollar:std helpers (notebook-std.js) run in the worker (no DOM), so they return
+// display DESCRIPTORS — { __mcdollar_display: 'table' | 'chart', … } — and THIS
 // module (which has `document`) turns them into DOM. That split is also the
 // security boundary: every node here is built with createElement(NS) +
 // textContent, NEVER innerHTML, and every color/coordinate is computed here or
@@ -44,7 +44,7 @@ const appendJsonBlock = (outputEl, value) => {
   outputEl.appendChild(pre);
   if (over) {
     const note = cellEl('div',
-      `…truncated (${text.length.toLocaleString()} chars). To render data, return chart()/table() from peerd:std — not a raw spec object.`);
+      `…truncated (${text.length.toLocaleString()} chars). To render data, return chart()/table() from mcdollar:std — not a raw spec object.`);
     note.className = 'nb-table-note';
     outputEl.appendChild(note);
   }
@@ -87,7 +87,7 @@ export const isRowArray = (v) => Array.isArray(v) && v.length > 0 && v.every(isF
 
 /** @param {unknown} v @returns {v is Record<string, any>} */
 export const isDescriptor = (v) =>
-  !!v && typeof v === 'object' && !Array.isArray(v) && typeof (/** @type {any} */ (v).__peerd_display) === 'string';
+  !!v && typeof v === 'object' && !Array.isArray(v) && typeof (/** @type {any} */ (v).__mcdollar_display) === 'string';
 
 // ── tables ────────────────────────────────────────────────────────────────
 
@@ -344,7 +344,7 @@ export const renderChart = (d) => {
 
 /** @param {HTMLElement} outputEl @param {Record<string, any>} d */
 const renderDescriptor = (outputEl, d) => {
-  if (d.__peerd_display === 'table') {
+  if (d.__mcdollar_display === 'table') {
     const rows = Array.isArray(d.rows) ? d.rows : [];
     if (!rows.length) {
       const note = cellEl('div', '(empty table)');
@@ -355,7 +355,7 @@ const renderDescriptor = (outputEl, d) => {
     const caption = cellEl('div', `← ${rows.length} row${rows.length === 1 ? '' : 's'}`);
     caption.className = 'log-line log-return';
     outputEl.append(caption, renderTable(rows));
-  } else if (d.__peerd_display === 'chart') {
+  } else if (d.__mcdollar_display === 'chart') {
     outputEl.appendChild(renderChart(d));
   } else {
     appendJsonBlock(outputEl, d);

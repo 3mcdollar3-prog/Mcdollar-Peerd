@@ -9,5 +9,5 @@ export const immutableAppRoot = (input) => {
   if (!parts.did) throw new DwappUriError('App addresses must include a publisher key.');
   if (parts.path !== undefined) throw new DwappUriError('File paths are not supported; enter the root App address.');
   return { address: formatDwappUri(parts), publisher: parts.did, hash: parts.hash,
-    uri: `peerd://${parts.did}/${parts.hash}` };
+    uri: `mcdollar://${parts.did}/${parts.hash}` };
 };

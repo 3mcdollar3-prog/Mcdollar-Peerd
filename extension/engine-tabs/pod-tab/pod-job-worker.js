@@ -4,11 +4,11 @@
 // WASI linear memory. Terminating this Worker is cancellation.
 
 import { podFetch } from './pod-realm-seal.js'; // MUST remain the first import
-// why direct: importing peerd-engine's broad public barrel into the UNTRUSTED
+// why direct: importing mcdollar-engine's broad public barrel into the UNTRUSTED
 // command heap would link unrelated browser/extension modules before the job.
 // This pure leaf carries no authority and is the execution host's shared core.
 // eslint-disable-next-line no-restricted-imports
-import { executePodShell, matchPodGrep } from '../../peerd-engine/pod-shell.js';
+import { executePodShell, matchPodGrep } from '../../mcdollar-engine/pod-shell.js';
 import { demoModule, runWasiWorkspace } from '../notebook-tab/notebook-wasi.js';
 
 const OUTPUT_CAP = 512 * 1024;
@@ -142,7 +142,7 @@ const runCommand = async ({ argv, stdin, cwd, env }) => {
   const [command = '', ...args] = argv;
   if (!command) return { stdout: '', stderr: '', exitCode: 0 };
   if (command === 'help') return { stdout: [
-    'Peerd Pod commands:',
+    'Mcdollar Pod commands:',
     '  pwd cd ls cat echo printf mkdir rm cp mv touch',
     '  head tail wc grep [-F] pattern [file] sort uniq env export unset sleep',
     '  js [-e code|file]   local Web-standard JavaScript on Chromium; no Node/network',
@@ -337,8 +337,8 @@ const runCommand = async ({ argv, stdin, cwd, env }) => {
     const [name, source] = args;
     if (!/^[a-z0-9][a-z0-9._-]{0,63}$/i.test(name ?? '') || !source) return { stdout: '', stderr: 'install-tool: name and .wasm path required\n', exitCode: 2 };
     try {
-      await fs.mkdir('/.peerd/tools', true);
-      await fs.copy(resolvePodPath(source, cwd), `/.peerd/tools/${name}.wasm`, false);
+      await fs.mkdir('/.mcdollar/tools', true);
+      await fs.copy(resolvePodPath(source, cwd), `/.mcdollar/tools/${name}.wasm`, false);
       return { stdout: `installed ${name}\n`, stderr: '', exitCode: 0 };
     } catch (error) { return { stdout: '', stderr: `install-tool: ${/** @type {{message?:string}} */ (error)?.message ?? String(error)}\n`, exitCode: 1 }; }
   }
@@ -390,7 +390,7 @@ const runCommand = async ({ argv, stdin, cwd, env }) => {
     const result = /** @type {{cancelled?:boolean}} */ (await hostCall('cancel-job', { jobId: args[0] }));
     return { stdout: '', stderr: result.cancelled ? '' : `kill: no running job ${args[0]}\n`, exitCode: result.cancelled ? 0 : 1 };
   }
-  const toolPath = `/.peerd/tools/${command}.wasm`;
+  const toolPath = `/.mcdollar/tools/${command}.wasm`;
   if (await fs.exists(toolPath)) {
     try {
       const result = await runWasiTool(/** @type {Uint8Array} */ (await fs.readBytes(toolPath)), [command, ...args], stdin, cwd, env);

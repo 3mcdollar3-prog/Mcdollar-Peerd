@@ -73,7 +73,7 @@ describe('store manifest posture', () => {
   test('preview narrows connect-src too (pinned hosts only)', () => {
     const csp = preview.content_security_policy?.extension_pages ?? '';
     expect(csp).toContain('wss://disks.webvm.io');
-    expect(csp).toContain('wss://bootstrap.peerd.ai');
+    expect(csp).toContain('wss://bootstrap.mcdollar.ai');
     expect(csp).not.toMatch(/\bwss:(?!\/\/)/);
   });
 
@@ -138,7 +138,7 @@ describe('store manifest posture', () => {
   test('Firefox preview metadata does not advertise or connect to an unavailable dweb mesh', () => {
     expect(previewFirefox.description).not.toContain('dweb');
     expect(previewFirefox.content_security_policy.extension_pages)
-      .not.toContain('bootstrap.peerd.ai');
+      .not.toContain('bootstrap.mcdollar.ai');
   });
 });
 
@@ -172,7 +172,7 @@ describe('store prompt posture — no dweb/dwapp in the store system prompt', ()
   // The one remaining way a leak could happen: hardcoded dweb prose in the
   // always-shipped BASE template. This guard forbids it — strip the gated
   // placeholder, and nothing dweb/dwapp may remain.
-  const baseTemplate = readFileSync(join(EXTENSION_DIR, 'peerd-provider', 'system-prompt.txt'), 'utf8');
+  const baseTemplate = readFileSync(join(EXTENSION_DIR, 'mcdollar-provider', 'system-prompt.txt'), 'utf8');
 
   test('the base template references the dweb ONLY through the gated {{DWEB_BLOCK}} placeholder', () => {
     const withoutGatedBlock = baseTemplate.replace(/\{\{DWEB_BLOCK\}\}/g, '');
@@ -187,6 +187,6 @@ describe('store prompt posture — no dweb/dwapp in the store system prompt', ()
 
   test('package.ts prunes the dweb prompt fragment from store artifacts', () => {
     const pkg = readFileSync(join(EXTENSION_DIR, '..', 'packaging', 'package.ts'), 'utf8');
-    expect(pkg).toContain('peerd-provider/system-prompt-dweb.txt');
+    expect(pkg).toContain('mcdollar-provider/system-prompt-dweb.txt');
   });
 });

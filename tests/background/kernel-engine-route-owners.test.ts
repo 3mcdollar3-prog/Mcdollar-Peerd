@@ -17,7 +17,7 @@ const deps = (over: any = {}) => ({
   pushState: () => {},
   browser: {
     runtime: {
-      getURL: (path: string) => `moz-extension://peerd/${path}`,
+      getURL: (path: string) => `moz-extension://mcdollar/${path}`,
       getContexts: async () => [], sendMessage: async () => ({ ok: true }),
     },
     storage: { local: { get: async () => ({}), set: async () => {} } },
@@ -53,7 +53,7 @@ const deps = (over: any = {}) => ({
       meta: { tags: [] },
     }),
     inspectEnvelope: async () => ({ ok: true, summary: 'safe' }),
-    exportFilename: (name: string) => `${name}.peerd`,
+    exportFilename: (name: string) => `${name}.mcdollar`,
   },
   ArtifactTooLargeError, EnvelopeFormatError, EnvelopeIntegrityError,
   settingsStore: { get: () => ({}) }, DWEB_ENABLED: false,
@@ -114,7 +114,7 @@ describe('kernel engine route owners', () => {
   test('artifact reads preserve the factory contract and imports fence uncertain writes', async () => {
     const routes = makeKernelArtifactRoutes(deps());
     expect(await routes['export/artifact']({ kind: 'app', id: 'app-1' }, {}))
-      .toEqual({ ok: true, filename: 'App.peerd', envelope: { kind: 'app-envelope' } });
+      .toEqual({ ok: true, filename: 'App.mcdollar', envelope: { kind: 'app-envelope' } });
     expect(await routes['import/inspect']({ envelope: {} }, {}))
       .toEqual({ ok: true, summary: 'safe' });
     expect(await routes['import/apply']({ envelope: {} }, {}))
@@ -178,7 +178,7 @@ describe('kernel engine route owners', () => {
       listOffscreenContexts: async () => [{}],
       browser: {
         runtime: {
-          getURL: (path: string) => `moz-extension://peerd/${path}`,
+          getURL: (path: string) => `moz-extension://mcdollar/${path}`,
           getContexts: async () => [],
           sendMessage: async () => { sends += 1; return { ok: true }; },
         },

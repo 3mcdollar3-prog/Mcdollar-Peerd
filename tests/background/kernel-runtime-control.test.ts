@@ -11,7 +11,7 @@ describe('kernel runtime control', () => {
     expect(payload).toEqual({ operation: 'runtime.probe', input: {} });
     expect(control.authorize({ ...payload })).toBeNull();
     expect(control.authorize(payload)).toEqual({
-      ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+      ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
       origin: null, target: 'kernel-runtime', replayClass: 'A',
     });
     expect(control.authorize(payload)).toBeNull();

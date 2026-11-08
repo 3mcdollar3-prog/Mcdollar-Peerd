@@ -2,9 +2,9 @@
 // background/watch-mode.js — the pure decision behind "watch the agent's tab".
 //
 // Watch mode is the OPT-IN inverse of the no-focus-steal rule (DESIGN-12). By
-// default peerd drives its tab in the BACKGROUND so it never interrupts the
+// default mcdollar drives its tab in the BACKGROUND so it never interrupts the
 // user. When the user turns watch mode ON, they are explicitly asking to see
-// the page: peerd brings the agent's current tab to the foreground and follows
+// the page: mcdollar brings the agent's current tab to the foreground and follows
 // it as the agent moves between tabs. The browser itself is the viewer — no
 // screenshotting, no capture, full fidelity, works on every channel (it is a
 // plain tabs.update, no CDP and no new permission).
@@ -22,7 +22,7 @@
  *    everything below is what stops "I watched one task last Tuesday" from
  *    becoming a standing licence to grab focus.
  *
- *  - `panelOpen` — a SIDE-PANEL port specifically. why not "any peerd surface":
+ *  - `panelOpen` — a SIDE-PANEL port specifically. why not "any mcdollar surface":
  *    the full-page home is a primary parked surface (the toolbar icon still
  *    opens it under frontDoorView:'home') and its
  *    port SELF-RECONNECTS after every service-worker respawn, so a home tab parked
@@ -33,8 +33,8 @@
  *    so the panel is what "watching" means.
  *
  *  - `chromeFocused` — the browser is the focused APPLICATION. The worst symptom
- *    of every path found was peerd hauling Chrome over the app the user had
- *    alt-tabbed to. If the user isn't in the browser at all, nothing peerd does is
+ *    of every path found was mcdollar hauling Chrome over the app the user had
+ *    alt-tabbed to. If the user isn't in the browser at all, nothing mcdollar does is
  *    being watched, so it must never raise a window. (windows.onFocusChanged fires
  *    WINDOW_ID_NONE when Chrome loses focus.)
  *

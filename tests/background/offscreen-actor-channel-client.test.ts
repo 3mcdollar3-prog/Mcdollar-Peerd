@@ -87,7 +87,7 @@ describe('targeted offscreen actor MessageChannel', () => {
     expect(result).toEqual({ ok: true, started: true, finalText: 'done' });
     expect(offered).toHaveLength(1);
     expect(offered[0]).toMatchObject({
-      type: 'peerd/actor-channel', protocol: 1, channelId: 'channel-one', lease: actorLease,
+      type: 'mcdollar/actor-channel', protocol: 1, channelId: 'channel-one', lease: actorLease,
     });
     expect(JSON.stringify(offered)).not.toContain('private job');
     expect(relayed).toEqual([{

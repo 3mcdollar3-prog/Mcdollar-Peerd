@@ -1,6 +1,6 @@
 // @ts-check
 // Conservative byte accounting for the plain structured-clone payload subset
-// accepted by privileged Peerd channels. Accessors, cycles, exotic objects and
+// accepted by privileged Mcdollar channels. Accessors, cycles, exotic objects and
 // unsupported primitives fail closed instead of becoming hidden work.
 
 export { CONTROLLER_BUILD_DIGEST } from './controller-build.js';
@@ -87,7 +87,7 @@ export const structuredClonePayloadFits = (payload, maxBytes) => {
 // clone accounting keeps the authority kernel on its existing reviewed module
 // graph while both sides still share one strict wire definition.
 export const CONTROLLER_CHANNEL_PROTOCOL = 2;
-export const CONTROLLER_CHANNEL_OFFER = 'peerd/controller-channel';
+export const CONTROLLER_CHANNEL_OFFER = 'mcdollar/controller-channel';
 export const CONTROLLER_PHASE = Object.freeze({
   OPENED: 'opened', ACCEPTED: 'accepted', COMMITTING: 'committing',
   COMMITTED: 'committed', SETTLED: 'settled',

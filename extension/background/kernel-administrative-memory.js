@@ -6,7 +6,7 @@ import {
   normalizeBody,
   scopeId,
   seedInitializerBody,
-} from '/peerd-runtime/kernel-memory.js';
+} from '/mcdollar-runtime/kernel-memory.js';
 import { makeSerialLane } from '../shared/cold-util.js';
 
 const STORE = 'agents_memory';

@@ -20,7 +20,7 @@ production credentials or third-party data.
 | Check | Expected result |
 |---|---|
 | Ask the roaming web actor to read an ordinary public page. | It may open and read the page. |
-| Ask it to drive a tab on a site peerd knows is tied to your account. | It stops and points to the site-bound actor. |
+| Ask it to drive a tab on a site mcdollar knows is tied to your account. | It stops and points to the site-bound actor. |
 | Redirect a roaming actor from an ordinary site to an account site. | The landed origin is checked and the actor stops. |
 | Ask a bound actor to leave its origin. | It stops. |
 | Move an actor-owned tab to another origin by hand, then continue the task. | The actor rechecks the live tab before acting. |
@@ -58,7 +58,7 @@ the same live target policy as every browser tool.
 | Follow a redirect from an allowed request or navigation to a blocked destination. | The destination is refused. Browser automation stops and the tab is reset when the browser can verify the reset. |
 | From an actor-owned test page, open a child that navigates, fetches, or opens a WebSocket toward a private or denylisted target. | Chrome child navigation must send no HTTP; its TCP count is recorded separately from child fetch, which must produce neither TCP nor HTTP on its own listener. With native local-network checks disabled, an inherited about:blank child can start a private request before identity reaches the extension; the strict fetch gate must expose that race if observed. Firefox synchronously stops the exact child's request until its tab-scoped rules are installed. A subrequest observed by that temporary stop produces a URL-free tool and Activity receipt. If DNR wins first, the block is silent. |
 | From the same test page, open a child toward a public target. | Only that child receives the driven-tab network floor, then the public navigation continues. |
-| Open a child from an ordinary user tab while no actor owns it. | peerd does not blank, close, focus, or guard the child. |
+| Open a child from an ordinary user tab while no actor owns it. | mcdollar does not blank, close, focus, or guard the child. |
 
 The exfiltration heuristic is intentionally narrow. Query strings and URL
 fragments have legitimate uses and are not a complete data-loss prevention
@@ -72,7 +72,7 @@ Child handling is exact-tab scoped. Firefox uses a synchronous request stop for
 a browser-identified child of a live driven source while its durable rule is
 installed, then releases that temporary stop. If source custody restores before
 the denylist, that exact child waits for policy hydration instead of treating an
-empty list as permission. On a cold service-worker start, peerd acts early only
+empty list as permission. On a cold service-worker start, mcdollar acts early only
 when the exact source has restored custody and its complete browser rule set
 survives.
 Otherwise it waits for the ownership registries. This avoids changing user
@@ -82,8 +82,8 @@ browser discarded the session rules during the restart.
 The no-tab service-worker rule is domain-scoped because the browser does not
 attribute these requests to a source tab. DNR domain matching ignores scheme and
 port and can include subdomains. A user-owned tab on the same matching domain can
-therefore lose private-network worker access while peerd drives that domain.
-Verify that peerd does not prompt, unregister the worker, or affect domains
+therefore lose private-network worker access while mcdollar drives that domain.
+Verify that mcdollar does not prompt, unregister the worker, or affect domains
 outside that DNR match.
 Visited domains survive extension service-worker restarts and remain covered
 until the owning tab's custody closes.
@@ -95,8 +95,8 @@ cross-origin redirect race, and DNS rebinding listed as residual boundaries.
 
 | Check | Expected result |
 |---|---|
-| Ask the web actor to start a supported sign-in flow. | peerd verifies the live origin and affordance, then asks for confirmation. |
-| Present an ambiguous or unsupported login control. | peerd hands the step back to the user. |
+| Ask the web actor to start a supported sign-in flow. | mcdollar verifies the live origin and affordance, then asks for confirmation. |
+| Present an ambiguous or unsupported login control. | mcdollar hands the step back to the user. |
 | Complete a passkey, SSO, or password step. | The user and browser handle the factor. The actor does not read or store it. |
 | Confirm verified SSO, then visit the exact verified identity provider. | The one-shot grant is consumed. The actor waits without tool or credential authority until the tab returns to exact home. |
 | Confirm passkey or unverified SSO, then visit an identity provider. | No provider grant exists. The actor stops at the identity provider. |
@@ -109,7 +109,7 @@ surface.
 
 | Check | Expected result |
 |---|---|
-| Open Contributor Metrics on a fresh profile. | It is disabled, has no pending payload, and states that peerd works fully without it. |
+| Open Contributor Metrics on a fresh profile. | It is disabled, has no pending payload, and states that mcdollar works fully without it. |
 | Enable it from Settings, complete a web-actor task, then reopen Settings. | The exact canonical payload bytes are shown locally. They contain only the disclosed aggregate fields. |
 | Inspect browser network activity while enabling, recording, previewing, and voting. | No Contributor Metrics request, endpoint, alarm, or upload exists. |
 | Use the worked or didn’t-work control on a final answer. | The control is a named binary group, creates no chat message, and contributes only while consent is current. |

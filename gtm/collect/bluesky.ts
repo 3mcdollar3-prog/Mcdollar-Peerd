@@ -2,7 +2,7 @@
 //
 // why Bluesky and not Twitter/X: the follow graph here is a PUBLIC, free,
 // unauthenticated API (the AppView) - no scraping, no ToS gray zone - and
-// the local-first / dweb community peerd's `d` module speaks to genuinely
+// the local-first / dweb community mcdollar's `d` module speaks to genuinely
 // lives here. This is the closest 2026 analog to the graph Figma mapped.
 //
 // Edge model: follower → followee ("endorses"). Same in-community trick as

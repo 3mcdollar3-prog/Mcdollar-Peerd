@@ -41,7 +41,7 @@ const makeSemanticControllerClient = (
 
 const BUILD_DIGEST = 'a'.repeat(64);
 const AUTHORITY = Object.freeze({
-  ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+  ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
   origin: null, target: 'kernel-runtime', replayClass: 'A' as const,
 });
 const REQUEST = Object.freeze({ operation: 'runtime.probe', input: Object.freeze({}) });
@@ -936,7 +936,7 @@ describe('private runtime controller channel', () => {
         isTrusted: true,
         source: { scriptURL: expectedWorkerUrl },
         data: {
-          type: 'peerd/controller-channel', protocol: 2,
+          type: 'mcdollar/controller-channel', protocol: 2,
           buildDigest: BUILD_DIGEST, kernelEpoch: 'runtime-kernel-generation',
           kernelIdentity,
           lease,

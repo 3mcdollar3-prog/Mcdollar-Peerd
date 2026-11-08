@@ -43,7 +43,7 @@
           const regions = [];
           const escapedNonce = markerNonce.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const markerPattern = new RegExp(
-            '/\\*__peerd_module:' + escapedNonce + ':(module|body):([^*]+)__\\*/',
+            '/\\*__mcdollar_module:' + escapedNonce + ':(module|body):([^*]+)__\\*/',
           );
           for (let index = 0; index < sourceLines.length; index += 1) {
             const marker = markerPattern.exec(sourceLines[index]);

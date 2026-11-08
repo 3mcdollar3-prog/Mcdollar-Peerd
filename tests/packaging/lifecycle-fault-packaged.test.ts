@@ -17,7 +17,7 @@ describe('packaged Chrome lifecycle fault lane', () => {
   );
   const source = (path: string) => readFileSync(join(REPO_ROOT, 'extension', path), 'utf8');
   const executionSources = {
-    tracking: source('peerd-runtime/lifecycle/dispatch-tracking.js'),
+    tracking: source('mcdollar-runtime/lifecycle/dispatch-tracking.js'),
     controller: source('offscreen/controller-turn-runtime.js'),
     bridge: source('background/controller-turn-bridge.js'),
     authority: source('background/execution-tool-authority.js'),
@@ -50,7 +50,7 @@ describe('packaged Chrome lifecycle fault lane', () => {
     expect(bridge).toContain("['dweb_share', 'D', 'chrome-fault-d']");
     expect(worker).toContain("phase: 'offscreen.runJob'");
     expect(job).toContain("sendToSW('lifecycle-fault/dispatch'");
-    expect(authority).toContain("return 'peerd-lifecycle-fault';");
+    expect(authority).toContain("return 'mcdollar-lifecycle-fault';");
     expect(job).toContain('await new Promise(() => {});');
     expect(executionSources.controller).toContain(
       "rpc('turn.execution.run-script', { ...binding(), ...scriptRequest })",

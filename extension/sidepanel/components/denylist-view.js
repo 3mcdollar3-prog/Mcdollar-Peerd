@@ -15,7 +15,7 @@
 // Both paths arm an inline confirm first (hooks-view's confirmRemove
 // pattern — the app-level ConfirmModal is wired to the SW confirmation
 // coordinator for AGENT actions, not mountable for a local UI choice),
-// and the confirm copy states the consequence ("peerd will be able to
+// and the confirm copy states the consequence ("mcdollar will be able to
 // act on <pattern> again") before anything dispatches. Every mutation
 // is audited by the SW (denylist_added / denylist_removed, seed flag).
 //
@@ -201,7 +201,7 @@ export const DenylistView = {
       }, ui.note ? ui.note.text : null),
 
       // A search that matches nothing says so ONCE, at the top. The groups stay
-      // listed underneath (a category that vanishes reads as "peerd does not
+      // listed underneath (a category that vanishes reads as "mcdollar does not
       // block this"), so without this line the page would show eight headings
       // and no statement that the search itself came up empty.
       model.filtered && model.shown === 0
@@ -352,7 +352,7 @@ const confirmStrip = (vnode, p, user) => {
   }, [
     m(`code.denylist-item${user ? '.is-user' : ''}`, p),
     m('span.denylist-badge',
-      { title: user ? 'A pattern you added' : 'Ships with peerd — can be disabled, not deleted' },
+      { title: user ? 'A pattern you added' : 'Ships with mcdollar — can be disabled, not deleted' },
       user ? 'user' : 'built-in'),
     m('span.denylist-consequence', consequence),
     m('button.linkish.danger-text', {

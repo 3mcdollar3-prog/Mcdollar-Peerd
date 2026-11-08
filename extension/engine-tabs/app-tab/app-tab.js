@@ -12,9 +12,9 @@ import {
   isBinaryAppFile,
   isBinaryAssetPath,
   opfsHelpers,
-} from '/peerd-engine/index.js';
+} from '/mcdollar-engine/index.js';
 import { loadDweb } from '/shared/dweb-loader.js';
-import { mountPullInPeerd, onPanelOpenChange, openPanel, panelKind } from '/shared/pull-in-peerd.js';
+import { mountPullInMcdollar, onPanelOpenChange, openPanel, panelKind } from '/shared/pull-in-mcdollar.js';
 import { isServiceWorkerSender } from '/shared/messaging.js';
 import { createAppDataClient } from './app-data-client.js';
 import { mithrilClassicSource } from './mithril-classic-source.js';
@@ -165,15 +165,15 @@ const sendActorChatMessage = async () => {
     // why: some mappings append provider text. Only fixed lines can cross here.
     const fixed = ['provider-key-missing', 'unknown-provider', 'actor-recovery-pending', 'provider-usage-limit', 'provider-http-401', 'provider-http-429', 'provider-http-529', 'insufficient_quota'].some((code) => mapError(code) === mapped);
     appendActorChatMessage('status', actorChatInput.disabled
-      ? 'Peerd could not confirm whether the App actor received that message. Inspect its transcript in peerd before sending another.'
+      ? 'Mcdollar could not confirm whether the App actor received that message. Inspect its transcript in mcdollar before sending another.'
       : failure?.error === 'vault-locked'
-        ? 'Vault is locked. Unlock it in the peerd panel, then send again.'
+        ? 'Vault is locked. Unlock it in the mcdollar panel, then send again.'
         : fixed ? mapped.replace(/\p{Dash_Punctuation}/gu, '-') : cause instanceof Error
           ? 'The App actor connection was interrupted. Try again.' : 'The App actor did not reply. Try again.');
   } finally {
     actorChatSend.disabled = actorChatInput.disabled;
     actorChatStatus.textContent = actorChatInput.disabled
-      ? 'Delivery unconfirmed · inspect the actor in peerd'
+      ? 'Delivery unconfirmed · inspect the actor in mcdollar'
       : 'Enter to send · Shift+Enter for a new line';
     if (!actorChatInput.disabled) actorChatInput.focus({ preventScroll: true });
   }
@@ -193,7 +193,7 @@ if (!appId) {
   throw new Error('No appId in URL hash');
 }
 
-const opfs = opfsHelpers(['peerd-apps', appId]);
+const opfs = opfsHelpers(['mcdollar-apps', appId]);
 const appData = createAppDataClient({
   appId,
   opfs,
@@ -249,7 +249,7 @@ let saveOutcomeUnknown = false;
 /** @param {unknown} reply @param {string} knownMessage */
 const replyFailure = (reply, knownMessage) => Object.assign(
   new Error(/** @type {{outcomeKnown?:boolean}} */ (reply)?.outcomeKnown === false
-    ? 'Peerd could not confirm whether the change finished.' : knownMessage),
+    ? 'Mcdollar could not confirm whether the change finished.' : knownMessage),
   /** @type {object} */ (reply ?? {}),
 );
 /** @param {string} path @param {unknown} error @param {'save'|'create'|'delete'} [action] */
@@ -261,9 +261,9 @@ const showSaveFailure = (path, error, action = 'save') => {
   saveOutcomeUnknown ||= refusal?.outcomeKnown === false;
   const pastAction = action === 'delete' ? 'deleted' : action === 'create' ? 'created' : 'saved';
   saveMessage.textContent = saveOutcomeUnknown
-    ? `Peerd could not confirm whether ${path} was ${pastAction}. Your edits are still open. Download a copy before reopening the App to check the saved file.`
+    ? `Mcdollar could not confirm whether ${path} was ${pastAction}. Your edits are still open. Download a copy before reopening the App to check the saved file.`
     : refusal?.error === 'vault-locked'
-      ? `Could not ${action} ${path}: the vault is locked. Your edits are still open. Unlock it in the peerd panel, then retry.`
+      ? `Could not ${action} ${path}: the vault is locked. Your edits are still open. Unlock it in the mcdollar panel, then retry.`
     : refusal?.code === 'app-file-invalid-json'
       ? `${path} is not valid JSON, so it is not saved yet. Fix the JSON to save it.`
     : `Could not ${action} ${path}. Your edits are still open. Reduce the file or free browser storage, then retry.`;
@@ -363,7 +363,7 @@ const loadBuiltinLib = async (name) => {
   // why: fetches our OWN bundled asset via a chrome-extension:// URL
   // (runtime.getURL), not a network egress. The egress allowlist
   // intentionally wouldn't admit our own extension origin, so safeFetch
-  // isn't the right tool here (same case as peerd-runtime/loop/system-prompt.js).
+  // isn't the right tool here (same case as mcdollar-runtime/loop/system-prompt.js).
   // eslint-disable-next-line no-restricted-globals
   const res = await fetch(browser.runtime.getURL(spec.path));
   if (!res.ok) throw new Error(`builtin ${name}: HTTP ${res.status}`);
@@ -454,7 +454,7 @@ browser.runtime.onMessage.addListener((/** @type {any} */ message, /** @type {an
     }, 12_000);
     agentCallPending.set(id, { resolve, timer, op });
     frame.contentWindow?.postMessage({
-      peerd: 'app:agent:request', id, op, args: message.args ?? {},
+      mcdollar: 'app:agent:request', id, op, args: message.args ?? {},
     }, '*');
   });
 });
@@ -488,7 +488,7 @@ const tryDeliver = () => {
   pendingBody = null;
   pendingAssets = {};
   runnerPhase = 'delivered';
-  if (appMeta?.name) document.title = `peerd · ${appMeta.name}`;
+  if (appMeta?.name) document.title = `mcdollar · ${appMeta.name}`;
   boot.classList.add('is-hidden');
 };
 
@@ -578,7 +578,7 @@ const renderMode = async () => {
   // looked like a no-op even though the render happened underneath.
   editorPanel.hidden = true;
 
-  // Always refetch on entry. Edit mode can change peerd.json and a dweb update
+  // Always refetch on entry. Edit mode can change mcdollar.json and a dweb update
   // can replace the package while this tab remains alive.
   const meta = /** @type {any} */ (await uiRuntime.send({ type: 'app/get-meta', appId }));
   if (!meta?.ok) { fail('App metadata is temporarily unavailable.', { retryActor: true }); return; }
@@ -604,8 +604,8 @@ const renderMode = async () => {
 
   let runtime;
   try {
-    runtime = appRuntimeFromFiles({ ...textFiles, ...(binaryAssets['peerd.json']
-      ? { 'peerd.json': new Uint8Array(binaryAssets['peerd.json']) } : {}) });
+    runtime = appRuntimeFromFiles({ ...textFiles, ...(binaryAssets['mcdollar.json']
+      ? { 'mcdollar.json': new Uint8Array(binaryAssets['mcdollar.json']) } : {}) });
   }
   catch (error) { fail(/** @type {Error} */ (error).message); return; }
 
@@ -647,30 +647,30 @@ window.addEventListener('message', (/** @type {MessageEvent} */ e) => {
     }
     return;
   }
-  if (e.data?.peerd === 'app:data:request' && runnerPhase === 'delivered') {
+  if (e.data?.mcdollar === 'app:data:request' && runnerPhase === 'delivered') {
     const id = typeof e.data.id === 'string' && e.data.id.length <= 100 ? e.data.id : null;
     const op = ['get', 'set', 'delete', 'list'].includes(e.data.op) ? e.data.op : null;
     if (!id || !op) return;
     appData.request(op, e.data.key, e.data.json).then((/** @type {any} */ reply) => {
       frame.contentWindow?.postMessage({
-        peerd: 'app:data:result', id,
+        mcdollar: 'app:data:result', id,
         ok: reply?.ok === true,
         ...(reply?.ok === true ? { value: reply.value }
           : { error: String(reply?.error || 'App data request failed').slice(0, 1_000) }),
       }, '*');
     }).catch((error) => {
       frame.contentWindow?.postMessage({
-        peerd: 'app:data:result', id, ok: false,
+        mcdollar: 'app:data:result', id, ok: false,
         error: String(error?.message ?? error).slice(0, 1_000),
       }, '*');
     });
     return;
   }
-  if (e.data?.peerd === 'app:agent:open' && runnerPhase === 'delivered') {
+  if (e.data?.mcdollar === 'app:agent:open' && runnerPhase === 'delivered') {
     setActorChatOpen(true);
     return;
   }
-  if (e.data?.peerd === 'app:agent:result') {
+  if (e.data?.mcdollar === 'app:agent:result') {
     const pending = agentCallPending.get(e.data.id);
     if (!pending) return;
     agentCallPending.delete(e.data.id);
@@ -864,11 +864,11 @@ const editMode = async () => {
     await readForRender();
     editorApi = await createEditor({
       mountEl: editorMount,
-      opfsBase: ['peerd-apps', appId],
+      opfsBase: ['mcdollar-apps', appId],
       pinnedFile: appMeta.entryFile,
       isReadOnlyFile: (path) => binaryFilePaths.has(path) || isBinaryAssetPath(path),
       onReadOnlyFile: (path) => showNotice(
-        `${path} is a binary file and cannot be edited here. Ask peerd to replace it, or import another App package.`,
+        `${path} is a binary file and cannot be edited here. Ask mcdollar to replace it, or import another App package.`,
         { persistent: true },
       ),
       writeFile: async (path, content) => {
@@ -905,7 +905,7 @@ const editMode = async () => {
 };
 
 // ---------------------------------------------------------------------------
-// Export — download this app as a .peerd file (DESIGN-10). The SW owns
+// Export — download this app as a .mcdollar file (DESIGN-10). The SW owns
 // the format; this is flush (if editing) → fetch envelope → Blob+anchor.
 // why button-text feedback: this page has no log surface in render
 // mode, and the boot overlay is too heavy for a failed download.
@@ -971,7 +971,7 @@ const showActorAttachFailure = (reply, knownFallback = 'The required App actor i
   const unknown = reply?.outcomeKnown === false;
   actorRetry.textContent = unknown ? 'Recheck actor' : 'Retry actor';
   fail(unknown
-    ? 'Peerd could not confirm whether the App actor attached. Recheck the exact attachment without reopening the App.'
+    ? 'Mcdollar could not confirm whether the App actor attached. Recheck the exact attachment without reopening the App.'
     : reply?.error ?? knownFallback, {
     retryActor: reply?.actorRequired === true && reply?.retryable === true,
   });
@@ -1006,8 +1006,8 @@ toggleBtn.addEventListener('click', async () => {
     if (editorApi?.hasUnsavedChanges()) return;
     fail(
       /** @type {{outcomeKnown?:boolean}} */ (error)?.outcomeKnown === false
-        ? 'Peerd could not confirm the App state. Reopen the App to reconcile.'
-        : 'The App could not switch modes. Retry after peerd reconnects.',
+        ? 'Mcdollar could not confirm the App state. Reopen the App to reconcile.'
+        : 'The App could not switch modes. Retry after mcdollar reconnects.',
       { retryActor: /** @type {{outcomeKnown?:boolean}} */ (error)?.outcomeKnown !== false },
     );
   }
@@ -1021,13 +1021,13 @@ const isolation = /** @type {{ ok?: boolean, error?: string, actorRequired?: boo
   await actorAttachment.start()
 );
 
-// A peerd-owned tab carries the trigger to pull the side panel in — so you can
+// A mcdollar-owned tab carries the trigger to pull the side panel in — so you can
 // keep chatting from this App without a round-trip back to home.
-mountPullInPeerd();
+mountPullInMcdollar();
 // Full screen keeps the trigger as the P handle at the left edge.
 mountFullScreen({
   doc: document, target: document.documentElement, frame,
-  button: byId('fullscreen-btn'), handle: byId('peerd-handle'), status: byId('fullscreen-status'),
+  button: byId('fullscreen-btn'), handle: byId('mcdollar-handle'), status: byId('fullscreen-status'),
   panelKind: panelKind(), openPanel, onPanelOpenChange, onFailure: showNotice,
 });
 
@@ -1036,8 +1036,8 @@ if (!isolation?.ok) {
 } else {
   renderMode().catch((error) => fail(
     /** @type {{outcomeKnown?:boolean}} */ (error)?.outcomeKnown === false
-      ? 'Peerd could not confirm the App state after worker recovery. Reopen the App to reconcile.'
-      : 'The App could not finish loading. Retry after peerd reconnects.',
+      ? 'Mcdollar could not confirm the App state after worker recovery. Reopen the App to reconcile.'
+      : 'The App could not finish loading. Retry after mcdollar reconnects.',
     { retryActor: /** @type {{outcomeKnown?:boolean}} */ (error)?.outcomeKnown !== false },
   ));
 }

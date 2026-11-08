@@ -4,8 +4,8 @@ import { PROVIDER_EGRESS_MANIFEST } from '../../extension/background/provider-eg
 import {
   PROVIDER_METADATA,
   listProviderMetadata,
-} from '../../extension/peerd-provider/metadata.js';
-import { listProviders } from '../../extension/peerd-provider/registry.js';
+} from '../../extension/mcdollar-provider/metadata.js';
+import { listProviders } from '../../extension/mcdollar-provider/registry.js';
 
 describe('provider authority manifest', () => {
   test('keeps document UI metadata identical to the executable provider registry', () => {

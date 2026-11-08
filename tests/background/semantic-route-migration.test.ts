@@ -4,7 +4,7 @@ import { createKernelSemanticControl } from '../../extension/background/kernel-s
 import { makeActorOverviewRoutes } from '../../extension/background/routes/actor-overview.js';
 import { makeContactsRoutes } from '../../extension/background/routes/contacts.js';
 import { dispatchSemanticRoute } from '../../extension/offscreen/semantic-route-host.js';
-import { mergeContacts } from '../../extension/peerd-runtime/contacts/aggregate.js';
+import { mergeContacts } from '../../extension/mcdollar-runtime/contacts/aggregate.js';
 
 const HOME = { id: 'extension', url: 'extension://home/home.html' };
 const OTHER = { id: 'extension', url: 'extension://sidepanel/sidepanel.html' };

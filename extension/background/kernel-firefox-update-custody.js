@@ -7,7 +7,7 @@ import { withDeadline } from '../shared/cold-util.js';
 export const FIREFOX_UPDATE_CUSTODY_KEY = 'kernel.firefoxUpdateCustody.v1';
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const VERSION = /^\d+(?:\.\d+)*$/;
-const RELEASE = /^\/NotASithLord\/peerd\/releases\/download\/v(\d+(?:\.\d+)*)\/peerd-preview-firefox\.xpi$/;
+const RELEASE = /^\/NotASithLord\/mcdollar\/releases\/download\/v(\d+(?:\.\d+)*)\/mcdollar-preview-firefox\.xpi$/;
 
 const validVersion = (/** @type {unknown} */ value) => typeof value === 'string'
   && value.length > 0 && value.length <= 32 && VERSION.test(value);
@@ -66,7 +66,7 @@ const manifestFeed = (manifest) => {
   if (typeof gecko?.id !== 'string' || typeof gecko?.update_url !== 'string') return null;
   let url;
   try { url = new URL(gecko.update_url); } catch { return null; }
-  if (url.protocol !== 'https:' || url.hostname !== 'peerd.ai'
+  if (url.protocol !== 'https:' || url.hostname !== 'mcdollar.ai'
       || url.pathname !== '/updates/firefox-preview.json'
       || url.port || url.username || url.password || url.search || url.hash) return null;
   return { addonId: gecko.id, url: url.href };
@@ -108,7 +108,7 @@ export const createKernelFirefoxUpdateCustody = ({
         return { ...state, pending: null, notifiedVersion: null };
       }
       delivered = notify(
-        `peerd v${candidate.version} is available (you have v${current}). Firefox can install it now.`,
+        `mcdollar v${candidate.version} is available (you have v${current}). Firefox can install it now.`,
         { kind: 'open-url', label: 'Install update', url: candidate.url },
       );
       return delivered ? { ...state, notifiedVersion: candidate.version } : state;

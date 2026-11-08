@@ -1,4 +1,4 @@
-// Experimental model wire adapter. Browser authority remains in Peerd: this
+// Experimental model wire adapter. Browser authority remains in Mcdollar: this
 // process can return existing tool calls, but has no browser-control connection.
 import { createHash, randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -11,7 +11,7 @@ import {
   validateRecoveryPlan, verifySiteClientResult,
 } from './api-policy.mjs';
 
-export const BRIDGE_MODEL = 'peerd-local-browser';
+export const BRIDGE_MODEL = 'mcdollar-local-browser';
 // The bridge retains a transcript on the CPU, then constructs a much smaller
 // decision request. This is not a claim that the decision model has 64k context.
 export const BRIDGE_TRANSPORT_CONTEXT = 65_536;

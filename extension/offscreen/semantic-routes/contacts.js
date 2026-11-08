@@ -3,7 +3,7 @@
 /** @param {string} code @param {string} action */
 const unknown = (code, action) => ({
   ok: false,
-  error: `Peerd could not confirm whether ${action} finished. Refresh to reconcile before trying again.`,
+  error: `Mcdollar could not confirm whether ${action} finished. Refresh to reconcile before trying again.`,
   code,
   outcomeKnown: false,
   outcomeKind: 'unknown',

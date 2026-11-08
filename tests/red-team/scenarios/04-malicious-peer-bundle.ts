@@ -4,7 +4,7 @@
 // agent card) that is tampered, re-attributed, amplified to exhaust memory, or
 // crafted to poison discovery.
 //
-// Defenses (peerd-distributed):
+// Defenses (mcdollar-distributed):
 //   - Content addressing: a bundle's address is SHA-256 over the canonical
 //     manifest, and the manifest commits to the ordered chunk hashes, so the
 //     signature transitively covers every byte. Tamper any signed field (a chunk
@@ -24,12 +24,12 @@
 import {
   type Scenario, type Probe, blocked, leaked, summarize,
 } from '../harness.ts';
-import { generateIdentity } from '../../../extension/peerd-distributed/identity/keypair.js';
+import { generateIdentity } from '../../../extension/mcdollar-distributed/identity/keypair.js';
 import {
   buildManifest, verifyManifest, manifestHash, assertBundleWithinLimits,
   MAX_BUNDLE_BYTES,
-} from '../../../extension/peerd-distributed/content/manifest.js';
-import { parsePeerCard, MAX_CARD_NAME, MAX_SKILLS, MAX_CARD_BYTES } from '../../../extension/peerd-distributed/agent-card.js';
+} from '../../../extension/mcdollar-distributed/content/manifest.js';
+import { parsePeerCard, MAX_CARD_NAME, MAX_SKILLS, MAX_CARD_BYTES } from '../../../extension/mcdollar-distributed/agent-card.js';
 import { utf8 } from '../../../extension/shared/bundle/bytes.js';
 
 export const scenario: Scenario = {

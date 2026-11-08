@@ -1,7 +1,7 @@
 // @ts-check
 // notebook-tab — host page for one Notebook.
 //
-// Most of the heavy lifting lives in peerd-engine:
+// Most of the heavy lifting lives in mcdollar-engine:
 //   - createEditor()  — CodeMirror + file tree + OPFS, mounted into
 //                       #editor-host
 //   - buildEntry()    - static import/re-export resolver
@@ -17,15 +17,15 @@ import {
   REMOTE_MODULE_CAPABILITY_BLOCKED_MESSAGE,
   remoteModuleCapabilityBlockedMessage,
   UnsupportedNativeModuleImportError,
-} from '/peerd-engine/index.js';
+} from '/mcdollar-engine/index.js';
 import { renderReturnValue } from './output-render.js';
 import { recoverMirrorState } from './mirror-state.js';
-// The sealed worker source (realm seal + peerd.* surface + bridges) is shared
+// The sealed worker source (realm seal + mcdollar.* surface + bridges) is shared
 // with the headless offscreen job runner so the security surface can't diverge.
 import {
   buildWorkerSource, mapWorkerError, NOTEBOOK_BUILTINS, SEAL_MODULE_URL,
 } from './worker-source.js';
-import { mountPullInPeerd } from '/shared/pull-in-peerd.js';
+import { mountPullInMcdollar } from '/shared/pull-in-mcdollar.js';
 import { isServiceWorkerSender } from '/shared/messaging.js';
 import {
   NOTEBOOK_MODULE_LOADER, REMOTE_MODULE_IMPORTS_ENABLED,
@@ -48,10 +48,10 @@ const assertAgentFileMutation = (path) => {
   }
 };
 
-// A peerd-owned tab carries the trigger to pull the side panel in — so you can
+// A mcdollar-owned tab carries the trigger to pull the side panel in — so you can
 // keep chatting from this Notebook without a round-trip back to home. Mounted
 // at load so it's present during boot and on any init failure.
-mountPullInPeerd();
+mountPullInMcdollar();
 
 // ---------------------------------------------------------------------------
 // DOM glue
@@ -76,12 +76,12 @@ const els = {
 };
 
 els.idChip.textContent = notebookId;
-document.title = `peerd · notebook ${notebookId} — booting…`;
+document.title = `mcdollar · notebook ${notebookId} — booting…`;
 /** @param {string} status */
 const setTitleStatus = (status) =>
   document.title = status
-    ? `peerd · notebook ${notebookId} — ${status}`
-    : `peerd · notebook ${notebookId}`;
+    ? `mcdollar · notebook ${notebookId} — ${status}`
+    : `mcdollar · notebook ${notebookId}`;
 
 // why: defer output mutations until the resize delivery is complete.
 const OUTPUT_HISTORY = 5_000;
@@ -140,7 +140,7 @@ const setSaveStatus = (state) => {
 };
 
 // ---------------------------------------------------------------------------
-// Editor (peerd-engine/editor) — mounted at boot, held here so the
+// Editor (mcdollar-engine/editor) — mounted at boot, held here so the
 // js/eval handler can mirror agent code into notebook.js and refresh
 // the tree after each run.
 // ---------------------------------------------------------------------------
@@ -225,12 +225,12 @@ const makeResolverDeps = (onRemoteFetch, signal, deadlineAt) => ({
       appendLine('log-error', `[import] FAILED ${label}: ${entry.error}`);
     }
   },
-  // peerd:std for entry and nested static imports.
+  // mcdollar:std for entry and nested static imports.
   builtins: NOTEBOOK_BUILTINS,
 });
 
 // ---------------------------------------------------------------------------
-// Per-eval worker spawn. buildWorkerSource (the sealed realm + peerd.* surface)
+// Per-eval worker spawn. buildWorkerSource (the sealed realm + mcdollar.* surface)
 // lives in worker-source.js, shared with the headless offscreen job runner.
 //
 // why FRESH worker per run (DO NOT CHANGE — DECISIONS #24): every run spawns a
@@ -239,7 +239,7 @@ const makeResolverDeps = (onRemoteFetch, signal, deadlineAt) => ({
 // function of the code + the files on disk, so a Notebook is REPRODUCIBLE by
 // construction (no hidden kernel state, no out-of-order-execution gremlins —
 // Jupyter's classic failure mode). If durable state is needed across runs it
-// goes in OPFS (peerd.self.writeFile/readFile), never a module global. Resist
+// goes in OPFS (mcdollar.self.writeFile/readFile), never a module global. Resist
 // "add a kernel for speed": the answer is to persist the expensive result to a
 // file, not to keep RAM warm.
 // ---------------------------------------------------------------------------
@@ -640,7 +640,7 @@ const runEvalInternal = async (code, timeoutMs = 30000, entryPath = NOTEBOOK_PAT
             });
             return;
           }
-          // peerd.distributed.{whoami,status,peers,presence} — the READ window
+          // mcdollar.distributed.{whoami,status,peers,presence} — the READ window
           // onto the always-on base network. One SW round-trip (dweb/distributed/
           // info) returns the rosters; the worker slices per method. dweb-off /
           // store answers { ok:false, error:'dweb-disabled' }, which the worker
@@ -658,7 +658,7 @@ const runEvalInternal = async (code, timeoutMs = 30000, entryPath = NOTEBOOK_PAT
             clearTimeout(timer);
             try { worker.terminate(); } catch {}
           }
-          // peerd.self.display(value) - use the return value renderer.
+          // mcdollar.self.display(value) - use the return value renderer.
           // Tables, charts, JSON, and plain values keep the same output.
           if (m.type === 'display' || m.value !== undefined && !m.error) renderReturnValue(els.output, m.value);
           if (m.type === 'display') return;
@@ -800,7 +800,7 @@ const runFromEditor = async () => {
 };
 
 // ---------------------------------------------------------------------------
-// Export — download this Notebook as a .peerd file (DESIGN-10). The SW
+// Export — download this Notebook as a .mcdollar file (DESIGN-10). The SW
 // owns the format; this is just flush → fetch envelope → Blob+anchor.
 // ---------------------------------------------------------------------------
 
@@ -984,7 +984,7 @@ browser.runtime.onMessage.addListener(/** @type {any} */ (onNotebookMessage));
 // on the two panes IS the split ratio (defaults 6:4 from CSS).
 // ---------------------------------------------------------------------------
 
-const LS_SPLIT = `peerd:nb:${notebookId}:split`;
+const LS_SPLIT = `mcdollar:nb:${notebookId}:split`;
 
 const setupResizer = () => {
   const editorMount = document.getElementById('editor-mount');
@@ -1046,7 +1046,7 @@ const setupResizer = () => {
   // (empty is fine). The editor's initial-load tolerates missing files.
   editor = await createEditor({
     mountEl: byId('editor-mount'),
-    opfsBase: ['peerd-notebooks', notebookId],
+    opfsBase: ['mcdollar-notebooks', notebookId],
     pinnedFile: NOTEBOOK_PATH,
     beforeOpfsMutation: assertOpfsWritable,
     onRun: runFromEditor,

@@ -20,8 +20,8 @@ import {
 } from '/shared/ui-effects.js';
 import { App } from './components/app.js';
 import { makeConfirmationAnswer } from './confirmation-answer.js';
-import { classifyBrowserAutomationTarget, createVoiceManager } from '/peerd-runtime/ui.js';
-import { findDenylistMatch } from '/peerd-egress/ui.js';
+import { classifyBrowserAutomationTarget, createVoiceManager } from '/mcdollar-runtime/ui.js';
+import { findDenylistMatch } from '/mcdollar-egress/ui.js';
 import {
   INITIAL_STATE, putSpawnedSession, reduceChat, resetChatAfterRuntimeLoss,
 } from './chat-reducer.js';
@@ -33,7 +33,7 @@ import { eventBelongsToSidepanelWindow, focusBrowserTab } from './tab-context.js
 /** @type {ChatState} */
 let currentState = INITIAL_STATE;
 
-// "Keep peerd as the first tab": the panel that showed the first vault setup
+// "Keep mcdollar as the first tab": the panel that showed the first vault setup
 // offers it once (home/first-tab-prompts.js). The vault shell shows that setup
 // before this module loads, and marks the page; the vault gate here shows it
 // after a vault reset. why a lazy import: only a first run needs it, so the
@@ -50,7 +50,7 @@ const focusComposer = () => {
 const noteFirstRun = () => {
   if (firstTab || !currentState.hydrated) return;
   if (currentState.vault?.initialized !== false
-    && document.documentElement.dataset.peerdFirstSetup !== 'true') return;
+    && document.documentElement.dataset.mcdollarFirstSetup !== 'true') return;
   firstTab = { view: () => null };
   import('/home/first-tab-prompts.js')
     .then(({ makePanelFirstTab }) => {
@@ -297,7 +297,7 @@ const uiActions = { loadActor, confirmAnswer, dismissNotice, requestDebugger, op
 // surfaces — it plays its reverse "self-delete" in the panel while options is
 // foregrounded, and renders back in when you leave. Best-effort: any tabs-API
 // gap simply leaves the logo present (fail-safe — never permanently gone).
-// Hand off to ANY peerd full-tab surface — the options page AND the
+// Hand off to ANY mcdollar full-tab surface — the options page AND the
 // home/Library page — so the panel mark self-deletes whenever one is
 // foregrounded and renders back when you leave.
 const FULLPAGE_URLS = (() => {
@@ -441,7 +441,7 @@ const Root = {
 let started = false;
 export const startSidepanel = () => {
   if (started) return;
-  if (document.documentElement.dataset.peerdBootStage === 'failed') return;
+  if (document.documentElement.dataset.mcdollarBootStage === 'failed') return;
   started = true;
   statePort.start();
   document.addEventListener('keydown', onGlobalKeydown);

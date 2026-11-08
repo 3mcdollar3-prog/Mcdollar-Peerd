@@ -28,8 +28,8 @@ const failed = (/** @type {unknown} */ cause, /** @type {string} */ action) => {
     outcomeKnown,
     retryable: outcomeKnown,
     error: outcomeKnown
-      ? `Peerd could not ${action}. Try again.`
-      : `Peerd could not confirm the result of trying to ${action}. Refresh Git history to reconcile before trying again.`,
+      ? `Mcdollar could not ${action}. Try again.`
+      : `Mcdollar could not confirm the result of trying to ${action}. Refresh Git history to reconcile before trying again.`,
   };
 };
 const appRoute = (/** @type {string} */ action, /** @type {string} */ operation,

@@ -15,7 +15,7 @@ import {
 // them: every typed line echoed (PS2 `> ` before continuations) BEFORE any
 // output, because bash reads the whole compound before executing it.
 
-const MARKER = '___PEERD_p5m46sghpw_mqyj4wy9___';
+const MARKER = '___MCDOLLAR_p5m46sghpw_mqyj4wy9___';
 const ERRFILE = `${ERRFILE_PREFIX}ab12cd34`;
 
 /** Assemble the PTY capture for one wrapped run of `cmd`. */

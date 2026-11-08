@@ -5,7 +5,7 @@
 
 import { SUITES, TASKS } from './tasks.js';
 import { aggregate, compare, wastedTurns } from './score.js';
-import { costOf } from '/peerd-provider/index.js';
+import { costOf } from '/mcdollar-provider/index.js';
 import { sleep } from '/shared/util.js';
 
 /**

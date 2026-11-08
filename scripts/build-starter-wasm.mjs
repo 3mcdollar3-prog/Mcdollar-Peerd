@@ -11,4 +11,4 @@ export const starterWasm = new Uint8Array([
   ...section(7,[2,4,...new TextEncoder().encode('gray'),0,0,9,...new TextEncoder().encode('threshold'),0,1]),
   ...section(10,[2,gray.length,...gray,threshold.length,...threshold]),
 ]);
-if (import.meta.main) await writeFile(new URL('../extension/peerd-engine/starters/wasm-image/filter.wasm', import.meta.url), starterWasm);
+if (import.meta.main) await writeFile(new URL('../extension/mcdollar-engine/starters/wasm-image/filter.wasm', import.meta.url), starterWasm);

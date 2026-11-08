@@ -1,5 +1,5 @@
-import { wrapUntrusted } from '../../extension/peerd-runtime/tools/prompt-wrap.js';
-import { siteClientEnvelope } from '../../extension/peerd-runtime/site-clients/core.js';
+import { wrapUntrusted } from '../../extension/mcdollar-runtime/tools/prompt-wrap.js';
+import { siteClientEnvelope } from '../../extension/mcdollar-runtime/site-clients/core.js';
 import { describe, expect, test } from 'bun:test';
 import { createBrowserDecisionResponder, LOCAL_BROWSER_BUDGETS, makeLocalClients, HELPER_CONTEXT } from '../../scripts/local-browser/model-bridge.mjs';
 

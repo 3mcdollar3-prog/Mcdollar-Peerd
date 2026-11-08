@@ -30,7 +30,7 @@ const nowReceipt = (completionCalls: number, unixMs = 1_778_000_000_000) => ({
 });
 const surface = (kind: string, pathname: string, target: string | null = null) => ({
   kind, url: `moz-extension://7d12f198-31fc-4e95-9184-e954123981b6${pathname}`, pathname,
-  runtimeId: 'peerd@peerd.ai', readyState: 'complete', ready: true,
+  runtimeId: 'mcdollar@mcdollar.ai', readyState: 'complete', ready: true,
   rootVisible: true, shell: true, target,
 });
 const modelWire = (receipts: Record<string, any>) => [
@@ -117,7 +117,7 @@ const valid = () => ({
     },
     remoteGit: {
       ok: true, phase: 'complete', credentialStored: true, remoteLinked: true,
-      pushed: true, fetched: true, host: 'git-fixture.peerd.test',
+      pushed: true, fetched: true, host: 'git-fixture.mcdollar.test',
       branch: 'acceptance/cutover', committedOid: 'a'.repeat(40),
       cleanClone: {
         ok: true,
@@ -155,7 +155,7 @@ const valid = () => ({
       appGitPersistence: { payload: { ok: true } },
       remoteGitPersisted: true,
       remoteGitPersistence: {
-        ok: true, phase: 'complete', host: 'git-fixture.peerd.test', fetched: true,
+        ok: true, phase: 'complete', host: 'git-fixture.mcdollar.test', fetched: true,
         oid: 'a'.repeat(40), historyContainsCommit: true, credentialRetained: true,
         cleanup: { appRemoved: true, credentialRemoved: true, credentialAbsent: true },
       },
@@ -268,7 +268,7 @@ describe('installed Firefox production cutover lane', () => {
     expect(source).toContain('browserVerifyAcceptanceAppPayload.toString()');
     expect(source).toContain("await navigateMain(driver, handle, OPTIONS_URL, 'options')");
     expect(source).toContain("await call(sender, { type: 'apps/open', appId })");
-    expect(source).not.toContain("document.title === 'peerd ·");
+    expect(source).not.toContain("document.title === 'mcdollar ·");
     expect(source).toContain('startGitSmartHttpFixture()');
     expect(source).toContain('FIREFOX_CUTOVER_HANG_CEILINGS');
     expect(source).toContain('rootRect.width <= 0');

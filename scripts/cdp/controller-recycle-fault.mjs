@@ -19,7 +19,7 @@ import {
   readActiveFeatureLease, startOllamaAcceptanceFixture,
 } from './product-acceptance-probes.mjs';
 import {
-  attach, evalIn, launchPeerd, rpc, sseText, sseToolCall, unlockAndReady, waitFor,
+  attach, evalIn, launchMcdollar, rpc, sseText, sseToolCall, unlockAndReady, waitFor,
 } from './e2e-harness.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -360,7 +360,7 @@ export async function runControllerFaultEvidence({
         return { status: 409, body: JSON.stringify({ error: 'duplicate-model-call' }) };
       },
     });
-    ctx = await launchPeerd({
+    ctx = await launchMcdollar({
       extensionDir: treePath,
       interceptModel: false,
       expectedBackgroundEntry: PRODUCTION_BACKGROUND_ENTRY,
@@ -567,13 +567,13 @@ export async function runControllerFaultEvidence({
 }
 
 if (import.meta.main) {
-  const reportPath = process.env.PEERD_ACCEPTANCE_REPORT_PATH
-    ? resolve(process.env.PEERD_ACCEPTANCE_REPORT_PATH) : CONTROLLER_FAULT_REPORT;
+  const reportPath = process.env.MCDOLLAR_ACCEPTANCE_REPORT_PATH
+    ? resolve(process.env.MCDOLLAR_ACCEPTANCE_REPORT_PATH) : CONTROLLER_FAULT_REPORT;
   runControllerFaultEvidence({
-    ...(process.env.PEERD_ACCEPTANCE_SOURCE_ROOT
-      ? { sourceRoot: resolve(process.env.PEERD_ACCEPTANCE_SOURCE_ROOT) } : {}),
-    ...(process.env.PEERD_ACCEPTANCE_ARTIFACT_ROOT
-      ? { artifactRoot: resolve(process.env.PEERD_ACCEPTANCE_ARTIFACT_ROOT) } : {}),
+    ...(process.env.MCDOLLAR_ACCEPTANCE_SOURCE_ROOT
+      ? { sourceRoot: resolve(process.env.MCDOLLAR_ACCEPTANCE_SOURCE_ROOT) } : {}),
+    ...(process.env.MCDOLLAR_ACCEPTANCE_ARTIFACT_ROOT
+      ? { artifactRoot: resolve(process.env.MCDOLLAR_ACCEPTANCE_ARTIFACT_ROOT) } : {}),
     reportPath,
   }).then((report) => console.log(JSON.stringify(report, null, 2))).catch((cause) => {
     const failurePath = join(dirname(reportPath), 'controller-fault-evidence-failure.json');

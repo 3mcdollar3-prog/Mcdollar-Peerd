@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { createResourceToolAuthority } from '../../extension/background/resource-tool-authority.js';
-import { makeWebFetch, withSessionScopedCredentials } from '../../extension/peerd-egress/fetch/web-fetch.js';
+import { makeWebFetch, withSessionScopedCredentials } from '../../extension/mcdollar-egress/fetch/web-fetch.js';
 import { snapshotControllerTurnAuthorityBinding, projectControllerTurnAuthorityClass } from '../../extension/background/controller-turn-authority-scope.js';
 
 const response = (
@@ -225,7 +225,7 @@ describe('exact API actor web-resource scope', () => {
   test('confirms the final normalized request metadata without exposing credentials or body', async () => {
     const args = {
       url: 'https://api.example.com/v1/items?token=secret&view=full', method: 'POST',
-      headers: { Authorization: 'Bearer secret', 'x-client': 'peerd' },
+      headers: { Authorization: 'Bearer secret', 'x-client': 'mcdollar' },
       body: { password: 'hidden', item: 1 },
     };
     let prompt: any = null;
@@ -239,7 +239,7 @@ describe('exact API actor web-resource scope', () => {
     });
     await authority.confirmWebWrite({
       url: args.url, method: 'POST',
-      headers: { 'x-client': 'peerd', 'Content-Type': 'application/json' },
+      headers: { 'x-client': 'mcdollar', 'Content-Type': 'application/json' },
       body: JSON.stringify(args.body),
     });
     expect(prompt.summary).toContain('POST https://api.example.com/v1/items');

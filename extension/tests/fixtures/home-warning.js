@@ -19,7 +19,7 @@ const installedApp = (id, dwappId, name, version) => ({
     dwapp_id: dwappId,
     version_id: `version-${version}`,
     seq: version,
-    uri: `peerd://peer/${dwappId}/version-${version}`,
+    uri: `mcdollar://peer/${dwappId}/version-${version}`,
     slug: dwappId,
   },
 });
@@ -29,7 +29,7 @@ const announcedApp = (dwappId, name) => ({
   dwapp_id: dwappId,
   version_id: 'version-2',
   seq: 2,
-  uri: `peerd://peer/${dwappId}/version-2`,
+  uri: `mcdollar://peer/${dwappId}/version-2`,
   name,
   slug: dwappId,
   publisher: 'did:key:zPeerPublisher',

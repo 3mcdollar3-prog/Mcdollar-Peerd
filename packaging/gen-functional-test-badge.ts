@@ -55,7 +55,7 @@ export const failedFunctionalTests = (xml: string): string[] => {
 };
 
 const generate = () => {
-  const scratch = mkdtempSync(join(tmpdir(), 'peerd-functional-tests-'));
+  const scratch = mkdtempSync(join(tmpdir(), 'mcdollar-functional-tests-'));
   const junitPath = join(scratch, 'results.xml');
   try {
     const run = spawnSync(process.execPath, [

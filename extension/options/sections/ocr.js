@@ -1,7 +1,7 @@
 // @ts-check
 // Options → OCR (rendered inside the combined "Voice & OCR" tab).
 //
-// Where the runtime has a document host, peerd reads PDF text with pdf.js by
+// Where the runtime has a document host, mcdollar reads PDF text with pdf.js by
 // default. Scanned or image-only PDFs have no text layer, so they need OCR: an
 // on-device engine downloaded once.
 // This section owns that opt-in download. It lives in its own file (one section
@@ -15,7 +15,7 @@
 
 import m from '/vendor/mithril/mithril.js';
 import { confirmationDialogAttrs } from '/shared/ui-effects.js';
-import { createOcrStore, hasValidOcrSris, OCR_TOTAL_BYTES } from '/peerd-runtime/options.js';
+import { createOcrStore, hasValidOcrSris, OCR_TOTAL_BYTES } from '/mcdollar-runtime/options.js';
 
 export const OcrSection = {
   oninit(/** @type {any} */ vnode) {
@@ -70,7 +70,7 @@ export const OcrSection = {
     return m('.ocr-section', [
       m('h3', { style: 'margin:0 0 4px; font-size:15px;' }, 'PDF OCR (scanned documents)'),
       m('p.muted', { style: 'margin:0 0 8px;' }, hostAvailable ? [
-        'peerd reads PDFs automatically with the built-in pdf.js text reader — ',
+        'mcdollar reads PDFs automatically with the built-in pdf.js text reader — ',
         'no setup needed. ',
         m('strong', 'Scanned or photographed PDFs'),
         ' have no text layer, so they need OCR: an on-device engine that ',
@@ -104,9 +104,9 @@ export const OcrSection = {
         : null,
 
       // Download confirmation — facts shown BEFORE any download (the voice rule).
-      hostAvailable && ui.confirmOpen ? m('.peerd-modal-backdrop', {
+      hostAvailable && ui.confirmOpen ? m('.mcdollar-modal-backdrop', {
         onclick: (/** @type {any} */ e) => { if (e.target === e.currentTarget) closeConfirmation(); },
-      }, m('.peerd-modal', confirmationDialogAttrs('ocr-confirm-title', closeConfirmation, ui), [
+      }, m('.mcdollar-modal', confirmationDialogAttrs('ocr-confirm-title', closeConfirmation, ui), [
         m('h3#ocr-confirm-title', 'Download on-device OCR engine?'),
         m('ul', [
           m('li', `Download size: ~${sizeMb} MB (one time, cached locally after)`),
@@ -114,7 +114,7 @@ export const OcrSection = {
           m('li', 'Storage: IndexedDB on this browser only'),
           m('li', 'Source: pinned, integrity-checked (SHA-384 SRI)'),
         ]),
-        m('.peerd-modal-actions', [
+        m('.mcdollar-modal-actions', [
           m('button.secondary', { type: 'button', 'data-confirm-reject': '', disabled: ui.busy, onclick: closeConfirmation }, 'Cancel'),
           m('button', { type: 'button', disabled: ui.busy || !shippable, onclick: enableOcr }, 'Download & enable'),
         ]),

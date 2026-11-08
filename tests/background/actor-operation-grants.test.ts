@@ -3,7 +3,7 @@ import {
   actorOperationGrant,
   makeOffscreenActorClient,
 } from '../../extension/background/offscreen-actor-client.js';
-import { projectControllerToolSurface } from '../../extension/peerd-runtime/controller-tool-projection.js';
+import { projectControllerToolSurface } from '../../extension/mcdollar-runtime/controller-tool-projection.js';
 import { ACTOR_RELAY_ROUTES } from '../../extension/shared/actor-channel-protocol.js';
 import {
   APP_PROGRAM_EXACT_OPERATIONS,

@@ -1,6 +1,6 @@
-# peerd red-team suite
+# mcdollar red-team suite
 
-A runnable check on peerd's security claims. Each scenario takes an adversary from
+A runnable check on mcdollar's security claims. Each scenario takes an adversary from
 [`docs/security/THREAT-MODEL.md`](../../docs/security/THREAT-MODEL.md), drives the
 real defense function with hostile input, and records whether the defense held. The
 scenarios run in CI, and re-running them re-checks the claim against the current
@@ -9,7 +9,7 @@ code.
 ## What this is, and what it is not
 
 This is evidence, not proof. The suite is a set of runnable security probes for
-peerd's core invariants. It is not a complete adversarial audit.
+mcdollar's core invariants. It is not a complete adversarial audit.
 
 - Most probes run at the **unit level**: they import the real production defense
   function (the egress allowlist, the denylist matcher, the SSRF guard, the
@@ -23,8 +23,8 @@ peerd's core invariants. It is not a complete adversarial audit.
   gate. Those are architectural and UX questions; the threat model names the
   relevant residual risks rather than claiming they are closed.
 
-The honest posture is: peerd has a formal threat model and CI-gated red-team
-probes for its core security invariants. It is not a claim that peerd is immune
+The honest posture is: mcdollar has a formal threat model and CI-gated red-team
+probes for its core security invariants. It is not a claim that mcdollar is immune
 to prompt injection.
 
 ## Contents
@@ -57,9 +57,9 @@ to prompt injection.
 
 ### Scenario 05 and MCP
 
-peerd ships no MCP client. The only `mcp` string in `extension/` is a substring
+mcdollar ships no MCP client. The only `mcp` string in `extension/` is a substring
 inside vendored `moonshine.js`. The "malicious MCP server, tool poisoning" vector is
-mapped onto peerd's real untrusted-tool-metadata surface, which is the A2A and
+mapped onto mcdollar's real untrusted-tool-metadata surface, which is the A2A and
 inbound-mesh path (agent-cards and peer messages). The scenario proves the analogous
 defenses. See the scenario's `mcpMapping` field and the threat model.
 

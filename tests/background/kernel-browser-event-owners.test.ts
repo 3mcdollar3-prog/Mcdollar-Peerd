@@ -79,7 +79,7 @@ describe('production kernel browser event owners', () => {
     attachKernelLifecycleEvents({
       browser, registry,
       onStartup: owners.lifecycle.onStartup,
-      alarmName: 'peerd-schedule',
+      alarmName: 'mcdollar-schedule',
       onAlarm: owners.lifecycle.onAlarm,
     });
     attachKernelTabEvents({
@@ -96,7 +96,7 @@ describe('production kernel browser event owners', () => {
     expect(calls).toEqual([['created', tab]]);
     const wakes = [
       ...browser.runtime.onStartup.emit(),
-      ...browser.alarms.onAlarm.emit({ name: 'peerd-schedule' }),
+      ...browser.alarms.onAlarm.emit({ name: 'mcdollar-schedule' }),
     ];
     await Promise.resolve();
     expect(calls).toEqual([['created', tab]]);
@@ -126,7 +126,7 @@ describe('production kernel browser event owners', () => {
     attachKernelLifecycleEvents({
       browser, registry: receipts,
       onStartup: owners.lifecycle.onStartup,
-      alarmName: 'peerd-schedule', onAlarm: owners.lifecycle.onAlarm,
+      alarmName: 'mcdollar-schedule', onAlarm: owners.lifecycle.onAlarm,
     });
     attachKernelTabEvents({
       browser, registry: receipts,

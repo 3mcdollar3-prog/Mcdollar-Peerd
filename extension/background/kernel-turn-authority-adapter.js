@@ -3,7 +3,7 @@ import { makeSerialLane } from '/shared/cold-util.js';
 import { setUserPeerBlocked, refreshDiscoverySetting } from './dweb-peer-policy.js';
 
 import { effectReceiptFields } from './host-effect-verdict.js';
-import { VMBootFailedError } from '/peerd-engine/background.js';
+import { VMBootFailedError } from '/mcdollar-engine/background.js';
 
 import { createAuthorityEffectScheduler } from './authority-effect-scheduler.js';
 import {
@@ -61,7 +61,7 @@ import {
   retireStoppedRoamingWebActorDurably,
   retryClassForTool,
   SessionNotFoundError,
-} from '/peerd-runtime/kernel-turn-authority.js';
+} from '/mcdollar-runtime/kernel-turn-authority.js';
 import {
   buildMintInjection,
   confirmActionsFromRecord,
@@ -101,7 +101,7 @@ import {
   shapeMeshResult,
   siteHandleFor,
   wrapUntrusted,
-} from '/peerd-runtime/kernel-turn-lifecycle.js';
+} from '/mcdollar-runtime/kernel-turn-lifecycle.js';
 import {
   HARDCODED_ALLOWLIST,
   makeAgentSendCustody,
@@ -115,7 +115,7 @@ import {
   VaultLockedError,
   withSessionScopedCredentials,
   withWebRequestAuthority,
-} from '/peerd-egress/background.js';
+} from '/mcdollar-egress/background.js';
 import {
   projectSemanticHookManifest,
   UNAVAILABLE_HOOK_RECORDS,
@@ -126,7 +126,7 @@ import { createCurrentChat, rootChatSession } from '/shared/current-session-bind
 import {
   needsWebWriteConfirm,
   WEB_WRITE_CONFIRM_KEY,
-} from '/peerd-engine/authority.js';
+} from '/mcdollar-engine/authority.js';
 import { createActorLiveProjection } from './actor-live-projection.js';
 import { makeActorOverviewRoutes } from './routes/actor-overview.js';
 import { makeActorIsolationStateStore } from './actor-isolation-state.js';
@@ -167,7 +167,7 @@ import {
 } from '/shared/web-actor-source-projection.js';
 import { providerEgressPolicy } from './provider-egress-manifest.js';
 import { finalWebRequestConfirmation } from '/shared/web-request-confirmation.js';
-import { parseAppManifest } from '/peerd-engine/authority.js';
+import { parseAppManifest } from '/mcdollar-engine/authority.js';
 import { createControllerTurnComposeControl } from './controller-turn-compose-control.js';
 import {
   composerReferenceAuditEntry,
@@ -1335,7 +1335,7 @@ export const createKernelTurnAuthorityAdapter = (deps) => {
     let appRole;
     if (entry[1] === 'app') {
       const contract = options.contract
-        ?? parseAppManifest(await engine.appClient.readFile({ appId: record.id, path: 'peerd.json' }));
+        ?? parseAppManifest(await engine.appClient.readFile({ appId: record.id, path: 'mcdollar.json' }));
       const authority = options.ownerAuthority
         ?? await deriveAppOwnerAuthority(owner, contract, { signal: options.signal });
       permission = authority.permission;
@@ -1451,7 +1451,7 @@ export const createKernelTurnAuthorityAdapter = (deps) => {
       const record = await engine.appRegistry.get(appId);
       if (!record) return null;
       const contract = parseAppManifest(
-        await engine.appClient.readFile({ appId, path: 'peerd.json' }),
+        await engine.appClient.readFile({ appId, path: 'mcdollar.json' }),
       );
       const manifestDigest = await sha256Hex(canonicalAppActorManifest(contract));
       const role = makeAppRole({ contract, record, manifestDigest });
@@ -1523,7 +1523,7 @@ export const createKernelTurnAuthorityAdapter = (deps) => {
     const owner = await live.shared.sessions.get(actor.parentSessionId);
     if (!record || !owner || owner.archivedAt) return false;
     const contract = parseAppManifest(await engine.appClient.readFile({
-      appId: actor.instanceId, path: 'peerd.json',
+      appId: actor.instanceId, path: 'mcdollar.json',
     }));
     const manifestDigest = await sha256Hex(canonicalAppActorManifest(contract));
     const role = makeAppRole({ contract, record, manifestDigest });
@@ -1668,7 +1668,7 @@ export const createKernelTurnAuthorityAdapter = (deps) => {
         details: { origin: apiOrigin, performed: false },
       }).catch(() => {});
       return { resolutionRefusal: numericTabAuthorityRefusal(
-        /** @type {import('../peerd-runtime/actor/numeric-tab-authority.js').NumericTabAuthorityRefusalDecision} */ (authority),
+        /** @type {import('../mcdollar-runtime/actor/numeric-tab-authority.js').NumericTabAuthorityRefusalDecision} */ (authority),
       ) };
     }
     if (apiOrigin && !isKnownIdpHost(apiOrigin)) {
@@ -2599,7 +2599,7 @@ export const createKernelTurnAuthorityAdapter = (deps) => {
         deps.browser.notifications?.create?.({
           type: 'basic', iconUrl: deps.browser.runtime.getURL('icons/icon128.png'),
           title: count > 1 ? `${count} actors finished` : 'An actor finished',
-          message: 'Open peerd to see the result.',
+          message: 'Open mcdollar to see the result.',
         });
       } catch { /* notification delivery is optional */ }
     };
@@ -2639,8 +2639,8 @@ export const createKernelTurnAuthorityAdapter = (deps) => {
       isRunning: (/** @type {any} */ routine) => !!routine.lastSessionId
         && goalRunner?.isActive(routine.lastSessionId),
       setAlarm: (/** @type {number|null} */ when) => {
-        if (when == null) deps.browser.alarms?.clear?.('peerd-schedule');
-        else deps.browser.alarms?.create?.('peerd-schedule', { when });
+        if (when == null) deps.browser.alarms?.clear?.('mcdollar-schedule');
+        else deps.browser.alarms?.create?.('mcdollar-schedule', { when });
       },
       onEvent: post,
       fireRoutine: async (/** @type {any} */ routine) => {
@@ -2668,8 +2668,8 @@ export const createKernelTurnAuthorityAdapter = (deps) => {
         try {
           deps.browser.notifications?.create?.({
             type: 'basic', iconUrl: deps.browser.runtime.getURL('icons/icon128.png'),
-            title: 'peerd routine running',
-            message: 'A scheduled task started. Open peerd to see it.',
+            title: 'mcdollar routine running',
+            message: 'A scheduled task started. Open mcdollar to see it.',
           });
         } catch { /* notification delivery is optional */ }
         return { sessionId: created.sessionId };
@@ -3022,7 +3022,7 @@ export const createKernelTurnAuthorityAdapter = (deps) => {
         }
         await deps.ensureDwebFeature();
         return deps.browser.runtime.sendMessage({
-          type: 'dweb/base-host/room', roomId: 'peerd-agent', ...payload,
+          type: 'dweb/base-host/room', roomId: 'mcdollar-agent', ...payload,
         });
       });
     const lostMeshMutation = () => ({
@@ -3755,7 +3755,7 @@ export const createKernelTurnAuthorityAdapter = (deps) => {
       turnSlots: shared.turnSlots, actorMessaging: live.actorMessaging,
       actorLifecycle: live.actorLifecycle,
       nukeSessionWorkspace: (/** @type {string} */ sessionId) =>
-        engine.opfsHelpers(['peerd-workspace', sessionId]).nuke(),
+        engine.opfsHelpers(['mcdollar-workspace', sessionId]).nuke(),
       purgeLifecycleSession: (/** @type {string} */ sessionId) =>
         lifecycleBoot.purgeSession(sessionId),
     },

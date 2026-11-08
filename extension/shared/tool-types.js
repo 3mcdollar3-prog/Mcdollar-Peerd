@@ -12,7 +12,7 @@
 /**
  * The architectural primitive each tool exercises. Surfaces in the
  * tool-call UI as a default "lineage" header so users see what kind of
- * thing the agent is doing. Lowercase, one token per peerd convention.
+ * thing the agent is doing. Lowercase, one token per mcdollar convention.
  *
  *   inspect   — sovereignty introspection (storage, audit, denylist, ...)
  *   tab       — browser tabs + DOM
@@ -128,7 +128,7 @@
  *   write."); the loop surfaces it on the failure path — see agent-loop.js.
  * @property {'transport-lost' | 'host-lost' | 'pre-effect-failure' | 'effect-completed'} [outcomeKind]
  *   typed failure outcome for the lifecycle recovery contract
- *   (peerd-runtime/lifecycle/failure-taxonomy.js): a tool that KNOWS how it
+ *   (mcdollar-runtime/lifecycle/failure-taxonomy.js): a tool that KNOWS how it
  *   failed stamps this so the recovery decision is deterministic instead of
  *   string-matched. Optional — unstamped failures take the heuristic path.
  * @property {any} [structured] optional host-side policy or recovery details;
@@ -208,7 +208,7 @@
  *                                     arms one exact verified IdP after consent
  * @property {(idpOrigin: string, signal?: AbortSignal) => Promise<boolean>} [revokeSignInExcursion]
  *                                     removes a still-unused grant after failure
- * @property {() => Promise<import('../peerd-runtime/actor/landing-rule.js').LandingVerdict | null>} [revalidateActorLanding]
+ * @property {() => Promise<import('../mcdollar-runtime/actor/landing-rule.js').LandingVerdict | null>} [revalidateActorLanding]
  *                                     execute-time live origin/auth check for
  *                                     every tab-backed web-actor tool
  * @property {boolean} [idpTransitOnly] stale-session defense that causes every
@@ -224,8 +224,8 @@
  * @property {(prompt: ConfirmPrompt, signal?: AbortSignal) => Promise<ConfirmAnswer>} confirm
  * @property {string | null} [lifecycleOwnerSessionId] root chat that owns
  *                                     lifecycle intent for this execution
- * @property {Object} kv               peerd-egress kv namespace
- * @property {Object} idb              peerd-egress idb namespace
+ * @property {Object} kv               mcdollar-egress kv namespace
+ * @property {Object} idb              mcdollar-egress idb namespace
  * @property {readonly string[]} denylist   loaded denylist patterns (egress + denylist gate input)
  * @property {ProviderLite} provider
  * @property {VaultLite} vault

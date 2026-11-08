@@ -1,0 +1,334 @@
+// @ts-check
+// Dispatcher composition tests.
+//
+// The dispatcher's contract is small but load-bearing: gates run in
+// order, each result lands in meta.gates, a failing gate stops execution
+// and audits, execute() failures audit and surface with the gate chain
+// already populated. These tests pin all of that.
+
+import { describe, it, expect } from '../../framework.js';
+import { GATES } from '/mcdollar-runtime/index.js';
+import { dispatchToolCall as dispatchExplicitToolCall } from '/mcdollar-runtime/tools/local-tool-dispatcher.js';
+import { toToolDescriptor } from '/mcdollar-runtime/tools/metadata/descriptor.js';
+
+/** @typedef {import('/shared/tool-types.js').ToolContext} ToolContext */
+/** @typedef {import('/shared/tool-types.js').Tool} Tool */
+/** @typedef {import('/shared/tool-types.js').ToolMeta} ToolMeta */
+/** @param {import('/shared/tool-types.js').ToolResult} r @returns {ToolMeta} */
+const metaOf = (r) => /** @type {ToolMeta} */ (r.meta);
+/** @param {import('/shared/tool-types.js').ToolResult} r @returns {string} */
+const errOf = (r) => /** @type {import('/shared/tool-types.js').ToolResultErr} */ (r).error;
+
+/**
+ * @param {Record<string, any>} [overrides]
+ */
+const recorderCtx = (overrides = {}) => {
+  /** @type {any[]} */
+  const audited = [];
+  return {
+    ctx: /** @type {ToolContext} */ (/** @type {unknown} */ ({
+      session: { sessionId: 's1' },
+      tabs: { query: async () => [] },
+      getSecret: async () => null,
+      audit: async (/** @type {any} */ e) => { audited.push(e); },
+      confirm: async () => 'no_once',
+      kv: { list: async () => ({}) },
+      idb: { getAll: async () => [] },
+      denylist: [],
+      provider: { name: 'anthropic', model: 'claude-sonnet-4-6', hasKey: false },
+      vault: { isLocked: false },
+      ...overrides,
+    })),
+    audited,
+  };
+};
+
+/**
+ * @param {Partial<Tool>} overrides
+ * @returns {Tool}
+ */
+const makeTool = (overrides) => /** @type {Tool} */ ({
+  name: 't',
+  primitive: 'inspect',
+  description: 't',
+  schema: {},
+  sideEffect: 'read',
+  origins: () => [],
+  execute: async () => ({ ok: true, content: 'hello' }),
+  ...overrides,
+});
+
+/** @type {Map<string, Tool>} */
+const fixtureTools = new Map();
+/** @param {Tool} tool */
+const setFixtureTool = (tool) => { fixtureTools.set(tool.name, tool); };
+const clearFixtureTool = () => { fixtureTools.clear(); };
+/** @param {import('/shared/tool-types.js').ToolCall} call @param {ToolContext} ctx */
+const dispatchToolCall = (call, ctx) => {
+  const implementation = fixtureTools.get(call.name) ?? null;
+  return dispatchExplicitToolCall(call, ctx, {
+    descriptor: implementation ? toToolDescriptor(implementation) : undefined,
+    execute: (prepared) => implementation
+      ? implementation.execute(prepared.args, prepared.execCtx)
+      : ({ ok: false, error: 'tool implementation unavailable', outcomeKnown: true }),
+  });
+};
+
+describe('dispatcher', () => {
+  it('returns unknown_tool for a name absent from the explicit surface', async () => {
+    clearFixtureTool();
+    const { ctx } = recorderCtx();
+    const r = await dispatchToolCall({ id: 'x', name: 'no-such', args: {} }, ctx);
+    expect(r.ok).toBe(false);
+    expect(metaOf(r).primitive).toBe('unknown');
+    expect(metaOf(r).gates).toEqual([]);
+    expect(metaOf(r).toolName).toBe('no-such');
+  });
+
+  it('runs every gate and records each in meta.gates', async () => {
+    clearFixtureTool();
+    setFixtureTool(makeTool({}));
+    const { ctx } = recorderCtx();
+    const r = await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    expect(r.ok).toBe(true);
+    expect(metaOf(r).gates.length).toBe(GATES.length);
+    expect(metaOf(r).gates.map((g) => g.name)).toEqual(GATES.map((g) => g.name));
+    for (const g of metaOf(r).gates) expect(g.allowed).toBe(true);
+  });
+
+  it('rechecks the live actor landing before any gate or tool effect', async () => {
+    clearFixtureTool();
+    let executed = false;
+    setFixtureTool(makeTool({ execute: async () => { executed = true; return { ok: true, content: 'bad' }; } }));
+    const { ctx } = recorderCtx({
+      revalidateActorLanding: async () => ({ action: 'wait', reason: 'signing in' }),
+    });
+    const r = await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    expect(r.ok).toBe(false);
+    expect(errOf(r)).toBe('auth_waiting_for_user');
+    expect(/** @type {any} */ (r).endTurn).toBe(true);
+    expect(executed).toBe(false);
+  });
+
+  it('rechecks the live actor landing again immediately before execution', async () => {
+    clearFixtureTool();
+    let checks = 0;
+    let executed = false;
+    setFixtureTool(makeTool({ execute: async () => { executed = true; return { ok: true, content: 'bad' }; } }));
+    const { ctx } = recorderCtx({
+      revalidateActorLanding: async () => {
+        checks += 1;
+        return checks === 1
+          ? { action: 'continue', reason: 'at approved site' }
+          : { action: 'wait', reason: 'signing in' };
+      },
+    });
+    const r = await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    expect(r.ok).toBe(false);
+    expect(errOf(r)).toBe('auth_waiting_for_user');
+    expect(checks).toBe(2);
+    expect(executed).toBe(false);
+  });
+
+  it('uses truthful neutral recovery for ordinary and expired boundary stops', async () => {
+    for (const reason of [
+      'this helper works only on one site, and the tab left it',
+      'the sign-in authorization was invalid or expired, so this task was stopped',
+    ]) {
+      clearFixtureTool();
+      setFixtureTool(makeTool({}));
+      const { ctx } = recorderCtx({
+        revalidateActorLanding: async () => ({ action: 'end', reason }),
+      });
+      const r = await dispatchToolCall({ id: reason, name: 't', args: {} }, ctx);
+      const content = String(/** @type {any} */ (r).content);
+      expect(content).toContain('Review the open tab');
+      expect(content.includes('Return to the original site')).toBe(false);
+    }
+  });
+
+  it('attaches primitive and durationMs to meta', async () => {
+    clearFixtureTool();
+    setFixtureTool(makeTool({ primitive: 'tab' }));
+    const { ctx } = recorderCtx();
+    const r = await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    expect(metaOf(r).primitive).toBe('tab');
+    expect(typeof metaOf(r).durationMs).toBe('number');
+    expect(metaOf(r).durationMs >= 0).toBe(true);
+  });
+
+  it('stops at the first gate denial and audits a tool_blocked entry', async () => {
+    clearFixtureTool();
+    // Tool whose origin gate triggers a denylist hit.
+    setFixtureTool(makeTool({
+      origins: () => ['https://chase.com'],
+    }));
+    const { ctx, audited } = recorderCtx({ denylist: ['chase.com', '*.chase.com'] });
+    const r = await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    expect(r.ok).toBe(false);
+    expect(errOf(r).startsWith('gate_blocked:origin:')).toBe(true);
+    expect(metaOf(r).durationMs).toBe(0);
+    // Gates ran through origin but no further.
+    const names = metaOf(r).gates.map((g) => g.name);
+    expect(names).toEqual(['persona', 'auth-wait', 'exposure', 'origin']);
+    expect(metaOf(r).gates[3].allowed).toBe(false);
+    // Wait a microtask for the fire-and-forget audit to land.
+    await Promise.resolve();
+    expect(audited.some((e) => e.type === 'tool_blocked' && e.details.gate === 'origin')).toBe(true);
+  });
+
+  it('audits tool_executed on success', async () => {
+    clearFixtureTool();
+    setFixtureTool(makeTool({}));
+    const { ctx, audited } = recorderCtx();
+    await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    await Promise.resolve();
+    expect(audited.some((e) => e.type === 'tool_executed' && e.details.tool === 't')).toBe(true);
+  });
+
+  // why no returned-{ok:false} audit case here: that's pure values-in/out
+  // (dispatcher branch → recorded audit array) and lives in the Bun suite
+  // (tests/mcdollar-runtime/tools/dispatcher-meta.test.ts). This in-browser
+  // file earns its keep on the REAL-audit-log + render seam — see
+  // tests/unit/options/activity-tool-failed.test.js.
+
+  it('catches execute() throw and returns ok:false with meta intact', async () => {
+    clearFixtureTool();
+    setFixtureTool(makeTool({
+      execute: async () => { throw new Error('kaboom'); },
+    }));
+    const { ctx, audited } = recorderCtx();
+    const r = await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    expect(r.ok).toBe(false);
+    expect(errOf(r)).toBe('kaboom');
+    expect(metaOf(r).gates.length).toBe(GATES.length);
+    await Promise.resolve();
+    expect(audited.some((e) => e.type === 'tool_failed')).toBe(true);
+  });
+
+  it('treats a throwing gate as a denial rather than crashing', async () => {
+    // We can't inject a custom gate easily; we'll exercise the path
+    // via a tool whose origins() throws — that surfaces through the
+    // origin gate's `result = fn(...)` wrapper.
+    clearFixtureTool();
+    setFixtureTool(makeTool({
+      origins: () => { throw new Error('origins blew up'); },
+    }));
+    const { ctx } = recorderCtx();
+    const r = await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    expect(r.ok).toBe(false);
+    expect(errOf(r).startsWith('gate_blocked:origin:gate threw')).toBe(true);
+  });
+});
+
+// Semantic dispatch enforces Plan/Act admission, but exact service-worker
+// authority owns confirmation after binding final arguments and targets.
+describe('confirmation ownership', () => {
+  it('PLAN mode blocks a non-read tool before exact authority', async () => {
+    clearFixtureTool();
+    setFixtureTool(makeTool({ sideEffect: 'write', primitive: 'tab' }));
+    let prompted = false;
+    const { ctx } = recorderCtx({
+      permission: { mode: 'plan', confirmActions: true },
+      confirm: async () => { prompted = true; return 'yes_once'; },
+    });
+    const r = await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    expect(r.ok).toBe(false);
+    expect(errOf(r).startsWith('gate_blocked:persona:')).toBe(true);
+    expect(prompted).toBe(false);
+  });
+
+  it('read tools require no confirmation', async () => {
+    clearFixtureTool();
+    setFixtureTool(makeTool({ sideEffect: 'read' }));
+    let prompted = false;
+    const { ctx } = recorderCtx({
+      permission: { mode: 'act', confirmActions: true },
+      confirm: async () => { prompted = true; return 'no'; },
+    });
+    const r = await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    expect(r.ok).toBe(true);
+    expect(prompted).toBe(false);
+  });
+
+  it('semantic writes do not prompt or settle before exact authority', async () => {
+    clearFixtureTool();
+    setFixtureTool(makeTool({ sideEffect: 'write', primitive: 'tab' }));
+    let semanticAuthorityCalls = 0;
+    const { ctx } = recorderCtx({
+      permission: { mode: 'act', confirmActions: true },
+      confirm: async () => { semanticAuthorityCalls += 1; return 'no'; },
+      lifecycle: {
+        beginTracking: async () => { semanticAuthorityCalls += 1; },
+        settleTracking: async () => { semanticAuthorityCalls += 1; },
+      },
+    });
+    const r = await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    expect(r.ok).toBe(true);
+    expect(semanticAuthorityCalls).toBe(0);
+    const confirmGate = metaOf(r).gates.find((g) => g.name === 'confirmation');
+    expect(confirmGate?.reason).toBe('exact authority verifies final arguments');
+  });
+});
+
+describe('gate composition order', () => {
+  it('is persona → auth wait → exposure → origin → confirmation → egress → audit', () => {
+    expect(GATES.map((g) => g.name)).toEqual([
+      'persona', 'auth-wait', 'exposure', 'origin', 'confirmation', 'egress', 'audit',
+    ]);
+  });
+
+  it('persona gate reflects the Plan/Act mode; exposure passes non-hidden tools', async () => {
+    clearFixtureTool();
+    // Default ctx has no permission → resolves to Plan; but a read tool
+    // is allowed in Plan, so the persona reason names the mode + class.
+    setFixtureTool(makeTool({ sideEffect: 'read' }));
+    const { ctx } = recorderCtx();
+    const r = await dispatchToolCall({ id: 'x', name: 't', args: {} }, ctx);
+    const persona = metaOf(r).gates.find((g) => g.name === 'persona');
+    const exposure = metaOf(r).gates.find((g) => g.name === 'exposure');
+    expect(persona?.reason.includes('read')).toBe(true);
+    expect(exposure?.allowed).toBe(true);
+    expect(exposure?.reason).toBe('exposed');
+  });
+
+  it('exposure gate refuses main-hidden tools when ctx.exposure is "main"', async () => {
+    clearFixtureTool();
+    // read_page is in the main-hidden set (actor-only — the web actor holds the
+    // DOM tools) — dispatching it with exposure:'main' must refuse at the gate,
+    // so a prompt-injected model can't reach it by name.
+    setFixtureTool(makeTool({ name: 'read_page', sideEffect: 'read' }));
+    const { ctx } = recorderCtx({ exposure: 'main' });
+    const r = await dispatchToolCall({ id: 'x', name: 'read_page', args: {} }, ctx);
+    expect(r.ok).toBe(false);
+    expect(errOf(r).startsWith('gate_blocked:exposure:')).toBe(true);
+    const exposure = metaOf(r).gates.find((g) => g.name === 'exposure');
+    expect(exposure?.allowed).toBe(false);
+    expect(exposure?.reason.includes('actor-only')).toBe(true);
+  });
+
+  // DESIGN-17: the actor capability tier, end-to-end through the dispatcher.
+  // The full-chain analog of the actorTierGate unit proof (tests/mcdollar-runtime/
+  // exposure.test.ts). The actor model is unconditional, so this proves a
+  // actor can't escalate into the mutating tier, while message_actor (the
+  // non-mutating delegation channel) passes the exposure gate on the main agent.
+  it('actor tier: an actor can not escalate into the mutating tier', async () => {
+    clearFixtureTool();
+    setFixtureTool(makeTool({ name: 'app_delete', sideEffect: 'destructive' }));
+    setFixtureTool(makeTool({ name: 'message_actor', sideEffect: 'write' }));
+    // act + confirm-off so persona/confirmation don't pre-empt the exposure gate.
+    const permission = { mode: 'act', confirmActions: false };
+
+    // An actor (exposure unset) trying the mutating tier by name is refused.
+    const sub = recorderCtx({ permission }).ctx;
+    const rDelete = await dispatchToolCall({ id: 'a', name: 'app_delete', args: { appId: 'app-x' } }, sub);
+    expect(rDelete.ok).toBe(false);
+    expect(errOf(rDelete).startsWith('gate_blocked:exposure:')).toBe(true);
+    expect(metaOf(rDelete).gates.find((g) => g.name === 'exposure')?.reason.includes('actor-only')).toBe(true);
+
+    // message_actor is non-mutating — the main agent's delegation channel passes.
+    const main = recorderCtx({ permission, exposure: 'main' }).ctx;
+    const rMsg = await dispatchToolCall({ id: 'b', name: 'message_actor', args: {} }, main);
+    expect(metaOf(rMsg).gates.find((g) => g.name === 'exposure')?.allowed).toBe(true);
+  });
+});

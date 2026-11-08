@@ -9,7 +9,7 @@
 //
 // Three bands, because eleven equal-weight blocks made a safety guard look like
 // a diagnostic toggle. Only SAFETY is raised and ruled (options.css) — a user
-// skimming for "what can peerd do to me" should find those four without reading
+// skimming for "what can mcdollar do to me" should find those four without reading
 // a word of copy.
 //
 // The rationale text below is the SHIPPED prose, moved rather than rewritten: it
@@ -17,7 +17,7 @@
 // redesign is how a page quietly starts lying about its own guarantees.
 
 import m from '/vendor/mithril/mithril.js';
-import { listProviderMetadata } from '/peerd-provider/options.js';
+import { listProviderMetadata } from '/mcdollar-provider/options.js';
 import { resetRow } from './reset-row.js';
 import { settingsRow, settingsBand, toggleSwitch, rowController } from '../components/settings-row.js';
 
@@ -29,7 +29,7 @@ export const BehaviorSection = {
     const s = state.settings ?? {};
     const { whyOpen, toggleWhy, toggleRow } = rowController(ui);
 
-    // ── Safety — changes what peerd MAY DO ───────────────────────────────────
+    // ── Safety — changes what mcdollar MAY DO ───────────────────────────────────
     const confirmsOn = state.session?.permission?.confirmActions === true;
     const webWritesOn = s.confirmWebWrites !== false;
     const schemaOn = s.schemaValidatedReplies === true;
@@ -43,11 +43,11 @@ export const BehaviorSection = {
         on: confirmsOn,
         busyKey: 'confirmBusy',
         summary: confirmsOn
-          ? 'peerd asks before each side-effecting action — click, type, navigate, run code, fetch, write.'
-          : 'peerd clicks, types and navigates without asking. Memory writes always confirm.',
+          ? 'mcdollar asks before each side-effecting action — click, type, navigate, run code, fetch, write.'
+          : 'mcdollar clicks, types and navigates without asking. Memory writes always confirm.',
         why: confirmsOn
-          ? 'ON — peerd asks before each side-effecting action (click, type, navigate, run code, fetch, write). Confirmation prompts appear in the peerd panel, next to the chat.'
-          : 'OFF — peerd acts without asking (it clicks, types, navigates, runs code, and edits). That’s the default: acting on a live tab, a Notebook, or a WebVM is the point. Memory writes always confirm.',
+          ? 'ON — mcdollar asks before each side-effecting action (click, type, navigate, run code, fetch, write). Confirmation prompts appear in the mcdollar panel, next to the chat.'
+          : 'OFF — mcdollar acts without asking (it clicks, types, navigates, runs code, and edits). That’s the default: acting on a live tab, a Notebook, or a WebVM is the point. Memory writes always confirm.',
         // why permission/set, not settings/update: mode (Plan/Act) is the
         // ModeSelector's axis, and this toggle must not yank a user out of Plan
         // as a side effect.
@@ -60,10 +60,10 @@ export const BehaviorSection = {
         pill: ui.webWriteBusy ? '…' : webWritesOn ? 'ON' : 'OFF',
         summary: ui.webWriteBusy ? 'Saving…' : webWritesOn
           ? 'Asks before any request that could carry data out of the browser.'
-          : 'peerd can POST, PUT and DELETE to any non-denylisted host without asking. Not recommended.',
+          : 'mcdollar can POST, PUT and DELETE to any non-denylisted host without asking. Not recommended.',
         why: webWritesOn
-          ? 'ON — peerd asks before any request that can transmit a BODY out of the browser (POST/PUT/PATCH/DELETE/OPTIONS) — from the web actor\'s fetch or inside a WebVM (curl, etc.). You can approve a single write or all writes for that chat. This is the main guard against a prompt-injected agent exfiltrating data via a write. (Plain reads — GET/HEAD — are never gated; the denylist is the guard there.)'
-          : 'OFF — peerd can send POST/PUT/DELETE requests to any non-denylisted host WITHOUT asking, including under prompt injection. The denylist still blocks known-sensitive sites, but everything else is open. Not recommended.',
+          ? 'ON — mcdollar asks before any request that can transmit a BODY out of the browser (POST/PUT/PATCH/DELETE/OPTIONS) — from the web actor\'s fetch or inside a WebVM (curl, etc.). You can approve a single write or all writes for that chat. This is the main guard against a prompt-injected agent exfiltrating data via a write. (Plain reads — GET/HEAD — are never gated; the denylist is the guard there.)'
+          : 'OFF — mcdollar can send POST/PUT/DELETE requests to any non-denylisted host WITHOUT asking, including under prompt injection. The denylist still blocks known-sensitive sites, but everything else is open. Not recommended.',
         open: whyOpen('web-writes'),
         onToggleWhy: toggleWhy('web-writes'),
         control: toggleSwitch({
@@ -101,7 +101,7 @@ export const BehaviorSection = {
           ? 'A helper’s report must fit a fixed structure; one that doesn’t is thrown away.'
           : 'A helper’s report comes back as prose, marked untrusted — a hint, not a wall.',
         why: schemaOn
-          ? 'ON — when a web helper finishes reading a page, it must hand its report back in a fixed structure that peerd checks before the main agent ever sees it. A report that does not fit is thrown away and the agent is told only that it was unreadable. This closes the gap where a page could smuggle text past the “this is data, not instructions” fence by imitating it. The tradeoff: if the model wanders off the format, you lose that report and have to ask again.'
+          ? 'ON — when a web helper finishes reading a page, it must hand its report back in a fixed structure that mcdollar checks before the main agent ever sees it. A report that does not fit is thrown away and the agent is told only that it was unreadable. This closes the gap where a page could smuggle text past the “this is data, not instructions” fence by imitating it. The tradeoff: if the model wanders off the format, you lose that report and have to ask again.'
           : 'OFF — a web helper reports back in plain prose, marked as untrusted data. That marking is a strong hint to the model, not a wall. Turning this on makes it a wall, at the cost of occasionally losing a report the model formatted wrong. Experimental.',
         apply: () => send({ type: 'settings/update', patch: { schemaValidatedReplies: !schemaOn } }),
       }),
@@ -116,11 +116,11 @@ export const BehaviorSection = {
           on: aaOn,
           busyKey: 'debuggerBusy',
           summary: aaOn
-            ? 'peerd can drive apps that block scripts — Gmail, Notion, Slack. Chrome shows a debugging banner.'
+            ? 'mcdollar can drive apps that block scripts — Gmail, Notion, Slack. Chrome shows a debugging banner.'
             : 'Apps that block injected automation stay undrivable, and page reading takes a slower path.',
           why: aaOn
-            ? 'On. peerd can drive apps that block injected scripts (Gmail, Notion, Slack) using the Chrome debugger. Chrome shows a "debugging this browser" banner while peerd is connected to a tab for automation; that connection can persist between actions until the tab closes or you turn this off. peerd never touches the sites on its built-in denylist (banks, health, password managers) regardless.'
-            : 'Off. Some apps (Gmail, Notion, Slack) block injected automation, and page reading falls back to a slower path. Turning this on lets peerd act on them via the Chrome debugger, which shows a visible "debugging this browser" banner while it’s connected to a tab. The denylist applies regardless.',
+            ? 'On. mcdollar can drive apps that block injected scripts (Gmail, Notion, Slack) using the Chrome debugger. Chrome shows a "debugging this browser" banner while mcdollar is connected to a tab for automation; that connection can persist between actions until the tab closes or you turn this off. mcdollar never touches the sites on its built-in denylist (banks, health, password managers) regardless.'
+            : 'Off. Some apps (Gmail, Notion, Slack) block injected automation, and page reading falls back to a slower path. Turning this on lets mcdollar act on them via the Chrome debugger, which shows a visible "debugging this browser" banner while it’s connected to a tab. The denylist applies regardless.',
           apply: () => send({ type: 'settings/update', patch: { advancedAutomationEnabled: !aaOn } }),
         })
         : settingsRow({
@@ -128,7 +128,7 @@ export const BehaviorSection = {
           label: 'Advanced automation',
           pill: 'N/A',
           summary: 'Not available in this browser — Firefox has no Chrome debugger API.',
-          why: 'The Chrome debugger API doesn’t exist in Firefox WebExtensions. peerd reads pages and uses selector-based click/type here; apps that block injected scripts (Gmail, Notion, Slack) may not be drivable.',
+          why: 'The Chrome debugger API doesn’t exist in Firefox WebExtensions. mcdollar reads pages and uses selector-based click/type here; apps that block injected scripts (Gmail, Notion, Slack) may not be drivable.',
           open: whyOpen('advanced-automation'),
           onToggleWhy: toggleWhy('advanced-automation'),
           control: toggleSwitch({
@@ -184,15 +184,15 @@ export const BehaviorSection = {
       // The kernel adds the tabs (background/kernel-first-tab.js).
       toggleRow({
         id: 'first-tab',
-        label: 'Keep peerd as the first tab',
+        label: 'Keep mcdollar as the first tab',
         on: firstTabOn,
         busyKey: 'firstTabBusy',
         summary: firstTabOn
-          ? 'Each window has a pinned peerd tab at the start, one click away.'
-          : 'peerd adds no tab to your windows.',
+          ? 'Each window has a pinned mcdollar tab at the start, one click away.'
+          : 'mcdollar adds no tab to your windows.',
         why: firstTabOn
-          ? 'On. Each window has a pinned peerd tab at the start of its tabs. It shows only the peerd icon, and a click opens peerd Home. New windows get one too. If you close or unpin it, peerd does not put it back.'
-          : 'Off. peerd adds no tab to your windows. Turn this on to keep a pinned peerd tab at the start of each window, so peerd is one click away. Turning it off does not close the tabs that are open.',
+          ? 'On. Each window has a pinned mcdollar tab at the start of its tabs. It shows only the mcdollar icon, and a click opens mcdollar Home. New windows get one too. If you close or unpin it, mcdollar does not put it back.'
+          : 'Off. mcdollar adds no tab to your windows. Turn this on to keep a pinned mcdollar tab at the start of each window, so mcdollar is one click away. Turning it off does not close the tabs that are open.',
         apply: () => send({ type: 'settings/update', patch: { firstTabEnabled: !firstTabOn } }),
       }),
 
@@ -244,8 +244,8 @@ export const BehaviorSection = {
           ? 'A turn cut off mid-flight continues when you reopen the chat. One you stop yourself never resumes.'
           : 'A turn cut off mid-flight stays frozen until you resend it.',
         why: arOn
-          ? 'On. If a turn is cut off mid-flight — the browser reclaims peerd’s background worker, or the model stream drops — reopening the chat (or unlocking the vault) continues it from where it left off. A turn you Stop yourself is never auto-resumed.'
-          : 'Off. A turn cut off mid-flight stays frozen until you resend. Turn this on to have peerd pick an interrupted turn back up automatically when you reopen the chat.',
+          ? 'On. If a turn is cut off mid-flight — the browser reclaims mcdollar’s background worker, or the model stream drops — reopening the chat (or unlocking the vault) continues it from where it left off. A turn you Stop yourself is never auto-resumed.'
+          : 'Off. A turn cut off mid-flight stays frozen until you resend. Turn this on to have mcdollar pick an interrupted turn back up automatically when you reopen the chat.',
         apply: () => send({ type: 'settings/update', patch: { autoResumeInterruptedTurns: !arOn } }),
       }),
 
@@ -259,8 +259,8 @@ export const BehaviorSection = {
           ? 'Checks at startup and applies or offers a newer preview build.'
           : 'Preview updates wait for the browser’s own periodic check.',
         why: auOn
-          ? 'On. At startup peerd asks the browser for a newer preview build from the release feed. In Chrome the update installs immediately when no chat is mid-turn and no peerd surface is open; otherwise it applies on the next browser restart. In Firefox, which gives extensions no way to trigger their own update, peerd shows an “update available” notice with an install link, and Firefox’s own daily add-on check still installs it on its own.'
-          : 'Off. peerd stays on the installed build until the browser’s own periodic update check picks up a new preview release. Turn this on to check at startup and install right away.',
+          ? 'On. At startup mcdollar asks the browser for a newer preview build from the release feed. In Chrome the update installs immediately when no chat is mid-turn and no mcdollar surface is open; otherwise it applies on the next browser restart. In Firefox, which gives extensions no way to trigger their own update, mcdollar shows an “update available” notice with an install link, and Firefox’s own daily add-on check still installs it on its own.'
+          : 'Off. mcdollar stays on the installed build until the browser’s own periodic update check picks up a new preview release. Turn this on to check at startup and install right away.',
         apply: () => send({ type: 'settings/update', patch: { autoUpdateEnabled: !auOn } }),
       })] : []),
 
@@ -275,8 +275,8 @@ export const BehaviorSection = {
             : `Falls back to ${fallbacks.join(', ')} when your provider stays down.`)
           : 'A provider that stays down ends the turn with an error.',
         why: foOn
-          ? 'On. When your active provider stays overloaded past peerd’s retries, or returns a hard usage limit (out of credit / over a cap), peerd switches to a fallback provider below and continues the turn — but only before any of the answer has streamed. Each fallback uses its own key (or local daemon) and its default model. Without a fallback selected, this does nothing.'
-          : 'Off. A provider that stays down (or out of credit) ends the turn with an error. Turn this on, then pick one or more fallback providers, to have peerd switch and keep going.',
+          ? 'On. When your active provider stays overloaded past mcdollar’s retries, or returns a hard usage limit (out of credit / over a cap), mcdollar switches to a fallback provider below and continues the turn — but only before any of the answer has streamed. Each fallback uses its own key (or local daemon) and its default model. Without a fallback selected, this does nothing.'
+          : 'Off. A provider that stays down (or out of credit) ends the turn with an error. Turn this on, then pick one or more fallback providers, to have mcdollar switch and keep going.',
         apply: () => send({ type: 'settings/update', patch: { providerFailoverEnabled: !foOn } }),
         // The fallback picker is only meaningful while failover is on.
         children: foOn ? m('div', [
@@ -411,7 +411,7 @@ export const BehaviorSection = {
 
     return m('div', [
       settingsBand({
-        name: 'Safety', subtitle: 'changes what peerd may do', safety: true, rows: safetyRows,
+        name: 'Safety', subtitle: 'changes what mcdollar may do', safety: true, rows: safetyRows,
       }),
       settingsBand({
         name: 'Behavior', subtitle: 'changes how it works, not what it may do', rows: behaviorRows,

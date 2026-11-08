@@ -23,7 +23,7 @@ import {
   composerUtf8Fits,
 } from './composer-reference-policy.js';
 
-const OWNER_ID = 'peerd-authority-kernel';
+const OWNER_ID = 'mcdollar-authority-kernel';
 
 export const TURN_COMPOSE_CAPABILITY = 'turn.compose';
 

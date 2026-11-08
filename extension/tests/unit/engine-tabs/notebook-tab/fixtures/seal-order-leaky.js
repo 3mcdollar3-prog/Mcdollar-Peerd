@@ -18,7 +18,7 @@ const attempt = (fn) => {
 // why: the seal-ordering probe is a bespoke channel the entry worker reads
 // back off the global; cast through a writable view to attach it without
 // augmenting the typed globalThis.
-/** @type {{ __peerdSealOrderProbe: unknown }} */ (/** @type {unknown} */ (globalThis)).__peerdSealOrderProbe = {
+/** @type {{ __mcdollarSealOrderProbe: unknown }} */ (/** @type {unknown} */ (globalThis)).__mcdollarSealOrderProbe = {
   webSocket: attempt(() => new globalThis.WebSocket('wss://example.invalid/')),
   xhr: attempt(() => new globalThis.XMLHttpRequest()),
   fetchIsBridge: (() => {
@@ -28,4 +28,4 @@ const attempt = (fn) => {
     return Boolean(desc && desc.writable === false && desc.configurable === false);
   })(),
 };
-console.log(/** @type {{ __peerdSealOrderProbe: unknown }} */ (/** @type {unknown} */ (globalThis)).__peerdSealOrderProbe);
+console.log(/** @type {{ __mcdollarSealOrderProbe: unknown }} */ (/** @type {unknown} */ (globalThis)).__mcdollarSealOrderProbe);

@@ -17,8 +17,8 @@
 //   5. package:all WITH signing; store artifacts verify themselves
 //   6. generate the update-feed release assets
 //   7. tag vX.Y.Z; push main + tag
-//   8. gh release create peerd-preview-vX.Y.Z with .crx/.xpi/feeds
-//   9. dispatch peerd-site, whose workflow downloads and deploys the feeds
+//   8. gh release create mcdollar-preview-vX.Y.Z with .crx/.xpi/feeds
+//   9. dispatch mcdollar-site, whose workflow downloads and deploys the feeds
 //
 // Keep in sync with the workflow's release job — when Actions billing is
 // healthy, a tag push runs the same flow in CI; this script exists so
@@ -99,7 +99,7 @@ const main = async () => {
       '\n!! REPO IS PRIVATE: GitHub Release asset URLs require auth on private\n'
       + '!! repos, so the auto-update feeds and the README install links will\n'
       + '!! NOT work for users until the repo is public (or assets are hosted\n'
-      + '!! on peerd.ai). Fine for a test release; not fine for distribution.',
+      + '!! on mcdollar.ai). Fine for a test release; not fine for distribution.',
     );
   }
 
@@ -129,7 +129,7 @@ const main = async () => {
   run('bun', ['scripts/bench/cold-service-worker.mjs', `--lane=${coldLane}`]);
 
   step('signing credentials');
-  const keyPath = process.env.PEERD_CRX_KEY ?? join(REPO_ROOT, 'key.pem');
+  const keyPath = process.env.MCDOLLAR_CRX_KEY ?? join(REPO_ROOT, 'key.pem');
   const missing: string[] = [];
   if (!existsSync(keyPath)) missing.push(`${keyPath} (CRX signing key)`);
   if (!process.env.AMO_JWT_ISSUER) missing.push('AMO_JWT_ISSUER env');
@@ -146,16 +146,16 @@ const main = async () => {
   // carry the CRX3 magic and the .xpi must contain AMO's signature block.
   // File-exists alone let a run that died before sign.ts pass this step.
   if (!dryRun) {
-    const crx = join(ARTIFACTS_DIR, 'peerd-preview-chrome.crx');
-    const xpi = join(ARTIFACTS_DIR, 'peerd-preview-firefox.xpi');
-    if (!existsSync(crx)) die('peerd-preview-chrome.crx was not produced — signing failed?');
+    const crx = join(ARTIFACTS_DIR, 'mcdollar-preview-chrome.crx');
+    const xpi = join(ARTIFACTS_DIR, 'mcdollar-preview-firefox.xpi');
+    if (!existsSync(crx)) die('mcdollar-preview-chrome.crx was not produced — signing failed?');
     const magic = readFileSync(crx).subarray(0, 4).toString('latin1');
-    if (magic !== 'Cr24') die('peerd-preview-chrome.crx lacks the Cr24 CRX3 magic — not a signed CRX');
-    if (!existsSync(xpi)) die('peerd-preview-firefox.xpi was not produced — AMO signing failed?');
+    if (magic !== 'Cr24') die('mcdollar-preview-chrome.crx lacks the Cr24 CRX3 magic — not a signed CRX');
+    if (!existsSync(xpi)) die('mcdollar-preview-firefox.xpi was not produced — AMO signing failed?');
     try {
       execFileSync('unzip', ['-l', xpi, 'META-INF/mozilla.rsa'], { cwd: REPO_ROOT, stdio: 'ignore' });
     } catch {
-      die('peerd-preview-firefox.xpi has no META-INF/mozilla.rsa — AMO signing did not run');
+      die('mcdollar-preview-firefox.xpi has no META-INF/mozilla.rsa — AMO signing did not run');
     }
     console.log('signing proof OK (CRX3 magic + AMO signature block)');
   }
@@ -168,7 +168,7 @@ const main = async () => {
     console.log(
       'Built + verified everything. A real release would now:\n'
       + `  tag ${tag}, push main+tag,\n`
-      + `  gh release view-or-create ${tag} (title peerd-preview-${tag}),\n`
+      + `  gh release view-or-create ${tag} (title mcdollar-preview-${tag}),\n`
       + '  attach the feeds, and dispatch the site deployment.',
     );
     return;
@@ -210,18 +210,18 @@ const main = async () => {
     return p;
   };
   const sumsPath = writeSums('SHA256SUMS', [
-    join(ARTIFACTS_DIR, 'peerd-preview-chrome.crx'),
-    join(ARTIFACTS_DIR, 'peerd-preview-firefox.xpi'),
+    join(ARTIFACTS_DIR, 'mcdollar-preview-chrome.crx'),
+    join(ARTIFACTS_DIR, 'mcdollar-preview-firefox.xpi'),
     join(ARTIFACTS_DIR, 'chrome-preview.xml'),
     join(ARTIFACTS_DIR, 'firefox-preview.json'),
   ]);
   const storeSumsPath = writeSums('SHA256SUMS.store', [
-    join(ARTIFACTS_DIR, 'peerd-store-chrome.zip'),
-    join(ARTIFACTS_DIR, 'peerd-store-firefox.xpi'),
+    join(ARTIFACTS_DIR, 'mcdollar-store-chrome.zip'),
+    join(ARTIFACTS_DIR, 'mcdollar-store-firefox.xpi'),
   ]);
   const assets = [
-    join(ARTIFACTS_DIR, 'peerd-preview-chrome.crx'),
-    join(ARTIFACTS_DIR, 'peerd-preview-firefox.xpi'),
+    join(ARTIFACTS_DIR, 'mcdollar-preview-chrome.crx'),
+    join(ARTIFACTS_DIR, 'mcdollar-preview-firefox.xpi'),
     sumsPath,
     storeSumsPath,
     join(ARTIFACTS_DIR, 'chrome-preview.xml'),
@@ -237,28 +237,28 @@ const main = async () => {
   } else {
     run('gh', [
       'release', 'create', tag,
-      '--title', `peerd-preview-${tag}`,
+      '--title', `mcdollar-preview-${tag}`,
       '--notes', releaseNotes(version),
       ...assets,
     ]);
   }
 
-  step('trigger peerd.ai feed deployment');
+  step('trigger mcdollar.ai feed deployment');
   try {
     run('gh', [
-      'api', '--method', 'POST', 'repos/NotASithLord/peerd-site/dispatches',
-      '-f', 'event_type=peerd-release', '-F', `client_payload[tag]=${tag}`,
+      'api', '--method', 'POST', 'repos/NotASithLord/mcdollar-site/dispatches',
+      '-f', 'event_type=mcdollar-release', '-F', `client_payload[tag]=${tag}`,
     ]);
-    console.log('peerd-site feed sync dispatched');
+    console.log('mcdollar-site feed sync dispatched');
   } catch {
     console.warn(
-      'could not dispatch peerd-site; its scheduled feed sync remains the fallback.\n'
+      'could not dispatch mcdollar-site; its scheduled feed sync remains the fallback.\n'
       + 'Confirm later with `bun run feeds:check`.',
     );
   }
 
-  step(`released peerd-preview-${tag}`);
-  console.log(`store artifacts ready for manual submission:\n  ${join(ARTIFACTS_DIR, 'peerd-store-chrome.zip')}\n  ${join(ARTIFACTS_DIR, 'peerd-store-firefox.xpi')}`);
+  step(`released mcdollar-preview-${tag}`);
+  console.log(`store artifacts ready for manual submission:\n  ${join(ARTIFACTS_DIR, 'mcdollar-store-chrome.zip')}\n  ${join(ARTIFACTS_DIR, 'mcdollar-store-firefox.xpi')}`);
 };
 
 try {

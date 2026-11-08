@@ -146,7 +146,7 @@ describe('cold shell state contract', () => {
   test('terminal boot failures remain visible and expose one explicit reload retry', () => {
     const shell = Bun.file(new URL('../../extension/sidepanel/vault-shell.js', import.meta.url));
     return shell.text().then((source) => {
-      expect(source).toContain("dataset.peerdBootStage = 'failed'");
+      expect(source).toContain("dataset.mcdollarBootStage = 'failed'");
       expect(source).toContain("shell.setAttribute('role', 'alert')");
       expect(source).toContain("retry.textContent = 'Retry'");
       expect(source).toContain("retry.addEventListener('click', () => location.reload(), { once: true })");
@@ -181,12 +181,12 @@ describe('cold shell state contract', () => {
     return shell.text().then((source) => {
       expect(source).toContain('browser.storage.local.get(VAULT_POSTURE_INDEX_KEY)');
       expect(source).toContain("typeof indexedDB.databases !== 'function'");
-      expect(source).toContain("!databases.some((entry) => entry?.name === 'peerd')");
+      expect(source).toContain("!databases.some((entry) => entry?.name === 'mcdollar')");
       expect(source).toContain('if (!posture && !freshInstall) return;');
-      expect(source).toContain("peerdVaultPosture = posture\n        ? 'indexed' : 'fresh-provisional'");
+      expect(source).toContain("mcdollarVaultPosture = posture\n        ? 'indexed' : 'fresh-provisional'");
       expect(source).toContain('hydrated: false');
-      expect(source).toContain("dataset.peerdBootStage = 'vault-posture'");
-      expect(source).toContain("dataset.peerdVaultPosture = 'authoritative'");
+      expect(source).toContain("dataset.mcdollarBootStage = 'vault-posture'");
+      expect(source).toContain("dataset.mcdollarVaultPosture = 'authoritative'");
       expect(source).toContain('if (stopped || authoritativeStateSeen) return;');
       expect(source).not.toContain('browser.storage.local.set(');
       expect(source).not.toContain('browser.storage.local.remove(');

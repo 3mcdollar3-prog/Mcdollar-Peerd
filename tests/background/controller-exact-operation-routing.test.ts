@@ -23,7 +23,7 @@ type Spec = {
   expected?: string[];
 };
 
-const MATRIX_CHILD = 'PEERD_EXACT_OPERATION_MATRIX_CHILD';
+const MATRIX_CHILD = 'MCDOLLAR_EXACT_OPERATION_MATRIX_CHILD';
 if (process.env[MATRIX_CHILD] !== '1') {
   describe('controller exact-operation executable routing', () => {
     test('the isolated matrix executes every canonical operation without leaking module spies', () => {
@@ -304,7 +304,7 @@ const specs = Object.fromEntries([
   op('dweb', 'dweb.discover-apps', 'discoverApps'),
   op('dweb', 'dweb.publish-confirmed-app', 'publishConfirmedApp', { appId: 'app-1' }),
   op('dweb', 'dweb.install-confirmed-app', 'installConfirmedApp', {
-    uri: 'peerd://app/one', name: 'App',
+    uri: 'mcdollar://app/one', name: 'App',
   }),
   op('dweb', 'dweb.read-peers', 'readPeers'),
   op('dweb', 'dweb.set-peer-blocked', 'setPeerBlocked', {

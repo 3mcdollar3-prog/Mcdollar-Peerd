@@ -1,10 +1,10 @@
 // @ts-check
 
-import { parseAppManifest } from '/peerd-engine/app-manifest.js';
+import { parseAppManifest } from '/mcdollar-engine/app-manifest.js';
 
 const unknown = (/** @type {string} */ code, /** @type {string} */ action) => ({
   ok: false,
-  error: `Peerd could not confirm whether ${action} finished. Refresh to reconcile before trying again.`,
+  error: `Mcdollar could not confirm whether ${action} finished. Refresh to reconcile before trying again.`,
   code,
   outcomeKnown: false,
   outcomeKind: 'unknown',
@@ -68,7 +68,7 @@ export const dispatchAppSemanticRoute = async (route, message, options) => {
         .filter((/** @type {unknown} */ path) => typeof path === 'string')
         .map((/** @type {string} */ path) => path.replace(/^\/+/, '')));
       if (!paths.has(contract.entry)) {
-        return { ok: false, error: `peerd.json entry is missing: ${contract.entry}` };
+        return { ok: false, error: `mcdollar.json entry is missing: ${contract.entry}` };
       }
       runtimeDweb = contract.capabilities.includes('dweb') && message.dwebEnabled === true
         ? (app.dweb ?? { uri: null, publisher: null, hash: null, local: true }) : null;

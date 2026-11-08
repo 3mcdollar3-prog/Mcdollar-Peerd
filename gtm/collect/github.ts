@@ -49,7 +49,7 @@ export const collectGithub = async (
     minimumIntervalMs,
     headers: {
       accept: 'application/vnd.github+json',
-      'user-agent': 'peerd-gtm-graph',
+      'user-agent': 'mcdollar-gtm-graph',
       'x-github-api-version': '2026-03-10',
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     },

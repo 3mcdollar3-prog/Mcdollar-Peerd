@@ -1,5 +1,5 @@
 // @ts-check
-// shared/peer-notifications.js — the client-side peerd notifications feed.
+// shared/peer-notifications.js — the client-side mcdollar notifications feed.
 //
 // The offscreen dweb base host broadcasts a runtime `dweb/notify` message when a
 // genuinely-new peer connects or a new app shows up to install (offscreen/

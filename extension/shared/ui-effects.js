@@ -12,8 +12,8 @@ export const putUiEffectFailureNotice = (notices, cause) => [
   {
     id: Date.now() + Math.random(),
     text: /** @type {{outcomeKnown?:unknown}} */ (cause)?.outcomeKnown === false
-      ? 'Peerd could not confirm whether that change finished. Review the current state before trying again.'
-      : 'Peerd could not apply that change.',
+      ? 'Mcdollar could not confirm whether that change finished. Review the current state before trying again.'
+      : 'Mcdollar could not apply that change.',
     action: { kind: 'ui-effect-failure' },
   },
 ].slice(-3);

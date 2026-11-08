@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {candidateAddressHash} from './dweb-address-proof.mjs';
 import {validateHosts, validateMesh, validatePaths} from './dweb-cluster-checks.mjs';
-import {sparsePublicProfile} from '../../extension/peerd-distributed/transport/rendezvous-profile.js';
+import {sparsePublicProfile} from '../../extension/mcdollar-distributed/transport/rendezvous-profile.js';
 
 export const validateCapacityConfig = config => {
   assert(sparsePublicProfile(config.roomId, config.profile), 'Capacity placement requires the production sparse profile on an isolated coordinator');

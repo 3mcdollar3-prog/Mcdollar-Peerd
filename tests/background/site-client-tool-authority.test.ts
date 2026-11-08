@@ -186,7 +186,7 @@ describe('exact site-client capture authority', () => {
           get: async () => {
             tabStarted();
             await tabGate;
-            return { id: 7, url: 'https://example.com/', peerdDocumentId: 'doc-1' };
+            return { id: 7, url: 'https://example.com/', mcdollarDocumentId: 'doc-1' };
           },
         },
         scripting: { executeScript: async () => [{ documentId: 'doc-1', result: {
@@ -229,7 +229,7 @@ describe('exact site-client capture authority', () => {
       const ctx: any = {
         actorType: 'web', activeTab: { id: 7 }, denylist: [],
         tabs: { get: async () => ({
-          id: 7, url: 'https://example.com/', peerdDocumentId: 'doc-1',
+          id: 7, url: 'https://example.com/', mcdollarDocumentId: 'doc-1',
         }) },
         scripting: { executeScript: async () => [{ documentId: 'doc-1', result: {
           href: 'https://example.com/', origin: 'https://example.com',

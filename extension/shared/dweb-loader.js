@@ -1,12 +1,12 @@
 // @ts-check
 // Dweb loader — DEV/PREVIEW VARIANT.
 //
-// This is the ONLY file in the codebase (outside peerd-distributed/
+// This is the ONLY file in the codebase (outside mcdollar-distributed/
 // itself) allowed to reference the dweb module's path, and the
 // reference is a dynamic import gated on the package-time flag. The store
 // package replaces this whole file with packaging/templates/
 // dweb-loader.store.js (stub-only, no path string), and prunes
-// peerd-distributed/ from dweb-disabled artifacts. Two structural layers plus the
+// mcdollar-distributed/ from dweb-disabled artifacts. Two structural layers plus the
 // post-package string check. packaging/check-dweb-boundary.ts enforces
 // the single-reference rule in CI.
 
@@ -25,7 +25,7 @@ let clientPromise = null;
  */
 export const loadDweb = () => {
   if (!DWEB_ENABLED) return Promise.resolve(dwebStub);
-  clientPromise ??= import('/peerd-distributed/index.js')
+  clientPromise ??= import('/mcdollar-distributed/index.js')
     .then((mod) => mod.createDwebClient());
   return clientPromise;
 };

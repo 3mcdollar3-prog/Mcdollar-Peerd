@@ -3,7 +3,7 @@
 // real Pod tab in Firefox, reloads it once, and reports evidence to the local
 // harness. This file is never included in a release artifact.
 
-const stageKey = 'peerd-pod-firefox-smoke-stage';
+const stageKey = 'mcdollar-pod-firefox-smoke-stage';
 const podId = location.hash.slice(1);
 
 // The disposable background fixture uses the real registry API to create the
@@ -52,10 +52,10 @@ const phase = async (name) => {
   await browser.runtime.sendMessage({ type: 'firefox-smoke/phase', name }).catch(() => {});
 };
 
-// Probe the browser primitive independently of Peerd's product guard. Firefox's
+// Probe the browser primitive independently of Mcdollar's product guard. Firefox's
 // MV3 Worker/CSP behavior has changed over time (Mozilla Bug 1869152), so the
 // smoke report must distinguish "the browser rejected this construction" from
-// "Peerd deliberately kept the path disabled pending policy/security review".
+// "Mcdollar deliberately kept the path disabled pending policy/security review".
 const probeBlobModuleWorker = async () => {
   const url = URL.createObjectURL(new Blob([
     'postMessage({ ok: true, source: "blob-module-worker" });',
@@ -63,7 +63,7 @@ const probeBlobModuleWorker = async () => {
   /** @type {Worker | null} */
   let worker = null;
   try {
-    worker = new Worker(url, { type: 'module', name: 'peerd-firefox-compat-probe' });
+    worker = new Worker(url, { type: 'module', name: 'mcdollar-firefox-compat-probe' });
     return await new Promise((resolve) => {
       const timer = setTimeout(() => resolve({ ok: false, error: 'timeout' }), 3_000);
       worker.onmessage = (event) => {
@@ -132,7 +132,7 @@ const main = async () => {
     // Deliberately pin today's rejection. If Firefox starts executing this
     // Worker, fail the smoke so the Pod JS guard gets an explicit review.
     blobModuleWorkerRejected: blobModuleWorkerProbe?.ok === false,
-    javascriptPolicy: javascript.includes('Peerd disables dynamic blob Workers') && javascript.includes('exit 1'),
+    javascriptPolicy: javascript.includes('Mcdollar disables dynamic blob Workers') && javascript.includes('exit 1'),
     wasi: wasi.includes('hello from wasi') && wasi.includes('exit 0'),
     egressDenial: denied.includes('private_network') && denied.includes('exit 1'),
     concurrentJobs: !!sleepingJob && jobs.includes('\trunning\tjobs'),

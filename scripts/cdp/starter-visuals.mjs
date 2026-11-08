@@ -16,14 +16,14 @@ import { evalIn, waitFor, openExtPage, openWidePage } from './e2e-harness.mjs';
 // frames for the lines a reply adds (a failure, an unknown outcome, a copy)
 // and for a tile with no description. why a fixture probe: an older tree
 // draws these screens, but its fixtures cannot reach them. `names`: the apps
-// that come with peerd go by plain names (Tables and charts, Desaturator,
+// that come with mcdollar go by plain names (Tables and charts, Desaturator,
 // Chat rooms). The probe reads the tree's starter catalog. `polish`: fixture
 // frames of the second plain-words and trust pass (an update that finished,
 // the user's own app offline or out of the Library, a changed copy on a
 // share-link page, Chat rooms added under a former name), and the checks of
 // what that pass changed on screens an older tree draws too.
 export const discoverSurface = () => {
-  if (process.env.PEERD_VISUAL_BASE_RENDER !== '1') {
+  if (process.env.MCDOLLAR_VISUAL_BASE_RENDER !== '1') {
     return {
       base: false, flow: true, phase2: true, says: true, blocks: true, mine: true, added: true, changed: true, plain: true, lines: true,
       names: true, polish: true, tree: null,
@@ -86,7 +86,7 @@ const COPY_AGAIN = `(async () => {
 
 // [mode, ready on the one-flow Discover, ready on an older tree]
 const KEPT_READY = {
-  home: [byTree('Try an app that comes with peerd', 'Try an included app'), has('Add and open Commons')],
+  home: [byTree('Try an app that comes with mcdollar', 'Try an included app'), has('Add and open Commons')],
   review: [byTree('Add to Library', 'Apply: add local copy'), has('Apply: add local copy')],
   empty: [byTree('Looking for people who share apps…', 'Apps show up as peers share them'), has('No peer Apps discovered yet')],
 };
@@ -160,7 +160,7 @@ const keptState = (mode, narrow) => ({
       rec.check('discovery surface fits narrow and wide viewport', await evalIn(page,`document.documentElement.scrollWidth <= innerWidth`));
       if (mode === 'home' || mode === 'review') rec.check('starter review has no install, run or network grant',await evalIn(page,`window.__starterFixtureCalls.every(type=>['apps/list','import/inspect'].includes(type))`));
       if (mode === 'home' && surface.flow) rec.check('network-off Discover sends no message', await evalIn(page, `window.__starterFixtureCalls.length === 0`));
-      // The apps that come with peerd go by their plain names.
+      // The apps that come with mcdollar go by their plain names.
       if (mode === 'home' && NAMES) rec.check('the start row names Tables and charts in plain words', await evalIn(page,
         `${has('Add the Tables and charts app to your Library, then open it from there.')} && ${has('Try Tables and charts')}`));
       if (mode === 'review' && NAMES) rec.check('the page names Desaturator', await evalIn(page,
@@ -199,7 +199,7 @@ const FLOW_FRAMES = [
   // why not the empty line: it claims what the Library holds, so it waits for a good read.
   ['offline-reading', 'offline-reading', `${has('Peer network is offline')} && ${has('Checking your Library…')}
     && !${has('You can still open the apps')} && !${has('Apps you install from peers')}`, []],
-  ['offline-failed', 'offline-failed', `${has('Peer network is offline')} && ${byTree('peerd could not read your Library.', 'Could not read your Library.')}
+  ['offline-failed', 'offline-failed', `${has('Peer network is offline')} && ${byTree('mcdollar could not read your Library.', 'Could not read your Library.')}
     && !${has('You can still open the apps')} && !${has('Apps you install from peers')}`, []],
   ['installing', 'installing', has('You can leave this page. The install keeps going.'), ['dweb/base/install']],
   // why the status line: focus never lands on Open, which runs the app.
@@ -210,18 +210,18 @@ const FLOW_FRAMES = [
         && document.querySelector('.disc-steps')?.getAttribute('aria-label') === 'Install steps';
     })()`] }],
   ['open-unknown', 'open-unknown', `[...document.querySelectorAll('.disc-panel [role="status"]')]
-    .some(line => line.textContent === ${JSON.stringify(PHASE2 ? 'peerd is not sure the app opened. Check your tabs.'
-    : 'peerd could not confirm whether the app opened. Check your tabs.')} && !line.classList.contains('error'))`,
+    .some(line => line.textContent === ${JSON.stringify(PHASE2 ? 'mcdollar is not sure the app opened. Check your tabs.'
+    : 'mcdollar could not confirm whether the app opened. Check your tabs.')} && !line.classList.contains('error'))`,
   ['dweb/base/install', 'apps/open']],
-  ['install-failed', 'failed', byTree('peerd could not install Field notes.', 'peerd could not install this app. Try again.'), ['dweb/base/install']],
-  ['install-unknown', 'unknown', byTree('peerd is not sure the install finished.', 'peerd could not confirm whether the install finished.'),
+  ['install-failed', 'failed', byTree('mcdollar could not install Field notes.', 'mcdollar could not install this app. Try again.'), ['dweb/base/install']],
+  ['install-unknown', 'unknown', byTree('mcdollar is not sure the install finished.', 'mcdollar could not confirm whether the install finished.'),
     ['dweb/base/install']],
   ['update-conflict', 'conflict', byTree('Changed on this device', 'Locally modified'), ['dweb/base/update-app']],
   // why Open too: the installed version still runs after a failed or unconfirmed update.
-  ['update-failed', 'update-failed', `${byTree('peerd could not update Field notes.', 'peerd could not update this app. Try again.')}
+  ['update-failed', 'update-failed', `${byTree('mcdollar could not update Field notes.', 'mcdollar could not update this app. Try again.')}
     && ${panelButtons(['Try again', 'Open'])}`, ['dweb/base/update-app'], { narrow: true }],
-  ['update-unknown', 'update-unknown', PHASE2 ? `${has('peerd is not sure the update finished.')} && ${panelButtons(['Check again', 'Open'])}`
-    : `${has('peerd could not confirm whether the update finished.')} && ${panelButtons(['Refresh', 'Open'])}`, ['dweb/base/update-app']],
+  ['update-unknown', 'update-unknown', PHASE2 ? `${has('mcdollar is not sure the update finished.')} && ${panelButtons(['Check again', 'Open'])}`
+    : `${has('mcdollar could not confirm whether the update finished.')} && ${panelButtons(['Refresh', 'Open'])}`, ['dweb/base/update-app']],
   ['update-ready', 'update', `${focused('.disc-back')} && ${has('Update ready')}`, []],
   ['update-cant-run', 'update-cant-run', `${focused('.disc-back')}
     && ${byTree('This browser cannot run the new version.', 'This update can’t run in this browser.')}`, []],
@@ -233,8 +233,8 @@ const FLOW_FRAMES = [
     'Apps from this maker appear here when your peers share them.')}`, ['dweb/base/inspect-address']],
   // why the margins: the line sits in the 24px rhythm of the view, as every other line does.
   ['commons-unknown', 'commons-unknown', `[...document.querySelectorAll('.disc-view > p')]
-    .some(line => line.textContent.startsWith(${JSON.stringify(NAMES ? 'peerd is not sure the Chat rooms app was added or opened.'
-    : PHASE2 ? 'peerd is not sure Commons was added or opened.' : 'Could not confirm whether Commons was added or opened.')})
+    .some(line => line.textContent.startsWith(${JSON.stringify(NAMES ? 'mcdollar is not sure the Chat rooms app was added or opened.'
+    : PHASE2 ? 'mcdollar is not sure Commons was added or opened.' : 'Could not confirm whether Commons was added or opened.')})
       && getComputedStyle(line).marginTop === '0px' && getComputedStyle(line).marginBottom === '0px')`, ['dweb/open-commons']],
   // The share dialog, open over an app page: focus is inside, on its action.
   ['share', 'share', `!!document.querySelector('.disc-share[role="dialog"]') && ${focused('[data-share-copy]')}
@@ -247,23 +247,23 @@ const FLOW_FRAMES = [
       const tops = new Set([...document.querySelectorAll('.disc-yours-item')].map(item => Math.round(item.getBoundingClientRect().top)));
       return !!list && tops.size === 1 && list.scrollWidth > list.clientWidth;
     })()`] }],
-  // The app says it: an app peerd only heard about, a share link it checked
+  // The app says it: an app mcdollar only heard about, a share link it checked
   // (every fact, the strongest last), and an installed version that asks for none.
-  ['says-unknown', 'says-unknown', `${focused('.disc-back')} && ${has('Not known yet. peerd reads this from the app itself when it checks it.')}`,
+  ['says-unknown', 'says-unknown', `${focused('.disc-back')} && ${has('Not known yet. mcdollar reads this from the app itself when it checks it.')}`,
     [], { says: true }],
   ['says-checked', 'says-checked', `${focused('.disc-back')} && document.querySelectorAll('.disc-says li').length === 3
-    && document.querySelector('.disc-says li:last-child')?.classList.contains('is-strong') && ${has('checked when peerd looked at it.')}`,
+    && document.querySelector('.disc-says li:last-child')?.classList.contains('is-strong') && ${has('checked when mcdollar looked at it.')}`,
   ['dweb/base/inspect-address'], { says: true, narrow: true }],
-  ['says-nothing', 'says-nothing', `${focused('.disc-back')} && ${has('It does not use the peer network and has no instructions for peerd.')}
-    && ${has('From the app’s own files, checked when peerd installed it.')}`, [], { says: true }],
+  ['says-nothing', 'says-nothing', `${focused('.disc-back')} && ${has('It does not use the peer network and has no instructions for mcdollar.')}
+    && ${has('From the app’s own files, checked when mcdollar installed it.')}`, [], { says: true }],
   // The same installed version after an edit on this device: the head and
-  // What to know say so, and none of the facts peerd checked at the install show.
+  // What to know say so, and none of the facts mcdollar checked at the install show.
   ['says-changed', 'says-changed', `${focused('.disc-back')} && ${has('It changed on this device after you installed it.')}
     && ${has('Changed on this device')} && !document.querySelector('.disc-says')`, [], { changed: true,
-    newCheck: ['the panel says peers get the version peerd checked, not the changes', has('They do not get your changes.')] }],
+    newCheck: ['the panel says peers get the version mcdollar checked, not the changes', has('They do not get your changes.')] }],
   // The user's own app, made and shared from their Library: What to know says
   // they made it, never that an install checked it against its maker.
-  ['mine', 'mine', `${focused('.disc-back')} && ${has('You made this app.')} && !${has('peerd checked')}`, [], { mine: true, narrow: true,
+  ['mine', 'mine', `${focused('.disc-back')} && ${has('You made this app.')} && !${has('mcdollar checked')}`, [], { mine: true, narrow: true,
     newCheck: ['the panel of an app the user made has no install steps', `!document.querySelector('.disc-steps')
       && !!document.querySelector('.disc-panel .disc-installed')`] }],
   // Block a maker: the maker menu open, its confirm open on Cancel, and the
@@ -276,16 +276,16 @@ const FLOW_FRAMES = [
     ['dweb/peer-block'], { blocks: true }],
   // A block whose reply was lost: neutral words, and Check again in place of Block.
   ['block-unknown', 'block-unknown', `${focused('[data-block-check]')}
-    && ${has('peerd is not sure Ana is blocked. Check again before you try again.')}`, ['dweb/peer-block'], { blocks: true }],
+    && ${has('mcdollar is not sure Ana is blocked. Check again before you try again.')}`, ['dweb/peer-block'], { blocks: true }],
   // Rename from the maker menu: the form opens with the saved name and focus in it.
   ['maker-rename', 'maker-rename', `${focused('.disc-rename input')} && document.querySelector('.disc-rename input')?.value === 'Ana'`,
     [], { blocks: true, narrow: true }],
-  // Offline from the start, so peerd heard no card: a Library tile claims no description.
+  // Offline from the start, so mcdollar heard no card: a Library tile claims no description.
   ['offline-fresh', 'offline-fresh', `${has('Peer network is offline')} && ${cards(1)} && !document.querySelector('.disc-tile-desc')`,
     [], { plain: true, narrow: true }],
   // An update that could not stop sharing the old version says so in plain words.
   ['update-cleanup', 'update-cleanup', `!!document.querySelector('.disc-panel .disc-installed')
-    && ${has('peerd still shares the old version. Sharing stops the next time you update or remove this app.')}`,
+    && ${has('mcdollar still shares the old version. Sharing stops the next time you update or remove this app.')}`,
   ['dweb/base/update-app'], { plain: true, narrow: true }],
   // An update that runs names its step Update, as its line does.
   ['updating', 'updating', `${has('You can leave this page. The update keeps going.')}
@@ -294,13 +294,13 @@ const FLOW_FRAMES = [
   ['dweb/base/update-app'], { plain: true, narrow: true }],
   // Library errors say what failed, what stays off, then what to do: after a
   // refresh online and offline, and on an app page before any read.
-  ['refresh-failed', 'refresh-failed', `${has('peerd could not refresh your Library. Surprise me stays off until peerd can read it.')}
+  ['refresh-failed', 'refresh-failed', `${has('mcdollar could not refresh your Library. Surprise me stays off until mcdollar can read it.')}
     && [...document.querySelectorAll('button')].some(button => button.textContent === 'Surprise me' && button.disabled)`,
   [], { plain: true, narrow: true }],
   ['offline-refresh-failed', 'offline-refresh-failed', `${has('Peer network is offline')}
-    && ${has('peerd could not refresh your Library. This list may be out of date. peerd tries again by itself.')}`, [], { plain: true, narrow: true }],
+    && ${has('mcdollar could not refresh your Library. This list may be out of date. mcdollar tries again by itself.')}`, [], { plain: true, narrow: true }],
   ['library-failed', 'library-failed', `${focused('.disc-back')}
-    && ${has('peerd could not read your Library. Install stays off until peerd can read it. Try again in a moment.')}
+    && ${has('mcdollar could not read your Library. Install stays off until mcdollar can read it. Try again in a moment.')}
     && [...document.querySelectorAll('.disc-panel button')].some(button => button.textContent === 'Install and share' && button.disabled)`,
   [], { plain: true, narrow: true }],
   // An empty pill says why it is empty and what to do.
@@ -317,32 +317,32 @@ const FLOW_FRAMES = [
   // Peers share an app the user made, and the user's Library no longer holds it: its tile says Made by you.
   ['mine-tile', 'mine-tile', `${cards(4)} && [...document.querySelectorAll('.disc-tile-meta')]
     .some(meta => meta.textContent.startsWith('Made by you'))`, [], { plain: true, narrow: true }],
-  // The lines a reply adds: a name peerd could not save, or is not sure it
+  // The lines a reply adds: a name mcdollar could not save, or is not sure it
   // saved; a block that failed; an Open in Your apps that failed, or may not
   // have opened; a copy of the share link that worked or failed; and a maker
   // blocked in another tab, as an install and a link check say it.
-  ['rename-failed', 'rename-failed', `${focused('.disc-rename button[type="submit"]')} && ${has('peerd could not save the name. Try again.')}`,
+  ['rename-failed', 'rename-failed', `${focused('.disc-rename button[type="submit"]')} && ${has('mcdollar could not save the name. Try again.')}`,
     ['contacts/set'], { lines: true, narrow: true }],
   ['rename-unknown', 'rename-unknown', `${focused('[data-maker-menu]')}
-    && ${has('peerd is not sure the name was saved. Check Contacts before you try again.')}`, ['contacts/set'], { lines: true, narrow: true }],
-  ['block-failed', 'block-failed', `${focused('[data-block-confirm]')} && ${has('peerd could not block Ana. Try again.')}`,
+    && ${has('mcdollar is not sure the name was saved. Check Contacts before you try again.')}`, ['contacts/set'], { lines: true, narrow: true }],
+  ['block-failed', 'block-failed', `${focused('[data-block-confirm]')} && ${has('mcdollar could not block Ana. Try again.')}`,
     ['dweb/peer-block'], { lines: true, narrow: true }],
   // why Open at the item's end: the line under it widens the item.
   ['yours-open-failed', 'yours-open-failed', `[...document.querySelectorAll('.disc-yours-item [role="alert"]')]
-    .some(line => line.textContent === 'peerd could not open this app. Try again.') && (() => {
+    .some(line => line.textContent === 'mcdollar could not open this app. Try again.') && (() => {
       const item = document.querySelector('.disc-yours-item [role="alert"]')?.closest('.disc-yours-item');
       const open = item?.querySelector('.disc-yours-open');
       return !!item && !!open && item.getBoundingClientRect().right - open.getBoundingClientRect().right <= 16;
     })()`, ['apps/open'], { lines: true, narrow: true }],
   ['yours-open-unknown', 'yours-open-unknown', `[...document.querySelectorAll('.disc-yours-item [role="status"]')]
-    .some(line => line.textContent === 'peerd is not sure the app opened. Check your tabs.' && !line.classList.contains('error'))`,
+    .some(line => line.textContent === 'mcdollar is not sure the app opened. Check your tabs.' && !line.classList.contains('error'))`,
   ['apps/open'], { lines: true, narrow: true }],
   ['share-copied', 'share-copied', `${focused('[data-share-copy]')} && document.querySelector('.disc-share-status')?.textContent === 'Link copied.'`,
     [], { lines: true, again: COPY_AGAIN }],
   ['share-copy-failed', 'share-copy-failed', `${focused('[data-share-copy]')} && document.querySelector('.disc-share-status')?.textContent
-    === 'peerd could not copy the link. Select it and copy it yourself.'`, [], { lines: true, narrow: true }],
+    === 'mcdollar could not copy the link. Select it and copy it yourself.'`, [], { lines: true, narrow: true }],
   // why no Try again: only an unblock in Contacts helps, and the hint says so.
-  ['install-blocked', 'install-blocked', `${has('peerd could not install Field notes.')}
+  ['install-blocked', 'install-blocked', `${has('mcdollar could not install Field notes.')}
     && ${has('You blocked the maker of this app. To install it, unblock them in Contacts.')}
     && !document.querySelector('.disc-panel button')`, ['dweb/base/install'], { lines: true, narrow: true }],
   ['link-blocked', 'link-blocked', has('You blocked the maker of this app. To look at it, unblock them in Contacts.'),
@@ -353,7 +353,7 @@ const FLOW_FRAMES = [
   // The user's own shared app while the peer network is off: the Library says
   // the user made it, so its page speaks to them and claims no check.
   ['mine-offline', 'mine-offline', `${focused('.disc-back')} && ${has('Made by you')} && ${has('You made this app.')}
-    && !${has('peerd checked')} && !document.querySelector('.disc-steps')`, [], { polish: true }],
+    && !${has('mcdollar checked')} && !document.querySelector('.disc-steps')`, [], { polish: true }],
   // Peers share an app the user made, and their Library no longer holds it.
   ['mine-not-installed', 'mine-not-installed', `${focused('.disc-back')} && ${has('You made this app. It is not in your Library now.')}
     && ${panelButtons(['Install and share'])}`, [], { polish: true, narrow: true }],
@@ -364,7 +364,7 @@ const FLOW_FRAMES = [
   // update. why the focus: the Update button is gone, as after an install.
   ['update-done', 'update-done', `${focused('.disc-panel .disc-installed')} && ${has('Field notes in your Library is now the new version.')}
     && [...document.querySelectorAll('.disc-step-title')].map(title => title.textContent).join() === 'Look at it,Update,Open'
-    && ${has('When you updated it, peerd checked that it was exactly the app')}`, ['dweb/base/update-app'], { polish: true, narrow: true }],
+    && ${has('When you updated it, mcdollar checked that it was exactly the app')}`, ['dweb/base/update-app'], { polish: true, narrow: true }],
   // A share link to an installed copy that changed on this device: the head and
   // What to know say so, and the link's facts do not stand for the copy Open runs.
   ['link-changed', 'link-changed', `${focused('.disc-back')} && ${has('Changed on this device')}
@@ -372,9 +372,9 @@ const FLOW_FRAMES = [
     && ${has('They do not get your changes.')}`, ['dweb/base/inspect-address'], { polish: true, narrow: true }],
   // An earlier add of Chat rooms under a former name: the tile, with Open, and Your apps show the name it has now.
   ['commons-renamed', 'commons-renamed', `[...document.querySelectorAll('.disc-tile-name, .disc-yours-name')]
-    .filter(name => name.textContent === 'Chat rooms').length === 2 && !${has('Peerd-to-Peerd Commons')}
+    .filter(name => name.textContent === 'Chat rooms').length === 2 && !${has('Mcdollar-to-Mcdollar Commons')}
     && !${has('Add and open Chat rooms')}`, [], { polish: true }],
-  // A search on All finds the app that comes with peerd that its words match, in the same grid.
+  // A search on All finds the app that comes with mcdollar that its words match, in the same grid.
   ['search-included', 'search-included', `${cards(1)} && document.querySelector('.disc-tile-name')?.textContent === 'Chat rooms'
     && document.querySelector('.disc-pill[aria-pressed="true"]')?.textContent === 'All' && !${has('No matching apps')}`, [],
   { polish: true }],
@@ -433,21 +433,21 @@ const CONTACT_FRAMES = [
   // Add a name, the app count alone under the key, and the full key only in Technical details.
   ['unnamed', 'unnamed', `document.querySelectorAll('.contact-row').length === 3 && ${has('No apps installed from them yet.')}
     && [...document.querySelectorAll('.contact-row-actions button')].some(button => button.textContent === 'Add a name')
-    && [...document.querySelectorAll('.contact-row .peerd-disc-pub')].some(line => line.textContent === '1 app')
+    && [...document.querySelectorAll('.contact-row .mcdollar-disc-pub')].some(line => line.textContent === '1 app')
     && !!document.querySelector('.contact-detail details.contact-tech:not([open])')`, [], { narrow: true, plain: true,
-    narrowCheck: ['the key of each person with no name shows in full', `[...document.querySelectorAll('.contact-row .peerd-disc-name')]
+    narrowCheck: ['the key of each person with no name shows in full', `[...document.querySelectorAll('.contact-row .mcdollar-disc-name')]
       .every(name => name.scrollWidth <= name.clientWidth)`] }],
   ['empty', 'empty', has('Nobody here yet.'), [], { narrow: true, plain: true }],
   // An unblock that failed says so in its row; one whose reply was lost stays
   // neutral and offers Check again; a list that cannot load says so, with
   // Try again; and the last unblock leaves nobody in the list.
-  ['unblock-failed', 'unblock-failed', `${focused('[data-unblock]')} && ${has('peerd could not unblock Ana. Try again.')}`,
+  ['unblock-failed', 'unblock-failed', `${focused('[data-unblock]')} && ${has('mcdollar could not unblock Ana. Try again.')}`,
     ['dweb/peer-unblock'], { narrow: true, lines: true }],
   // why one "Blocked." only: the row whose unblock may be done claims neither outcome.
   ['unblock-unknown', 'unblock-unknown', `${focused('[data-unblock]')}
-    && ${has('peerd is not sure Ana is unblocked. Check again before you try again.')}
+    && ${has('mcdollar is not sure Ana is unblocked. Check again before you try again.')}
     && document.querySelectorAll('.contacts-blocked-meta').length === 1`, ['dweb/peer-unblock'], { narrow: true, lines: true }],
-  ['load-failed', 'load-failed', `${has('peerd could not load your blocked makers. Try again.')}
+  ['load-failed', 'load-failed', `${has('mcdollar could not load your blocked makers. Try again.')}
     && !!document.querySelector('.contacts-blocked-retry')`, [], { narrow: true, lines: true }],
   ['unblocked-last', 'unblocked-last', `${focused('.contacts-unblocked')} && ${has('Nobody is blocked now.')}
     && !${has('Their apps are hidden')}`, ['dweb/peer-unblock'], { lines: true }],
@@ -506,7 +506,7 @@ const tryPage = {
   },
 };
 
-// The page after an add peerd confirmed: Go to Library leads, and the line
+// The page after an add mcdollar confirmed: Go to Library leads, and the line
 // says that another add makes a second copy. The fixture answers the add.
 const starterAdded = {
   name: 'discovery-starter-added', kind:'visual', phase:'post-unlock', responder:null,

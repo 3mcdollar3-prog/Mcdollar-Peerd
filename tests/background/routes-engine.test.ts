@@ -3,8 +3,8 @@ import { makeEngineRoutes } from '../../extension/background/routes/engine.js';
 import { createAppQuiescence } from '../../extension/background/app-quiescence.js';
 import { listOffscreenContexts } from '../../extension/background/offscreen-contexts.js';
 import { requireDenylistPolicy } from '../../extension/background/denylist-store.js';
-import { parseAppManifest } from '../../extension/peerd-engine/app-manifest.js';
-import { podGitRemoteOperation } from '../../extension/peerd-engine/pod-shell.js';
+import { parseAppManifest } from '../../extension/mcdollar-engine/app-manifest.js';
+import { podGitRemoteOperation } from '../../extension/mcdollar-engine/pod-shell.js';
 import { appReleaseDescriptorMatches } from '../../extension/background/app-client.js';
 
 class ArtifactTooLargeError extends Error {}
@@ -19,13 +19,13 @@ const baseDeps = (over: any = {}) => {
   browser: {
     runtime: {
       getContexts: async () => [], sendMessage: async () => ({ ok: true }),
-      getURL: (path: string) => `moz-extension://peerd/${path}`,
+      getURL: (path: string) => `moz-extension://mcdollar/${path}`,
     },
     storage: { local: { get: async () => ({}), set: async () => {} } },
   },
   // #53: engine's sw/web-fetch now delegates to the vm-net vmHttpFetch factory
   // (cache + host-bound git-auth + body cap + base64 — those are covered by
-  // tests/peerd-engine/vm-net/vm-http-fetch.test.ts). engine.js only validates
+  // tests/mcdollar-engine/vm-net/vm-http-fetch.test.ts). engine.js only validates
   // the url and wraps EgressDeniedError, so the route's own tests inject vmHttpFetch.
   vmHttpFetch: async () => ({ ok: true, status: 200, statusText: 'OK', headers: {}, bodyB64: btoa('hello') }),
   appRegistry: {
@@ -44,7 +44,7 @@ const baseDeps = (over: any = {}) => {
       schema: 1, kind: 'app', entry: 'index.html',
       agent: { kind: 'bound-app' }, capabilities: [],
     }),
-    listFiles: async () => [{ path: '/index.html' }, { path: '/peerd.json' }],
+    listFiles: async () => [{ path: '/index.html' }, { path: '/mcdollar.json' }],
     snapshotFiles: async () => ({
       record: { id: 'a1', name: 'App', entryFile: 'index.html', fileKinds: { 'index.html': 'text' } },
       files: { 'index.html': new TextEncoder().encode('<h1>x</h1>') },
@@ -60,7 +60,7 @@ const baseDeps = (over: any = {}) => {
   },
   appQuiescence: { run: async (_appId: string, operation: () => Promise<any>) => operation() },
   opfsHelpers: () => ({ list: async () => [], read: async () => '', readBytes: async () => new Uint8Array(), write: async () => {} }),
-  NOTEBOOK_OPFS_ROOT: 'peerd-notebooks',
+  NOTEBOOK_OPFS_ROOT: 'mcdollar-notebooks',
   IMAGE_PIN_STORAGE_KEY: 'vm.imagePins',
   artifactEngine: {
     buildAppExport: async () => ({ env: 'app' }),
@@ -68,7 +68,7 @@ const baseDeps = (over: any = {}) => {
     buildVmRecipeExport: async () => ({ env: 'vm' }),
     openEnvelope: async () => ({ kind: 'app', name: 'X', entry: 'i.html', files: {}, meta: { tags: [] } }),
     inspectEnvelope: async () => ({ ok: true, summary: 'x' }),
-    exportFilename: (name: string, kind: string) => `${name}.${kind}.peerd`,
+    exportFilename: (name: string, kind: string) => `${name}.${kind}.mcdollar`,
   },
   ArtifactTooLargeError, EnvelopeFormatError, EnvelopeIntegrityError,
   settingsStore: { get: () => ({ dwebEnabled: false }) },
@@ -76,7 +76,7 @@ const baseDeps = (over: any = {}) => {
   withDwebPublication: async (operation: (isCurrent: () => boolean) => Promise<any>) => operation(() => true),
   withAppLifecycle: async (_appId: string, operation: () => Promise<any>) => operation(),
   listOffscreenContexts,
-  isOffscreenSender: (sender: any) => sender?.url === 'moz-extension://peerd/offscreen/offscreen.html',
+  isOffscreenSender: (sender: any) => sender?.url === 'moz-extension://mcdollar/offscreen/offscreen.html',
   assertOpfsWritable: async () => {},
   // The SW always injects the extract post-step (a passthrough when extract is
   // absent — that contract is pinned in tests/shared/fetch-extract.test.ts).
@@ -118,7 +118,7 @@ const baseDeps = (over: any = {}) => {
      getDwebGeneration: () => 0, ...over.appTabTracker },
  };
 };
-const appSender = (id: string) => ({ tab: { id: 44, url: `moz-extension://peerd/engine-tabs/app-tab/index.html#${id}` } });
+const appSender = (id: string) => ({ tab: { id: 44, url: `moz-extension://mcdollar/engine-tabs/app-tab/index.html#${id}` } });
 
 describe('pod/git: instance-pinned isomorphic-git shell bridge', () => {
   const sender = { tab: { id: 99 } };
@@ -344,7 +344,7 @@ describe('App repository quiescence', () => {
     const result = await makeEngineRoutes(deps)['apps/repository/commit']({ appId: 'a1' });
     expect(result).toEqual({
       ok: false, code: 'repository-operation-failed', outcomeKnown: true,
-      retryable: true, error: 'Peerd could not save the Git checkpoint. Try again.',
+      retryable: true, error: 'Mcdollar could not save the Git checkpoint. Try again.',
     });
     expect(closed).toBe(false);
     expect(mutated).toBe(false);
@@ -393,7 +393,7 @@ describe('App repository quiescence', () => {
       .toEqual({
         ok: false, code: 'repository-host-timeout', outcomeKnown: false,
         retryable: false,
-        error: 'Peerd could not confirm the result of trying to save the Git checkpoint. Refresh Git history to reconcile before trying again.',
+        error: 'Mcdollar could not confirm the result of trying to save the Git checkpoint. Refresh Git history to reconcile before trying again.',
       });
   });
 
@@ -437,7 +437,7 @@ describe('lifecycle/assert-opfs-writable', () => {
       assertOpfsWritable: async () => { checks += 1; },
     }));
     const result = await (routes['lifecycle/assert-opfs-writable'] as any)(
-      {}, { url: 'moz-extension://peerd/engine-tabs/notebook-tab/index.html#nb-1' });
+      {}, { url: 'moz-extension://mcdollar/engine-tabs/notebook-tab/index.html#nb-1' });
     expect(result).toEqual({ ok: true });
     expect(checks).toBe(1);
   });
@@ -448,7 +448,7 @@ describe('lifecycle/assert-opfs-writable', () => {
       assertOpfsWritable: async () => { checks += 1; },
     }));
     const result = await (routes['lifecycle/assert-opfs-writable'] as any)(
-      {}, { url: 'moz-extension://peerd/offscreen/offscreen.html' });
+      {}, { url: 'moz-extension://mcdollar/offscreen/offscreen.html' });
     expect(result).toEqual({ ok: true });
     expect(checks).toBe(1);
   });
@@ -460,7 +460,7 @@ describe('lifecycle/assert-opfs-writable', () => {
       },
     }));
     const result = await (routes['lifecycle/assert-opfs-writable'] as any)(
-      {}, { url: 'moz-extension://peerd/engine-tabs/notebook-tab/index.html#nb-1' });
+      {}, { url: 'moz-extension://mcdollar/engine-tabs/notebook-tab/index.html#nb-1' });
     expect(result.ok).toBe(false);
     expect(result.error).toContain("'opfs-workspaces'");
     expect(result.error).toContain('No data was changed');
@@ -473,7 +473,7 @@ describe('lifecycle/assert-opfs-writable', () => {
       assertOpfsWritable: async () => { checks += 1; },
     }));
     const result = await (routes['lifecycle/assert-opfs-writable'] as any)(
-      {}, { url: 'moz-extension://peerd/sidepanel/sidepanel.html' });
+      {}, { url: 'moz-extension://mcdollar/sidepanel/sidepanel.html' });
     expect(result).toEqual({ ok: false, error: 'unauthorized OPFS posture request' });
     expect(checks).toBe(0);
   });
@@ -723,7 +723,7 @@ describe('sw/web-fetch', () => {
 });
 
 describe('app/vm meta + apps Library', () => {
-  const dwebSender = { tab: { id: 41, url: 'moz-extension://peerd/engine-tabs/app-tab/index.html#a1' } };
+  const dwebSender = { tab: { id: 41, url: 'moz-extension://mcdollar/engine-tabs/app-tab/index.html#a1' } };
   const dwebMetaDeps = (over: any) => baseDeps({
     appTabTracker: {
       getTabId: (id: string) => id === 'a1' ? 41 : null,
@@ -766,7 +766,7 @@ describe('app/vm meta + apps Library', () => {
           },
           capabilities: [],
         }),
-        listFiles: async () => [{ path: '/index.html' }, { path: '/peerd.json' }],
+        listFiles: async () => [{ path: '/index.html' }, { path: '/mcdollar.json' }],
       },
     }));
     expect((await r['app/get-meta']({ appId: 'a1' }, appSender('a1'))).agent).toEqual({
@@ -790,7 +790,7 @@ describe('app/vm meta + apps Library', () => {
           schema: 1, kind: 'app', entry: 'main.html', agent: { kind: 'bound-app' },
           capabilities: [],
         }),
-        listFiles: async () => [{ path: 'main.html' }, { path: 'peerd.json' }],
+        listFiles: async () => [{ path: 'main.html' }, { path: 'mcdollar.json' }],
       },
     }));
     expect(await r['app/get-meta']({ appId: 'a1' }, appSender('a1'))).toMatchObject({
@@ -798,7 +798,7 @@ describe('app/vm meta + apps Library', () => {
     });
     expect(writes).toBe(0);
   });
-  test('app/get-meta revokes a stale registry bridge when peerd.json removes dweb', async () => {
+  test('app/get-meta revokes a stale registry bridge when mcdollar.json removes dweb', async () => {
     const r = makeEngineRoutes(baseDeps({
       appRegistry: {
         get: async () => ({ id: 'a1', name: 'App', entryFile: 'index.html', dweb: { publisher: 'did:key:zOld' } }),
@@ -807,12 +807,12 @@ describe('app/vm meta + apps Library', () => {
     }));
     expect((await r['app/get-meta']({ appId: 'a1' }, appSender('a1'))).dweb).toBeNull();
   });
-  test('app/get-meta grants the bridge from peerd.json without mutating provenance', async () => {
+  test('app/get-meta grants the bridge from mcdollar.json without mutating provenance', async () => {
     const r = makeEngineRoutes(baseDeps({
       DWEB_ENABLED: true,
       appClient: {
         readFile: async () => JSON.stringify({ schema: 1, kind: 'app', entry: 'index.html', agent: { kind: 'bound-app' }, capabilities: ['dweb'] }),
-        listFiles: async () => [{ path: '/index.html' }, { path: '/peerd.json' }],
+        listFiles: async () => [{ path: '/index.html' }, { path: '/mcdollar.json' }],
       },
     }));
     expect((await r['app/get-meta']({ appId: 'a1' }, appSender('a1'))).dweb).toMatchObject({ local: true });
@@ -833,7 +833,7 @@ describe('app/vm meta + apps Library', () => {
       },
       appClient: {
         readFile: async () => JSON.stringify({ schema: 1, kind: 'app', entry: 'index.html', agent: { kind: 'bound-app' }, capabilities: ['dweb'] }),
-        listFiles: async () => [{ path: '/index.html' }, { path: '/peerd.json' }],
+        listFiles: async () => [{ path: '/index.html' }, { path: '/mcdollar.json' }],
       },
     });
     deps.repositories.matches = async () => true;
@@ -861,7 +861,7 @@ describe('app/vm meta + apps Library', () => {
       },
       appClient: {
         readFile: async () => JSON.stringify({ schema: 1, kind: 'app', entry: 'index.html', agent: { kind: 'bound-app' }, capabilities: ['dweb'] }),
-        listFiles: async () => [{ path: '/index.html' }, { path: '/peerd.json' }],
+        listFiles: async () => [{ path: '/index.html' }, { path: '/mcdollar.json' }],
       },
     });
     let comparison: any = null;
@@ -901,7 +901,7 @@ describe('app/vm meta + apps Library', () => {
     release();
     expect((await pending).dweb).toMatchObject({ forked: true, generation: 2 });
   });
-  test('app/get-meta checks changed bytes when peerd.json is missing', async () => {
+  test('app/get-meta checks changed bytes when mcdollar.json is missing', async () => {
     const deps = dwebMetaDeps({
       DWEB_ENABLED: true,
       appRegistry: {
@@ -929,7 +929,7 @@ describe('app/vm meta + apps Library', () => {
         },
         appClient: {
           readFile: async () => JSON.stringify({ schema: 1, kind: 'app', entry: 'index.html', agent: { kind: 'bound-app' }, capabilities: ['dweb'] }),
-          listFiles: async () => [{ path: '/index.html' }, { path: '/peerd.json' }],
+          listFiles: async () => [{ path: '/index.html' }, { path: '/mcdollar.json' }],
         },
       });
       let checks = 0;
@@ -1009,11 +1009,11 @@ describe('app/vm meta + apps Library', () => {
         code: 'repository-host-timeout',
         outcomeKnown: false,
         retryable: false,
-        error: 'Peerd could not confirm whether the Git import finished. Refresh and inspect the Library before trying again.',
+        error: 'Mcdollar could not confirm whether the Git import finished. Refresh and inspect the Library before trying again.',
       });
   });
   test('App data mutations reuse exact-tab-pinned editor authority', async () => {
-    const sender = { tab: { id: 44, url: 'moz-extension://peerd/engine-tabs/app-tab/index.html#app-1' } };
+    const sender = { tab: { id: 44, url: 'moz-extension://mcdollar/engine-tabs/app-tab/index.html#app-1' } };
     const writes: any[] = [];
     const r = makeEngineRoutes(baseDeps({
       appTabTracker: {
@@ -1046,7 +1046,7 @@ describe('app/vm meta + apps Library', () => {
       { path: 'data/document.json', delete: true },
     ]);
     expect(await r['app/editor-write']({
-      appId: 'app-1', path: '../peerd.json', content: '{}', runtimeData: true,
+      appId: 'app-1', path: '../mcdollar.json', content: '{}', runtimeData: true,
     }, sender))
       .toEqual({ ok: false, error: 'app-data-unauthorized' });
     expect(await r['app/editor-write'](
@@ -1238,7 +1238,7 @@ describe('export/artifact', () => {
   });
   test('app export returns filename + envelope', async () => {
     const r = makeEngineRoutes(baseDeps());
-    expect(await r['export/artifact']({ kind: 'app', id: 'a1' })).toEqual({ ok: true, filename: 'App.app.peerd', envelope: { env: 'app' } });
+    expect(await r['export/artifact']({ kind: 'app', id: 'a1' })).toEqual({ ok: true, filename: 'App.app.mcdollar', envelope: { env: 'app' } });
   });
   test('app export returns a Firefox-cloneable JSON reply', async () => {
     const r = makeEngineRoutes(baseDeps({

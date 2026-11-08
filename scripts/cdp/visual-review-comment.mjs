@@ -29,7 +29,7 @@ const LABELS = {
   'home-fulltab': 'Home (full tab)', 'options-fulltab': 'Settings (full tab)',
 };
 
-const md = ['<!-- peerd-visual -->', '### Visual regression', ''];
+const md = ['<!-- mcdollar-visual -->', '### Visual regression', ''];
 if (!existsSync(REPORT)) {
   md.push('⚠️ **The visual comparison is incomplete.** No comparison report is available.');
   if (RUN_URL) md.push(`See the render evidence on [this run](${RUN_URL}).`);

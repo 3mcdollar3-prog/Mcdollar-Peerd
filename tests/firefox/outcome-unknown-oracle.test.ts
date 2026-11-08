@@ -13,8 +13,8 @@ describe('Firefox unknown-outcome runtime oracle', () => {
   });
 
   test.each([
-    'This action may have completed, but peerd did not receive confirmation.',
-    'peerd cannot confirm whether the actor ran or completed.',
+    'This action may have completed, but mcdollar did not receive confirmation.',
+    'mcdollar cannot confirm whether the actor ran or completed.',
     'The actor did not complete cleanly. Its outcome is unknown.',
   ])('recognizes ambiguous-outcome warning semantics: %s', (message) => {
     expect(hasAmbiguousOutcomeWarning(message)).toBe(true);

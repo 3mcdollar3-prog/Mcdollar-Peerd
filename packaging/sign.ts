@@ -12,7 +12,7 @@
 //             signs the .xpi; the signed file replaces the unsigned one.
 //
 // Credentials are environment-only (CI secrets; never in the repo):
-//   PEERD_CRX_KEY    path to key.pem        (default: <repo>/key.pem)
+//   MCDOLLAR_CRX_KEY    path to key.pem        (default: <repo>/key.pem)
 //   AMO_JWT_ISSUER / AMO_JWT_SECRET         (addons.mozilla.org API)
 //
 // Missing credentials SKIP signing with a loud warning instead of
@@ -25,7 +25,7 @@ import { join, relative } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { REPO_ROOT, ARTIFACTS_DIR, type Browser } from './lib.ts';
 
-const keyPath = () => process.env.PEERD_CRX_KEY ?? join(REPO_ROOT, 'key.pem');
+const keyPath = () => process.env.MCDOLLAR_CRX_KEY ?? join(REPO_ROOT, 'key.pem');
 
 const signChromeCrx = async (zipArtifact: string): Promise<void> => {
   if (!existsSync(keyPath())) {

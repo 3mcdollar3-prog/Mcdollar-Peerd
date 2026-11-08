@@ -3,7 +3,7 @@
 import {
   isAddressableBrowserTab,
   isDenylistedTab,
-} from '../peerd-runtime/kernel-turn-authority.js';
+} from '../mcdollar-runtime/kernel-turn-authority.js';
 
 const mismatch = () => Object.assign(new Error('introspection authority mismatch'), {
   outcomeKnown: true, retryable: false,

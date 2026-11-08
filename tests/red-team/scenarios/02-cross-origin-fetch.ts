@@ -1,6 +1,6 @@
 // Scenario 02: malicious page tries to induce a cross-origin fetch.
 //
-// Adversary: a malicious page (or an injected agent) tries to make peerd reach a
+// Adversary: a malicious page (or an injected agent) tries to make mcdollar reach a
 // sensitive origin it should never touch, the user's bank, webmail, or a cloud
 // console where the browser already holds a logged-in cookie, or to smuggle an
 // origin-bound API key onto a DIFFERENT origin so the attacker collects it.
@@ -17,10 +17,10 @@
 import {
   type Scenario, type Probe, blocked, leaked, summarize,
 } from '../harness.ts';
-import { makeWebFetch } from '../../../extension/peerd-egress/fetch/web-fetch.js';
-import { matchesDenylist, findDenylistMatch } from '../../../extension/peerd-egress/denylist/denylist.js';
-import { authOriginForRequestUrl } from '../../../extension/peerd-egress/fetch/web-fetch.js';
-import { EgressDeniedError } from '../../../extension/peerd-egress/fetch/errors.js';
+import { makeWebFetch } from '../../../extension/mcdollar-egress/fetch/web-fetch.js';
+import { matchesDenylist, findDenylistMatch } from '../../../extension/mcdollar-egress/denylist/denylist.js';
+import { authOriginForRequestUrl } from '../../../extension/mcdollar-egress/fetch/web-fetch.js';
+import { EgressDeniedError } from '../../../extension/mcdollar-egress/fetch/errors.js';
 
 // A representative slice of the kind of sensitive origins a user's denylist holds
 // (the shipped seed lists apex + subdomain wildcard separately per site).

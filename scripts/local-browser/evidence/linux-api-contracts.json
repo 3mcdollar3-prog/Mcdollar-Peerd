@@ -11,7 +11,7 @@
     "appleSilicon": false
   },
   "modelInference": "All model replies, client authoring, and API selection are scripted. No model weights were loaded for these runs.",
-  "scope": "Real unpacked Peerd, browser events, capture, confirmation, sealed client execution, origin-bound API requests, and bridge routing. This is integration evidence, not a browser-model success benchmark or Mac latency result.",
+  "scope": "Real unpacked Mcdollar, browser events, capture, confirmation, sealed client execution, origin-bound API requests, and bridge routing. This is integration evidence, not a browser-model success benchmark or Mac latency result.",
   "smoke": {
     "ok": true,
     "startedAt": "2026-10-26T06:41:52.148Z",
@@ -42,7 +42,7 @@
           "query": "copper",
           "title": "Copper widget",
           "typedQuery": "copper",
-          "url": "https://git-fixture.peerd.test/item/copper-widget?case=search-navigation&q=copper&mutation=0"
+          "url": "https://git-fixture.mcdollar.test/item/copper-widget?case=search-navigation&q=copper&mutation=0"
         },
         "checks": [
           {
@@ -79,7 +79,7 @@
             "type": "api_inspection",
             "at": 1792996924919,
             "lane": "api",
-            "origin": "https://git-fixture.peerd.test"
+            "origin": "https://git-fixture.mcdollar.test"
           },
           {
             "type": "api_fallback",
@@ -188,7 +188,7 @@
           "query": "copper",
           "title": "Copper widget",
           "typedQuery": "copper",
-          "url": "https://git-fixture.peerd.test/item/copper-widget?case=mutation-replan&q=copper&mutation=1"
+          "url": "https://git-fixture.mcdollar.test/item/copper-widget?case=mutation-replan&q=copper&mutation=1"
         },
         "checks": [
           {
@@ -237,7 +237,7 @@
             "type": "api_inspection",
             "at": 1792996928581,
             "lane": "api",
-            "origin": "https://git-fixture.peerd.test"
+            "origin": "https://git-fixture.mcdollar.test"
           },
           {
             "type": "api_fallback",
@@ -367,7 +367,7 @@
           "itemClicked": null,
           "title": "API catalog",
           "typedQuery": null,
-          "url": "https://git-fixture.peerd.test/api-catalog?case=api-reuse-repeat"
+          "url": "https://git-fixture.mcdollar.test/api-catalog?case=api-reuse-repeat"
         },
         "checks": [
           {
@@ -412,13 +412,13 @@
             "type": "api_inspection",
             "at": 1792996934767,
             "lane": "api",
-            "origin": "https://git-fixture.peerd.test"
+            "origin": "https://git-fixture.mcdollar.test"
           },
           {
             "type": "api_contract",
             "at": 1792996934808,
             "lane": "api",
-            "origin": "https://git-fixture.peerd.test",
+            "origin": "https://git-fixture.mcdollar.test",
             "revision": "62d83ef0-0da9-4184-8d18-9ab9229670f9",
             "status": "validated",
             "eligibleCount": 1
@@ -435,7 +435,7 @@
             "type": "api_run",
             "at": 1792996934879,
             "lane": "api",
-            "origin": "https://git-fixture.peerd.test",
+            "origin": "https://git-fixture.mcdollar.test",
             "revision": "62d83ef0-0da9-4184-8d18-9ab9229670f9",
             "operation": "lookup"
           },
@@ -443,7 +443,7 @@
             "type": "api_result",
             "at": 1792996934989,
             "lane": "api",
-            "origin": "https://git-fixture.peerd.test",
+            "origin": "https://git-fixture.mcdollar.test",
             "revision": "62d83ef0-0da9-4184-8d18-9ab9229670f9",
             "operation": "lookup",
             "inputValidated": true,
@@ -454,10 +454,10 @@
         "authoringDurationMs": 2823,
         "reuseDurationMs": 1355,
         "apiSelectorCalls": 1,
-        "captureReceipt": "<untrusted_web_content origin=\"https://git-fixture.peerd.test\" tool=\"site_capture\" retrieved_at=\"2026-10-26T06:42:12.235Z\">\nderiver: capture-tap\ncaptured origins (1):\norigin: https://git-fixture.peerd.test (owned tab)\n  auth posture: none\n  endpoints (1):\n    GET /api/items - query: material; → {\"available\":\"boolean\",\"id\":\"string\",\"name\":\"string\",\"price\":\"number\"}\n\nPersist only the https://git-fixture.peerd.test group here with site_client_write. For every other origin, report the attributed group and have the orchestrator delegate to that exact API actor to verify and derive its own client.\n</untrusted_web_content>",
+        "captureReceipt": "<untrusted_web_content origin=\"https://git-fixture.mcdollar.test\" tool=\"site_capture\" retrieved_at=\"2026-10-26T06:42:12.235Z\">\nderiver: capture-tap\ncaptured origins (1):\norigin: https://git-fixture.mcdollar.test (owned tab)\n  auth posture: none\n  endpoints (1):\n    GET /api/items - query: material; → {\"available\":\"boolean\",\"id\":\"string\",\"name\":\"string\",\"price\":\"number\"}\n\nPersist only the https://git-fixture.mcdollar.test group here with site_client_write. For every other origin, report the attributed group and have the orchestrator delegate to that exact API actor to verify and derive its own client.\n</untrusted_web_content>",
         "validationReceipt": {
           "schema": 1,
-          "origin": "https://git-fixture.peerd.test",
+          "origin": "https://git-fixture.mcdollar.test",
           "revision": "62d83ef0-0da9-4184-8d18-9ab9229670f9",
           "status": "validated",
           "validatedOperations": [
@@ -479,7 +479,7 @@
         },
         "typedResult": {
           "schema": 1,
-          "origin": "https://git-fixture.peerd.test",
+          "origin": "https://git-fixture.mcdollar.test",
           "revision": "62d83ef0-0da9-4184-8d18-9ab9229670f9",
           "operation": "lookup",
           "inputValidated": true,

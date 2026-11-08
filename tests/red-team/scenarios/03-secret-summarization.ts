@@ -6,7 +6,7 @@
 // is the dangerous combination of untrusted input, a secret, and an outbound
 // channel in one reasoning context.
 //
-// peerd blocks this with credential custody, an isolated heap where the browser
+// mcdollar blocks this with credential custody, an isolated heap where the browser
 // provides one, and a structural data fence:
 //   1. Every actor loop receives throwing credential stubs. The service worker
 //      restores live functions only at the provider call boundary.
@@ -18,12 +18,12 @@ import {
 } from '../harness.ts';
 import {
   makeActorSummaryFence, makeInMemorySessions, runActorLoop,
-} from '../../../extension/peerd-runtime/actor/actor-worker-core.js';
+} from '../../../extension/mcdollar-runtime/actor/actor-worker-core.js';
 import { createActorModelEgress } from '../../../extension/offscreen/actor-model-egress.js';
-import { ActorCredentialBoundaryError } from '../../../extension/peerd-runtime/errors.js';
-import { wrapUntrusted, neutralizeFence } from '../../../extension/peerd-runtime/tools/prompt-wrap.js';
-import { makeTurnAuthorityDriver } from '../../../extension/peerd-runtime/loop/turn-authority-driver.js';
-import { appSearchTool } from '../../../extension/peerd-runtime/tools/defs/app-search.js';
+import { ActorCredentialBoundaryError } from '../../../extension/mcdollar-runtime/errors.js';
+import { wrapUntrusted, neutralizeFence } from '../../../extension/mcdollar-runtime/tools/prompt-wrap.js';
+import { makeTurnAuthorityDriver } from '../../../extension/mcdollar-runtime/loop/turn-authority-driver.js';
+import { appSearchTool } from '../../../extension/mcdollar-runtime/tools/defs/app-search.js';
 
 const identity = <T>(value: T): T => value;
 

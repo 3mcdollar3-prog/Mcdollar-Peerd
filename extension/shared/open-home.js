@@ -8,7 +8,7 @@ const HOME_PATH = 'home/home.html';
 
 /**
  * The Home tab to focus: one in the caller's window, the pinned one first,
- * else the first one in any window. With "Keep peerd as the first tab" on,
+ * else the first one in any window. With "Keep mcdollar as the first tab" on,
  * every window has one, and a jump to another window would lose the user.
  * @template {{ windowId?: number, pinned?: boolean }} T
  * @param {T[]} homes @param {number | undefined} windowId

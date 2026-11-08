@@ -39,7 +39,7 @@ export const PACKAGED_MANDATORY_LAZY_MODULE_ENTRIES = Object.freeze([
   'background/firefox-storage-keepalive.js',
   'background/direct-actor-host.js',
   'background/repository-local-client.js',
-  'peerd-egress/ui.js',
+  'mcdollar-egress/ui.js',
   'sidepanel/components/vault-gate.js',
   'home/discover-section.js',
   'sidepanel/components/vault-code-stream.js',
@@ -51,17 +51,17 @@ export const PACKAGED_MANDATORY_LAZY_MODULE_ENTRIES = Object.freeze([
   'offscreen/web-extract-core.js',
   'offscreen/artifact-host.js',
   'offscreen/artifact-worker.js',
-  'peerd-engine/artifact.js',
+  'mcdollar-engine/artifact.js',
   'offscreen/local-model.js',
-  'peerd-runtime/offscreen.js',
-  'peerd-runtime/voice/transcriber-picker.js',
+  'mcdollar-runtime/offscreen.js',
+  'mcdollar-runtime/voice/transcriber-picker.js',
   'offscreen/doc-extract.js',
   'offscreen/document-conversion-worker.js',
   'offscreen/web-extract.js',
   // Firefox event pages load this directly on first repository use; Chrome
   // reaches the same graph through repository-host.js.
-  'peerd-engine/repository.js',
-  'peerd-engine/export.js',
+  'mcdollar-engine/repository.js',
+  'mcdollar-engine/export.js',
 
   // Vendor module roots selected by authored runtime loaders.
   'vendor/cheerpx/cx.esm.js',
@@ -103,14 +103,14 @@ export const PACKAGED_PREVIEW_LAZY_MODULE_ENTRIES = Object.freeze([
   'background/kernel-contributor-owner.js',
   'offscreen/contributor-channel-addon.js',
   'offscreen/semantic-routes/contributor.js',
-  'peerd-runtime/controller-contributor.js',
+  'mcdollar-runtime/controller-contributor.js',
   'shared/contributor-channel.js',
 ] as const);
 
 export const PACKAGED_PREVIEW_CHROME_LAZY_MODULE_ENTRIES = Object.freeze([
   // Only Preview Chrome has the mesh host and distributed implementation.
   'offscreen/dweb-base.js',
-  'peerd-distributed/index.js',
+  'mcdollar-distributed/index.js',
 ] as const);
 
 export const PACKAGED_UNAVAILABLE_RUNTIME_MODULE_EDGES = Object.freeze([
@@ -144,7 +144,7 @@ export const PACKAGED_LAZY_MODULE_ENTRIES = Object.freeze([
   ...PACKAGED_PREVIEW_CHROME_LAZY_MODULE_ENTRIES,
 ] as const);
 
-// Fixed assets selected by runtime and vendor-controlled loaders outside Peerd's
+// Fixed assets selected by runtime and vendor-controlled loaders outside Mcdollar's
 // static graph. Packaging verifies byte presence rather than treating opaque
 // vendor selection as an authored ES-module graph.
 export const PACKAGED_LAZY_ASSET_ENTRIES = Object.freeze([
@@ -157,7 +157,7 @@ export const PACKAGED_LAZY_ASSET_ENTRIES = Object.freeze([
   'vendor/cheerpx/cxcore-no-return-call.js',
   'vendor/cheerpx/cxcore-no-return-call.wasm',
   'vendor/cheerpx/workerclock.js',
-  // Linux.create requires these imports to resolve even though Peerd never
+  // Linux.create requires these imports to resolve even though Mcdollar never
   // initializes the optional Tailscale implementation behind the auto entry.
   'vendor/cheerpx/tun/direct.js',
   'vendor/cheerpx/tun/tailscale_tun_auto.js',

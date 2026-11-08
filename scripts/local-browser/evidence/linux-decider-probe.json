@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "evidenceClass": "real-model-single-decision",
   "recordedDate": "2026-10-26",
-  "description": "A real Decider GGUF model selected one action from a synthetic Peerd observation through the production prototype HTTP adapter. The reusable Node probe repeated the decision.",
+  "description": "A real Decider GGUF model selected one action from a synthetic Mcdollar observation through the production prototype HTTP adapter. The reusable Node probe repeated the decision.",
   "limitations": [
     "Linux x86_64 CPU measurement; not a Mac benchmark.",
     "One synthetic observation; no browser task was executed by these probes.",

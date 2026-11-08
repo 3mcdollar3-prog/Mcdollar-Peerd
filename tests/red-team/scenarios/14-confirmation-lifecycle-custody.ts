@@ -4,9 +4,9 @@ import {
   type Probe, type Scenario, blocked, leaked, summarize,
 } from '../harness.ts';
 import { makeConfirmAnswerRoute } from '../../../extension/background/kernel-confirmation.js';
-import { makeConfirmCoordinator } from '../../../extension/peerd-egress/confirm/protocol.js';
-import { makeDispatchTracker } from '../../../extension/peerd-runtime/lifecycle/dispatch-tracking.js';
-import { createOperationLog } from '../../../extension/peerd-runtime/lifecycle/operation-log.js';
+import { makeConfirmCoordinator } from '../../../extension/mcdollar-egress/confirm/protocol.js';
+import { makeDispatchTracker } from '../../../extension/mcdollar-runtime/lifecycle/dispatch-tracking.js';
+import { createOperationLog } from '../../../extension/mcdollar-runtime/lifecycle/operation-log.js';
 
 const confirmationProbe = async (): Promise<Probe> => {
   let prompt: any = null;

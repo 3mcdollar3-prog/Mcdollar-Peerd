@@ -101,12 +101,12 @@ export const SessionsView = {
         else {
           ui.effectUnconfirmed = reply?.outcomeKnown === false;
           ui.error = ui.effectUnconfirmed
-            ? `Peerd could not confirm whether ${action} finished. Refresh chats to reconcile before trying again.`
-            : `Peerd could not ${action}. Try again.`;
+            ? `Mcdollar could not confirm whether ${action} finished. Refresh chats to reconcile before trying again.`
+            : `Mcdollar could not ${action}. Try again.`;
         }
       } catch {
         ui.effectUnconfirmed = true;
-        ui.error = `Peerd could not confirm whether ${action} finished. Refresh chats to reconcile before trying again.`;
+        ui.error = `Mcdollar could not confirm whether ${action} finished. Refresh chats to reconcile before trying again.`;
       } finally {
         ui.effectBusy = false;
         m.redraw();

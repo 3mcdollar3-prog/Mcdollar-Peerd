@@ -18,7 +18,7 @@ describe('holdDiskLock', () => {
   });
 
   it('names the lock after the disk overlay key', () => {
-    expect(diskLockName('peerd-vm-vm-1-abc')).toBe('peerd-vm-disk:peerd-vm-vm-1-abc');
+    expect(diskLockName('mcdollar-vm-vm-1-abc')).toBe('mcdollar-vm-disk:mcdollar-vm-vm-1-abc');
   });
 
   it('reports a broken lock manager instead of refusing the boot', async () => {

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { useFakeIndexedDB } from '../setup.ts';
-import { createSiteClientStore } from '../../extension/peerd-runtime/site-clients/store.js';
+import { createSiteClientStore } from '../../extension/mcdollar-runtime/site-clients/store.js';
 import { createScriptRunRegistry } from '../../extension/background/script-runs.js';
 import { makeOffscreenActorClient } from '../../extension/background/offscreen-actor-client.js';
 import { runActor } from '../../extension/offscreen/actor-runner.js';
@@ -9,10 +9,10 @@ import {
   ACTOR_REALM_FACT_KEYS,
   ACTOR_WORKER_PROTOCOL,
 } from '../../extension/shared/actor-worker-protocol.js';
-import { projectControllerToolSurface } from '../../extension/peerd-runtime/controller-tool-projection.js';
+import { projectControllerToolSurface } from '../../extension/mcdollar-runtime/controller-tool-projection.js';
 import { canonicalCloneDigest } from '../../extension/shared/canonical-clone-digest.js';
 import { controllerDomainOperationPayloadCap } from '../../extension/shared/controller-kernel-quota.js';
-import { makeScriptedProviderAuthority } from '../peerd-provider/model-egress-fixture';
+import { makeScriptedProviderAuthority } from '../mcdollar-provider/model-egress-fixture';
 
 type ToolCall = { id: string; name: string; args: Record<string, unknown> };
 

@@ -353,7 +353,7 @@ export const makeVaultAuthorityClient = ({
         }
         matches[0].postMessage(offer, [port2]);
       } else {
-        worker = createWorker(workerUrl, { type: 'module', name: 'peerd-vault-authority' });
+        worker = createWorker(workerUrl, { type: 'module', name: 'mcdollar-vault-authority' });
         connection.worker = worker;
         worker.postMessage({
           type: VAULT_AUTHORITY_BOOTSTRAP,

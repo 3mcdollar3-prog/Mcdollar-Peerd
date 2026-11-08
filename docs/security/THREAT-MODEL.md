@@ -1,4 +1,4 @@
-# peerd threat model
+# mcdollar threat model
 
 > Status: 0.x experimental beta. This document describes the security
 > architecture as it exists in the code. Where this document and the code
@@ -14,7 +14,7 @@
 
 ## 1. Summary
 
-peerd is a browser-native AI agent shipped as a Chrome and Firefox extension. The
+mcdollar is a browser-native AI agent shipped as a Chrome and Firefox extension. The
 agent loop runs in the user's browser. It holds the user's model-provider API key
 (bring your own key) in an encrypted vault, drives the user's logged-in tabs and
 DOM, runs code in sandboxes (a WebAssembly Linux VM, sealed JS workers, opaque
@@ -28,7 +28,7 @@ anything useful.
 
 The core assumption is that an AI agent that reads attacker-controlled content
 will eventually be prompt-injected, and that no content filter reliably prevents
-this. peerd does not rely on filtering. Instead it separates untrusted reasoning
+this. mcdollar does not rely on filtering. Instead it separates untrusted reasoning
 from dangerous capability in three ways:
 
 1. Memory. Reasoning that reads a page runs in a separate dedicated worker heap.
@@ -50,7 +50,7 @@ out of the privileged background heap.
 
 ## 2. System surfaces
 
-peerd runs across several browser execution contexts. Trust boundaries fall
+mcdollar runs across several browser execution contexts. Trust boundaries fall
 between them.
 
 | Surface | What runs there | Credential access |
@@ -61,12 +61,12 @@ between them.
 | Offscreen document (`offscreen/`, Chrome) | A thin host supervisor for the sealed controller and isolated actor Workers, plus headless `script`, voice, and the dweb base network | No. Hosted Worker heaps are keyless |
 | Side panel (`sidepanel/`) | The chat UI, confirm prompts, settings | No |
 | Sandbox tabs (`engine-tabs/vm-tab/`, `engine-tabs/notebook-tab/`, `engine-tabs/app-tab/`) | WebVM (CheerpX), Notebook (sealed worker), App (opaque origin iframe) | No |
-| The mesh (`peerd-distributed/`, preview only) | WebRTC mesh, DHT, gossip, signed direct channels, A2A | No |
+| The mesh (`mcdollar-distributed/`, preview only) | WebRTC mesh, DHT, gossip, signed direct channels, A2A | No |
 
 The module map (`p`rovider, `e`gress, `e`ngine, `r`untime, `d`istributed) is in
 [`CLAUDE.md`](../../CLAUDE.md). Security-relevant code is concentrated in
-`peerd-egress/` (vault, egress, denylist, audit) and in the
-`peerd-runtime/actor/` and `peerd-runtime/tools/` layers (the heap split and
+`mcdollar-egress/` (vault, egress, denylist, audit) and in the
+`mcdollar-runtime/actor/` and `mcdollar-runtime/tools/` layers (the heap split and
 the gate stack).
 
 ---
@@ -75,10 +75,10 @@ the gate stack).
 
 ### 3.1 Actors
 
-peerd splits "the agent" into separate roles so that no single reasoning context
+mcdollar splits "the agent" into separate roles so that no single reasoning context
 holds both untrusted input and dangerous capability. Enforcement lives in
-`peerd-runtime/tools/exposure.js`, `peerd-runtime/tools/gates.js`, and
-`peerd-runtime/actor/`.
+`mcdollar-runtime/tools/exposure.js`, `mcdollar-runtime/tools/gates.js`, and
+`mcdollar-runtime/actor/`.
 
 | Actor | Trusted with | Not permitted to |
 |---|---|---|
@@ -94,7 +94,7 @@ holds both untrusted input and dangerous capability. Enforcement lives in
 - B1. Untrusted content and the orchestrator's heap. Page text, command output,
   file contents, and peer bytes are read in a separate keyless actor worker and
   return only as `wrapUntrusted`-fenced data
-  (`peerd-runtime/actor/actor-worker-core.js`,
+  (`mcdollar-runtime/actor/actor-worker-core.js`,
   `background/offscreen-actor-client.js`). A versioned readiness and realm probe
   must pass before work starts. Missing or failed isolation refuses the actor
   turn before any target action.
@@ -106,7 +106,7 @@ holds both untrusted input and dangerous capability. Enforcement lives in
   exact offscreen WindowClient. The job and relays never use extension-wide
   runtime messaging. Firefox binds the same relays to its private in-process host.
 - B3. The extension and the open web. All outbound bytes pass through
-  `peerd-egress/fetch/`: `safeFetch` (exact-origin provider allowlist, carries the
+  `mcdollar-egress/fetch/`: `safeFetch` (exact-origin provider allowlist, carries the
   key) or `webFetch` (SSRF and private-network block plus denylist, keyless).
 - B4. Sandboxed code and the host. The WebVM, Notebook worker, and App iframe each
   run confined to a realm whose only outward edge is an audited postMessage bridge,
@@ -136,11 +136,11 @@ malicious separate extension, and physical device access.
 |---|---|---|
 | Model-provider API key | Encrypted in the vault; decrypted only in the sealed vault Worker. An explicitly requested secret crosses its private channel only to the service worker's exact egress handler | Vault crypto (Argon2id or WebAuthn-PRF, AES-GCM), never handed to an actor loop, egress allowlist |
 | Origin-bound API keys (per integration) | Vault, injected at the egress boundary only | `origin-credentials.js`. Sent only to the exact owned https origin |
-| Proof-of-possession key (DPoP, per origin — opt-in per integration) | A non-extractable `CryptoKey` handle in IndexedDB — the key material never leaves the browser's crypto implementation and peerd never holds it as bytes | Non-extractable by construction, checked at generate and on every load (`usableDpopPrivateKey`; `exportKey` rejects for every caller, including us); usable only at the audited egress boundary, which mints a fresh per-request proof and never exposes one to the agent. Minted when the user saves a DPoP credential, retired when they remove it (INV-15) |
-| The user's session cookies (logged-in tabs) | The browser's cookie jar. peerd never reads cookies | Sensitive-origin denylist, Plan and Act mode, confirm gate |
+| Proof-of-possession key (DPoP, per origin — opt-in per integration) | A non-extractable `CryptoKey` handle in IndexedDB — the key material never leaves the browser's crypto implementation and mcdollar never holds it as bytes | Non-extractable by construction, checked at generate and on every load (`usableDpopPrivateKey`; `exportKey` rejects for every caller, including us); usable only at the audited egress boundary, which mints a fresh per-request proof and never exposes one to the agent. Minted when the user saves a DPoP credential, retired when they remove it (INV-15) |
+| The user's session cookies (logged-in tabs) | The browser's cookie jar. mcdollar never reads cookies | Sensitive-origin denylist, Plan and Act mode, confirm gate |
 | User authentication factor (login) | Never held by the agent — a passkey stays on the user's device; an SSO session stays with the provider; a password is never read or filled | The agent never holds it; a login is initiated only through a gated, origin-verified, always-confirmed, affordance-verified action (`tools/defs/login.js`, Tier 0). The factor stays with the user |
 | Page content the agent reads | Transiently, inside an actor loop | Credential custody, actor tool gates, the untrusted-content fence, and the B1 memory boundary where an isolated host is available |
-| Durable memory (notes loaded into every future prompt) | `peerd-runtime/memory/` | User-approved writes. The digest excludes tool results (see residual risk R2) |
+| Durable memory (notes loaded into every future prompt) | `mcdollar-runtime/memory/` | User-approved writes. The digest excludes tool results (see residual risk R2) |
 | Local files (WebVM filesystem, Notebook and App OPFS) | Sandbox-local storage | Per-instance OPFS root, path-traversal collapse, realm seal |
 | Peer bundles (dwapps, data, agent cards) | Received over the mesh | Content addressing, Ed25519 signatures, size and shape caps |
 | The agent's own authority (its tools, its delegation) | The orchestrator | Exposure and actor-tier gates, the sender gate, Plan and Act mode |
@@ -150,7 +150,7 @@ malicious separate extension, and physical device access.
 
 ## 5. Adversaries
 
-Each adversary lists what it can do, peerd's primary defenses with the enforcing
+Each adversary lists what it can do, mcdollar's primary defenses with the enforcing
 file, and the [red-team scenario](../../tests/red-team/) that exercises the
 defense.
 
@@ -168,10 +168,10 @@ the page cannot forge (`tools/prompt-wrap.js`).
 Proven by: scenarios 01, 02, 03, 07, 08.
 
 ### 5.2 Malicious MCP server (mapped)
-peerd ships no MCP client. The only `mcp` occurrence in `extension/` is a substring
+mcdollar ships no MCP client. The only `mcp` occurrence in `extension/` is a substring
 inside vendored `moonshine.js`. The named vector is not a live surface. Its threat,
 which is untrusted external tool metadata or instructions that make the agent act on
-an attacker's behalf, maps onto peerd's real analog: the A2A and inbound-mesh surface
+an attacker's behalf, maps onto mcdollar's real analog: the A2A and inbound-mesh surface
 (agent-cards and peer messages).
 Defenses (the analogs of MCP tool-description sanitization): the sender gate
 (`actor/delegation-lineage.js` `mayMessageActor`) makes an inbound turn unable to
@@ -209,11 +209,11 @@ model, host, and credential fields at the call boundary.
 Proven by: scenarios 03, 08 (and 05 for delegation).
 
 ### 5.5 Malicious extension (out of scope, see section 7)
-A second extension installed alongside peerd, or a compromise of peerd's own
+A second extension installed alongside mcdollar, or a compromise of mcdollar's own
 extension origin, is out of scope. Such code already runs in-origin and can reach
 service worker memory, including the live key, directly. This is stated as an
 accepted limitation (R7), not defended against. Store hardening (no `debugger`
-permission in the store Chrome build, a strict CSP) reduces peerd's own attack
+permission in the store Chrome build, a strict CSP) reduces mcdollar's own attack
 surface but does not defend against a separate malicious extension.
 
 ### 5.6 Compromised dependency (supply chain)
@@ -222,7 +222,7 @@ JavaScript module could inject code.
 Defenses (partial): there is no npm runtime inside the extension. Third-party code is
 vendored in `vendor/` with a `SOURCE.txt`. The Moonshine voice model is SHA-384
 SRI-verified and refuses to load on a null SRI
-(`peerd-runtime/voice/model-store.js`). Store and web builds refuse direct
+(`mcdollar-runtime/voice/model-store.js`). Store and web builds refuse direct
 remote JavaScript imports without requesting the module source. On package
 targets where Preview enables literal static remote modules, they cross the
 audited web-fetch path, have source and graph
@@ -262,7 +262,7 @@ A request carrying the vault key (`safeFetch`) reaches only an exact-origin memb
 of the provider allowlist, and fails closed on any 3xx redirect. Lookalikes,
 substrings, scheme downgrades, and off-origin ports are refused, and the underlying
 `fetch` never fires on a denied origin.
-Code: `peerd-egress/fetch/safe-fetch.js` (`makeSafeFetch`, `isAllowed`, `originOf`),
+Code: `mcdollar-egress/fetch/safe-fetch.js` (`makeSafeFetch`, `isAllowed`, `originOf`),
 `fetch/allowlist.js` (frozen `HARDCODED_ALLOWLIST`). Red-team: scenario 01.
 
 <a id="inv-2"></a>
@@ -273,7 +273,7 @@ substring sibling, and port and trailing-dot are canonicalized away). An
 origin-bound credential authenticates only when the request's `URL.origin` exactly
 equals the actor's owned origin over https. Cross-origin, http, and spoofed URLs send
 anonymously.
-Code: `peerd-egress/denylist/denylist.js`, `fetch/web-fetch.js`,
+Code: `mcdollar-egress/denylist/denylist.js`, `fetch/web-fetch.js`,
 `fetch/origin-credentials.js` (`authOriginForRequestUrl`). Red-team: scenario 02.
 
 <a id="inv-3"></a>
@@ -284,7 +284,7 @@ only at the model provider boundary. A worker cannot pass functions across its
 relay because `makeRelayedCallModel` drops them. Every untrusted summary re-enters the
 orchestrator wrapped as data (`makeActorSummaryFence` and `wrapUntrusted`) with a
 delimiter the content cannot forge (`neutralizeFence`).
-Code: `peerd-runtime/actor/actor-worker-core.js`,
+Code: `mcdollar-runtime/actor/actor-worker-core.js`,
 `background/offscreen-actor-client.js`, `background/offscreen-actor-channel-client.js`,
 `background/direct-actor-host.js`, `offscreen/actor-channel-host.js`,
 `offscreen/actor-runner.js`, `shared/actor-worker-protocol.js`, and
@@ -301,7 +301,7 @@ Tampering any signed field breaks `verifyManifest` and changes the address, so i
 cannot reuse an honest one. Re-attributing to a different publisher breaks the
 signature. An oversized, amplified, or size-lying manifest is refused before any
 chunk is fetched, and a peer agent-card is coerced within hard caps.
-Code: `peerd-distributed/content/manifest.js`, `identity/keypair.js`,
+Code: `mcdollar-distributed/content/manifest.js`, `identity/keypair.js`,
 `agent-card.js`. Red-team: scenario 04.
 
 <a id="inv-5"></a>
@@ -316,7 +316,7 @@ wall covers EVERY door to delegation, not only the direct `message_actor` tool: 
 an inbound turn (`tools/defs/script.js` gates `actorsOn` on
 `ctx.inbound !== true` — the trusted turn signal folded SW-side; the untrusted worker
 never echoes it).
-Code: `peerd-runtime/actor/delegation-lineage.js` (`mayMessageActor`,
+Code: `mcdollar-runtime/actor/delegation-lineage.js` (`mayMessageActor`,
 `buildAncestry`), `tools/defs/script.js`, `actor/a2a-api.js`. Red-team: scenario 05.
 
 <a id="inv-6"></a>
@@ -325,12 +325,12 @@ In a Notebook or headless worker realm, every raw network channel throws, the na
 `fetch` is deleted off the prototype chain, and the bridge is pinned non-writable and
 non-configurable so in-realm sabotage cannot unseat it. Same-origin durable stores are
 sealed too — `indexedDB` (the sealed worker runs at the extension origin, so an unsealed
-IDBFactory would reach the `peerd` database: the vault blob, always-loaded memory,
+IDBFactory would reach the `mcdollar` database: the vault blob, always-loaded memory,
 sessions, grants, and audit) and the Cache API are both replaced with throwing stubs and
 deleted off the prototype chain, so the audited postMessage bridge and the per-instance
 OPFS root remain the only outward edges. No fresh un-sealed realm can
 be created, and OPFS import paths collapse `..` inside the instance root. A wasm32-wasi
-module run in that realm via the `peerd:wasi` builtin holds strictly less than the realm
+module run in that realm via the `mcdollar:wasi` builtin holds strictly less than the realm
 itself: its only imports are the vendored shim's WASI preview1 syscalls, and every
 descriptor behind them is wrapper-built (stdin bytes, size-capped output collectors, an
 in-memory file table from the call) — no network channel exists for the seal to even
@@ -349,9 +349,9 @@ output.
 Code: `engine-tabs/notebook-tab/notebook-neutralizers.js` (`applyRealmSeal`),
 `engine-tabs/notebook-tab/worker-source.js`,
 `engine-tabs/notebook-tab/notebook-tab.js`, `offscreen/job-runner.js`,
-`peerd-runtime/tools/defs/js-notebook.js`, `peerd-runtime/tools/defs/script.js`,
-`peerd-engine/app-compose.js`, `peerd-engine/vm-net/http-bridge.js`,
-`peerd-engine/module-resolver.js`, `peerd-egress/denylist/dnr-rules.js`,
+`mcdollar-runtime/tools/defs/js-notebook.js`, `mcdollar-runtime/tools/defs/script.js`,
+`mcdollar-engine/app-compose.js`, `mcdollar-engine/vm-net/http-bridge.js`,
+`mcdollar-engine/module-resolver.js`, `mcdollar-egress/denylist/dnr-rules.js`,
 `background/kernel-turn-authority-adapter.js` (`attachAppTabActor`), and the manifest sandbox CSP.
 Red-team: scenario 06,
 with the real-realm proof in
@@ -360,7 +360,7 @@ with the real-realm proof in
 `extension/tests/unit/red-team/sandbox-escape.test.js`.
 
 <a id="inv-7"></a>
-### INV-7. Peerd-controlled and browser-enforceable channels refuse private targets
+### INV-7. Mcdollar-controlled and browser-enforceable channels refuse private targets
 `webFetch` and the credential-bearing repository egress wrapper refuse a host classified as private, loopback, link-local, `.local`, or
 metadata by `isPrivateOrLocalHost`, across decimal, hex, octal, and short-form IPv4 and
 IPv4-mapped and NAT64 IPv6 encodings — plus the RFC 6598 shared/CGNAT (`100.64.0.0/10`),
@@ -373,7 +373,7 @@ Browser automation applies the same lexical classifier before navigation and
 to the committed document. Driven tabs also receive tab-scoped DNR rules for
 private hosts and address ranges, covering redirects, forms, frames, and
 tab-associated requests at the browser network layer. While a public HTTP or
-HTTPS page is under peerd custody, a second private-network rule set covers
+HTTPS page is under mcdollar custody, a second private-network rule set covers
 requests that the browser attributes to no tab when their initiator domain
 matches a public domain visited by the driven tab. This covers page service-worker fetches and
 Firefox worker WebSockets without applying a browser-wide rule. Chrome DNR does
@@ -383,13 +383,13 @@ enforced product invariant; the live regression test records it without gating
 on the browser changing behavior. The scope follows browser DNR
 domain matching, so it ignores scheme and port and can include subdomains. A
 user-owned tab with the same matching domain can therefore lose private-network
-service-worker fetch access while peerd drives that domain. peerd does not prompt, unregister
+service-worker fetch access while mcdollar drives that domain. mcdollar does not prompt, unregister
 the worker, or take exclusive control of the origin. Visited domains persist in
 browser-session storage and remain covered until that tab's custody ends.
 
 A page-created child is
 blanked and guarded only when `webNavigation` reports that its exact source tab
-is already under peerd custody. Firefox also synchronously cancels private,
+is already under mcdollar custody. Firefox also synchronously cancels private,
 local, metadata, or denylisted HTTP and WebSocket requests from that exact child
 while its tab-scoped DNR rules are being installed, then releases the temporary
 listener state for that child. It does not read request bodies or act on children
@@ -397,16 +397,16 @@ from user-owned tabs. If actor custody restores before denylist hydration, that
 exact child waits instead of treating an empty policy as permission. A protected
 child is closed after the network guard takes custody. A missing or malformed
 bundled denylist pauses tool dispatch instead of authorizing an empty policy for
-browser or open-web work. The tab rules never apply to tabs peerd is not driving.
+browser or open-web work. The tab rules never apply to tabs mcdollar is not driving.
 The no-tab companion is limited to domains visited by current driven tabs and
 private-network targets. During a service-worker restart, early adoption requires two positive
 signals for the exact source: restored durable custody or a restored web-actor
 binding, plus the complete surviving private-network DNR rule set.
 `background/startup-popup-network-guard.js` copies only those known block rules
 to the exact child, then hands it to the restored custody set. If either signal
-is absent, peerd leaves the child unchanged until its registries finish loading.
+is absent, mcdollar leaves the child unchanged until its registries finish loading.
 This avoids interfering with a user popup, but leaves a short cold-start window
-for an autonomous child if the browser lost its session rules while peerd's
+for an autonomous child if the browser lost its session rules while mcdollar's
 later registry restore still identifies the source as driven. A page-initiated
 cross-origin redirect can also begin before the browser reports the new committed
 URL and adds its no-tab domain scope. DNS resolution and rebinding remain
@@ -421,12 +421,12 @@ original combined child probe could not attribute a TCP connection to either
 operation. With native local-network checks
 disabled, Chrome can also start an inherited about:blank child's immediate
 private request before the extension receives enough child identity to close it.
-Code: `shared/private-network.js`, `peerd-egress/fetch/web-fetch.js`,
+Code: `shared/private-network.js`, `mcdollar-egress/fetch/web-fetch.js`,
 `background/kernel-demand-plane.js`,
-`peerd-egress/denylist/dnr-rules.js`, `background/denylist-net-guard.js`,
+`mcdollar-egress/denylist/dnr-rules.js`, `background/denylist-net-guard.js`,
 `background/browser-origin-custody.js`,
 `background/driven-child-request-guard.js`, `background/startup-popup-network-guard.js`,
-`peerd-runtime/tools/browser-automation-policy.js`, and
+`mcdollar-runtime/tools/browser-automation-policy.js`, and
 `offscreen/pdf-extract.js`. Red-team: scenario 07.
 
 <a id="inv-8"></a>
@@ -466,7 +466,7 @@ this invariant exists to close. Text hidden with CSS is out of scope entirely: t
 are ordinary visible characters. The comment-removal pass is applied
 only where a comment is genuinely a comment (markup), never to JSON or plain text
 where `<!--` is visible content.
-Code: `peerd-runtime/dom/cdr.js`, wired at `tools/prompt-wrap.js`,
+Code: `mcdollar-runtime/dom/cdr.js`, wired at `tools/prompt-wrap.js`,
 `tools/defs/fetch-url.js`, `tools/defs/read-page.js`, `background/kernel-memory-init-probe.js`,
 `skills/registry.js`. Red-team: scenario 09.
 
@@ -478,7 +478,7 @@ posture in which the rule means anything. Reads are exempt (reading is the point
 sending an actor there) and so is navigation (leaving is how it finishes). The zone is
 classified from the tab's live URL rather than a turn-start pin, because an in-page
 hop moves the page with no tool call to observe.
-Code: `peerd-runtime/actor/ugc-registry.js`, enforced in
+Code: `mcdollar-runtime/actor/ugc-registry.js`, enforced in
 `background/page-tool-authority.js`.
 Red-team: scenario 09.
 
@@ -501,17 +501,17 @@ label, never the raw captured phrase. SSO for a provider outside the identity-pr
 registry is refused without a click or actor stop. A password affordance is refused
 because Tier 0 holds no credentials.
 
-**The auto-click rule.** peerd AUTO-CLICKS a login only when it has (a) VERIFIED the
+**The auto-click rule.** mcdollar AUTO-CLICKS a login only when it has (a) VERIFIED the
 destination is a known IdP (an href/formAction host that passes `isKnownIdp`), (b)
 pinned a STABLE `walkId` (a snapshot registry node the page cannot re-point; a raw
 selector or a CDP-only backend ref is not stable across confirmation), and
 (c) RE-VERIFIED, AFTER the consent, that the live origin is unchanged and a re-read via
 the SAME walkId re-classifies to the identical verdict (method/provider/verified) —
 aborting on any change (`login_origin_changed` / `login_affordance_changed` /
-`login_target_gone`). Everything else is ASSISTED-MANUAL: peerd verified the origin and
+`login_target_gone`). Everything else is ASSISTED-MANUAL: mcdollar verified the origin and
 took consent, then hands the gesture to the user. A recognized provider NAME with an
 unverified (or unverifiable) destination is supported-but-unverified — never an
-auto-click under the "peerd never sees your password" reassurance; the confirm carries
+auto-click under the "mcdollar never sees your password" reassurance; the confirm carries
 `verified:false` and the card softens its copy and does not vouch for the destination.
 A passkey is ALWAYS assisted-manual at Tier 0: WebAuthn needs transient user activation,
 which only a TRUSTED (CDP) click grants, and that channel resolves the node by a
@@ -528,7 +528,7 @@ BEST-EFFORT — it proves the element's declared navigation target (its href, or
 SUBMIT control only, its form action) is a known IdP, but a script `onclick` can still do
 something other than that declared target. So an auto-click carries the residual that a
 verified-looking button runs a different handler. This is bounded by the exact-origin
-grant and landing wait, and by the fact that peerd only auto-clicks and never fills a
+grant and landing wait, and by the fact that mcdollar only auto-clicks and never fills a
 credential. The worst case is a same-origin action on the origin the user already
 consented to interact with, not a credential leak.
 
@@ -541,20 +541,20 @@ later request only after the same tab returns to the exact relying-site origin. 
 expired or replayed authorization, malformed state, or legacy excursion state stops the
 actor. The grant and active excursion survive a service-worker restart without widening
 their authority.
-Code: `peerd-runtime/tools/defs/login.js`, `peerd-runtime/tools/login-affordance.js`,
-`peerd-runtime/tools/exposure.js`, `peerd-runtime/actor/idp-registry.js`,
-`peerd-runtime/actor/origin-lock.js`, and `peerd-runtime/actor/landing-rule.js`.
+Code: `mcdollar-runtime/tools/defs/login.js`, `mcdollar-runtime/tools/login-affordance.js`,
+`mcdollar-runtime/tools/exposure.js`, `mcdollar-runtime/actor/idp-registry.js`,
+`mcdollar-runtime/actor/origin-lock.js`, and `mcdollar-runtime/actor/landing-rule.js`.
 Red-team: scenarios 10 and 11.
 
 <a id="inv-15"></a>
 ### INV-15. A proof-of-possession credential cannot be exfiltrated
 **Status: opt-in and reachable.** A user turns this on per integration in Settings →
-API integrations by saving a credential with the **DPoP** auth style; peerd mints
+API integrations by saving a credential with the **DPoP** auth style; mcdollar mints
 that origin's keypair at that moment and shows the public `jkt` thumbprint to
 register with the authorization server. Bearer remains the default and the fallback.
 What follows is the guarantee for an origin that has it on.
 
-peerd holds a HANDLE to a key it cannot read. A DPoP (RFC 9449) private key is
+mcdollar holds a HANDLE to a key it cannot read. A DPoP (RFC 9449) private key is
 generated with `extractable: false`, so no in-origin code — not the agent, not a
 prompt-injected or outright compromised service worker, not a co-extension that
 somehow reached our IndexedDB — can ever export it: `crypto.subtle.exportKey` on it
@@ -595,7 +595,7 @@ is bound to one request at one moment and cannot be replayed against another. Pr
 are minted ONLY at the service worker's egress chokepoint: they never reach the
 agent, never enter an actor heap, and do not outlive the request. The binding rules
 are the origin-credential rules unchanged — same-origin and https ONLY
-(`authOriginForRequestUrl`), so peerd never signs a statement about a URL the actor
+(`authOriginForRequestUrl`), so mcdollar never signs a statement about a URL the actor
 does not own and never over cleartext. Every failure mode is fail-closed and SILENT:
 a locked vault, an absent key, or a failed signature sends the request ANONYMOUS with
 no throw, and the token is never sent unsigned as a consolation prize (the bearer
@@ -622,20 +622,20 @@ incapable of reaching another server and is never persisted. The remaining gap o
 side is key ROTATION, which is manual: a key lives until the integration is removed,
 so rotating one means removing and re-adding the credential (and re-registering the
 new thumbprint).
-Code: `peerd-egress/dpop/proof.js` (pure canonicalization), `peerd-egress/dpop/keys.js`
+Code: `mcdollar-egress/dpop/proof.js` (pure canonicalization), `mcdollar-egress/dpop/keys.js`
 (`generateDpopKeypair`'s non-negotiable `false`, `usableDpopPrivateKey`, the
-mint/read/retire lifecycle), `peerd-egress/dpop/nonce.js` (the pure §8 retry
+mint/read/retire lifecycle), `mcdollar-egress/dpop/nonce.js` (the pure §8 retry
 decisions + the bounded per-origin nonce cache),
-`peerd-egress/fetch/web-fetch.js` (`withDpopCredentials`, which sequences them),
-`peerd-egress/fetch/origin-credentials.js`,
-`peerd-egress/fetch/origin-credential-routes.js` (provision / surface the `jkt` /
+`mcdollar-egress/fetch/web-fetch.js` (`withDpopCredentials`, which sequences them),
+`mcdollar-egress/fetch/origin-credentials.js`,
+`mcdollar-egress/fetch/origin-credential-routes.js` (provision / surface the `jkt` /
 revoke), `extension/options/sections/api-integrations.js` (the user-facing choice).
-Tested: `tests/peerd-egress/dpop.test.ts` (against real WebCrypto — the load-bearing
+Tested: `tests/mcdollar-egress/dpop.test.ts` (against real WebCrypto — the load-bearing
 case is that `exportKey` on the private key rejects),
-`tests/peerd-egress/dpop-nonce.test.ts` (the §8 dance — the load-bearing cases are
+`tests/mcdollar-egress/dpop-nonce.test.ts` (the §8 dance — the load-bearing cases are
 that the retry happens exactly ONCE and that the retried proof is a genuinely new
 signature over the new claims, verified for real), and
-`extension/tests/unit/peerd-egress/dpop-key-idb.test.js` (in-browser, real
+`extension/tests/unit/mcdollar-egress/dpop-key-idb.test.js` (in-browser, real
 IndexedDB — the handle survives a genuine structured-clone store→evict→load cycle
 still non-extractable, still `exportKey`-rejecting, and still signing a proof that
 verifies against its persisted public key; the Bun tier can only prove this over a
@@ -664,8 +664,8 @@ This stage has no uploader, endpoint, alarm, collector origin, or network primit
 Store and web channels register no Contributor Metrics routes or UI. A later uploader
 is a separate security boundary and cannot inherit consent if the disclosure version
 changes.
-Code: `peerd-runtime/observability/contributor-metrics.js`,
-`peerd-runtime/observability/contributor-store.js`,
+Code: `mcdollar-runtime/observability/contributor-metrics.js`,
+`mcdollar-runtime/observability/contributor-store.js`,
 `background/kernel-contributor-owner.js`,
 `background/kernel-contributor-feedback-guard.js`,
 `offscreen/semantic-routes/contributor.js`, and
@@ -683,7 +683,7 @@ microphone prompt begins. OCR and local WebGPU controls refuse before downloads.
 Artifacts without a dweb mesh host omit the dweb module, controls, defaults,
 and model tools.
 
-Code: `peerd-runtime/runtime-capabilities.js`, `peerd-runtime/tools/gates.js`,
+Code: `mcdollar-runtime/runtime-capabilities.js`, `mcdollar-runtime/tools/gates.js`,
 `background/kernel-turn-authority-adapter.js`, `packaging/gen-channel-config.ts`.
 Red-team: scenario 08.
 
@@ -713,7 +713,7 @@ reauthorizes on every operation and again immediately before network IO. Capture
 may observe a common `api.` sibling, but its digest retains exact-origin
 attribution and calls it separate custody; only that origin's actor may verify
 and persist its client.
-Code: `peerd-runtime/actor/origin-lock.js` (`mayUseSiteClientOrigin`),
+Code: `mcdollar-runtime/actor/origin-lock.js` (`mayUseSiteClientOrigin`),
 `tools/gates.js`, `tools/defs/site-client-{read,run,write}.js`, and
 `tools/defs/site-capture.js`. Red-team:
 scenario 13.
@@ -745,9 +745,9 @@ to the ordinary origin already bound and stops the actor before page access.
 Refusals expose only the canonical origin and a machine-authored recovery rule.
 They never expose the path, query, title, or other page-authored text.
 
-Code: `peerd-runtime/actor/numeric-tab-authority.js`,
-`peerd-runtime/actor/idp-registry.js`, `peerd-runtime/actor/landing-rule.js`, and
-`peerd-runtime/actor/actor-messaging.js`.
+Code: `mcdollar-runtime/actor/numeric-tab-authority.js`,
+`mcdollar-runtime/actor/idp-registry.js`, `mcdollar-runtime/actor/landing-rule.js`, and
+`mcdollar-runtime/actor/actor-messaging.js`.
 Red-team: scenario 10.
 
 <a id="inv-20"></a>
@@ -766,12 +766,12 @@ is scoped to the owning root chat and normalized external target. Repeating the
 same uncertain action through a sibling actor therefore requires a new exact
 user confirmation. A different root chat or external target remains independent.
 
-Code: `peerd-egress/confirm/protocol.js`, `background/routes/vault.js`,
-`peerd-runtime/lifecycle/dispatch-tracking.js`,
-and `peerd-runtime/tools/dispatcher.js`. Red-team: scenario 14.
+Code: `mcdollar-egress/confirm/protocol.js`, `background/routes/vault.js`,
+`mcdollar-runtime/lifecycle/dispatch-tracking.js`,
+and `mcdollar-runtime/tools/dispatcher.js`. Red-team: scenario 14.
 
 ### INV-21. A site's stated pause is a control-plane fact the model cannot move
-When a site answers that peerd is asking too often, the pause it asked for is
+When a site answers that mcdollar is asking too often, the pause it asked for is
 recorded against that exact canonical origin and honored before the next
 request. Only the egress choke point, holding a real `Response`, may create or
 raise a rule: page text, a tool result, and a model instruction cannot. Nothing
@@ -782,12 +782,12 @@ explicit human forget on the settings page.
 The recorded deadline is absolute and anchored to the response that named it, so
 it survives a service-worker restart and cannot be shortened by a later, smaller
 answer. No adjustment may move an action earlier than that deadline. Past the
-inline ceiling peerd stops rather than sleeping: the refusal ends the turn, and
+inline ceiling mcdollar stops rather than sleeping: the refusal ends the turn, and
 because the deadline is durable state keyed by origin rather than by session,
 retrying it or delegating to a fresh actor reaches the same refusal. Pacing state
 that cannot be read refuses browser writes rather than reading as "no limits".
 
-Code: `peerd-runtime/pacing/`, `peerd-egress/fetch/web-fetch.js`,
+Code: `mcdollar-runtime/pacing/`, `mcdollar-egress/fetch/web-fetch.js`,
 `background/kernel-turn-authority-adapter.js`, `background/routes/paced-origins.js`.
 Red-team: scenario 15.
 
@@ -798,18 +798,18 @@ Red-team: scenario 15.
   wrong-versus-tampered side channel, and never rewrites the blob. The key is never
   returned to a caller. Both unlock factors (Argon2id and WebAuthn-PRF) recover the same
   key. A tampered or out-of-bounds KDF descriptor is rejected before any derive runs.
-  Code: `peerd-egress/vault/`. Tested: `tests/peerd-egress/vault-*.test.ts`,
-  `extension/tests/unit/peerd-egress/vault*.test.js`.
+  Code: `mcdollar-egress/vault/`. Tested: `tests/mcdollar-egress/vault-*.test.ts`,
+  `extension/tests/unit/mcdollar-egress/vault*.test.js`.
 - INV-10. The store build is minimal. The store Chrome package never ships `debugger`.
   Every Firefox package drops Chrome-only permissions. The store artifact contains zero
-  `peerd-distributed` traces. Code: `packaging/gen-manifest.ts`
+  `mcdollar-distributed` traces. Code: `packaging/gen-manifest.ts`
   (`STORE_STRIPPED_PERMISSIONS`), `packaging/verify-store-artifact.ts`. Tested:
   `tests/store/`, CI.
 - INV-11. There is exactly one egress path per class. A bare `fetch` is forbidden by
   lint. The credentialed path (`safeFetch`) and the open-web path (`webFetch`) are
   separate wrappers, so VM and app traffic can never reach the provider allowlist or
   the API key. Code: `eslint.config.js` (`no-restricted-globals`),
-  `peerd-egress/fetch/`.
+  `mcdollar-egress/fetch/`.
 
 ---
 
@@ -830,14 +830,14 @@ Red-team: scenario 15.
 
 ### Out of scope
 - An already-compromised OS or browser, or a malicious extension installed alongside
-  peerd. Both already have in-origin or in-process reach. See R7.
+  mcdollar. Both already have in-origin or in-process reach. See R7.
 - Physical access to an unlocked device.
 - Self-inflicted configuration, such as the user removing their own denylist entries,
   or importing a transfer file they know to be hostile. See R6 for the injection surface
   a shared import creates.
 - Social engineering of the human, and missing best-practice headers without a
   demonstrated impact.
-- The dweb and `peerd-distributed` preview is research-grade and ships only on the
+- The dweb and `mcdollar-distributed` preview is research-grade and ships only on the
   preview channel. Report issues, but understand the protocol is pre-hardening.
 
 ---
@@ -845,7 +845,7 @@ Red-team: scenario 15.
 ## 8. Known residual risks
 
 These are stated plainly. Several are deliberate tradeoffs. All are things a reader
-evaluating peerd should know. Each cites where it lives in the code.
+evaluating mcdollar should know. Each cites where it lives in the code.
 
 - R1. Actor isolation depends on the browser's dedicated Worker implementation.
   Chrome starts the runner from its offscreen document. Firefox starts the same
@@ -865,7 +865,7 @@ evaluating peerd should know. Each cites where it lives in the code.
   not a sealed code sandbox. Model output is not evaluated as code in that realm,
   and model or tool requests use the privileged relay paths.
   (`offscreen/actor-runner.js`, `shared/actor-worker-protocol.js`,
-  `background/direct-actor-host.js`, `peerd-runtime/actor/isolation.js`.)
+  `background/direct-actor-host.js`, `mcdollar-runtime/actor/isolation.js`.)
 - R2 (narrowed). Memory poisoning. The auto-memory digest excludes tool results and
   synthetic messages, but still includes raw assistant text, which can echo
   attacker-paraphrased content, and an approved note persists into every future prompt.
@@ -875,7 +875,7 @@ evaluating peerd should know. Each cites where it lives in the code.
   INVISIBLE-Unicode instruction can no longer ride into durable memory beneath the
   approval gate — the note the user reviews is the note the model reads. The residual is
   the visible channel: content the model paraphrases into ordinary assistant text.
-  (`peerd-runtime/memory/auto-memory.js`, `background/kernel-memory-init-probe.js`.)
+  (`mcdollar-runtime/memory/auto-memory.js`, `background/kernel-memory-init-probe.js`.)
 - R3 (narrowed). A skill body is trusted instructions by design. Installation accepts
   only text the user pastes locally, and the frontmatter parser refuses unknown keys,
   but the skill body loads into context as trusted instructions with no
@@ -885,7 +885,7 @@ evaluating peerd should know. Each cites where it lives in the code.
   `load_skill` — are now CDR-stripped (`skills/registry.js`, INV-12), so the description
   the user reviewed in the skills UI is the description the model reads; a covert
   invisible-Unicode channel in that field is closed. The BODY remains trusted-by-design.
-  (`peerd-runtime/skills/`.)
+  (`mcdollar-runtime/skills/`.)
 - R4 (narrowed). The audit log is tamper-EVIDENT, not tamper-proof. Every entry
   extends a SHA-256 hash chain and a head record pins the newest link, so a rewritten
   entry, a deleted middle entry, a truncated tail, or an inserted record fails
@@ -893,14 +893,14 @@ evaluating peerd should know. Each cites where it lives in the code.
   the cheaper attack of deleting the tail AND the head record together, which fails
   closed on the surviving chained prefix. What remains out of reach: an attacker with
   in-origin code execution can recompute the whole chain and the head — no in-origin scheme can prevent that without a secret the
-  origin does not hold. (`peerd-egress/audit/chain.js`, `audit/log.js`.)
+  origin does not hold. (`mcdollar-egress/audit/chain.js`, `audit/log.js`.)
 - R5 (narrowed). Confirm grants are origin-BOUND: a session-scoped "Yes" is keyed by
   tool + the prompt's dispatcher-computed origin (the pinned tab for DOM tools, the
   target host for web writes), so approving `click` on one site no longer covers any
   other site; the origin line the user sees is system-derived. What remains: the
   DESCRIPTION text is agent-supplied, so a misleading summary could still induce a
   "yes" for the named origin. (`background/confirm-grant-key.js`,
-  `peerd-egress/confirm/protocol.js`.)
+  `mcdollar-egress/confirm/protocol.js`.)
 - R6 (narrowed). Transfer import is a gated untrusted-deserialization surface.
   Provider endpoints are validated (https or local loopback only) and named in the
   summary the user approves; imported hooks land DISABLED and untrusted (a JS hook
@@ -908,12 +908,12 @@ evaluating peerd should know. Each cites where it lives in the code.
   prompt-injection consequence in the apply notices. What remains: an approved https
   endpoint is still an egress redirection the user chose to accept, and imported
   memory is trusted once the user proceeds. Import only files you trust.
-  (`peerd-runtime/transfer/transfer.js`.)
+  (`mcdollar-runtime/transfer/transfer.js`.)
 - R7. A malicious co-installed extension or compromised origin is out of scope. The live
   key is reachable to any code running in the extension origin, and is mirrored into
   `chrome.storage.session` for service-worker-restart resume. The stated threat model is
   that anything with in-origin execution already has service worker memory.
-  (`peerd-egress/vault/vault.js`.)
+  (`mcdollar-egress/vault/vault.js`.)
 - R8. The CheerpX WebVM disk image is a live third-party dependency. The root filesystem
   streams from a third-party host over WSS and cannot be SRI-pinned. A compromise of that
   host feeds content into the VM the agent runs commands in. The Moonshine model, by
@@ -925,13 +925,13 @@ evaluating peerd should know. Each cites where it lives in the code.
 - R10. The soft-injection defense has limited regression coverage. The structural
   fence (`neutralizeFence`) is tested, and a regression test now asserts the
   system-prompt still carries the load-bearing untrusted-content framing
-  (`tests/peerd-runtime/system-prompt-framing.test.ts`), so a template edit that
+  (`tests/mcdollar-runtime/system-prompt-framing.test.ts`), so a template edit that
   strips that framing fails CI. What is still not covered: whether that framing is
   actually persuasive to the model. The framing is a soft defense; the structural
   defenses (keyless loop custody, the isolated heap where available, and the gates)
   are the real story. The red-team benchmark
   (scenario 08) tests the gates, not the prompt text.
-  (`peerd-provider/system-prompt.txt`, `peerd-runtime/loop/system-prompt.js`.)
+  (`mcdollar-provider/system-prompt.txt`, `mcdollar-runtime/loop/system-prompt.js`.)
 - R11. Open-web exfil, and what is left of key extractability. The extractability half is
   now narrowed rather than open. The data key the vault holds while unlocked is unwrapped
   NON-EXTRACTABLE, so `exportKey` on the handle the vault passes to its encrypt/decrypt
@@ -961,8 +961,8 @@ evaluating peerd should know. Each cites where it lives in the code.
   closes), and a user who set auto-lock to "never" keeps the unbounded mirror they asked
   for. Separately, the open-web `webFetch` path is allowlist-free, so exfil to an
   arbitrary public host is not prevented by the allowlist; that half is mitigated only by
-  the keyless-web-actor architecture (INV-3). (`peerd-egress/vault/keys.js`,
-  `peerd-egress/vault/vault.js`, and the header of `peerd-egress/fetch/safe-fetch.js`.)
+  the keyless-web-actor architecture (INV-3). (`mcdollar-egress/vault/keys.js`,
+  `mcdollar-egress/vault/vault.js`, and the header of `mcdollar-egress/fetch/safe-fetch.js`.)
 - R12. CLOSED (issue #251), and what replaced it is worth stating precisely because the
   original wording was about a pin. A web actor is still pinned to a TAB rather than an
   origin, and `tools/defs/navigate.js` still re-stamps that pin to wherever the tab
@@ -980,7 +980,7 @@ evaluating peerd should know. Each cites where it lives in the code.
   a self-redirect onto a credentialed origin cannot be spent by `fetch_url`,
   `read_result` or a site-client fetch in the window before a DOM tool re-enters
   the chokepoint. Durable client record custody is a separate invariant (INV-18).
-  (`peerd-runtime/actor/landing-rule.js`, `origin-lock.js`,
+  (`mcdollar-runtime/actor/landing-rule.js`, `origin-lock.js`,
   `browser-authority/dom-helpers.js`; driven end to end by the `origin-lock` e2e state.)
   The #251 arc hardened the TAB actor's site-client CREDENTIAL path but left its
   API-actor sibling: the `site-fetch/call` relay's `backing:'api'` branch pinned credentials to the
@@ -997,7 +997,7 @@ evaluating peerd should know. Each cites where it lives in the code.
   exempt from INV-13 by design. The INTERSECTION of those two individually-reasonable
   exemptions is an off-origin navigation carrying a payload in the query, which is the
   arc's stated target and is not closed. Not a regression — identical before the arc.
-  (`peerd-runtime/tools/egress-heuristics.js`, KNOWN RESIDUALS.)
+  (`mcdollar-runtime/tools/egress-heuristics.js`, KNOWN RESIDUALS.)
 - R14. INV-9's structural reply boundary ships OFF. The deterministic actor-reply
   envelope is default-off on both channels behind a Settings toggle, so for a default
   install the web actor's reply crosses on the prompt fence alone — a strong hint to the
@@ -1011,7 +1011,7 @@ evaluating peerd should know. Each cites where it lives in the code.
   LEARNED from ordinary use — a password field seen on a page, and a write the user
   approved. It fails open, so an unlisted credentialed site is treated as ordinary until
   a signal fires. The signal is observed at the DOM chokepoint every DOM tool passes
-  through, so which tool an actor reaches for no longer decides whether peerd learns
+  through, so which tool an actor reaches for no longer decides whether mcdollar learns
   (#267 — it used to fire only on `snapshot`, and tool choice belongs to whoever is
   driving the actor). The FIRST landing on a site whose login the actor never sees is
   unprotected by construction. An origin can now be un-learned: Settings → Learned
@@ -1022,7 +1022,7 @@ evaluating peerd should know. Each cites where it lives in the code.
   would expose browser-wide credential state. Learned signals are keyed by hostname,
   not origin: scheme and port changes cannot route around a learned mark, and a mark
   on a parent host also covers its descendants (#264). A mark learned on a child host
-  does not spread to its parent or siblings. Without cookie metadata peerd cannot know
+  does not spread to its parent or siblings. Without cookie metadata mcdollar cannot know
   whether that child set an authentication cookie with `Domain=` on a parent, and
   spreading every child mark across a registrable site would let a hostile or
   multi-tenant sibling cause persistent false handoffs. Bound helper authority and
@@ -1034,7 +1034,7 @@ evaluating peerd should know. Each cites where it lives in the code.
   grant. The cost is a real one: a bound actor sent through "sign in with GitHub" ENDS.
   That is the safe failure, but it is a failure, and whether it happens often enough to
   change the trade is a question for use rather than for this document.
-  (`peerd-runtime/actor/idp-registry.js`.)
+  (`mcdollar-runtime/actor/idp-registry.js`.)
 - R17. A handoff names a successor the orchestrator may address, and the origin in it is
   chosen by whatever moved the tab — which on a hostile page is the attacker. The
   successor is a BOUND TAB actor (`site:<origin>`), which holds no stored key, so it is
@@ -1042,7 +1042,7 @@ evaluating peerd should know. Each cites where it lives in the code.
   and the report conditions the successor explicitly on the user's own request having
   been about that site. But the report is first-party text the orchestrator is meant to
   trust, so a hijacked page gets one attempt at persuading it to open a helper somewhere
-  the user never asked about. (`peerd-runtime/actor/origin-lock-report.js`.)
+  the user never asked about. (`mcdollar-runtime/actor/origin-lock-report.js`.)
 
 - R20. Direct native cross-origin form actions are blocked before activation (#269).
   The URL tripwire cannot see a form destination or its live values in `click` or
@@ -1054,7 +1054,7 @@ evaluating peerd should know. Each cites where it lives in the code.
   destination already has fresh user consent and a one-shot excursion grant
   (`tools/defs/click.js`, `tools/defs/type.js`, `tools/browser-automation-policy.js`).
 
-  The boundary is intentionally limited to the live native action that peerd can resolve
+  The boundary is intentionally limited to the live native action that mcdollar can resolve
   before it fires page events. Page-script beacons remain outside the tool action path.
   A handler can change a same-origin action after an input or click event, submit through
   JavaScript, or send data without using the form action. A same-origin endpoint can also
@@ -1078,7 +1078,7 @@ evaluating peerd should know. Each cites where it lives in the code.
   is bounded, and an exhausted negative stays unknown at the policy boundary. Fields
   beyond that budget can therefore still fail open.
   `autocomplete="new-password"` is matched as a token, including sectioned and WebAuthn
-  forms (`dom/walk-injected.js`; `tests/unit/peerd-runtime/dom-walk.test.js`).
+  forms (`dom/walk-injected.js`; `tests/unit/mcdollar-runtime/dom-walk.test.js`).
 - R24. Chunked exfil defeats the minimum-blob threshold (#279). The tripwire is a pure
   per-call function over one call's slots, and the dispatcher hands it no history, so a
   payload split below the threshold passes as many times as an attacker cares to
@@ -1089,8 +1089,8 @@ evaluating peerd should know. Each cites where it lives in the code.
 Candidates for future red-team scenarios, from the partially-defended surfaces above:
 R2 memory poisoning and R3 skill-body smuggling. (R4 chain tampering, R5 grant
 scoping, and R6 import gating gained direct bun coverage when they were narrowed:
-tests/peerd-egress/audit-chain.test.ts, tests/background/confirm-grant-key.test.ts,
-and the R6 block in tests/peerd-runtime/transfer/transfer.test.ts.)
+tests/mcdollar-egress/audit-chain.test.ts, tests/background/confirm-grant-key.test.ts,
+and the R6 block in tests/mcdollar-runtime/transfer/transfer.test.ts.)
 
 ---
 
@@ -1124,7 +1124,7 @@ against the real defense functions; they show that a specific capability path is
 denied. They do not show that arbitrary real-world injection workflows cannot
 manipulate the user, poison memory, mislead a confirmation, or induce an action
 that no gate blocks. Those gaps are named in section 8, not claimed closed. The
-honest posture is: peerd has a formal threat model and CI-gated red-team probes
+honest posture is: mcdollar has a formal threat model and CI-gated red-team probes
 for its core security invariants, not that it is immune to prompt injection.
 
 ---

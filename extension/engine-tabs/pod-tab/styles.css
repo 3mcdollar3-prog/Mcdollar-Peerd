@@ -63,20 +63,20 @@ button:focus-visible, #terminal-input:focus-visible { outline: 2px solid current
   /* why: CodeMirror deliberately keeps its dark syntax theme. Keep its muted
      chrome and the matching active file row legible inside the light shell. */
   .pe-host { --pe-fg:#F3F3EF; --pe-fg-muted:#ABABA6; }
-  /* why `body `: peerd-engine/editor.js appends its stylesheet to document.head
+  /* why `body `: mcdollar-engine/editor.js appends its stylesheet to document.head
      at runtime, so its own `.pe-node.is-active` (same 0,2,0 specificity) would
      win on source order and paint --pe-fg (#151515 in light) on the dark
      --pe-bg-editor row. The descendant prefix outranks it. Same reason the
-     .peerd-pull rules below carry one. */
+     .mcdollar-pull rules below carry one. */
   body .pe-node.is-active { color: #F3F3EF; }
   .pe-node.is-active .pe-twirl,
   .pe-node.is-active .pe-icon,
   .pe-node.is-active .pe-close { color: #ABABA6; }
   /* why: the shared pull-in affordance keeps a dark translucent surface, so it
      needs Graphite's light ink even when the surrounding Pod shell is light. */
-  body .peerd-pull { color: #F3F3EF; }
-  body .peerd-pull .peerd-pull-glyph,
-  body .peerd-pull-hint { color: #ABABA6; }
-  body .peerd-pull-hint-cursor { background: #F3F3EF; }
+  body .mcdollar-pull { color: #F3F3EF; }
+  body .mcdollar-pull .mcdollar-pull-glyph,
+  body .mcdollar-pull-hint { color: #ABABA6; }
+  body .mcdollar-pull-hint-cursor { background: #F3F3EF; }
   #terminal-pane { background: #fafafa; }
 }

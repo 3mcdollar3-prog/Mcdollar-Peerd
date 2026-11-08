@@ -35,7 +35,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..', '..');
 const VERSION = String(JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version);
 const OUTPUT = join(ROOT, 'artifacts', 'performance', 'cold-service-worker.json');
-const ADDON_ID = 'peerd@peerd.ai';
+const ADDON_ID = 'mcdollar@mcdollar.ai';
 const FIREFOX_UUID = '7d12f198-31fc-4e95-9184-e954123981b6';
 const FIREFOX_ORIGIN = `moz-extension://${FIREFOX_UUID}`;
 const CHROME_PIN = readFileSync(join(ROOT, 'scripts', 'cdp', 'chrome-version.txt'), 'utf8').trim();
@@ -231,7 +231,7 @@ const materializeComparisonSources = (candidateCommitSha, baseCommitSha) => {
   if (candidateCommitSha === baseCommitSha) {
     throw new Error('interleaved comparison requires different candidate and base commits');
   }
-  const root = mkdtempSync(join(tmpdir(), 'peerd-cold-comparison-'));
+  const root = mkdtempSync(join(tmpdir(), 'mcdollar-cold-comparison-'));
   const roles = {};
   try {
     for (const [role, commitSha] of [
@@ -334,7 +334,7 @@ export const packagedGraphStats = async (browser, staging = stagingTree(browser)
 };
 
 const unpackArtifact = (archive, browser) => {
-  const directory = mkdtempSync(join(tmpdir(), `peerd-cold-${browser}-artifact-`));
+  const directory = mkdtempSync(join(tmpdir(), `mcdollar-cold-${browser}-artifact-`));
   execFileSync('unzip', ['-q', archive, '-d', directory]);
   return directory;
 };
@@ -395,7 +395,7 @@ const prepareHistoricalBrowserArtifacts = async (browser, {
         '--no-sign', '--skip-verify',
       ], { cwd: packageRoot, stdio: 'inherit' });
       const extension = browser === 'firefox' ? 'xpi' : 'zip';
-      const archive = join(packageRoot, 'artifacts', `peerd-${channel}-${browser}.${extension}`);
+      const archive = join(packageRoot, 'artifacts', `mcdollar-${channel}-${browser}.${extension}`);
       if (!existsSync(archive)) throw new Error(`historical ${channel}/${browser} artifact missing`);
       const extensionDir = unpackArtifact(archive, `historical-${channel}-${browser}`);
       prepared[channel] = {
@@ -555,7 +555,7 @@ const chromeBinary = () => {
   const relativeBinary = process.platform === 'darwin'
     ? join(platformDirectory, 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing')
     : join(platformDirectory, 'chrome');
-  const cached = join(homedir(), '.cache', 'peerd-cft', version, relativeBinary);
+  const cached = join(homedir(), '.cache', 'mcdollar-cft', version, relativeBinary);
   if (!existsSync(cached)) {
     throw new Error('Chrome for Testing is missing; run `bun run e2e:chrome` first');
   }
@@ -644,7 +644,7 @@ export const exactChromeWorkerVersion = (versions, scriptURL, expected = {}) =>
 
 const runChromeProcess = async ({ extensionDir, wakeSamples }) => {
   const backgroundEntry = packagedBackgroundEntry(extensionDir, 'chrome');
-  const profile = mkdtempSync(join(tmpdir(), 'peerd-cold-chrome-profile-'));
+  const profile = mkdtempSync(join(tmpdir(), 'mcdollar-cold-chrome-profile-'));
   const binary = chromeBinary();
   const launchStarted = hostNowMs();
   let deadlineAt = launchStarted + coldTimeoutMs;
@@ -1216,9 +1216,9 @@ const wakeFirefoxAndBootstrap = async (driver) => {
       try {
         const background = await browser.runtime.getBackgroundPage();
         if (!background) throw new Error('Firefox returned no extension background page');
-        background.__peerdColdBootId ||= background.crypto.randomUUID();
+        background.__mcdollarColdBootId ||= background.crypto.randomUUID();
         const workerAgeAtProbeMs = background.performance.now();
-        const bootId = background.__peerdColdBootId;
+        const bootId = background.__mcdollarColdBootId;
         const bootstrap = await browser.runtime.sendMessage({ type: 'bootstrap/ready' });
         if (!bootstrap?.ok) throw new Error('bootstrap/ready failed: ' + JSON.stringify(bootstrap));
         done({ ok: true, bootId, workerAgeAtProbeMs });

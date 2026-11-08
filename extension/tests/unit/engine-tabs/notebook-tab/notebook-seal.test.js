@@ -119,7 +119,7 @@ describe('notebook-tab realm seal (real worker realm)', () => {
       ]) {
         expect(results[channel].threw).toBe(true);
         expect(results[channel].name).toBe('NotebookEgressBlockedError');
-        expect(results[channel].message).toContain('peerd.egress.fetch');
+        expect(results[channel].message).toContain('mcdollar.egress.fetch');
       }
       expect(results.chromeAbsent).toBe(true);
       expect(results.browserAbsent).toBe(true);
@@ -239,7 +239,7 @@ describe('notebook-tab realm seal (real worker realm)', () => {
       const { result, consoleOutput } = await nextMessage(worker, 'order-result');
       expect(result.webSocket.threw).toBe(true);
       expect(result.webSocket.name).toBe('NotebookEgressBlockedError');
-      expect(result.webSocket.message).toContain('peerd.egress.fetch');
+      expect(result.webSocket.message).toContain('mcdollar.egress.fetch');
       expect(result.xhr.threw).toBe(true);
       expect(result.fetchIsBridge).toBe(true);
       expect(consoleOutput[0].text).toBe(JSON.stringify(result));

@@ -33,7 +33,7 @@ describe('kernel memory init probe', () => {
       scripting: {
         executeScript: () => new Promise(() => {}),
       },
-      resolveTab: async () => ({ ...tab, peerdDocumentId: 'document:1' }),
+      resolveTab: async () => ({ ...tab, mcdollarDocumentId: 'document:1' }),
       timeoutMs: 5,
     });
     await expect(detailsHung.probeTab()).resolves.toEqual({
@@ -52,7 +52,7 @@ describe('kernel memory init probe', () => {
       },
       scripting: { executeScript: async () => [{ result: { title: 'Work' } }] },
       resolveTab: async (candidate: any) => candidate?.id === 7
-        ? { ...tab, peerdDocumentId: 'document:7' } : null,
+        ? { ...tab, mcdollarDocumentId: 'document:7' } : null,
     });
     await expect(probe.probeTab({ activeTabSpecified: true, activeTabId: null }))
       .resolves.toEqual({ tab: null });
@@ -86,8 +86,8 @@ describe('kernel memory init probe', () => {
       resolveTab: async () => {
         resolutions += 1;
         return resolutions === 1
-          ? { ...tab, peerdDocumentId: 'document:old' }
-          : { ...tab, peerdDocumentId: 'document:new' };
+          ? { ...tab, mcdollarDocumentId: 'document:old' }
+          : { ...tab, mcdollarDocumentId: 'document:new' };
       },
     });
     await expect(replaced.probeTab({ activeTabSpecified: true, activeTabId: 7 }))

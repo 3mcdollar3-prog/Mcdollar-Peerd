@@ -1,7 +1,7 @@
 // @ts-check
 // Pacing bar - the chat view's window onto a per-origin wait (#234).
 //
-// why a bar and not a silent sleep: peerd deliberately does nothing for up to
+// why a bar and not a silent sleep: mcdollar deliberately does nothing for up to
 // tens of seconds while a site's stated pause runs out. Without a visible
 // reason, that is indistinguishable from a hang, and the reasonable response to
 // a hang is to send again - which aborts the turn and starts the whole thing
@@ -76,10 +76,10 @@ export const PacingBar = {
     if (!pacing || !pacing.origin) return null;
     const left = secondsLeft(pacing.untilMs, Date.now());
     const why = pacing.reason === 'server-deadline'
-      ? 'the site asked peerd to wait'
-      : 'peerd is keeping under this site’s limit';
+      ? 'the site asked mcdollar to wait'
+      : 'mcdollar is keeping under this site’s limit';
     return m('.goal-bar.pacing-bar', { role: 'status', 'aria-live': 'polite' }, [
-      m('span.peerd-spinner.peerd-spinner--sm', { 'aria-hidden': 'true' }),
+      m('span.mcdollar-spinner.mcdollar-spinner--sm', { 'aria-hidden': 'true' }),
       m('span.goal-bar-label', 'Waiting'),
       m('span.goal-bar-meta', left > 0 ? `${left}s` : 'resuming'),
       m('span.goal-bar-text', { title: `${hostOf(pacing.origin)}: ${why}` },

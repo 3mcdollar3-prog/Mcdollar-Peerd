@@ -47,16 +47,16 @@ import {
   reasoningForTurn,
   runUserTurn,
   semanticHooksFor,
-} from '/peerd-runtime/controller-turn.js';
-import { makeInMemorySessions, runActorLoop, makeActorSummaryFence } from '/peerd-runtime/actor/actor-worker-core.js';
-import { hydrateToolDescriptors } from '/peerd-runtime/semantic.js';
+} from '/mcdollar-runtime/controller-turn.js';
+import { makeInMemorySessions, runActorLoop, makeActorSummaryFence } from '/mcdollar-runtime/actor/actor-worker-core.js';
+import { hydrateToolDescriptors } from '/mcdollar-runtime/semantic.js';
 import {
   callModel as callProviderModel,
   costOf,
   contextWindowFor,
   providerMetadata,
   providerModelContextWindow,
-} from '/peerd-provider/controller.js';
+} from '/mcdollar-provider/controller.js';
 import { AGENT_PROGRAM, isExecutionDescription } from '/shared/execution-protocol.js';
 import { originOf } from '/shared/url-origin.js';
 import { createActorModelEgress } from './actor-model-egress.js';

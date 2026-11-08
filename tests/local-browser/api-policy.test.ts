@@ -1,5 +1,5 @@
-import { wrapUntrusted } from '../../extension/peerd-runtime/tools/prompt-wrap.js';
-import { siteClientEnvelope } from '../../extension/peerd-runtime/site-clients/core.js';
+import { wrapUntrusted } from '../../extension/mcdollar-runtime/tools/prompt-wrap.js';
+import { siteClientEnvelope } from '../../extension/mcdollar-runtime/site-clients/core.js';
 import { describe, expect, test } from 'bun:test';
 import {
   apiInvocationArgs, boundedHelperInput, canonicalOrigin, hasSuccessfulToolReceipt, inspectToolReceipt,
@@ -94,7 +94,7 @@ describe('strict host site-client protocol', () => {
     expect(inspectToolReceipt('outcome_unknown: Verify the target before retrying.').uncertain).toBe(true);
     expect(inspectToolReceipt('not_run: Prior tool outcome unknown.').uncertain).toBe(true);
   });
-  test('recognizes actual Peerd mutation success fences and refuses failure prose', () => {
+  test('recognizes actual Mcdollar mutation success fences and refuses failure prose', () => {
     const click = '<untrusted_web_content origin="https://orders.example.org" tool="click" retrieved_at="2026-10-26T00:00:00.000Z">\n{"result":"changed"}\n</untrusted_web_content>';
     expect(hasSuccessfulToolReceipt(click, 'click')).toBe(true);
     expect(hasSuccessfulToolReceipt(click, 'type')).toBe(false);

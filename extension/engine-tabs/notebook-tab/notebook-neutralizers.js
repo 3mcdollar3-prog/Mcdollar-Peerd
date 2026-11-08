@@ -2,7 +2,7 @@
 // notebook-neutralizers.js — the REALM SEAL for the Notebook worker.
 //
 // The js_notebook worker runs agent-authored code. This module makes the
-// audited postMessage fetch bridge (peerd.egress.fetch / global fetch) the ONLY
+// audited postMessage fetch bridge (mcdollar.egress.fetch / global fetch) the ONLY
 // network egress reachable from that realm:
 //
 //   1. `fetch` itself IS the bridge. The native fetch is deleted from the
@@ -56,8 +56,8 @@ export function applyRealmSeal(global, options = {}) {
     /** @param {string} channel */
     constructor(channel) {
       super(environment === 'Notebook'
-        ? `${channel} is disabled in the peerd Notebook. Use peerd.egress.fetch(url) for audited network access.`
-        : `${channel} is disabled in the peerd ${environment}. Use the environment's audited fetch interface.`);
+        ? `${channel} is disabled in the mcdollar Notebook. Use mcdollar.egress.fetch(url) for audited network access.`
+        : `${channel} is disabled in the mcdollar ${environment}. Use the environment's audited fetch interface.`);
       this.name = `${environment.replace(/[^a-z0-9]/gi, '') || 'Worker'}EgressBlockedError`;
       /** @type {string} */
       this.channel = channel;
@@ -96,7 +96,7 @@ export function applyRealmSeal(global, options = {}) {
   // The host page relays fetch-request → SW webFetch (SSRF block +
   // denylist + audit) and posts fetch-response back. Closure state is
   // unreachable from notebook code; notebook code posting its own
-  // fetch-request messages is equivalent to calling peerd.egress.fetch — same
+  // fetch-request messages is equivalent to calling mcdollar.egress.fetch — same
   // audited path, so that is not a bypass.
   /** @type {Map<number, { resolve: (v: any) => void, reject: (e: any) => void, timer: ReturnType<typeof setTimeout> }>} */
   const pending = new Map();
@@ -253,7 +253,7 @@ export function applyRealmSeal(global, options = {}) {
   // ORDINARY extension page (the Notebook tab / the offscreen host — only
   // engine-tabs/app-tab/runner.html is in manifest `sandbox.pages`), so it
   // inherits the extension origin chrome-extension://<id>. That is the SAME
-  // origin whose one IDB database `peerd` (peerd-egress/storage/idb.js) holds
+  // origin whose one IDB database `mcdollar` (mcdollar-egress/storage/idb.js) holds
   // the vault blob, agents_memory (durable, always-loaded into the trusted
   // orchestrator prompt), every session + session_messages, tool_grants, and
   // the audit log — none of it partitioned from a same-origin worker. Without

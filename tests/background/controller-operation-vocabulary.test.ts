@@ -8,10 +8,10 @@ import {
   CONTROLLER_OWNED_TOOL_NAMES,
   controllerAuthorityClassForTool,
   controllerOperationsForTools,
-} from '../../extension/peerd-runtime/controller-tool-ownership.js';
+} from '../../extension/mcdollar-runtime/controller-tool-ownership.js';
 import {
   projectControllerToolSurface,
-} from '../../extension/peerd-runtime/controller-tool-projection.js';
+} from '../../extension/mcdollar-runtime/controller-tool-projection.js';
 import { ACTOR_RELAY_ROUTES } from '../../extension/shared/actor-channel-protocol.js';
 import {
   CONTROLLER_DOMAIN_OPERATIONS,

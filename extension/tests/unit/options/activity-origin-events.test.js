@@ -3,7 +3,7 @@
 //
 // The #255 arc writes `origin_learned_sensitive` and `actor_origin_stop`, and
 // those entries exist to answer the one question the learned set makes a user
-// ask - "why did peerd refuse to open that site". Before this, neither type was
+// ask - "why did mcdollar refuse to open that site". Before this, neither type was
 // in EVENT_META, so both rendered as a bare slug, and `detailLine` never read
 // `details.origin` - so the row did not even say WHICH site.
 

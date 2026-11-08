@@ -9,8 +9,8 @@ import {
   actorsCallToOp, shapeActorsResult,
   ACTORS_ADDRESS_MAX_CHARS, ACTORS_GOAL_MAX_CHARS,
   ACTORS_TRACE_TARGET_MAX_CHARS, ACTORS_TRACE_ERROR_MAX_CHARS,
-} from '../../extension/peerd-runtime/actor/actors-api.js';
-import { shapeActorRoster } from '../../extension/peerd-runtime/tools/defs/actor-list.js';
+} from '../../extension/mcdollar-runtime/actor/actors-api.js';
+import { shapeActorRoster } from '../../extension/mcdollar-runtime/tools/defs/actor-list.js';
 import { createScriptRunRegistry } from '../../extension/background/script-runs.js';
 
 type Owner = {
@@ -20,8 +20,8 @@ type Owner = {
   toolManifest?: unknown;
 };
 
-const OFFSCREEN = { id: 'peerd', url: 'chrome-extension://peerd/offscreen/offscreen.html' };
-const ENGINE_TAB = { id: 'peerd', url: 'chrome-extension://peerd/engine-tabs/notebook-tab/index.html' };
+const OFFSCREEN = { id: 'mcdollar', url: 'chrome-extension://mcdollar/offscreen/offscreen.html' };
+const ENGINE_TAB = { id: 'mcdollar', url: 'chrome-extension://mcdollar/engine-tabs/notebook-tab/index.html' };
 
 const makeHarness = ({
   owner = { sessionId: 'chat-1' },

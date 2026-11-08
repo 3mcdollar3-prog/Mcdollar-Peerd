@@ -14,7 +14,7 @@ const text = (value: string) => new TextEncoder().encode(value);
 
 describe('dwapp bundle v2 transport', () => {
   test('pins one golden gzip payload independently of host stream codecs', async () => {
-    const source = text('peerd dwapp deterministic gzip codec v2\n'.repeat(257));
+    const source = text('mcdollar dwapp deterministic gzip codec v2\n'.repeat(257));
     const compressed = await compressBundleBytes(source);
     expect(compressed.byteLength).toBe(106);
     expect(await sha256hex(compressed))

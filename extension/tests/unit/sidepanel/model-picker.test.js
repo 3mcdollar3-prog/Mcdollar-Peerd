@@ -35,9 +35,9 @@ describe('sidepanel.model-picker request ordering', () => {
         sessionId: 's-model-race', messages: [],
         permission: { mode: 'act', confirmActions: false },
       },
-      providers: { hasKey: true, current: 'peerd' },
+      providers: { hasKey: true, current: 'mcdollar' },
       settings: {
-        providerName: 'peerd', providerModel: '', openrouterModels: [],
+        providerName: 'mcdollar', providerModel: '', openrouterModels: [],
         voiceOnboardingDismissed: true, voiceEnabled: false,
       },
       goalRuns: {},
@@ -55,34 +55,34 @@ describe('sidepanel.model-picker request ordering', () => {
       m.redraw.sync();
       expect(optionCalls).toBe(2);
 
-      state.settings.providerName = 'peerd';
-      state.providers.current = 'peerd';
+      state.settings.providerName = 'mcdollar';
+      state.providers.current = 'mcdollar';
       m.redraw.sync();
       expect(optionCalls).toBe(3);
 
       newARequest.resolve({
         ok: true,
         options: [
-          { value: 'peerd::new-a', label: 'New A', provider: 'peerd', providerLabel: 'peerd' },
-          { value: 'peerd::new-b', label: 'New B', provider: 'peerd', providerLabel: 'peerd' },
+          { value: 'mcdollar::new-a', label: 'New A', provider: 'mcdollar', providerLabel: 'mcdollar' },
+          { value: 'mcdollar::new-b', label: 'New B', provider: 'mcdollar', providerLabel: 'mcdollar' },
         ],
-        selected: 'peerd::new-a',
+        selected: 'mcdollar::new-a',
       });
       await flush();
       expect(/** @type {HTMLSelectElement | null} */ (
-        root.querySelector('select.model-picker-select'))?.value).toBe('peerd::new-a');
+        root.querySelector('select.model-picker-select'))?.value).toBe('mcdollar::new-a');
 
       oldARequest.resolve({
         ok: true,
         options: [
-          { value: 'peerd::old-a', label: 'Old A', provider: 'peerd', providerLabel: 'peerd' },
-          { value: 'peerd::old-b', label: 'Old B', provider: 'peerd', providerLabel: 'peerd' },
+          { value: 'mcdollar::old-a', label: 'Old A', provider: 'mcdollar', providerLabel: 'mcdollar' },
+          { value: 'mcdollar::old-b', label: 'Old B', provider: 'mcdollar', providerLabel: 'mcdollar' },
         ],
-        selected: 'peerd::old-a',
+        selected: 'mcdollar::old-a',
       });
       await flush();
       expect(/** @type {HTMLSelectElement | null} */ (
-        root.querySelector('select.model-picker-select'))?.value).toBe('peerd::new-a');
+        root.querySelector('select.model-picker-select'))?.value).toBe('mcdollar::new-a');
       expect(root.textContent?.includes('Old A')).toBe(false);
 
       bRequest.resolve({

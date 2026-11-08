@@ -24,14 +24,14 @@ const PRODUCTS = [
 ];
 
 const page = (title, body) => `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>${title} · Peerdmart</title></head>
+<html lang="en"><head><meta charset="utf-8"><title>${title} · Mcdollarmart</title></head>
 <body>
-<header><a href="/">Peerdmart</a> · <a href="/products">Products</a> · <a href="/contact">Contact</a></header>
+<header><a href="/">Mcdollarmart</a> · <a href="/products">Products</a> · <a href="/contact">Contact</a></header>
 <main>${body}</main>
 </body></html>`;
 
 const homeHtml = () => page('Home', `
-<h1>Peerdmart</h1>
+<h1>Mcdollarmart</h1>
 <p>Your friendly test storefront.</p>
 <ul>
   <li><a href="/products">Browse products</a></li>

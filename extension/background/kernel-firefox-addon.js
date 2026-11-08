@@ -74,7 +74,7 @@ export const createKernelFirefoxLazyAddon = ({
 };
 
 const root = /** @type {any} */ (globalThis);
-const addonId = Symbol.for('peerd.kernel.firefox-addon.v1');
+const addonId = Symbol.for('mcdollar.kernel.firefox-addon.v1');
 if (root[addonId]) throw new Error('kernel-firefox-addon-owner-conflict');
 export const createKernelFirefoxGuard = (/** @type {any} */ {
   isDrivenSource, isSourceReady, waitForSourceEvidence, waitForSourceAuthority,

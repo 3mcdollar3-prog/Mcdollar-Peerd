@@ -1,4 +1,4 @@
-// peerd packaging — the single entry point for the 2-channel × 2-browser
+// mcdollar packaging — the single entry point for the 2-channel × 2-browser
 // artifact matrix (spec §5). Source development stays buildless and the
 // extension/ tree runs directly in the browser. Packaging an artifact means:
 //
@@ -6,7 +6,7 @@
 //   2. prune what the channel must not ship:
 //        both channels: tests/ and checked-in generated files
 //        store:         eval/
-//        dweb-disabled: peerd-distributed/ entirely; the loader and two cold
+//        dweb-disabled: mcdollar-distributed/ entirely; the loader and two cold
 //                       route factories are swapped for committed fail-closed
 //                       templates. This covers store packages and Firefox
 //                       until it has a mesh host.
@@ -14,7 +14,7 @@
 //   4. generate the manifest for (channel, browser)
 //   5. compact authored modules in the static SW/offscreen cold graphs
 //      (module graph/names/vendor bytes preserved; staging copy only)
-//   6. zip to artifacts/peerd-<channel>-<browser>.{zip,xpi}
+//   6. zip to artifacts/mcdollar-<channel>-<browser>.{zip,xpi}
 //   7. store artifacts: run the no-dweb-strings verifier
 //   8. preview artifacts: sign when credentials are present (packaging/sign.ts)
 //
@@ -75,12 +75,12 @@ const PRUNE_STORE = [
   'offscreen/contributor-channel-addon.js',
   'offscreen/semantic-routes/contributor.js',
   'options/sections/contributor-metrics.js',
-  'peerd-runtime/controller-contributor.js',
-  'peerd-runtime/observability/contributor-metrics.js',
-  'peerd-runtime/observability/contributor-store.js',
+  'mcdollar-runtime/controller-contributor.js',
+  'mcdollar-runtime/observability/contributor-metrics.js',
+  'mcdollar-runtime/observability/contributor-store.js',
 ];
 const PRUNE_DWEB = [
-  'peerd-distributed', 'peerd-provider/system-prompt-dweb.txt',
+  'mcdollar-distributed', 'mcdollar-provider/system-prompt-dweb.txt',
   'offscreen/dweb-base.js', 'offscreen/dweb-custody-host.js',
   'offscreen/dweb-self.js', 'offscreen/dweb-transfer-host.js',
 ];
@@ -417,7 +417,7 @@ export const packageArtifact = async (
   // Chrome preview .crx is produced from the zip by the signing step.
   const ext = browser === 'firefox' ? 'xpi' : 'zip';
   mkdirSync(resolvedArtifactRoot, { recursive: true });
-  const artifact = join(resolvedArtifactRoot, `peerd-${channel}-${browser}.${ext}`);
+  const artifact = join(resolvedArtifactRoot, `mcdollar-${channel}-${browser}.${ext}`);
   rmSync(artifact, { force: true });
   // -X strips platform extra fields; -@ takes the sorted entry list on stdin
   // (see normalizeStagingForZip — mtimes/modes/order are already normalized).

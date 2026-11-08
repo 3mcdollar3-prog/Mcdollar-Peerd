@@ -1,10 +1,10 @@
 // @ts-check
-// Settings → Learned sites: the hosts peerd LEARNED may carry the user's session
+// Settings → Learned sites: the hosts mcdollar LEARNED may carry the user's session
 // on, and the only place one can be un-learned.
 //
 // why its own nav entry, next to the denylist rather than inside it: the two are
-// opposites worth reading together (the denylist is sites the user BANNED peerd
-// from; this is sites peerd decided are theirs), but the denylist page is ~164
+// opposites worth reading together (the denylist is sites the user BANNED mcdollar
+// from; this is sites mcdollar decided are theirs), but the denylist page is ~164
 // seed patterns tall — appending to it put this below the fold, and an un-learn
 // control the user cannot find is the exact problem this view exists to fix.
 //
@@ -22,11 +22,11 @@ import m from '/vendor/mithril/mithril.js';
 
 /** How a learned reason reads to a person. */
 const REASON_COPY = {
-  'password-field': 'a sign-in form was on a page peerd read',
-  'confirmed-write': 'you approved peerd sending data to it',
+  'password-field': 'a sign-in form was on a page mcdollar read',
+  'confirmed-write': 'you approved mcdollar sending data to it',
 };
 
-const UNKNOWN_MUTATION_COPY = 'Peerd could not confirm whether that change finished. '
+const UNKNOWN_MUTATION_COPY = 'Mcdollar could not confirm whether that change finished. '
   + 'The list was refreshed before another change can be sent.';
 
 /**
@@ -132,13 +132,13 @@ export const LearnedOriginsView = {
 
     return m('div.learned-sites', [
       m('h3', { tabindex: -1, 'data-learned-role': 'heading' }, 'Hosts that may share your browser session'),
-      m('p', 'peerd learns these from ordinary use. A helper that browses the open web '
+      m('p', 'mcdollar learns these from ordinary use. A helper that browses the open web '
         + 'is not allowed onto them. It hands the work to a helper bound to the exact '
         + 'site instead. Remove a host here if the guess was wrong.'),
       m('p.hint', 'Each entry covers this host on every port and its subdomains.'),
-      m('p.hint', 'Removing a host does not make it unprotected: a site on peerd’s '
+      m('p.hint', 'Removing a host does not make it unprotected: a site on mcdollar’s '
         + 'built-in shared-document list, or one you have stored a key for, stays '
-        + 'protected either way. peerd can also learn the same host again next time '
+        + 'protected either way. mcdollar can also learn the same host again next time '
         + 'it reads a sign-in form there.'),
 
       // `p.key-msg.ok` / `.err` — the same banner DenylistView and HooksView use.

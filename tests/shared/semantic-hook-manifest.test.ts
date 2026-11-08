@@ -10,7 +10,7 @@ import {
   USER_HOOK_RECORDS_MAX_BYTES,
   USER_HOOK_RECORDS_MAX_COUNT,
 } from '../../extension/shared/semantic-hook-manifest.js';
-import { applyImport, EXPORT_FORMAT, EXPORT_VERSION } from '../../extension/peerd-runtime/transfer/transfer.js';
+import { applyImport, EXPORT_FORMAT, EXPORT_VERSION } from '../../extension/mcdollar-runtime/transfer/transfer.js';
 
 const hook = (index: number) => ({
   id: `hook-${index}`, event: 'pre-tool-use', enabled: true, order: index,
@@ -32,7 +32,7 @@ describe('semantic hook manifest', () => {
     expect(bytes).toBeLessThan(controllerOuterPayloadCap('turn.run'));
 
     const mainSource = readFileSync(join(import.meta.dir,
-      '../../extension/peerd-runtime/loop/turn-authority-driver.js'), 'utf8');
+      '../../extension/mcdollar-runtime/loop/turn-authority-driver.js'), 'utf8');
     const actorSource = readFileSync(join(import.meta.dir,
       '../../extension/background/kernel-turn-authority-adapter.js'), 'utf8');
     expect(mainSource).toContain('.then(projectSemanticHookManifest)');

@@ -82,7 +82,7 @@ describe('options.transfer: artifact import', () => {
     };
     const { root, unmount } = await mountWhole(send);
     try {
-      const input = /** @type {HTMLInputElement} */ (root.querySelector('#peerd-artifact-file'));
+      const input = /** @type {HTMLInputElement} */ (root.querySelector('#mcdollar-artifact-file'));
       Object.defineProperty(input, 'files', {
         configurable: true,
         value: [{ size: 12, text: async () => { reads += 1; return '{"fixture":true}'; } }],
@@ -106,7 +106,7 @@ describe('options.transfer: artifact import', () => {
     };
     const { root, unmount } = await mountWhole(send);
     try {
-      const input = /** @type {HTMLInputElement} */ (root.querySelector('#peerd-artifact-file'));
+      const input = /** @type {HTMLInputElement} */ (root.querySelector('#mcdollar-artifact-file'));
       Object.defineProperty(input, 'files', {
         configurable: true,
         value: [{ size: Number.MAX_SAFE_INTEGER, text: async () => { reads += 1; return '{}'; } }],
@@ -140,7 +140,7 @@ describe('options.transfer: artifact import', () => {
     };
     const { root, unmount } = await mountWhole(send);
     try {
-      const input = /** @type {HTMLInputElement} */ (root.querySelector('#peerd-artifact-file'));
+      const input = /** @type {HTMLInputElement} */ (root.querySelector('#mcdollar-artifact-file'));
       const select = (/** @type {string} */ id) => {
         Object.defineProperty(input, 'files', {
           configurable: true,
@@ -289,7 +289,7 @@ describe('options.transfer — portable identity restore', () => {
       expect(root.textContent).toContain('final state is unknown');
       expect(root.querySelector('#restore-summary')).toBeFalsy();
       await new Promise((resolve) => requestAnimationFrame(resolve));
-      expect(root.querySelector('#peerd-backup-file')).toBe(document.activeElement);
+      expect(root.querySelector('#mcdollar-backup-file')).toBe(document.activeElement);
     } finally { unmount(); }
   });
 
@@ -320,7 +320,7 @@ describe('options.transfer — portable identity restore', () => {
     const { root, unmount } = await mount(() => ({ ok: false }), (msg) =>
       msg.payload.id === 'A' ? replyA : replyB);
     try {
-      const input = /** @type {HTMLInputElement} */ (root.querySelector('#peerd-backup-file'));
+      const input = /** @type {HTMLInputElement} */ (root.querySelector('#mcdollar-backup-file'));
       const select = (/** @type {string} */ id) => {
         Object.defineProperty(input, 'files', {
           configurable: true,
@@ -346,7 +346,7 @@ describe('options.transfer — portable identity restore', () => {
     const inspect = new Promise((resolve) => { resolveInspect = resolve; });
     const { root, unmount } = await mount(() => ({ ok: false }), () => inspect);
     try {
-      const input = /** @type {HTMLInputElement} */ (root.querySelector('#peerd-backup-file'));
+      const input = /** @type {HTMLInputElement} */ (root.querySelector('#mcdollar-backup-file'));
       Object.defineProperty(input, 'files', {
         configurable: true,
         value: [{ size: 10, text: async () => JSON.stringify({ id: 'slow' }) }],
@@ -359,7 +359,7 @@ describe('options.transfer — portable identity restore', () => {
       cancel.click();
       await flush();
       expect(root.textContent?.includes('Inspecting backup')).toBe(false);
-      expect(document.activeElement?.id).toBe('peerd-backup-file');
+      expect(document.activeElement?.id).toBe('mcdollar-backup-file');
       resolveInspect({ ok: true, summary: SUMMARY });
       await flush();
       expect(root.querySelector('#restore-summary')).toBeFalsy();
@@ -502,7 +502,7 @@ describe('options.transfer — portable identity restore', () => {
 
 for (const [code, guidance] of [
   ['identity-export-network-off', 'Turn it on in Settings > Decentralized web, then try again.'],
-  ['identity-export-failed', 'retry after reopening peerd.'],
+  ['identity-export-failed', 'retry after reopening mcdollar.'],
 ]) {
   describe(`options backup failure: ${code}`, () => {
     it('keeps the passphrase and uses the correct existing error surface', async () => {

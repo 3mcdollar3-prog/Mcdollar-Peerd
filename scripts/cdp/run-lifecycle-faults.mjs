@@ -15,14 +15,14 @@ import { resolveChrome } from './e2e-harness.mjs';
 
 const ROOT = resolve(import.meta.dir, '..', '..');
 const RESULT_DIR = join(ROOT, 'artifacts', 'chrome-lifecycle');
-const REACHED_KEY = 'peerd.e2e.lifecycleFault.reached';
-const OPERATION_KEY = 'peerd.lifecycle.operations';
-const NOTICE_KEY = 'peerd.lifecycle.pendingNotices';
-const BOOT_ERROR_KEY = 'peerd.e2e.lifecycleFault.bootError';
-const PROGRESS_KEY = 'peerd.e2e.lifecycleFault.progress';
+const REACHED_KEY = 'mcdollar.e2e.lifecycleFault.reached';
+const OPERATION_KEY = 'mcdollar.lifecycle.operations';
+const NOTICE_KEY = 'mcdollar.lifecycle.pendingNotices';
+const BOOT_ERROR_KEY = 'mcdollar.e2e.lifecycleFault.bootError';
+const PROGRESS_KEY = 'mcdollar.e2e.lifecycleFault.progress';
 const FAULT_PAGE = 'lifecycle-fault.html';
-const FAULT_CODE = "return 'peerd-lifecycle-fault';";
-const PASSPHRASE = 'peerd-physical-lifecycle-passphrase';
+const FAULT_CODE = "return 'mcdollar-lifecycle-fault';";
+const PASSPHRASE = 'mcdollar-physical-lifecycle-passphrase';
 const STABILITY_WINDOW_MS = 1_500;
 const SOURCE_TARGET = 'source';
 const STORE_TARGET = 'store';
@@ -100,7 +100,7 @@ export const injectLifecycleFaultKernel = (input) => {
         await kv.delete(${JSON.stringify(PROGRESS_KEY)});
         return {
           recovered: true,
-          generation: await kv.get('peerd.lifecycle.generation'),
+          generation: await kv.get('mcdollar.lifecycle.generation'),
         };
       }
       if (message?.start === true && typeof message.passphrase === 'string') {
@@ -110,7 +110,7 @@ export const injectLifecycleFaultKernel = (input) => {
         // fire-and-forget post-initialize notification against turn startup.
         await vault.initialize(message.passphrase);
         await featureHost.vaultInitialized();
-        const onboarded = await kernelProfile.complete({ peerName: 'peerd', facts: null });
+        const onboarded = await kernelProfile.complete({ peerName: 'mcdollar', facts: null });
         if (onboarded?.ok !== true) throw new Error('lifecycle fault onboarding failed');
         await settingsStore.update({ providerName: 'ollama', providerModel: 'qwen3:8b' });
         const relays = await (await loadDemandPlane()).getControllerRelays();
@@ -245,7 +245,7 @@ const injectLifecycleFaultTree = (extension) => {
   const authority = join(extension, 'background', 'execution-tool-authority.js');
   const authoritySource = readFileSync(authority, 'utf8');
   assertLifecycleFaultExecutionSeam({
-    tracking: readFileSync(join(extension, 'peerd-runtime', 'lifecycle', 'dispatch-tracking.js'), 'utf8'),
+    tracking: readFileSync(join(extension, 'mcdollar-runtime', 'lifecycle', 'dispatch-tracking.js'), 'utf8'),
     controller: readFileSync(join(extension, 'offscreen', 'controller-turn-runtime.js'), 'utf8'),
     bridge: readFileSync(join(extension, 'background', 'controller-turn-bridge.js'), 'utf8'),
     authority: authoritySource,
@@ -272,7 +272,7 @@ const injectLifecycleFaultTree = (extension) => {
 };
 
 const makeSourceFaultExtension = async () => {
-  const directory = mkdtempSync(join(tmpdir(), 'peerd-chrome-lifecycle-fault-'));
+  const directory = mkdtempSync(join(tmpdir(), 'mcdollar-chrome-lifecycle-fault-'));
   const extension = join(directory, 'extension');
   cpSync(join(ROOT, 'extension'), extension, { recursive: true });
   injectLifecycleFaultTree(extension);
@@ -287,7 +287,7 @@ const makeSourceFaultExtension = async () => {
 };
 
 const makePackagedFaultExtension = async () => {
-  const directory = mkdtempSync(join(tmpdir(), 'peerd-chrome-lifecycle-store-fault-'));
+  const directory = mkdtempSync(join(tmpdir(), 'mcdollar-chrome-lifecycle-store-fault-'));
   const sourceRoot = join(directory, 'source');
   const artifactRoot = join(directory, 'artifacts');
   const extension = join(sourceRoot, 'extension');
@@ -320,7 +320,7 @@ const makePackagedFaultExtension = async () => {
     readFileSync(join(staging, 'background/controller-turn-bridge.js'), 'utf8'),
     readFileSync(join(staging, 'offscreen/controller-turn-runtime.js'), 'utf8'),
     readFileSync(join(staging, 'offscreen/job-runner.js'), 'utf8'),
-    readFileSync(join(staging, 'peerd-runtime/lifecycle/dispatch-tracking.js'), 'utf8'),
+    readFileSync(join(staging, 'mcdollar-runtime/lifecycle/dispatch-tracking.js'), 'utf8'),
   ].join('\n');
   for (const canary of [
     REACHED_KEY, BOOT_ERROR_KEY, 'lifecycle-fault/dispatch',
@@ -428,7 +428,7 @@ const main = async (target = SOURCE_TARGET) => {
   if (typeof fault.backgroundEntry !== 'string') {
     throw new Error(`${target} lifecycle target has no service worker entry`);
   }
-  const profile = mkdtempSync(join(tmpdir(), 'peerd-pipe-lifecycle-'));
+  const profile = mkdtempSync(join(tmpdir(), 'mcdollar-pipe-lifecycle-'));
   let browser;
   let forcedTerminationAttempted = false;
   let stage = 'launch';
@@ -472,9 +472,9 @@ const main = async (target = SOURCE_TARGET) => {
     let bootError = null;
     const generation = await waitFor(() => page.evaluate(async (bootErrorKey) => {
       void chrome.runtime.sendMessage({ type: 'state/get' }).catch(() => null);
-      const stored = await chrome.storage.local.get(['peerd.lifecycle.generation', bootErrorKey]);
+      const stored = await chrome.storage.local.get(['mcdollar.lifecycle.generation', bootErrorKey]);
       const observed = {
-        generation: stored['peerd.lifecycle.generation'], bootError: stored[bootErrorKey] ?? null,
+        generation: stored['mcdollar.lifecycle.generation'], bootError: stored[bootErrorKey] ?? null,
       };
       return observed.generation?.id || observed.bootError ? observed : null;
     }, BOOT_ERROR_KEY).then((observed) => {
@@ -552,9 +552,9 @@ const main = async (target = SOURCE_TARGET) => {
         return true;
       }).catch(() => null);
       const stored = await page.evaluate(async (bootErrorKey) => {
-        const values = await chrome.storage.local.get(['peerd.lifecycle.generation', bootErrorKey]);
+        const values = await chrome.storage.local.get(['mcdollar.lifecycle.generation', bootErrorKey]);
         return {
-          generation: values['peerd.lifecycle.generation'],
+          generation: values['mcdollar.lifecycle.generation'],
           bootError: values[bootErrorKey] ?? null,
         };
       }, BOOT_ERROR_KEY);

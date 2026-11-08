@@ -67,7 +67,7 @@ describe('sidepanel.input-bar composer palette keys', () => {
       expect(mounted.root.querySelector('.command-palette')).toBeTruthy();
     } finally {
       mounted.unmount();
-      localStorage.removeItem('peerd.draft.palette-escape');
+      localStorage.removeItem('mcdollar.draft.palette-escape');
     }
   });
 
@@ -86,7 +86,7 @@ describe('sidepanel.input-bar composer palette keys', () => {
       expect(mounted.textarea.getAttribute('aria-expanded')).toBe('false');
     } finally {
       mounted.unmount();
-      localStorage.removeItem('peerd.draft.palette-empty');
+      localStorage.removeItem('mcdollar.draft.palette-empty');
     }
   });
 
@@ -111,7 +111,7 @@ describe('sidepanel.input-bar composer palette keys', () => {
       expect(mounted.root.querySelector('.command-palette')).toBe(null);
     } finally {
       mounted.unmount();
-      localStorage.removeItem('peerd.draft.palette-builtins');
+      localStorage.removeItem('mcdollar.draft.palette-builtins');
     }
   });
 
@@ -128,8 +128,8 @@ describe('sidepanel.input-bar composer palette keys', () => {
       expect(mounted.textarea.getAttribute('aria-expanded')).toBe('false');
     } finally {
       mounted.unmount();
-      localStorage.removeItem('peerd.draft.palette-switch-a');
-      localStorage.removeItem('peerd.draft.palette-switch-b');
+      localStorage.removeItem('mcdollar.draft.palette-switch-a');
+      localStorage.removeItem('mcdollar.draft.palette-switch-b');
     }
   });
 });

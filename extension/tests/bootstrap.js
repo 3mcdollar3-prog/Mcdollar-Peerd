@@ -30,13 +30,13 @@
   );
   // `runtime.id` is declared read-only by @types/chrome; the runner owns
   // this global, so assign through a writable view of the same object.
-  /** @type {{ id: string }} */ (globalThis.chrome.runtime).id = 'peerd-test-runner';
+  /** @type {{ id: string }} */ (globalThis.chrome.runtime).id = 'mcdollar-test-runner';
   // Same evaluation-time class as runtime.id, not a behavioral stub:
   // background/vm-tab-tracker.js computes its tab-URL prefix via
   // browser.runtime.getURL at module top, so merely IMPORTING it under
   // the http harness needs this sync string mapping. Behavior still
   // goes through injected deps / tests/mocks.
   globalThis.chrome.runtime.getURL = function getURL(path) {
-    return `chrome-extension://peerd-test-runner/${String(path).replace(/^\//, '')}`;
+    return `chrome-extension://mcdollar-test-runner/${String(path).replace(/^\//, '')}`;
   };
 })();

@@ -7,12 +7,12 @@ import {
   ExportPassphraseError,
   inspectImport,
   portableHookDisposition,
-} from '/peerd-runtime/transfer/transfer.js';
-import { createMemoryStore } from '/peerd-runtime/memory/store.js';
-import { createSkillRegistry } from '/peerd-runtime/skills/registry.js';
-import { createSkillStore } from '/peerd-runtime/skills/store.js';
-import { isCustodySecretName } from '/peerd-runtime/transfer/secret-policy.js';
-import { normalizeEngine, normalizeVariant } from '/peerd-runtime/voice/settings.js';
+} from '/mcdollar-runtime/transfer/transfer.js';
+import { createMemoryStore } from '/mcdollar-runtime/memory/store.js';
+import { createSkillRegistry } from '/mcdollar-runtime/skills/registry.js';
+import { createSkillStore } from '/mcdollar-runtime/skills/store.js';
+import { isCustodySecretName } from '/mcdollar-runtime/transfer/secret-policy.js';
+import { normalizeEngine, normalizeVariant } from '/mcdollar-runtime/voice/settings.js';
 import { assertUserHookRecordsBounded } from '/shared/semantic-hook-manifest.js';
 
 /** @param {Record<string,any>} deps */

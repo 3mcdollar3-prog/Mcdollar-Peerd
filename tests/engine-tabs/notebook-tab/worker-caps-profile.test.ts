@@ -1,5 +1,5 @@
 // PR #119 — the sealed worker's capability profile. buildWorkerSource assembles
-// the worker source string; the profile decides which peerd.* surfaces exist.
+// the worker source string; the profile decides which mcdollar.* surfaces exist.
 // These are STRING-SHAPE assertions on the generated source (pure — no Worker),
 // proving the code-REPL arm's `page` bridge is present ONLY under page:true and
 // the disabled caps get an in-realm throw-shim (the SECOND wall behind the host
@@ -32,7 +32,7 @@ describe('worker capability profile — the default (historical) surface', () =>
 
   test('a default build has NO page bridge and only the provider throw-shim', async () => {
     const { source } = await build();               // no caps → defaults
-    expect(source).not.toContain('peerd.page');
+    expect(source).not.toContain('mcdollar.page');
     expect(source).not.toContain("makeBridge('page'");
     expect(source).not.toContain('globalThis.page');
     // egress / subagent / opfs stay wired — no throw-shims for them.
@@ -52,7 +52,7 @@ describe('worker capability profile — the sub-model lane (design 5)', () => {
   test('provider:true installs the provider bridge and drops the shim', async () => {
     const { source } = await build({ provider: true });
     expect(source).toContain("makeBridge('provider'");
-    expect(source).toContain('globalThis.peerd.provider.call = (args) => providerRelay');
+    expect(source).toContain('globalThis.mcdollar.provider.call = (args) => providerRelay');
     expect(source).not.toContain('no-provider capability profile');
   });
 
@@ -72,7 +72,7 @@ describe('worker capability profile — headless distributed fast-fail (design 7
     const { source } = await build({ distributed: false });
     expect(source).toContain('no-distributed capability profile');
     for (const m of ['whoami', 'status', 'peers', 'presence']) {
-      expect(source).toContain(`globalThis.peerd.distributed.${m} = noDistributed('${m}')`);
+      expect(source).toContain(`globalThis.mcdollar.distributed.${m} = noDistributed('${m}')`);
     }
   });
 });
@@ -80,9 +80,9 @@ describe('worker capability profile — headless distributed fast-fail (design 7
 describe('worker capability profile — the code-REPL arm (page + compute only)', () => {
   const CODE_CAPS = { page: true, egress: false, subagent: false, opfs: false };
 
-  test('page:true installs the page bridge (peerd.page riding makeBridge)', async () => {
+  test('page:true installs the page bridge (mcdollar.page riding makeBridge)', async () => {
     const { source } = await build(CODE_CAPS);
-    expect(source).toContain('globalThis.peerd.page');
+    expect(source).toContain('globalThis.mcdollar.page');
     expect(source).toContain('globalThis.page = __page');
     // The bridge rides the generalized makeBridge protocol (post-#149): the wire
     // type is computed (name + '-request' → 'page-request' at runtime), so the
@@ -98,21 +98,21 @@ describe('worker capability profile — the code-REPL arm (page + compute only)'
   test('egress:false / subagent:false / opfs:false each install an in-realm throw-shim', async () => {
     const { source } = await build(CODE_CAPS);
     // The realm seal's global fetch can't be removed from here, so egress is
-    // disabled by overriding peerd.egress.fetch to throw (host also refuses it).
-    expect(source).toContain('peerd.egress.fetch = ()');
+    // disabled by overriding mcdollar.egress.fetch to throw (host also refuses it).
+    expect(source).toContain('mcdollar.egress.fetch = ()');
     expect(source).toContain('no-egress capability profile');
-    expect(source).toContain('peerd.runtime.runAgent = ()');
+    expect(source).toContain('mcdollar.runtime.runAgent = ()');
     expect(source).toContain('no-subagent capability profile');
     expect(source).toContain('no-opfs capability profile');
     // The dynamic-import shim is also stubbed under no-opfs.
-    expect(source).toContain('__peerd_dynamic_import = noOpfs');
+    expect(source).toContain('__mcdollar_dynamic_import = noOpfs');
   });
 
-  test('a page-only worker still keeps the peerd:std pure-compute stdlib import', async () => {
-    // The profile strips IO capabilities, NOT computation — page.* + peerd:std is
+  test('a page-only worker still keeps the mcdollar:std pure-compute stdlib import', async () => {
+    // The profile strips IO capabilities, NOT computation — page.* + mcdollar:std is
     // the whole point (drive the tab, compute over what you read).
     const { source } = await build(CODE_CAPS);
-    expect(source).toContain('peerd');               // the surface object is still assembled
+    expect(source).toContain('mcdollar');               // the surface object is still assembled
     expect(source).toContain("makeBridge('page'");   // and the only IO it has is the page bridge
   });
 });

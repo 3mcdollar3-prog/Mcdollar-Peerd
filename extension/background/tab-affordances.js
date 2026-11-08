@@ -1,20 +1,20 @@
 // @ts-check
-// background/tab-affordances.js — how peerd shows up in the browser's tab strip.
+// background/tab-affordances.js — how mcdollar shows up in the browser's tab strip.
 //
 // Extracted from the SW (wiring, not logic). Three cohesive affordances, all
 // pure UI presence with NO security surface, sharing only tab-strip state:
-//   1. the agent-tab CARD — the home/side-panel notice "peerd opened <tab>",
+//   1. the agent-tab CARD — the home/side-panel notice "mcdollar opened <tab>",
 //      anchored to the message_actor turn that last drove that tab (tabMsgAnchor);
-//   2. the "pull peerd in" HINT — a one-shot, informational, auto-dismissing
-//      caption injected into peerd-opened web tabs (never messages the SW back,
-//      crosses no boundary — docs/PULL-IN-PEERD-WEB-SCOPE.md);
+//   2. the "pull mcdollar in" HINT — a one-shot, informational, auto-dismissing
+//      caption injected into mcdollar-opened web tabs (never messages the SW back,
+//      crosses no boundary — docs/PULL-IN-MCDOLLAR-WEB-SCOPE.md);
 //   3. the FRONT DOOR — the toolbar icon + Alt+Shift+P command: open home, or
 //      pull the chat panel in.
 //
 // A helper module (like tab-tracker.js), so it imports its stateless
 // collaborators directly and receives the stateful ones (browser, uiPorts,
 // denylist, closeSidePanel) as deps. All the reassigned tab-strip state
-// (agentTab*, activeTabId, peerdWebTabs, homeTabIds, lastFocusedWindowId,
+// (agentTab*, activeTabId, mcdollarWebTabs, homeTabIds, lastFocusedWindowId,
 // tabMsgAnchor) is cluster-internal and lives here; the SW keeps the wiring.
 
 import { openHome } from '/shared/open-home.js';
@@ -22,8 +22,8 @@ import { decidePullIn } from './kernel-front-door.js';
 import {
   classifyBrowserAutomationTarget,
   pullInHintInjected,
-} from '/peerd-runtime/kernel-browser.js';
-import { matchesDenylist } from '/peerd-egress/background.js';
+} from '/mcdollar-runtime/kernel-browser.js';
+import { matchesDenylist } from '/mcdollar-egress/background.js';
 import { shouldFollowAgentTab } from './watch-mode.js';
 import { allowedDocumentTarget } from './page-activity.js';
 
@@ -51,7 +51,7 @@ export const makeTabAffordances = ({
 
   // ── 1. the agent-tab card ──────────────────────────────────────────────────
   // DESIGN-17/18 tab-card anchoring: maps an agent tab → the message_actor tool_use
-  // that LAST drove it. The inline "peerd opened …" notice anchors to THAT message's
+  // that LAST drove it. The inline "mcdollar opened …" notice anchors to THAT message's
   // turn, not the wall-clock-latest user message — actor work is async, so a physical
   // tab touch (engine ensureTab / web DOM noteTab) often lands during a later turn,
   // which would clump the cards at the chat's end. Set at each actor-turn start
@@ -96,9 +96,9 @@ export const makeTabAffordances = ({
     // "Notebook | my-nb"); a web tab (open_tab / DOM) just shows its page label.
     const text = (kind && name) ? `${kind} · ${name}` : (label || title || 'a tab');
     // why a fresh brand color each generation (owner): the home card's Open button
-    // cycles a peerd brand color so it stays eye-catching.
+    // cycles a mcdollar brand color so it stays eye-catching.
     const color = AGENT_TAB_COLORS[Math.floor(Math.random() * AGENT_TAB_COLORS.length)];
-    // `opened`: true when peerd OPENED this tab (open_tab / an engine create) — the
+    // `opened`: true when mcdollar OPENED this tab (open_tab / an engine create) — the
     // only case that mints an inline notice; false when the web actor merely ACTED
     // on a tab, which resurfaces an existing notice but never invents one for a tab
     // the USER opened. `noted: true` marks this as a real agent touch (vs. a
@@ -171,21 +171,21 @@ export const makeTabAffordances = ({
     if (tabId === agentTabId) { agentTabId = null; agentTabInfo = null; broadcastAgentTab(); }
   });
 
-  // ── 2. the "pull peerd in" hint ─────────────────────────────────────────────
-  // A peerd-opened WEB tab gets a brief, auto-dismissing caption (top-right) that
-  // types out "Press <shortcut> to pull peerd in" — engine tabs carry the real
+  // ── 2. the "pull mcdollar in" hint ─────────────────────────────────────────────
+  // A mcdollar-opened WEB tab gets a brief, auto-dismissing caption (top-right) that
+  // types out "Press <shortcut> to pull mcdollar in" — engine tabs carry the real
   // button, a third-party page can't, so this points you at the shortcut/icon.
   // INFORMATIONAL ONLY (it never messages the SW back), so it crosses no boundary
   // and needs no new permission. One-shot, on first load, via chrome.scripting;
   // never on a denylisted/sensitive origin; the injected script itself waits until
-  // the tab is actually visible before it shows. Peerd-opened web tabs (tabId →
+  // the tab is actually visible before it shows. Mcdollar-opened web tabs (tabId →
   // origin), tracked so we can show the reminder at the RIGHT moment: when the user
   // is ACTIVELY VIEWING one with the SIDEBAR CLOSED — they walked onto it, OR they
   // closed the panel while on it. The page world can't read sidebar state, so the
   // SW gates the inject; the injected script is idempotent + auto-dismissing.
   /** @type {Map<number, string>} */
-  const peerdWebTabs = new Map();
-  // The peerd toolbar icon as a data: URL, so the injected hint can show it on a
+  const mcdollarWebTabs = new Map();
+  // The mcdollar toolbar icon as a data: URL, so the injected hint can show it on a
   // third-party page without a chrome-extension:// fetch. Fetched + cached once;
   // '' if it ever fails (the hint then falls back to the wordmark text).
   /** @type {string | null} */ let pullInIconUrl = null;
@@ -202,15 +202,15 @@ export const makeTabAffordances = ({
     return pullInIconUrl;
   };
   const showWebTabHint = async (/** @type {number} */ tabId) => {
-    if (!peerdWebTabs.has(tabId)) return;
+    if (!mcdollarWebTabs.has(tabId)) return;
     if (uiPorts.hasNamed('sidepanel')) return;          // sidebar open → the chat's already here
     let tab;
     try { tab = await browser.tabs.get(tabId); } catch { return; }
     if (!tab || tab.status !== 'complete' || tab.active !== true) return; // only when actually being viewed
-    // Still the page peerd opened? (don't graffiti the user's own later navigation.)
+    // Still the page mcdollar opened? (don't graffiti the user's own later navigation.)
     let origin;
     try { origin = new URL(/** @type {string} */ (tab.url)).origin; } catch { return; }
-    if (origin !== peerdWebTabs.get(tabId)) { peerdWebTabs.delete(tabId); return; }
+    if (origin !== mcdollarWebTabs.get(tabId)) { mcdollarWebTabs.delete(tabId); return; }
     // Re-check the live committed location and pin the hint to that exact
     // document. A navigation after this probe makes the mutation fail instead
     // of landing on the replacement page.
@@ -222,7 +222,7 @@ export const makeTabAffordances = ({
     let shortcut = '';
     try {
       const cmds = await browser.commands?.getAll?.();
-      shortcut = (cmds ?? []).find((/** @type {any} */ c) => c.name === 'pull-in-peerd')?.shortcut || '';
+      shortcut = (cmds ?? []).find((/** @type {any} */ c) => c.name === 'pull-in-mcdollar')?.shortcut || '';
     } catch { /* no commands API in this build */ }
     const iconUrl = await getPullInIconUrl();
     try {
@@ -240,17 +240,17 @@ export const makeTabAffordances = ({
     if (!u.protocol.startsWith('http')) return;
     if (!classifyBrowserAutomationTarget(u).allowed) return;
     if (matchesDenylist(u.hostname, denylistStore.patterns())) return; // never graffiti a sensitive site
-    peerdWebTabs.set(tabId, u.origin);
+    mcdollarWebTabs.set(tabId, u.origin);
     showWebTabHint(tabId); // if the user is already viewing it with the sidebar closed
   };
-  // Show when the user WALKS ONTO a peerd web tab, or it finishes loading while
+  // Show when the user WALKS ONTO a mcdollar web tab, or it finishes loading while
   // they're on it. (Sidebar-close is handled at the port disconnect, in the SW.)
   coldEvent('tabs.onActivated', browser.tabs?.onActivated)?.addListener((/** @type {{ tabId: number }} */ { tabId }) => { showWebTabHint(tabId); });
   coldEvent('tabs.onUpdated', browser.tabs?.onUpdated)?.addListener((/** @type {number} */ tabId, /** @type {any} */ changeInfo) => { if (changeInfo.status === 'complete') showWebTabHint(tabId); });
-  coldEvent('tabs.onRemoved', browser.tabs?.onRemoved)?.addListener((/** @type {number} */ tabId) => { peerdWebTabs.delete(tabId); });
+  coldEvent('tabs.onRemoved', browser.tabs?.onRemoved)?.addListener((/** @type {number} */ tabId) => { mcdollarWebTabs.delete(tabId); });
 
   // ── 3. the front door — toolbar icon + Alt+Shift+P ──────────────────────────
-  // The toolbar icon is peerd's FRONT DOOR, and which surface it opens is the
+  // The toolbar icon is mcdollar's FRONT DOOR, and which surface it opens is the
   // user's `frontDoorView` setting (Settings → Behavior): 'panel' (default)
   // pulls the chat into the window-global side panel (Chrome) / sidebar
   // (Firefox) so it sits next to the page and follows you onto ANY tab;
@@ -329,7 +329,7 @@ export const makeTabAffordances = ({
 
   // The pull-in itself — open() runs synchronously (no await before it) to keep the
   // gesture; a failed/declined open falls back to home so the icon never dead-ends.
-  const pullInPeerd = (/** @type {number} */ windowId, { fromShortcut = false } = {}) => {
+  const pullInMcdollar = (/** @type {number} */ windowId, { fromShortcut = false } = {}) => {
     const target = decidePullIn({
       homeOpen: isHomeOpen(),
       panelOpen: uiPorts.hasNamed('sidepanel'),
@@ -357,15 +357,15 @@ export const makeTabAffordances = ({
   };
 
   coldEvent('action.onClicked', browser.action?.onClicked)?.addListener((/** @type {any} */ tab) => {
-    pullInPeerd(/** @type {number} */ (tab?.windowId ?? lastFocusedWindowId), { fromShortcut: false });
+    pullInMcdollar(/** @type {number} */ (tab?.windowId ?? lastFocusedWindowId), { fromShortcut: false });
   });
   // Alt+Shift+P (user-rebindable) — TOGGLES the panel: pulls it in, or closes it if
   // already open. The command handler is a VALID user-gesture context on BOTH Chrome
   // and Firefox, so it needs no content-script relay — and thus no hole in the
   // fail-closed SW boundary the injected-web-page button would have required.
   coldEvent('commands.onCommand', browser.commands?.onCommand)?.addListener((/** @type {string} */ command, /** @type {any} */ tab) => {
-    if (command !== 'pull-in-peerd') return;
-    pullInPeerd(/** @type {number} */ (tab?.windowId ?? lastFocusedWindowId), { fromShortcut: true });
+    if (command !== 'pull-in-mcdollar') return;
+    pullInMcdollar(/** @type {number} */ (tab?.windowId ?? lastFocusedWindowId), { fromShortcut: true });
   });
 
   return { noteAgentTab, broadcastAgentTab, scheduleWebTabHint, showWebTabHint, setTabAnchor, isHomeOpen, focusAgentTab, syncFrontDoorBehavior };

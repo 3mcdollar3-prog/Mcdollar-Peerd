@@ -4,9 +4,9 @@
 // the queue after dispatch so two Workers may run independently.
 
 import browser from '/shared/browser-api.js';
-import { createKeyedQueue } from '/peerd-engine/background.js';
+import { createKeyedQueue } from '/mcdollar-engine/background.js';
 
-export const POD_TAB_GROUP_TITLE = 'peerd';
+export const POD_TAB_GROUP_TITLE = 'mcdollar';
 const CALL_TIMEOUT_MS = 310_000;
 const WORKSPACE_LOCK_RENEW_MS = 10_000;
 

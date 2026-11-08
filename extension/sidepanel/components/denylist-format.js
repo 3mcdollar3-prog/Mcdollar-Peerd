@@ -62,13 +62,13 @@ export const denylistModel = ({ patterns = [], added = [], disabled = [] }, quer
 export const removalCopy = (pattern, isUser) => ({
   verb: isUser ? 'Remove' : 'Disable',
   consequence: isUser
-    ? `peerd will be able to act on ${pattern} again.`
-    : `peerd will be able to act on ${pattern} again. Built-in patterns can't be deleted — this turns it off until you re-enable it.`,
+    ? `mcdollar will be able to act on ${pattern} again.`
+    : `mcdollar will be able to act on ${pattern} again. Built-in patterns can't be deleted — this turns it off until you re-enable it.`,
 });
 
 /**
  * Display names for the seed's own category keys. The seed ships curated and
- * categorised (peerd-egress/denylist/default.json); this only makes those keys
+ * categorised (mcdollar-egress/denylist/default.json); this only makes those keys
  * readable — it never invents a taxonomy, and an unknown key still renders
  * (humanized) rather than dropping its patterns out of the list.
  * @type {Record<string, string>}

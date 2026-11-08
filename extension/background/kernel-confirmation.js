@@ -1,6 +1,6 @@
 // @ts-check
 
-import { makeConfirmCoordinator } from '/peerd-egress/confirm/protocol.js';
+import { makeConfirmCoordinator } from '/mcdollar-egress/confirm/protocol.js';
 
 /** @param {Record<string, any>} deps */
 export const makeConfirmAnswerRoute = ({

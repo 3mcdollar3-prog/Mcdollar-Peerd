@@ -103,7 +103,7 @@ export async function buildVaultKernelArtifact({
   }
   const extension = browser === 'firefox' ? 'xpi' : 'zip';
   const artifact = join(
-    artifactRoot, `peerd-vault-kernel-${channel}-${browser}.${extension}`,
+    artifactRoot, `mcdollar-vault-kernel-${channel}-${browser}.${extension}`,
   );
   rmSync(artifact, { force: true });
   execFileSync('zip', ['-q', '-X', artifact, '-@'], {

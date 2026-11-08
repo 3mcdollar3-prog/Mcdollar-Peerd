@@ -115,13 +115,13 @@ describe('options.behavior — settings rows', () => {
     } finally { unmount(); }
   });
 
-  it('"Keep peerd as the first tab" sits under the toolbar button and turns on with one switch', async () => {
+  it('"Keep mcdollar as the first tab" sits under the toolbar button and turns on with one switch', async () => {
     const { root, sent, unmount } = mount();
     try {
       const labels = [...root.querySelectorAll('.set-row-label')].map((e) => e.textContent);
-      expect(labels.indexOf('Keep peerd as the first tab')).toBe(labels.indexOf('Toolbar button') + 1);
-      const sw = /** @type {HTMLButtonElement} */ (root.querySelector('button[aria-label="Keep peerd as the first tab - off"]'));
-      expect(root.textContent).toContain('peerd adds no tab to your windows.');
+      expect(labels.indexOf('Keep mcdollar as the first tab')).toBe(labels.indexOf('Toolbar button') + 1);
+      const sw = /** @type {HTMLButtonElement} */ (root.querySelector('button[aria-label="Keep mcdollar as the first tab - off"]'));
+      expect(root.textContent).toContain('mcdollar adds no tab to your windows.');
       sw.click();
       await settle();
       expect(sent[0]).toEqual({ type: 'settings/update', patch: { firstTabEnabled: true } });

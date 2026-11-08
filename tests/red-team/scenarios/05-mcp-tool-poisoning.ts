@@ -1,12 +1,12 @@
 // Scenario 05: "malicious MCP server attempts tool poisoning", mapped onto
-// peerd's real surface.
+// mcdollar's real surface.
 //
-// IMPORTANT: peerd ships NO MCP client (verified: no modelcontextprotocol / mcp
+// IMPORTANT: mcdollar ships NO MCP client (verified: no modelcontextprotocol / mcp
 // client anywhere in extension/ outside a coincidental substring in vendored
 // moonshine.js). So the literal "malicious MCP server" is not a live attack
 // surface. The ANALOGOUS threat, an untrusted external party injecting tool
 // metadata or instructions that make the agent act on the attacker's behalf ,
-// lands on peerd's agent-to-agent (A2A) + inbound-mesh surface: a peer's agent
+// lands on mcdollar's agent-to-agent (A2A) + inbound-mesh surface: a peer's agent
 // reaches ours over the mesh, and a hostile agent-card / message is the "poisoned
 // tool description" equivalent.
 //
@@ -25,8 +25,8 @@
 import {
   type Scenario, type Probe, blocked, leaked, summarize,
 } from '../harness.ts';
-import { mayMessageActor, buildAncestry } from '../../../extension/peerd-runtime/actor/delegation-lineage.js';
-import { meshCallToOp, meshMethodSigns, shapeMeshResult } from '../../../extension/peerd-runtime/actor/a2a-api.js';
+import { mayMessageActor, buildAncestry } from '../../../extension/mcdollar-runtime/actor/delegation-lineage.js';
+import { meshCallToOp, meshMethodSigns, shapeMeshResult } from '../../../extension/mcdollar-runtime/actor/a2a-api.js';
 
 export const scenario: Scenario = {
   id: '05-mcp-tool-poisoning',
@@ -36,7 +36,7 @@ export const scenario: Scenario = {
   claim: 'An untrusted inbound message can never make the agent delegate, a tainted/forged/cyclic lineage fails closed, and a poisoned mesh op or malformed arg is rejected, so external tool metadata cannot hijack the agent.',
   threatModelRef: 'INV-5',
   tier: 'unit',
-  mcpMapping: 'peerd has no MCP client; the untrusted-tool-metadata threat maps to the A2A/inbound-mesh surface (agent-cards + peer messages). The sender gate + mesh-op validation are the analogs of MCP tool-description sanitization.',
+  mcpMapping: 'mcdollar has no MCP client; the untrusted-tool-metadata threat maps to the A2A/inbound-mesh surface (agent-cards + peer messages). The sender gate + mesh-op validation are the analogs of MCP tool-description sanitization.',
   async run() {
     const probes: Probe[] = [];
 

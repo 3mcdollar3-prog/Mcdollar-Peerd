@@ -36,7 +36,7 @@ export const makeAppActorAttachRecovery = ({ request }) => {
             ? operation === 'app/tab-ready'
               ? 'The App isolation check did not respond.'
               : 'The actor retry did not respond.'
-            : 'Peerd could not confirm whether the App actor attached.',
+            : 'Mcdollar could not confirm whether the App actor attached.',
           // A transport-unknown exact handshake is retryable because the
           // background operation is owner-scoped and idempotently reconciled.
           actorRequired: true,

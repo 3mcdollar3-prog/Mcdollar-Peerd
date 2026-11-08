@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-// scripts/cdp/run-om2w.mjs — run peerd against Online-Mind2Web and EXPORT the
+// scripts/cdp/run-om2w.mjs — run mcdollar against Online-Mind2Web and EXPORT the
 // schema-v2 trajectories WebJudge scores.
 //
-// Reuses the real eval loop (run-eval-bench's launchPeerd + __peerdEval), but in
+// Reuses the real eval loop (run-eval-bench's launchMcdollar + __mcdollarEval), but in
 // OM2W mode: it sends inline tasks (startUrl=website, prompt=task_description),
 // the runner records per-action screenshots + Grammar A actions (om2w-recorder),
 // and this driver writes one `<task_id>/result.json` + `trajectory/NNNN.jpg`
@@ -15,8 +15,8 @@
 //   OPENAI_API_KEY=sk-... bun scripts/cdp/om2w/score.mjs --run=<run>
 //
 // Usage:
-//   PEERD_BENCH_KEY=sk-ant-... bun scripts/cdp/run-om2w.mjs --model=claude-opus-4-8 --offset=0 --count=5
-//   bun scripts/cdp/run-om2w.mjs --provider=ollama --model=qwen3.5:2b-q4_K_M --runner-model=peerd-local-browser --ollama-host=http://127.0.0.1:11434 --run=local-model --actor-surface=tools
+//   MCDOLLAR_BENCH_KEY=sk-ant-... bun scripts/cdp/run-om2w.mjs --model=claude-opus-4-8 --offset=0 --count=5
+//   bun scripts/cdp/run-om2w.mjs --provider=ollama --model=qwen3.5:2b-q4_K_M --runner-model=mcdollar-local-browser --ollama-host=http://127.0.0.1:11434 --run=local-model --actor-surface=tools
 // Local inference needs no API key; the optional upstream WebJudge still does.
 // Flags: --provider (anthropic|openrouter|ollama), --model, --offset, --count (shard),
 //   --runner-model=<id> (optional web actor model pin within the selected provider),
@@ -32,7 +32,7 @@
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { launchPeerd, unlockAndReady, openExtPage, rpc, evalIn, waitFor, log, sseText, sseToolCall } from './e2e-harness.mjs';
+import { launchMcdollar, unlockAndReady, openExtPage, rpc, evalIn, waitFor, log, sseText, sseToolCall } from './e2e-harness.mjs';
 import { buildResult, validateResult, shotName } from './om2w/result-builder.mjs';
 import { resolveOm2wProviderConfig, configureOm2wProvider, launchOm2wBrowser } from './om2w/provider-config.mjs';
 import { startWebFixtureServer } from './fixtures/web-suite.mjs';
@@ -131,22 +131,22 @@ async function main() {
     if (!todo.length) { log('nothing to do'); process.exit(0); }
   }
 
-  // Launch Chrome + bring peerd to a ready-to-run state (vault, provider, the
+  // Launch Chrome + bring mcdollar to a ready-to-run state (vault, provider, the
   // eval page). Factored out so the run can RECYCLE the whole browser mid-run.
   // why: a long-lived session accumulates un-reaped hung web-actor turns +
   // debugger attachments + tabs (product bug — an un-timed CDP Runtime.evaluate
   // can hang a turn forever, and the abort isn't honored mid-dispatch; tracked
-  // in NotASithLord/peerd#176). That state is SW-/Chrome-process-scoped, so only a fresh Chrome
+  // in NotASithLord/mcdollar#176). That state is SW-/Chrome-process-scoped, so only a fresh Chrome
   // clears it. Recycling on a cadence keeps every task running against a clean
   // browser instead of a degrading one.
   async function bringUp() {
-    const c = await launchOm2wBrowser(launchPeerd, { smoke: SMOKE, modelResponder });
+    const c = await launchOm2wBrowser(launchMcdollar, { smoke: SMOKE, modelResponder });
     await unlockAndReady(c.page, { provider: PROVIDER, model: MODEL });
     await configureOm2wProvider((message) => rpc(c.page, message), providerConfig, ACTOR_SURFACE);
     const page = await openExtPage(c, 'eval/runner.html');
     if (SHOW_TABS) await evalIn(page, `(() => { const el = document.getElementById('showtabs'); if (el) el.checked = true; })()`);
-    if (!await waitFor(() => evalIn(page, `!!(window.__peerdEval && window.__peerdEval.ready)`), { budgetMs: 30_000 })) {
-      throw new Error('eval/runner.html never exposed __peerdEval');
+    if (!await waitFor(() => evalIn(page, `!!(window.__mcdollarEval && window.__mcdollarEval.ready)`), { budgetMs: 30_000 })) {
+      throw new Error('eval/runner.html never exposed __mcdollarEval');
     }
     return { ctx: c, evalPage: page };
   }
@@ -169,7 +169,7 @@ async function main() {
     ({ ctx, evalPage } = await withDeadline(bringUp(), BRINGUP_DEADLINE_MS, 'bringUp'));
     log(`provider ready: ${PROVIDER}${MODEL ? ` (${MODEL})` : ''}${ACTOR_SURFACE ? ` · actor surface: ${ACTOR_SURFACE}` : ''}`);
 
-    // ONE task per __peerdEval.run() call — an OM2W task can take minutes and we
+    // ONE task per __mcdollarEval.run() call — an OM2W task can take minutes and we
     // want each trajectory exported immediately (resumable), not held to the end.
     const started = Date.now();
     let done = 0;
@@ -213,12 +213,12 @@ async function main() {
       let card = null;
       try {
         await withDeadline(
-          evalIn(evalPage, `(() => { window.__peerdEval.run(${JSON.stringify(runOpts)}); return true; })()`),
+          evalIn(evalPage, `(() => { window.__mcdollarEval.run(${JSON.stringify(runOpts)}); return true; })()`),
           30_000, 'task launch');
         card = await withDeadline(waitFor(async () => {
-          const err = await evalIn(evalPage, `window.__peerdEval.lastError`);
+          const err = await evalIn(evalPage, `window.__mcdollarEval.lastError`);
           if (err) throw new Error(`in-page: ${err}`);
-          return evalIn(evalPage, `window.__peerdEval.lastCard`);
+          return evalIn(evalPage, `window.__mcdollarEval.lastCard`);
         }, { budgetMs: TASK_TIMEOUT_MS + 60_000, pollMs: 3_000 }), TASK_TIMEOUT_MS + 90_000, 'task wait');
       } catch (e) {
         log(`  ⚠ ${t.task_id}: harness fault (${/** @type {{ message?: string }} */ (e)?.message ?? e}) — treating as a timeout`);
@@ -234,7 +234,7 @@ async function main() {
         }
       } else {
         consecTimeouts = 0;
-        const results = await withDeadline(evalIn(evalPage, `window.__peerdEval.lastResults`), 30_000, 'results read').catch(() => null);
+        const results = await withDeadline(evalIn(evalPage, `window.__mcdollarEval.lastResults`), 30_000, 'results read').catch(() => null);
         exportTask(t, (results || [])[0]);
         done++;
       }

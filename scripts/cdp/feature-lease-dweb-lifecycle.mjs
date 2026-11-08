@@ -27,7 +27,7 @@ import {
   assertLiveKernelAssembly,
 } from '../acceptance/live-kernel-assembly.mjs';
 import {
-  evalIn, hostMonotonicMs, launchPeerd, openExtPage, rpc, unlockAndReady, waitFor,
+  evalIn, hostMonotonicMs, launchMcdollar, openExtPage, rpc, unlockAndReady, waitFor,
 } from './e2e-harness.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -351,7 +351,7 @@ export async function runPackagedFeatureLeaseDwebLifecycle({
   let sourceAppId = null;
   let seededAppId = null;
   try {
-    ctx = await launchPeerd({
+    ctx = await launchMcdollar({
       extensionDir: treePath,
       interceptModel: true,
       captureBootTimeline: true,
@@ -736,11 +736,11 @@ export async function runPackagedFeatureLeaseDwebLifecycle({
 }
 
 if (import.meta.main) {
-  const artifactRoot = process.env.PEERD_ACCEPTANCE_ARTIFACT_ROOT
-    ? resolve(process.env.PEERD_ACCEPTANCE_ARTIFACT_ROOT)
+  const artifactRoot = process.env.MCDOLLAR_ACCEPTANCE_ARTIFACT_ROOT
+    ? resolve(process.env.MCDOLLAR_ACCEPTANCE_ARTIFACT_ROOT)
     : ARTIFACTS_DIR;
-  const reportPath = process.env.PEERD_ACCEPTANCE_REPORT
-    ? resolve(process.env.PEERD_ACCEPTANCE_REPORT)
+  const reportPath = process.env.MCDOLLAR_ACCEPTANCE_REPORT
+    ? resolve(process.env.MCDOLLAR_ACCEPTANCE_REPORT)
     : join(artifactRoot, 'e2e', 'feature-lease-dweb-lifecycle.json');
   try {
     const report = await runPackagedFeatureLeaseDwebLifecycle({ artifactRoot, reportPath });

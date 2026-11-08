@@ -4,7 +4,7 @@
 // The runner produces a `result` per task; this aggregates them into a
 // scorecard. Kept pure (values in, values out) so it's unit-testable
 // without a browser — the harness's own logic is held to the same bar it
-// holds peerd to.
+// holds mcdollar to.
 
 /**
  * @typedef {{ id: string, pass: boolean, detail?: string, error?: string|null,

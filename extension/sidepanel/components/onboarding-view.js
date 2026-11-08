@@ -1,5 +1,5 @@
 // @ts-check
-// First-run onboarding — "Hello, I'm peerd".
+// First-run onboarding — "Hello, I'm mcdollar".
 //
 // Shown ONCE per profile: after vault setup, before the first chat
 // (route gating lives in sidepanel.js via needsOnboarding below). Three
@@ -45,7 +45,7 @@
 // after unlock.
 
 import m from '/vendor/mithril/mithril.js';
-import { PEER_NAME_MAX } from '/peerd-runtime/ui.js';
+import { PEER_NAME_MAX } from '/mcdollar-runtime/ui.js';
 import { ProviderStep } from './onboarding-provider-step.js';
 import { PeerNetworkStep } from './onboarding-network-step.js';
 import { DWEB_ENABLED } from '/shared/channel-config.js';
@@ -226,7 +226,7 @@ const goToStep = (ui, next) => {
 export const OnboardingView = {
   /** @param {OnbVnode} vnode */
   oninit(vnode) {
-    vnode.state.peerName = vnode.attrs.state?.profile?.peerName || 'peerd';
+    vnode.state.peerName = vnode.attrs.state?.profile?.peerName || 'mcdollar';
     vnode.state.callMe = '';
     vnode.state.notes = '';
     vnode.state.busy = false;
@@ -268,10 +268,10 @@ export const OnboardingView = {
         // On success the SW pushes fresh state and the route gate lifts
         // itself — no local navigation here.
         if (!reply?.ok) ui.error = reply?.outcomeKnown === false
-          ? 'Peerd could not confirm the save. Checking your profile before allowing another attempt.'
+          ? 'Mcdollar could not confirm the save. Checking your profile before allowing another attempt.'
           : 'Your onboarding details could not be saved.';
       } catch {
-        ui.error = 'Peerd could not confirm the save. Checking your profile before allowing another attempt.';
+        ui.error = 'Mcdollar could not confirm the save. Checking your profile before allowing another attempt.';
       } finally {
         try { await reconcileState?.(); } catch {}
         ui.busy = false;
@@ -338,11 +338,11 @@ export const OnboardingView = {
               // An emptied name visibly falls back so the user is never
               // staring at a nameless greeting. (The SW normalizes again
               // at the store chokepoint.)
-              if (!(/** @type {HTMLInputElement} */ (e.target).value ?? '').trim()) { ui.peerName = 'peerd'; }
+              if (!(/** @type {HTMLInputElement} */ (e.target).value ?? '').trim()) { ui.peerName = 'mcdollar'; }
             },
           }),
         ]),
-        // The peerd.ai-style blinking terminal cursor, trailing the
+        // The mcdollar.ai-style blinking terminal cursor, trailing the
         // editable name. Monochrome (--fg) per the brand color rule.
         // Decorative — hidden from the a11y tree and reduced-motion.
         m('span.onboarding-cursor', { 'aria-hidden': 'true' }),
@@ -358,7 +358,7 @@ export const OnboardingView = {
         m('button.linklike.onboarding-skip', {
           type: 'button', disabled: ui.busy,
           // Skip = don't rename: revert any half-edit, move on.
-          onclick: () => { ui.peerName = ui.peerName.trim() || 'peerd'; goToStep(ui, 2); },
+          onclick: () => { ui.peerName = ui.peerName.trim() || 'mcdollar'; goToStep(ui, 2); },
         }, 'Skip'),
       ]),
     ];

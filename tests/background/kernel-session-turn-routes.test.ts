@@ -3,7 +3,7 @@ import {
   KERNEL_SESSION_TURN_ROUTE_NAMES,
   makeKernelSessionTurnRoutes,
 } from '../../extension/background/kernel-session-turn-routes.js';
-import { makeAgentSendCustody } from '../../extension/peerd-egress/background.js';
+import { makeAgentSendCustody } from '../../extension/mcdollar-egress/background.js';
 
 class SessionNotFoundError extends Error {}
 

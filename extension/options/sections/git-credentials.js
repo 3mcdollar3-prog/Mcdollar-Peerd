@@ -28,7 +28,7 @@ export const GitCredentialsSection = {
       const r = await vnode.attrs.send({ type: 'git-cred/list' });
       if (r?.ok && Array.isArray(r.hosts)) vnode.state.hosts = r.hosts;
       else if (vnode.state.hosts === null) vnode.state.hosts = [];
-      if (r && !r.ok && r.error === 'locked') vnode.state.msg = { ok: false, text: 'Vault is locked — unlock in the peerd panel first.' };
+      if (r && !r.ok && r.error === 'locked') vnode.state.msg = { ok: false, text: 'Vault is locked — unlock in the mcdollar panel first.' };
       m.redraw();
       return r;
     } catch {
@@ -42,7 +42,7 @@ export const GitCredentialsSection = {
       mutationFailureCopy(reply, {
         action, fallback: 'The Git credential could not be changed.',
         messages: {
-          locked: 'Vault is locked; unlock in the peerd panel first.',
+          locked: 'Vault is locked; unlock in the mcdollar panel first.',
           'bad-host': 'Enter a real host like github.com (no localhost or IPs).',
           'bad-token': 'Paste a complete token (no spaces).',
         },
@@ -69,7 +69,7 @@ export const GitCredentialsSection = {
           ui.msg = { ok: false, text: errText(r, 'saving the Git credential') };
           if (r?.outcomeKnown === false) {
             ui.uncertain = { kind: 'save', host, token };
-            ui.msg = { ok: false, text: 'Peerd could not confirm the save. Finish the same save; do not change the host or token.' };
+            ui.msg = { ok: false, text: 'Mcdollar could not confirm the save. Finish the same save; do not change the host or token.' };
           }
         }
       } finally {
@@ -94,7 +94,7 @@ export const GitCredentialsSection = {
           ui.msg = { ok: false, text: errText(r, 'removing the Git credential') };
           if (r?.outcomeKnown === false) {
             ui.uncertain = { kind: 'delete', host };
-            ui.msg = { ok: false, text: 'Peerd could not confirm the removal. Finish the same removal; do not start another credential change.' };
+            ui.msg = { ok: false, text: 'Mcdollar could not confirm the removal. Finish the same removal; do not start another credential change.' };
           }
         }
       } finally {
@@ -108,7 +108,7 @@ export const GitCredentialsSection = {
         'Tokens for private GitHub/GitLab repositories in WebVMs, Apps, Notebooks, and Pods. Each is '
         + 'encrypted in the same vault as your API keys, decrypted only for a clone, fetch, or push request to that host, '
         + 'bound to its host, and ', m('strong', 'never shown to the agent or the VM'),
-        '. peerd only sends it to that exact host over HTTPS (redirects are refused), '
+        '. mcdollar only sends it to that exact host over HTTPS (redirects are refused), '
         + 'so it can’t leak elsewhere.',
       ]),
 

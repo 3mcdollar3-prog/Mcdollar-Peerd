@@ -57,7 +57,7 @@ describe('native preview update custody', () => {
     await expect(h.custody.onUpdateAvailable({ version: '1.2.3' })).resolves.toBe(true);
     expect(h.calls.reload).toBe(0);
     expect(h.calls.notifications).toEqual([
-      'peerd v1.2.3 is downloaded - it installs when peerd goes quiet or the browser restarts.',
+      'mcdollar v1.2.3 is downloaded - it installs when mcdollar goes quiet or the browser restarts.',
     ]);
     expect((h.values.get(KERNEL_UPDATE_CUSTODY_KEY) as any).pendingVersion).toBe('1.2.3');
 
@@ -267,7 +267,7 @@ describe('native preview update custody', () => {
     await h.custody.onUpdateAvailable({ version: '1.2.4' });
     expect(h.calls.reload).toBe(0);
     expect(h.calls.notifications).toEqual([
-      'peerd v1.2.4 is downloaded. Restart the browser to install it.',
+      'mcdollar v1.2.4 is downloaded. Restart the browser to install it.',
     ]);
   });
 

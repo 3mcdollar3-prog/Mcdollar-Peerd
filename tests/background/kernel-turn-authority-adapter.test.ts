@@ -1,37 +1,37 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, test } from 'bun:test';
 import { createKernelTurnAuthorityAdapter } from '../../extension/background/kernel-turn-authority-adapter.js';
-import { makeLearnedOrigins } from '../../extension/peerd-runtime/actor/learned-origins.js';
-import { createOriginPacingStore } from '../../extension/peerd-runtime/pacing/origin-pacing-store.js';
+import { makeLearnedOrigins } from '../../extension/mcdollar-runtime/actor/learned-origins.js';
+import { createOriginPacingStore } from '../../extension/mcdollar-runtime/pacing/origin-pacing-store.js';
 import { createAuthorityEffectScheduler } from '../../extension/background/authority-effect-scheduler.js';
 import { createPageToolAuthority } from '../../extension/background/page-tool-authority.js';
 import { createIntrospectionToolAuthority } from '../../extension/background/introspection-tool-authority.js';
 import {
   projectControllerTurnAuthorityClass, snapshotControllerTurnAuthorityBinding,
 } from '../../extension/background/controller-turn-authority-scope.js';
-import { executeControllerIntrospectionTool } from '../../extension/peerd-runtime/controller-introspection-tools.js';
+import { executeControllerIntrospectionTool } from '../../extension/mcdollar-runtime/controller-introspection-tools.js';
 import {
   actorPermissionAuthoritySession, appendBoundActorIsolationAudit, boundActorFailureCustody,
 } from '../../extension/background/kernel-turn-authority-adapter.js';
-import { createSessionStore, makeTurnSlots } from '../../extension/peerd-runtime/kernel-custody.js';
-import { buildAppManifest } from '../../extension/peerd-engine/app-manifest.js';
-import { VMBootFailedError } from '../../extension/peerd-engine/background.js';
+import { createSessionStore, makeTurnSlots } from '../../extension/mcdollar-runtime/kernel-custody.js';
+import { buildAppManifest } from '../../extension/mcdollar-engine/app-manifest.js';
+import { VMBootFailedError } from '../../extension/mcdollar-engine/background.js';
 import { createContextSnapshots } from '../../extension/shared/model-context-snapshot.js';
 import { createScriptRunRegistry } from '../../extension/background/script-runs.js';
-import { projectControllerToolSurface } from '../../extension/peerd-runtime/controller-tool-projection.js';
-import { planToolsCommand } from '../../extension/peerd-runtime/tools/manifest-command.js';
+import { projectControllerToolSurface } from '../../extension/mcdollar-runtime/controller-tool-projection.js';
+import { planToolsCommand } from '../../extension/mcdollar-runtime/tools/manifest-command.js';
 import { canonicalActorOwnerPosture } from '../../extension/background/app-actor-policy.js';
 import { sha256Hex } from '../../extension/shared/util.js';
 import { makeSessionRoutes } from '../../extension/background/routes/sessions.js';
 import { createKernelSessionReader } from '../../extension/background/vault-kernel-core.js';
 import { makeKernelLearnedOriginRoutes } from '../../extension/background/settings-store.js';
-import { makeGoalRunner } from '../../extension/peerd-runtime/loop/goal-runner.js';
+import { makeGoalRunner } from '../../extension/mcdollar-runtime/loop/goal-runner.js';
 import { composeTurn } from '../../extension/offscreen/controller-compose-runtime.js';
 import { browserProbeResult, TEST_DOCUMENT_ID } from '../helpers/browser-scripting.ts';
-import { ABORT_STOP } from '../../extension/peerd-runtime/loop/turn-slots.js';
-import { ENGINE_LIVENESS_KEY } from '../../extension/peerd-runtime/lifecycle/engine-liveness.js';
-import { makeLifecycleBoot, PENDING_NOTICES_KEY } from '../../extension/peerd-runtime/lifecycle/boot.js';
-import { OPERATION_STATES } from '../../extension/peerd-runtime/lifecycle/operation-state.js';
+import { ABORT_STOP } from '../../extension/mcdollar-runtime/loop/turn-slots.js';
+import { ENGINE_LIVENESS_KEY } from '../../extension/mcdollar-runtime/lifecycle/engine-liveness.js';
+import { makeLifecycleBoot, PENDING_NOTICES_KEY } from '../../extension/mcdollar-runtime/lifecycle/boot.js';
+import { OPERATION_STATES } from '../../extension/mcdollar-runtime/lifecycle/operation-state.js';
 
 const event = () => {
   const listeners = new Set<(...args: any[]) => void>();
@@ -316,7 +316,7 @@ const harness = async (
     vmTabTracker, jsTabTracker, podTabTracker, appTabTracker,
     vmClient: { onTabClosed: () => {} }, jsClient: {}, podClient: {},
     appClient: {
-      readFile: async ({ path }: any) => path === 'peerd.json' ? appManifest : '',
+      readFile: async ({ path }: any) => path === 'mcdollar.json' ? appManifest : '',
       withWriteLock: async (_id: string, operation: () => any) => operation(),
     },
     appQuiescence: {
@@ -2587,7 +2587,7 @@ describe('kernel turn authority adapter', () => {
     expect(goalStarts[0].goal).toBe('check the build');
     const scheduled = (await h.sessions.list()).find((record: any) => record.routineId === 'routine');
     expect(scheduled).toMatchObject({ permissionMode: 'act', confirmActions: false });
-    expect(h.notifications).toContainEqual(expect.objectContaining({ title: 'peerd routine running' }));
+    expect(h.notifications).toContainEqual(expect.objectContaining({ title: 'mcdollar routine running' }));
 
     await h.runtime.relays.onSettingsChanged({ frontDoorView: 'home' });
     expect(h.panelBehavior.length).toBeGreaterThan(0);

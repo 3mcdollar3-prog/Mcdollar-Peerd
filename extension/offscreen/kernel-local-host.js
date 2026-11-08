@@ -7,7 +7,7 @@ import {
   PROVIDER_MODEL_CATALOG,
   normalizeOpenRouterModels,
   providerMetadata,
-} from '/peerd-provider/controller.js';
+} from '/mcdollar-provider/controller.js';
 
 class LocalEffectError extends Error {
   /** @param {string} operation @param {any} result */

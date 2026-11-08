@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { createNotebookToolAuthority } from '../../extension/background/notebook-tool-authority.js';
-import { executeControllerNotebookTool } from '../../extension/peerd-runtime/controller-notebook-tools.js';
+import { executeControllerNotebookTool } from '../../extension/mcdollar-runtime/controller-notebook-tools.js';
 
 const signal = new AbortController().signal;
 const context = (overrides: Record<string, any> = {}) => ({

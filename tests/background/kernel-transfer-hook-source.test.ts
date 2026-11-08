@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { createKernelTransferLive } from '../../extension/background/kernel-executable-transfer-live.js';
 import { createKernelAdministrativeControl } from '../../extension/background/kernel-administrative-control.js';
 import { createKernelFeatureHost } from '../../extension/offscreen/kernel-feature-host.js';
-import { semanticHooksFor } from '../../extension/peerd-runtime/tools/local-tool-dispatcher.js';
+import { semanticHooksFor } from '../../extension/mcdollar-runtime/tools/local-tool-dispatcher.js';
 import {
   _clearAllHooks,
   listHooks,
   loadUserHooks,
-} from '../../extension/peerd-runtime/tools/hooks/registry.js';
-import { runPreToolUse } from '../../extension/peerd-runtime/tools/hooks/runner.js';
+} from '../../extension/mcdollar-runtime/tools/hooks/registry.js';
+import { runPreToolUse } from '../../extension/mcdollar-runtime/tools/hooks/runner.js';
 import { projectSemanticHookManifest } from '../../extension/shared/semantic-hook-manifest.js';
 import { KERNEL_FEATURE_DISPATCH_CAPABILITY } from '../../extension/shared/kernel-feature-policy.js';
 

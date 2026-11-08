@@ -2,7 +2,7 @@
 // Constants shared by the two ends of the targeted actor MessageChannel.
 
 export const ACTOR_CHANNEL_PROTOCOL = 1;
-export const ACTOR_CHANNEL_OFFER = 'peerd/actor-channel';
+export const ACTOR_CHANNEL_OFFER = 'mcdollar/actor-channel';
 export const ACTOR_LOOP_EVENT_BYTES = 64 * 1024;
 
 const MODEL_ROUTES = Object.freeze([

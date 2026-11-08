@@ -50,7 +50,7 @@ const headlessExtract = async () => {
   const r = await runJob(
     {
       code: [
-        `const res = await peerd.egress.fetch("${ARTICLE_URL}", { extract: "markdown" });`,
+        `const res = await mcdollar.egress.fetch("${ARTICLE_URL}", { extract: "markdown" });`,
         'return { text: await res.text(), extracted: res.extracted, contentType: res.contentType };',
       ].join('\n'),
     },

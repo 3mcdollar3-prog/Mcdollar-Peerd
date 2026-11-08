@@ -23,7 +23,7 @@
     The SW keeps its own (manifest) CSP with https:, so webFetch still works.
   -->
   <meta http-equiv="Content-Security-Policy" content="connect-src 'none'">
-  <title>peerd · Notebook</title>
+  <title>mcdollar · Notebook</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='3' width='12' height='10' rx='1.5' fill='%2334d399'/%3E%3Ctext x='8' y='11' text-anchor='middle' font-size='8' font-family='monospace' font-weight='700' fill='%230d1117'%3Ejs%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="/shared/brand.css">
   <link rel="stylesheet" href="styles.css">
@@ -39,16 +39,16 @@
 
   <main id="notebook-app" hidden>
     <header id="notebook-toolbar">
-      <span class="peerd-brand" aria-hidden="true"><span class="b-p">p</span><span class="b-e">e</span><span class="b-e2">e</span><span class="b-r">r</span><span class="b-d">d</span></span>
+      <span class="mcdollar-brand" aria-hidden="true"><span class="b-p">p</span><span class="b-e">e</span><span class="b-e2">e</span><span class="b-r">r</span><span class="b-d">d</span></span>
       <span class="brand-sep" aria-hidden="true">·</span>
       <span class="js-dot" aria-hidden="true">js</span>
       <span class="notebook-id-chip" id="notebook-id-chip"></span>
       <span class="spacer"></span>
       <span class="run-hint" id="save-status">saved</span>
       <details class="std-cheat" id="std-cheat">
-        <summary title="peerd:std quick reference">peerd:std ?</summary>
+        <summary title="mcdollar:std quick reference">mcdollar:std ?</summary>
         <div class="std-cheat-panel">
-          <code class="std-cheat-import">import { table, chart, mean } from 'peerd:std'</code>
+          <code class="std-cheat-import">import { table, chart, mean } from 'mcdollar:std'</code>
           <dl>
             <dt>display</dt><dd>table(rows) · chart({ type: 'bar'|'line'|'scatter'|'heatmap', data, x, y, v, title })<br>RETURN the value to render it — console.log is tracing only</dd>
             <dt>stats</dt><dd>sum · mean · median · min · max · mode · variance · stdev · quantile · round · clamp</dd>
@@ -59,12 +59,12 @@
           </dl>
         </div>
       </details>
-      <button class="export-btn" id="export-btn" title="Download this Notebook as a .peerd file">Export ⤓</button>
+      <button class="export-btn" id="export-btn" title="Download this Notebook as a .mcdollar file">Export ⤓</button>
       <button class="run-btn" id="run-btn" aria-label="Run notebook.js"
               title="Runs notebook.js (Cmd-Enter / Ctrl-Enter)">Run notebook.js ▶</button>
     </header>
 
-    <!-- peerd-engine/editor mounts here: file tree + CodeMirror. -->
+    <!-- mcdollar-engine/editor mounts here: file tree + CodeMirror. -->
     <div id="editor-mount"></div>
 
     <!-- Draggable boundary between the editor and the output pane. -->

@@ -110,7 +110,7 @@ export const rankOutreach = (
 export const toOutreachMarkdown = (candidates: OutreachCandidate[], top = 150): string => {
   const picked = candidates.slice(0, top);
   const lines = [
-    '# peerd - outreach worksheet',
+    '# mcdollar - outreach worksheet',
     '',
     `Top ${picked.length} of ${candidates.length} accounts, scored by weighted PageRank / betweenness / in-degree percentiles.`,
     'Deduplicate identities first. Contact each human once, with one specific message.',

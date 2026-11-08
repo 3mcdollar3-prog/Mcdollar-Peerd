@@ -1,8 +1,8 @@
 // @ts-check
 // Packaged examples have local provenance, not a peer publisher or availability claim.
 const STARTERS = Object.freeze({
-  'csv-lab': { name: 'Tables and charts', description: 'Explore tables, numbers and a chart, all on your device.', runtime: 'JavaScript', path: '/peerd-engine/starters/csv-lab.peerd' },
-  'wasm-image': { name: 'Desaturator', description: 'Make a picture gray, or black and white, all on your device.', runtime: 'JavaScript + WebAssembly', path: '/peerd-engine/starters/wasm-image.peerd' },
+  'csv-lab': { name: 'Tables and charts', description: 'Explore tables, numbers and a chart, all on your device.', runtime: 'JavaScript', path: '/mcdollar-engine/starters/csv-lab.mcdollar' },
+  'wasm-image': { name: 'Desaturator', description: 'Make a picture gray, or black and white, all on your device.', runtime: 'JavaScript + WebAssembly', path: '/mcdollar-engine/starters/wasm-image.mcdollar' },
 });
 /** @param {unknown} key */
 export const packagedStarter = key => typeof key === 'string' && Object.hasOwn(STARTERS, key)

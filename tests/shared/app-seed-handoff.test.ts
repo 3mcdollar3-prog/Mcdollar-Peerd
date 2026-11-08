@@ -3,8 +3,8 @@ import { appSeedHandoff, decodeAppSeedHandoff } from '../../extension/shared/app
 import { packBundle, MAX_NETWORK_BUNDLE_BYTES } from '../../extension/shared/bundle/bundle.js';
 import { packTransportBundle } from '../../extension/shared/bundle/transport.js';
 import { fromBase64, toBase64 } from '../../extension/shared/bundle/bytes.js';
-import { buildManifest } from '../../extension/peerd-distributed/content/manifest.js';
-import { generateIdentity } from '../../extension/peerd-distributed/identity/keypair.js';
+import { buildManifest } from '../../extension/mcdollar-distributed/content/manifest.js';
+import { generateIdentity } from '../../extension/mcdollar-distributed/identity/keypair.js';
 
 const fixture = async (compressed = false) => {
   const files = { 'index.html': new TextEncoder().encode('<h1>Signed App</h1>') };

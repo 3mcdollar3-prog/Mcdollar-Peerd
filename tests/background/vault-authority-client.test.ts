@@ -321,7 +321,7 @@ describe('sealed vault authority channel', () => {
         postMessage: (offer: any, ports: MessagePort[]) => {
           offers.push(offer);
           expect(offer).toMatchObject({
-            type: 'peerd/vault-authority-channel', protocol: 1, lease: currentLease,
+            type: 'mcdollar/vault-authority-channel', protocol: 1, lease: currentLease,
           });
           void serveVaultAuthority({ port: ports[0], channelId: offer.channelId });
         },
@@ -640,7 +640,7 @@ describe('sealed vault authority channel', () => {
       createWorker: ((url: string, options: any) => ({
         postMessage(bootstrap: any, ports: MessagePort[]) {
           expect(url).toBe(workerUrl);
-          expect(options).toEqual({ type: 'module', name: 'peerd-vault-authority' });
+          expect(options).toEqual({ type: 'module', name: 'mcdollar-vault-authority' });
           void serveVaultAuthority({ port: ports[0], channelId: bootstrap.channelId });
         },
         terminate() { terminated += 1; },
@@ -702,7 +702,7 @@ describe('sealed vault authority channel', () => {
       isTrusted: true,
       source: { scriptURL: expected },
       data: {
-        type: 'peerd/vault-authority-channel', protocol: 1, channelId: 'channel-123',
+        type: 'mcdollar/vault-authority-channel', protocol: 1, channelId: 'channel-123',
         lease: vaultLease,
       },
       ports: [{}],
@@ -734,8 +734,8 @@ describe('sealed vault authority channel', () => {
     const runtimeSource = readFileSync(
       join(EXTENSION_DIR, 'offscreen/vault-authority-runtime.js'), 'utf8',
     );
-    expect(runtimeSource).toContain("from '../peerd-egress/offscreen.js'");
-    expect(runtimeSource).not.toContain("from '../peerd-egress/vault/");
+    expect(runtimeSource).toContain("from '../mcdollar-egress/offscreen.js'");
+    expect(runtimeSource).not.toContain("from '../mcdollar-egress/vault/");
     expect(runtimeSource).not.toMatch(/^\s*import .*argon2id/m);
     expect(runtimeSource).toContain("import('../shared/argon2id.js')");
   });

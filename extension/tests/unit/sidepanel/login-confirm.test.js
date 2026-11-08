@@ -61,8 +61,8 @@ for (const blocked of [false, true]) {
         const cancel = /** @type {HTMLButtonElement} */ (dialog.querySelector('button.secondary'));
         const allow = /** @type {HTMLButtonElement} */ (dialog.querySelector('button:not(.secondary)'));
         expect(dialog.getAttribute('aria-modal')).toBe('true');
-        expect(dialog.getAttribute('aria-labelledby')).toBe('peerd-confirm-title');
-        expect(root.querySelector('#peerd-confirm-title')?.textContent).toBe('Approve sign-in');
+        expect(dialog.getAttribute('aria-labelledby')).toBe('mcdollar-confirm-title');
+        expect(root.querySelector('#mcdollar-confirm-title')?.textContent).toBe('Approve sign-in');
         expect(document.activeElement).toBe(cancel);
         expect(allow.disabled).toBe(blocked);
         cancel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }));

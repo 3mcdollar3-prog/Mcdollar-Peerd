@@ -24,7 +24,7 @@ describe('web channel flavor', () => {
   });
 
   test('web build has DWEB_ENABLED false — the agent-side dweb gate stays shut', () => {
-    // The web build stubs the loader AND never stages peerd-distributed at
+    // The web build stubs the loader AND never stages mcdollar-distributed at
     // all (see the curation invariant below).
     expect(src).toContain('export const DWEB_ENABLED = false');
   });
@@ -119,11 +119,11 @@ describe('web curation invariants', () => {
     }
   });
 
-  test('peerd-distributed is NOT staged — the web tree carries no dweb module', () => {
+  test('mcdollar-distributed is NOT staged — the web tree carries no dweb module', () => {
     // why: the same posture guarantee the store build gets from its
-    // dweb-prune. Nothing staged may import peerd-distributed (the dweb
+    // dweb-prune. Nothing staged may import mcdollar-distributed (the dweb
     // boundary), the loader is the store stub, so staging the module would
     // only ship dead — but reachable — mesh code to every consumer.
-    expect(WEB_INCLUDE_DIRS).not.toContain('peerd-distributed');
+    expect(WEB_INCLUDE_DIRS).not.toContain('mcdollar-distributed');
   });
 });

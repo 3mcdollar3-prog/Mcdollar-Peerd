@@ -3,7 +3,7 @@
 // formatter stays lazy offscreen; storage and mutation authority stay in the
 // service worker.
 
-export const CONTRIBUTOR_CHANNEL_OFFER = 'peerd/contributor-channel';
+export const CONTRIBUTOR_CHANNEL_OFFER = 'mcdollar/contributor-channel';
 export const CONTRIBUTOR_CHANNEL_PROTOCOL = 1;
 export const CONTRIBUTOR_CHANNEL_CALL = 'contributor/kernel-call';
 export const CONTRIBUTOR_CHANNEL_REPLY = 'contributor/kernel-reply';

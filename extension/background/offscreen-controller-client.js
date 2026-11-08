@@ -660,7 +660,7 @@ export const makeSemanticControllerClient = ({
     /** @type {unknown} */ payload,
   ) => capability === 'prompt.render' || capability === 'turn.tools.project'
     || capability === 'turn.tools.command' ? {
-      ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+      ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
       origin: null,
       target: capability === 'prompt.render' ? 'system-prompt'
         : capability === 'turn.tools.project' ? 'turn-tool-projection' : 'turn-tools-command',
@@ -853,14 +853,14 @@ export const makeSemanticControllerClient = ({
     /** @type {ReturnType<typeof setTimeout>} */ let timer;
     const loaded = (async () => {
       const base = await fetchFn(
-        browser.runtime.getURL('peerd-provider/system-prompt.txt'),
+        browser.runtime.getURL('mcdollar-provider/system-prompt.txt'),
         { signal: controller.signal },
       );
       if (!base.ok) throw new Error('packaged system-prompt template is unavailable');
       let dwebBlock = '';
       if (dwebEnabled) {
         const dweb = await fetchFn(
-          browser.runtime.getURL('peerd-provider/system-prompt-dweb.txt'),
+          browser.runtime.getURL('mcdollar-provider/system-prompt-dweb.txt'),
           { signal: controller.signal },
         );
         const text = dweb.ok ? (await dweb.text()).trim() : '';

@@ -8,7 +8,7 @@
 // — this page is the global, between-chats view.
 
 import m from '/vendor/mithril/mithril.js';
-import { DEFAULT_PRICING } from '/peerd-provider/options.js';
+import { DEFAULT_PRICING } from '/mcdollar-provider/options.js';
 import { resetRow } from './reset-row.js';
 
 /** @typedef {import('./reset-row.js').Send} Send */
@@ -60,7 +60,7 @@ export const CostsSection = {
       m('.settings-divider'),
       m('h3', 'Spend limit'),
       m('p', 'Optional hard cap on per-session spend. When a conversation’s '
-        + 'accumulated cost crosses this amount, peerd halts the agent mid-turn. '
+        + 'accumulated cost crosses this amount, mcdollar halts the agent mid-turn. '
         + 'Set to 0 (or blank) for no limit.'),
       m('div', { style: 'display:flex; gap:8px; align-items:center;' }, [
         m('span', { style: 'opacity:0.7;' }, '$'),
@@ -91,7 +91,7 @@ export const CostsSection = {
 
 // ---- pricing overrides (cost telemetry, feature 06) ----------------------
 //
-// The built-in pricing table (peerd-provider/pricing.js) is a snapshot and
+// The built-in pricing table (mcdollar-provider/pricing.js) is a snapshot and
 // drifts as vendors change prices. This editor lets the user paste a
 // corrected rate card per model id WITHOUT waiting on an extension update.
 // Overrides merge over the defaults; clearing a field reverts that model
@@ -100,7 +100,7 @@ export const CostsSection = {
 //
 // Kept collapsed by default (most users never touch it). Rates are USD per
 // 1,000,000 tokens to match how Anthropic + OpenRouter publish them.
-/** @typedef {import('/peerd-provider/pricing.js').ModelRates} ModelRates */
+/** @typedef {import('/mcdollar-provider/pricing.js').ModelRates} ModelRates */
 
 /** @type {[keyof ModelRates, string][]} */
 const RATE_FIELDS = [

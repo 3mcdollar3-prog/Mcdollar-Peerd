@@ -25,7 +25,7 @@ export const createKernelRecoveryCustody = ({
   };
   const retry = async () => {
     const delay = Math.min(RETRY_MIN_MS * 2 ** Math.min(failures - 1, 4), RETRY_MAX_MS);
-    try { await alarms.create('peerd-schedule', { when: now() + delay }); }
+    try { await alarms.create('mcdollar-schedule', { when: now() + delay }); }
     catch {}
   };
   /** @param {string|null|undefined} currentSessionId @returns {Promise<unknown>} */

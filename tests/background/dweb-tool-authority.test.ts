@@ -20,7 +20,7 @@ describe('exact dweb authority', () => {
           share: async (appId: string, received: any) => {
             events.push(`share:${appId}`);
             expect(received).toBe(prepared);
-            return { ok: true, uri: 'peerd://app-1' };
+            return { ok: true, uri: 'mcdollar://app-1' };
           },
         },
       },
@@ -28,7 +28,7 @@ describe('exact dweb authority', () => {
     await expect(authority.publishConfirmedApp('app-2'))
       .rejects.toThrow('dweb authority mismatch');
     expect(await authority.publishConfirmedApp('app-1'))
-      .toEqual({ ok: true, uri: 'peerd://app-1' });
+      .toEqual({ ok: true, uri: 'mcdollar://app-1' });
     expect(events).toEqual(['confirm', 'share:app-1']);
     expect(prompt.summary).toContain('Example App');
     expect(prompt.summary).toContain('Entry: index.html');
@@ -84,7 +84,7 @@ describe('exact dweb authority', () => {
       const binding = kind === 'publish'
         ? { operation: 'turn.dweb.publish-confirmed-app', args: { appId: 'app-1' } }
         : { operation: 'turn.dweb.install-confirmed-app', args: {
-            uri: 'peerd://bundle', name: 'Bundle',
+            uri: 'mcdollar://bundle', name: 'Bundle',
           } };
       const authority = createDwebToolAuthority({
         binding,
@@ -106,7 +106,7 @@ describe('exact dweb authority', () => {
       });
       const pending = kind === 'publish'
         ? authority.publishConfirmedApp('app-1')
-        : authority.installConfirmedApp('peerd://bundle', 'Bundle');
+        : authority.installConfirmedApp('mcdollar://bundle', 'Bundle');
       await started;
       controller.abort();
       releasePermission();
@@ -116,7 +116,7 @@ describe('exact dweb authority', () => {
   );
 
   test('install confirmation distinguishes long common-prefix bundle identities', async () => {
-    const prefix = `peerd://did:key:zPublisher/${'a'.repeat(560)}`;
+    const prefix = `mcdollar://did:key:zPublisher/${'a'.repeat(560)}`;
     const summaries: string[] = [];
     for (const suffix of ['bundle-one', 'bundle-two']) {
       const uri = `${prefix}${suffix}`;
@@ -146,7 +146,7 @@ test('offline block-only authority refuses other operations without asking for c
     ['turn.dweb.discover-apps', 'discoverApps', {}, []],
     ['turn.dweb.read-peers', 'readPeers', {}, []],
     ['turn.dweb.set-discovery-enabled', 'setDiscoveryEnabled', { enabled: true }, [true]],
-    ['turn.dweb.install-confirmed-app', 'installConfirmedApp', { uri: 'peerd://test' }, ['peerd://test', undefined]],
+    ['turn.dweb.install-confirmed-app', 'installConfirmedApp', { uri: 'mcdollar://test' }, ['mcdollar://test', undefined]],
   ] as const) {
     const authority: any = createDwebToolAuthority({ binding: { operation, args }, ctx });
     expect(await authority[method](...values)).toEqual({ ok: false, error: 'dweb_unavailable' });

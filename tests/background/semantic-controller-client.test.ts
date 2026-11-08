@@ -20,13 +20,13 @@ import { makeControllerOfferHandler } from '../../extension/offscreen/controller
 import { createController } from '../../extension/offscreen/controller-runtime.js';
 import {
   renderSystemPromptFromAssets,
-} from '../../extension/peerd-runtime/loop/system-prompt.js';
-import { buildTemporalBlock } from '../../extension/peerd-runtime/clock/context.js';
+} from '../../extension/mcdollar-runtime/loop/system-prompt.js';
+import { buildTemporalBlock } from '../../extension/mcdollar-runtime/clock/context.js';
 import { CONTROLLER_BUILD_DIGEST } from '../../extension/shared/structured-clone-size.js';
 
-const TEMPLATE = readFileSync(join(EXTENSION_DIR, 'peerd-provider/system-prompt.txt'), 'utf8');
+const TEMPLATE = readFileSync(join(EXTENSION_DIR, 'mcdollar-provider/system-prompt.txt'), 'utf8');
 const DWEB_TEXT = readFileSync(
-  join(EXTENSION_DIR, 'peerd-provider/system-prompt-dweb.txt'), 'utf8',
+  join(EXTENSION_DIR, 'mcdollar-provider/system-prompt-dweb.txt'), 'utf8',
 ).trim();
 const DWEB_BLOCK = DWEB_TEXT ? `\n${DWEB_TEXT}\n` : '';
 const TEST_KERNEL_IDENTITY = Object.freeze({
@@ -85,7 +85,7 @@ describe('production semantic controller slice', () => {
     ]);
     expect(CONTROLLER_BUILD_STAMP_MODULES).not.toContain('structured-clone-size.js' as any);
 
-    const root = mkdtempSync(join(tmpdir(), 'peerd-controller-stamp-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-controller-stamp-'));
     try {
       cpSync(EXTENSION_DIR, root, { recursive: true });
       const structuredClonePath = join(root, 'shared', 'structured-clone-size.js');
@@ -146,7 +146,7 @@ describe('production semantic controller slice', () => {
       expect(identityGraph, entry).toContain(join(EXTENSION_DIR, entry));
     }
 
-    const root = mkdtempSync(join(tmpdir(), 'peerd-controller-identity-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-controller-identity-'));
     try {
       cpSync(EXTENSION_DIR, root, { recursive: true });
       const before = await controllerBuildDigest(root);
@@ -164,7 +164,7 @@ describe('production semantic controller slice', () => {
   });
 
   test('build identity binds the kernel reverse-turn authority', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-controller-turn-identity-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-controller-turn-identity-'));
     try {
       cpSync(EXTENSION_DIR, root, { recursive: true });
       const before = await controllerBuildDigest(root);
@@ -177,7 +177,7 @@ describe('production semantic controller slice', () => {
   });
 
   test('build identity binds semantic reverse authority and admission', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-controller-semantic-identity-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-controller-semantic-identity-'));
     try {
       cpSync(EXTENSION_DIR, root, { recursive: true });
       let before = await controllerBuildDigest(root);
@@ -194,7 +194,7 @@ describe('production semantic controller slice', () => {
   });
 
   test('build identity binds support routing and reverse authority', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-controller-support-identity-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-controller-support-identity-'));
     try {
       cpSync(EXTENSION_DIR, root, { recursive: true });
       let before = await controllerBuildDigest(root);
@@ -292,7 +292,7 @@ describe('production semantic controller slice', () => {
     const workerUrl = 'chrome-extension://test/background/service-worker.js';
     const offscreenUrl = 'chrome-extension://test/offscreen/offscreen.html';
     const authority = {
-      ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+      ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
       origin: null, target: 'semantic:provider/status:first-party', replayClass: 'A',
     } as const;
     const offerHandler = makeControllerOfferHandler({
@@ -447,7 +447,7 @@ describe('production semantic controller slice', () => {
       firefoxDirect: false,
       dwebEnabled: false,
       authorizeTurnCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: 'session-1', instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: 'session-1', instanceId: null,
         origin: null, target: 'orchestrator-turn', replayClass: 'E',
       }),
       handleTurnKernelCall: async () => ({ ok: true }),
@@ -573,7 +573,7 @@ describe('production semantic controller slice', () => {
       firefoxDirect: false,
       dwebEnabled: false,
       authorizeSemanticCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
         origin: null, target: 'semantic:test:first-party', replayClass: 'A',
       }),
       handleSemanticKernelCall: async () => ({ ok: true }),
@@ -722,7 +722,7 @@ describe('production semantic controller slice', () => {
       ensureOffscreen: async () => {}, offscreenUrl,
       firefoxDirect: false, dwebEnabled: false,
       authorizeFeatureCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
         origin: null, target: 'feature:session/list', replayClass: 'A',
       }),
       handleFeatureKernelCall: async () => ({ ok: true }),
@@ -986,12 +986,12 @@ describe('production semantic controller slice', () => {
       ensureOffscreen: async () => {}, offscreenUrl: 'offscreen/offscreen.html',
       firefoxDirect: true, dwebEnabled: false,
       authorizeTurnCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: 'session-1', instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: 'session-1', instanceId: null,
         origin: null, target: 'orchestrator-turn', replayClass: 'E',
       }),
       handleTurnKernelCall: async () => ({ ok: true }),
       authorizeSemanticCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
         origin: null, target: 'semantic:test:first-party', replayClass: 'A',
       }),
       handleSemanticKernelCall: async () => ({ ok: true }),
@@ -1039,12 +1039,12 @@ describe('production semantic controller slice', () => {
       ensureOffscreen: async () => {}, offscreenUrl: 'offscreen/offscreen.html',
       firefoxDirect: true, dwebEnabled: false,
       authorizeTurnCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: 'session-1', instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: 'session-1', instanceId: null,
         origin: null, target: 'orchestrator-turn', replayClass: 'E',
       }),
       handleTurnKernelCall: async () => ({ ok: true }),
       authorizeSemanticCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
         origin: null, target: 'semantic:test:first-party', replayClass: 'A',
       }),
       handleSemanticKernelCall: async () => ({ ok: true }),
@@ -1129,7 +1129,7 @@ describe('production semantic controller slice', () => {
         ensureOffscreen: async () => {}, offscreenUrl: 'offscreen/offscreen.html',
         firefoxDirect, dwebEnabled: false,
         authorizeSemanticCall: () => ({
-          ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+          ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
           origin: null, target: 'semantic:provider/status:first-party', replayClass: 'A',
         }),
         handleSemanticKernelCall: async () => ({ ok: true }),
@@ -1177,7 +1177,7 @@ describe('production semantic controller slice', () => {
       ensureOffscreen: async () => {}, offscreenUrl: 'offscreen/offscreen.html',
       firefoxDirect: true, dwebEnabled: false, connectTimeoutMs: 5,
       authorizeSemanticCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
         origin: null, target: 'semantic:provider/status:first-party', replayClass: 'A',
       }),
       handleSemanticKernelCall: async () => ({ ok: true }),
@@ -1212,7 +1212,7 @@ describe('production semantic controller slice', () => {
       ensureOffscreen: async () => {}, offscreenUrl: 'offscreen/offscreen.html',
       firefoxDirect: true, dwebEnabled: false, connectTimeoutMs: 1_000,
       authorizeTurnCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: 'root', instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: 'root', instanceId: null,
         origin: null, target: 'turn:root', replayClass: 'C',
       }),
       handleTurnKernelCall: async () => ({ ok: true }),
@@ -1245,7 +1245,7 @@ describe('production semantic controller slice', () => {
       ensureOffscreen: async () => {}, offscreenUrl: 'offscreen/offscreen.html',
       firefoxDirect: true, dwebEnabled: false,
       authorizeComposeCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: 'root', instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: 'root', instanceId: null,
         origin: null, target: 'turn-compose', replayClass: 'A',
       }),
       handleComposeKernelCall: async () => ({ ok: true }),
@@ -1275,7 +1275,7 @@ describe('production semantic controller slice', () => {
       ensureOffscreen: async () => {}, offscreenUrl: 'offscreen/offscreen.html',
       firefoxDirect: true, dwebEnabled: false, connectTimeoutMs: 5,
       authorizeSemanticCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
         origin: null, target: 'semantic:provider/status:first-party', replayClass: 'A',
       }),
       handleSemanticKernelCall: async () => ({ ok: true }),
@@ -1356,7 +1356,7 @@ describe('production semantic controller slice', () => {
       ensureOffscreen: async () => {}, offscreenUrl: 'offscreen/offscreen.html',
       firefoxDirect: false, dwebEnabled: false, connectTimeoutMs: 50,
       authorizeSemanticCall: () => ({
-        ownerId: 'peerd-authority-kernel', sessionId: null, instanceId: null,
+        ownerId: 'mcdollar-authority-kernel', sessionId: null, instanceId: null,
         origin: null, target: 'semantic:provider/status:first-party', replayClass: 'A',
       }),
       handleSemanticKernelCall: async () => ({ ok: true }),

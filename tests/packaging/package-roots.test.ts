@@ -14,7 +14,7 @@ import {
 
 const roots: string[] = [];
 const temporaryRoot = (): string => {
-  const root = mkdtempSync(join(tmpdir(), 'peerd-package-roots-'));
+  const root = mkdtempSync(join(tmpdir(), 'mcdollar-package-roots-'));
   roots.push(root);
   return root;
 };

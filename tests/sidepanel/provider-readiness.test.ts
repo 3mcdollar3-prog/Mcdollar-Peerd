@@ -8,7 +8,7 @@ describe('composer provider readiness copy', () => {
       expect(composerUnavailableCopy(composer, { compact: true }))
         .toBe('Starting up. Try again in a moment.');
       expect(composerUnavailableCopy(composer))
-        .toBe('peerd is starting up. Try again in a moment.');
+        .toBe('mcdollar is starting up. Try again in a moment.');
     }
   });
 

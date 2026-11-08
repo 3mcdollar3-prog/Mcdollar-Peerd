@@ -1,5 +1,5 @@
 // @ts-check
-// Open the options page — the ONE way any peerd surface reaches the
+// Open the options page — the ONE way any mcdollar surface reaches the
 // full-tab settings.
 //
 // why two paths: runtime.openOptionsPage() focuses an existing options
@@ -9,8 +9,8 @@
 // (accepted in the design): a deep link can open a duplicate tab if an
 // options tab is already open; we accept that over tab-query plumbing.
 //
-// Lives in shared/ (not sidepanel/) because peerd-runtime's MicButton
-// needs it too — peerd-runtime importing /shared/* has abundant
+// Lives in shared/ (not sidepanel/) because mcdollar-runtime's MicButton
+// needs it too — mcdollar-runtime importing /shared/* has abundant
 // precedent (util.js, errors.js, channel-config.js).
 
 import browser from '/shared/browser-api.js';

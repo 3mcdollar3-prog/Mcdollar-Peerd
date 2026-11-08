@@ -25,12 +25,12 @@ test('logpoints never pause and record only bounded stage labels and timestamps,
   const points = calls.filter(c => c.method === 'Debugger.setBreakpointByUrl');
   expect(points).toHaveLength(LOCK_STAGES.length);
   for (const { args } of points) {
-    const scope = { __peerdVaultLockStages: [] as any[] };
+    const scope = { __mcdollarVaultLockStages: [] as any[] };
     const evaluate = new Function('globalThis', 'performance', `return ${args.condition}`);
     expect(evaluate(scope, { now: () => 42 })).toBe(false);
-    expect(Object.keys(scope.__peerdVaultLockStages[0])).toEqual(['stage', 'at']);
+    expect(Object.keys(scope.__mcdollarVaultLockStages[0])).toEqual(['stage', 'at']);
     for (let n = 0; n < 70; n++) expect(evaluate(scope, { now: () => 42 })).toBe(false);
-    expect(scope.__peerdVaultLockStages).toHaveLength(64);
+    expect(scope.__mcdollarVaultLockStages).toHaveLength(64);
   }
   await diagnostics.remove();
   expect(calls.filter(c => c.method === 'Debugger.removeBreakpoint')).toHaveLength(points.length);

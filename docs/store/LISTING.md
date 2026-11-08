@@ -2,7 +2,7 @@
 
 ## Name
 
-peerd
+mcdollar
 
 ## Summary (132 chars max, also the manifest description)
 
@@ -17,10 +17,10 @@ a capability of it. No module-by-module enumeration, no "harness", no
 
 ---
 
-peerd is an AI assistant that lives in your browser's side panel and
+mcdollar is an AI assistant that lives in your browser's side panel and
 does things for you, not just answers questions.
 
-peerd is an experimental beta. Breaking changes and incomplete browser support
+mcdollar is an experimental beta. Breaking changes and incomplete browser support
 are expected. Review the privacy and security notes before using it with
 sensitive data.
 
@@ -41,7 +41,7 @@ machine.
 
 YOUR DATA STAYS YOURS
 
-peerd is local-first and has no backend:
+mcdollar is local-first and has no backend:
 
 • Bring your own AI provider key, or use a configured local provider
   where supported. Keys are stored in an encrypted vault on your device,
@@ -54,7 +54,7 @@ peerd is local-first and has no backend:
 
 GUARDRAILS ON BY DEFAULT
 
-• peerd refuses to operate on sensitive sites out of the box: banks,
+• mcdollar refuses to operate on sensitive sites out of the box: banks,
   brokerages, crypto exchanges and wallets, health portals, government
   services, and password managers.
 • Direct fetch, document reading, and browser automation block localhost,
@@ -68,7 +68,7 @@ GUARDRAILS ON BY DEFAULT
   separate opt-in path.
 • Risky actions ask for your confirmation first.
 
-Choose a supported local provider or supply your own provider API key. peerd is
+Choose a supported local provider or supply your own provider API key. mcdollar is
 independent software and is not affiliated with any provider.
 
 ---
@@ -85,11 +85,11 @@ English
 
 | Asset | Spec | Status |
 |---|---|---|
-| Store icon | 128×128 PNG, 96×96 art + 16px transparent padding | ✅ `extension/icons/icon128.png`, with spec-compliant padding. Padded source: `docs/store/assets/peerd-icon-128.svg`. Full-bleed master and larger renders: `docs/store/assets/peerd-icon*`. The smaller toolbar icons stay full bleed. |
+| Store icon | 128×128 PNG, 96×96 art + 16px transparent padding | ✅ `extension/icons/icon128.png`, with spec-compliant padding. Padded source: `docs/store/assets/mcdollar-icon-128.svg`. Full-bleed master and larger renders: `docs/store/assets/mcdollar-icon*`. The smaller toolbar icons stay full bleed. |
 | Screenshots (≥1, max 5) | 1280×800 or 640×400 | ☐ capture, see shot list below |
 | Small promo tile | 440×280 PNG | ✅ `docs/store/assets/promo-440x280.png` |
 | Marquee promo tile (optional) | 1400×560 PNG | ✅ `docs/store/assets/marquee-1400x560.png` |
-| Privacy policy URL | published page | ☐ publish `docs/store/PRIVACY.md` at https://peerd.ai/privacy (deploys from the `peerd-site` repo) |
+| Privacy policy URL | published page | ☐ publish `docs/store/PRIVACY.md` at https://mcdollar.ai/privacy (deploys from the `mcdollar-site` repo) |
 | Demo video for reviewer | unlisted YouTube link | ☐ record (agent task → VM boot → audit log) |
 
 ### Screenshot shot list (1280×800)

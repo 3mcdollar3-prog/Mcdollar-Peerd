@@ -73,7 +73,7 @@ export const fabricateCredential = async (alg: -7 | -8 = -7): Promise<Fabricated
 };
 
 export const buildAuthenticatorData = async ({
-  rpId = 'id.peerd.ai',
+  rpId = 'id.mcdollar.ai',
   userPresent = true,
   userVerified = true,
   signCount = 7,
@@ -94,8 +94,8 @@ export const buildAuthenticatorData = async ({
 export const fabricateAssertion = async ({
   credential,
   challenge,
-  origin = 'https://id.peerd.ai',
-  rpId = 'id.peerd.ai',
+  origin = 'https://id.mcdollar.ai',
+  rpId = 'id.mcdollar.ai',
   type = 'webauthn.get',
   userPresent = true,
   userVerified = true,

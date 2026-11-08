@@ -38,7 +38,7 @@ export const NOTEBOOK_FETCH_STATE = {
       })()`, true);
       const outcome = await command({
         type: 'js/eval', timeoutMs: 10_000,
-        code: `const response = await peerd.egress.fetch(${JSON.stringify(url)});
+        code: `const response = await mcdollar.egress.fetch(${JSON.stringify(url)});
           return { ok: response.ok, text: await response.text() };`,
       });
       rec.check('ordinary Notebook fetch reaches the real audited route and returns data',

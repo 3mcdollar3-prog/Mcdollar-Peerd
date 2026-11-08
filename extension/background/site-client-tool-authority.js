@@ -8,12 +8,12 @@ import {
   validateSiteClientValue,
   canonicalSiteClientJson,
   siteClientValidatedOperations,
-} from '/peerd-runtime/kernel-turn-authority.js';
+} from '/mcdollar-runtime/kernel-turn-authority.js';
 import {
   browserDocumentIdentity,
   originOfUrl,
   resolveTargetTab,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 import { sameCanonicalStructuredClone } from '/shared/canonical-clone-digest.js';
 
 const mismatch = () => Object.assign(new Error('site-client authority mismatch'), {
@@ -417,7 +417,7 @@ const captureOwned = async (action, ctx, signal) => {
   );
   if (action === 'start') {
     const result = await capture.start({
-      tabId: tab.id, origins, documentId: tab.peerdDocumentId,
+      tabId: tab.id, origins, documentId: tab.mcdollarDocumentId,
       expectedDocument: browserDocumentIdentity(tab),
     });
     if (signal?.aborted) {

@@ -1,7 +1,7 @@
 // @ts-check
 import { afterStaticShellPaint, startVaultShell } from '../sidepanel/vault-shell.js';
 
-document.documentElement.dataset.peerdBootModule = 'evaluated';
+document.documentElement.dataset.mcdollarBootModule = 'evaluated';
 afterStaticShellPaint(() => {
   startVaultShell({
     portName: 'home',

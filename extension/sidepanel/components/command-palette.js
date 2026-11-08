@@ -26,9 +26,9 @@
 //   onhover   (i) => void
 
 import m from '/vendor/mithril/mithril.js';
-import { filterCandidates } from '/peerd-runtime/ui.js';
+import { filterCandidates } from '/mcdollar-runtime/ui.js';
 
-/** @typedef {import('/peerd-runtime/composer/parse.js').RefKind} RefKind */
+/** @typedef {import('/mcdollar-runtime/composer/parse.js').RefKind} RefKind */
 
 /**
  * The active composer trigger, as produced by `activeTrigger()`.

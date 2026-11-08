@@ -109,8 +109,8 @@ describe('target-exact kernel Port owners', () => {
   });
 
   test('Firefox pins each Port name to its exact browser sender', () => {
-    const runtimeId = 'peerd@test';
-    const extensionOrigin = 'moz-extension://peerd/';
+    const runtimeId = 'mcdollar@test';
+    const extensionOrigin = 'moz-extension://mcdollar/';
     const optionsUrl = `${extensionOrigin}options/options.html`;
     const sidepanelUrl = `${extensionOrigin}sidepanel/sidepanel.html`;
     const homeUrl = `${extensionOrigin}home/home.html`;

@@ -1,11 +1,11 @@
 // @ts-check
 
 import { normalizeApiOrigin } from '../shared/api-origin.js';
-import { resolveTargetTab } from '/peerd-runtime/browser-authority.js';
+import { resolveTargetTab } from '/mcdollar-runtime/browser-authority.js';
 import {
   PACED_CEILING_CODE, PACED_STATE_UNAVAILABLE_CODE,
   pacedCeilingMessage, PACED_STATE_UNAVAILABLE_MESSAGE,
-} from '/peerd-runtime/pacing-authority.js';
+} from '/mcdollar-runtime/pacing-authority.js';
 
 const PACED_OPERATIONS = new Set([
   'turn.page.open-tab', 'turn.page.navigate', 'turn.page.click',

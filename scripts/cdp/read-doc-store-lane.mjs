@@ -8,14 +8,14 @@ import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ARTIFACTS_DIR, REPO_ROOT, readVersion } from '../../packaging/lib.ts';
 import { packageArtifact } from '../../packaging/package.ts';
-import { makeDocx } from '../../tests/peerd-runtime/doc/fixtures.ts';
+import { makeDocx } from '../../tests/mcdollar-runtime/doc/fixtures.ts';
 import {
   GIT_FIXTURE_HOST, GIT_FIXTURE_TLS_CERT, GIT_FIXTURE_TLS_KEY,
 } from '../acceptance/git-smart-http-fixture.mjs';
 import { PRODUCTION_BACKGROUND_ENTRY } from './passkey-signup-lane.mjs';
 import { readActiveFeatureLease } from './product-acceptance-probes.mjs';
 import {
-  SITE_CLIENT_FIXTURE_TLS_PORT, attach, evalIn, launchPeerd, rpc, resetSession,
+  SITE_CLIENT_FIXTURE_TLS_PORT, attach, evalIn, launchMcdollar, rpc, resetSession,
   sseText, sseToolCall, unlockAndReady, waitFor,
 } from './e2e-harness.mjs';
 
@@ -357,7 +357,7 @@ const runOne = async (treePath, iteration, slowFixture) => {
   let ctx;
   let offscreen;
   try {
-    ctx = await launchPeerd({
+    ctx = await launchMcdollar({
       extensionDir: treePath,
       expectedBackgroundEntry: PRODUCTION_BACKGROUND_ENTRY,
       modelResponder: scripted.responder,
@@ -583,7 +583,7 @@ export async function runReadDocStoreLane({ runs = 1 } = {}) {
       'package did not use the production Store-Chrome background entry');
     for (const path of [
       'offscreen/doc-extract.js', 'offscreen/pdf-extract.js',
-      'peerd-runtime/controller-resource-tools.js',
+      'mcdollar-runtime/controller-resource-tools.js',
     ]) assert(statSync(join(treePath, path)).isFile(), `packaged lazy input missing: ${path}`);
 
     const iterations = [];

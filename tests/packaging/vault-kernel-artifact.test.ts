@@ -18,7 +18,7 @@ describe('test-only vault kernel package target', () => {
   test('changes only the copied background entry for each browser', () => {
     const source = {
       manifest_version: 3,
-      name: 'peerd',
+      name: 'mcdollar',
       permissions: ['storage'],
       background: { service_worker: 'background/service-worker.js', type: 'module' },
     };
@@ -26,7 +26,7 @@ describe('test-only vault kernel package target', () => {
     const preview = vaultKernelManifest(source, 'chrome', 'preview');
     const firefox = vaultKernelManifest(source, 'firefox');
     expect(chrome).toMatchObject({
-      name: 'peerd vault kernel store floor',
+      name: 'mcdollar vault kernel store floor',
       permissions: ['storage'],
       background: { service_worker: 'background/vault-kernel-chrome.js', type: 'module' },
     });
@@ -34,7 +34,7 @@ describe('test-only vault kernel package target', () => {
       service_worker: 'background/vault-kernel-preview.js', type: 'module',
     });
     expect(firefox).toMatchObject({
-      name: 'peerd vault kernel store floor',
+      name: 'mcdollar vault kernel store floor',
       permissions: ['storage'],
       background: { scripts: [FIREFOX_BACKGROUND_ENTRY], type: 'module' },
     });
@@ -56,7 +56,7 @@ describe('test-only vault kernel package target', () => {
     expect(manifest.background).toEqual({
       service_worker: 'background/vault-kernel-chrome.js', type: 'module',
     });
-    expect(release).not.toContain('peerd-vault-kernel');
+    expect(release).not.toContain('mcdollar-vault-kernel');
   });
 
   test('builder permits small controller adapters but excludes every feature implementation', () => {
@@ -64,7 +64,7 @@ describe('test-only vault kernel package target', () => {
       join(REPO_ROOT, 'scripts/cdp/vault-kernel-artifact.mjs'), 'utf8',
     );
     expect(source).toContain("`vault-kernel-${channel}-${browser}`");
-    expect(source).toContain("`peerd-vault-kernel-${channel}-${browser}.${extension}`");
+    expect(source).toContain("`mcdollar-vault-kernel-${channel}-${browser}.${extension}`");
     expect(source).toContain("verify: channel === 'store', minify: false");
     expect(source).toContain('minifyColdArtifactModules(staging, browser, channel)');
     expect(source).toContain('assertVaultKernelArtifactShape({');
@@ -81,7 +81,7 @@ describe('test-only vault kernel package target', () => {
       expect(() => assertVaultKernelGraph(paths)).not.toThrow();
       for (const semantic of [
         'offscreen/controller-turn-runtime.js', 'offscreen/semantic-route-host.js',
-        'offscreen/actor-worker.js', 'peerd-runtime/loop/agent-loop.js',
+        'offscreen/actor-worker.js', 'mcdollar-runtime/loop/agent-loop.js',
       ]) {
         expect(() => assertVaultKernelGraph([...paths, semantic]))
           .toThrow('crossed semantic host boundary');
@@ -117,7 +117,7 @@ describe('test-only vault kernel package target', () => {
   // Full artifact construction uses the same bounded harness allowance as the
   // controller build-identity packaging test; product budgets stay in packaging.
   for (const browser of ['chrome', 'firefox'] as const) test(`release packaging preserves modular ${browser} entry`, async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-native-package-path-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-native-package-path-'));
     const sourceRoot = join(root, 'source');
     const artifactRoot = join(root, 'artifacts');
     try {

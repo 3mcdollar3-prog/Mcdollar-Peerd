@@ -56,12 +56,12 @@ const boundedRequest = (promise, timeoutMs, outcomeKnown) => new Promise((resolv
 
 // What a change that did not finish says, in each action's own words: what
 // failed and what to do, or a neutral line when the outcome is not known.
-const SAVE_NAME = Object.freeze({ failed: 'peerd could not save the name. Try again.',
-  unsure: 'peerd is not sure the name was saved. Check the list before you try again.' });
-const FAVORITE = Object.freeze({ failed: 'peerd could not change the favorite. Try again.',
-  unsure: 'peerd is not sure the favorite changed. Check the list before you try again.' });
-const FORGET = Object.freeze({ failed: 'peerd could not forget this contact. Try again.',
-  unsure: 'peerd is not sure the contact was forgotten. Check the list before you try again.' });
+const SAVE_NAME = Object.freeze({ failed: 'mcdollar could not save the name. Try again.',
+  unsure: 'mcdollar is not sure the name was saved. Check the list before you try again.' });
+const FAVORITE = Object.freeze({ failed: 'mcdollar could not change the favorite. Try again.',
+  unsure: 'mcdollar is not sure the favorite changed. Check the list before you try again.' });
+const FORGET = Object.freeze({ failed: 'mcdollar could not forget this contact. Try again.',
+  unsure: 'mcdollar is not sure the contact was forgotten. Check the list before you try again.' });
 /** @param {{outcomeKnown?:unknown}|null|undefined} result @param {{failed:string, unsure:string}} words */
 const mutationFailureCopy = (result, words) => result?.outcomeKnown !== true ? words.unsure : words.failed;
 
@@ -412,11 +412,11 @@ export const ContactsSection = () => {
         a.firstEventAt ? m('.muted.contact-counts', `First met ${fmtWhen(a.firstEventAt)} · last activity ${fmtWhen(a.lastEventAt)}`) : null,
       ]),
       m('.contact-detail-actions', [
-        m('button.peerd-net-btn', { disabled: busyDid === row.did || unconfirmedDids.has(row.did), onclick: () => toggleFavorite(send, row, timeoutMs) }, row.favorite ? '★ Favorited' : '☆ Favorite'),
+        m('button.mcdollar-net-btn', { disabled: busyDid === row.did || unconfirmedDids.has(row.did), onclick: () => toggleFavorite(send, row, timeoutMs) }, row.favorite ? '★ Favorited' : '☆ Favorite'),
         row.saved
-          ? m('button.peerd-net-btn', { disabled: busyDid === row.did || unconfirmedDids.has(row.did), onclick: () => forget(send, row, timeoutMs) }, 'Forget')
+          ? m('button.mcdollar-net-btn', { disabled: busyDid === row.did || unconfirmedDids.has(row.did), onclick: () => forget(send, row, timeoutMs) }, 'Forget')
           : null,
-        unconfirmedDids.has(row.did) ? m('button.peerd-net-btn', {
+        unconfirmedDids.has(row.did) ? m('button.mcdollar-net-btn', {
           onclick: () => {
             unconfirmedDids.delete(row.did);
             mutationNotice = null;
@@ -444,9 +444,9 @@ export const ContactsSection = () => {
     // a person that way. The line under it then names the apps, not the key again.
     // why the same key under a name: one person has one key wherever it shows.
     const apps = r.activity?.appCount ? `${r.activity.appCount} app${r.activity.appCount === 1 ? '' : 's'}` : '';
-    return m('li.peerd-disc-row.contact-row', { key: r.did }, [
+    return m('li.mcdollar-disc-row.contact-row', { key: r.did }, [
       m('.contact-avatar', { style: `background:${colorOf(r.did)}`, 'aria-hidden': 'true' }, initial),
-      m('.peerd-disc-meta', [
+      m('.mcdollar-disc-meta', [
         editing
           ? m('input.contact-name-input', {
               value: editValue,
@@ -460,17 +460,17 @@ export const ContactsSection = () => {
               onblur: () => commitEdit(send, r, timeoutMs),
             })
           : m('.contact-name-line', [
-              m('span.peerd-disc-name', name || m('bdi.contact-key', short(r.did))),
+              m('span.mcdollar-disc-name', name || m('bdi.contact-key', short(r.did))),
               r.favorite ? m('span.contact-fav', { 'aria-label': 'favorite' }, '★') : null,
               status ? m('span.contact-status', { class: status.cls }, status.label) : null,
             ]),
-        name ? m('span.peerd-disc-pub', [m('bdi.contact-key', short(r.did)), apps ? ` · ${apps}` : null])
-          : apps ? m('span.peerd-disc-pub', apps) : null,
+        name ? m('span.mcdollar-disc-pub', [m('bdi.contact-key', short(r.did)), apps ? ` · ${apps}` : null])
+          : apps ? m('span.mcdollar-disc-pub', apps) : null,
       ]),
       m('.contact-row-actions', [
-        m('button.peerd-net-btn', { title: 'Edit name', disabled: busyDid === r.did || unconfirmedDids.has(r.did), onclick: () => startEdit(r) },
+        m('button.mcdollar-net-btn', { title: 'Edit name', disabled: busyDid === r.did || unconfirmedDids.has(r.did), onclick: () => startEdit(r) },
           name ? 'Rename' : 'Add a name'),
-        m('button.peerd-net-btn', {
+        m('button.mcdollar-net-btn', {
           'aria-expanded': String(expanded),
           title: expanded ? 'Hide activity' : 'Show activity',
           onclick: () => { expandedDid = expanded ? null : r.did; },
@@ -504,9 +504,9 @@ export const ContactsSection = () => {
             'aria-label': busy ? undefined : `Unblock ${maker.name ?? maker.key}`,
             onclick: () => { void unblock(send, maker.did, timeoutMs); },
           }, busy ? 'Unblocking…' : 'Unblock'),
-      issue === 'failed' ? m('p.error', { role: 'alert' }, ['peerd could not unblock ', who(), '. Try again.']) : null,
+      issue === 'failed' ? m('p.error', { role: 'alert' }, ['mcdollar could not unblock ', who(), '. Try again.']) : null,
       issue === 'unknown'
-        ? m('p.contacts-blocked-note', { role: 'status' }, ['peerd is not sure ', who(), ' is unblocked. Check again before you try again.'])
+        ? m('p.contacts-blocked-note', { role: 'status' }, ['mcdollar is not sure ', who(), ' is unblocked. Check again before you try again.'])
         : null,
     ]);
   };
@@ -519,7 +519,7 @@ export const ContactsSection = () => {
     if (!blockedDids) {
       return blockedFailed ? m('section.contacts-blocked', { 'aria-labelledby': BLOCKED_TITLE }, [
         m('h2', { id: BLOCKED_TITLE }, 'Blocked makers'),
-        m('p.error', { role: 'alert' }, 'peerd could not load your blocked makers. Try again.'),
+        m('p.error', { role: 'alert' }, 'mcdollar could not load your blocked makers. Try again.'),
         m('button.secondary.contacts-blocked-retry', {
           type: 'button', disabled: !!blockedRequest, onclick: () => { void refreshBlocked(send, timeoutMs); },
         }, 'Try again'),
@@ -535,14 +535,14 @@ export const ContactsSection = () => {
     const makers = blockedRows(blockedDids, names);
     return m('section.contacts-blocked', { 'aria-labelledby': BLOCKED_TITLE }, [
       m('h2', { id: BLOCKED_TITLE }, 'Blocked makers'),
-      makers.length ? m('p.contacts-blocked-note', 'Their apps are hidden in Discover, and peerd does not connect to them.') : null,
+      makers.length ? m('p.contacts-blocked-note', 'Their apps are hidden in Discover, and mcdollar does not connect to them.') : null,
       makers.length
         ? m('ul.contacts-blocked-list', makers.map((maker) => blockedRow(send, maker, timeoutMs)))
         : m('p.contacts-blocked-note', 'Nobody is blocked now.'),
       // why a stable status node: a live region must exist before its text changes.
       m('p.contacts-blocked-note.contacts-unblocked', {
         role: 'status', tabindex: -1, style: unblockedNote ? null : 'position:absolute',
-      }, unblockedNote ? 'After you unblock someone, their apps show up again the next time peerd hears from them.' : null),
+      }, unblockedNote ? 'After you unblock someone, their apps show up again the next time mcdollar hears from them.' : null),
     ]);
   };
 
@@ -582,26 +582,26 @@ export const ContactsSection = () => {
       const send = vnode.attrs.send;
       const timeoutMs = vnode.attrs.requestTimeoutMs ?? CONTACTS_REQUEST_TIMEOUT_MS;
       const list = contacts === null ? [] : rows();
-      return m('.peerd-disc.contacts', [
-        mutationNotice ? m('p.peerd-disc-err', {
+      return m('.mcdollar-disc.contacts', [
+        mutationNotice ? m('p.mcdollar-disc-err', {
           style: 'padding:8px;', role: 'alert', 'aria-live': 'assertive',
         }, mutationNotice) : null,
         listFailure ? m('.contacts-load-failure', { style: 'padding:8px;' }, [
-          m('p.peerd-disc-err', { role: 'alert' }, listFailure),
-          m('button.peerd-net-btn', {
+          m('p.mcdollar-disc-err', { role: 'alert' }, listFailure),
+          m('button.mcdollar-net-btn', {
             type: 'button', disabled: listPending,
             onclick: () => refresh(send, timeoutMs),
           }, listPending ? 'Retrying…' : 'Retry'),
         ]) : null,
         contacts === null && !listFailure
-          ? m('.peerd-net-empty', 'Loading contacts…')
+          ? m('.mcdollar-net-empty', 'Loading contacts…')
           : contacts === null
             ? null
             : list.length === 0
-            ? m('.peerd-net-empty',
+            ? m('.mcdollar-net-empty',
                 'Nobody here yet. People you install an app from, and people you meet on the peer network, show up here. '
                 + 'You can add a name for each one.')
-            : m('ul.peerd-disc-list', list.map((r) => row(send, r, timeoutMs))),
+            : m('ul.mcdollar-disc-list', list.map((r) => row(send, r, timeoutMs))),
         blockedSection(send, timeoutMs),
       ]);
     },

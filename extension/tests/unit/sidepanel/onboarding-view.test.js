@@ -54,7 +54,7 @@ const teaseShrinks = async (root, budgetMs = 2000) => {
 /** @param {Record<string, any>} [over] */
 const freshProfileState = (over = {}) => /** @type {ChatState} */ ({
   vault: { initialized: true, locked: false },
-  profile: { id: 'default', peerName: 'peerd', onboardingComplete: false },
+  profile: { id: 'default', peerName: 'mcdollar', onboardingComplete: false },
   ...over,
 });
 
@@ -133,7 +133,7 @@ describe('sidepanel.onboarding', () => {
     });
     it('stays closed when onboarding already completed', () => {
       expect(needsOnboarding(freshProfileState({
-        profile: { id: 'default', peerName: 'peerd', onboardingComplete: true },
+        profile: { id: 'default', peerName: 'mcdollar', onboardingComplete: true },
       }))).toBe(false);
     });
     it('stays closed while the vault is locked or uninitialized', () => {
@@ -163,7 +163,7 @@ describe('sidepanel.onboarding', () => {
         // the mirror is what the user actually reads.
         const input = need(root, '.peer-name-input', HTMLInputElement);
         expect(!!input).toBe(true);
-        expect(input.value).toBe('peerd');
+        expect(input.value).toBe('mcdollar');
         expect(input.getAttribute('aria-label')).toContain('editable');
         const mirror = need(root, '.peer-name-mirror');
         expect(!!mirror).toBe(true);
@@ -217,7 +217,7 @@ describe('sidepanel.onboarding', () => {
           await skipStep(root);   // call-me → notes
           await skipStep(root);   // notes → finish
           await tick();
-          expect(completions(sends)[0].peerName).toBe('peerd');
+          expect(completions(sends)[0].peerName).toBe('mcdollar');
         } finally { unmount(); }
       });
     });
@@ -245,7 +245,7 @@ describe('sidepanel.onboarding', () => {
       } finally { unmount(); }
     });
 
-    it('an emptied name falls back to peerd on blur — value AND mirror', async () => {
+    it('an emptied name falls back to mcdollar on blur — value AND mirror', async () => {
       const { root, unmount } = mount(OnboardingView, {
         state: freshProfileState(),
         send: async () => ({ ok: true }),
@@ -259,7 +259,7 @@ describe('sidepanel.onboarding', () => {
         input.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
         await tick();
         m.redraw.sync();
-        expect(input.value).toBe('peerd');
+        expect(input.value).toBe('mcdollar');
         expect(root.querySelectorAll('.peer-name-mirror span').length).toBe(5);
       } finally { unmount(); }
     });
@@ -309,7 +309,7 @@ describe('sidepanel.onboarding', () => {
         const done = completions(sends);
         expect(done.length).toBe(1);
         expect(done[0].facts).toBe(null);
-        expect(done[0].peerName).toBe('peerd');
+        expect(done[0].peerName).toBe('mcdollar');
       } finally { unmount(); }
     });
 
@@ -434,7 +434,7 @@ describe('sidepanel.onboarding', () => {
       });
       try {
         const role = need(root, '.message-assistant .role');
-        expect(role.textContent).toBe('peerd');
+        expect(role.textContent).toBe('mcdollar');
       } finally { unmount(); }
     });
   });

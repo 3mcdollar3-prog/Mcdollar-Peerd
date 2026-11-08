@@ -40,7 +40,7 @@ describe('sidepanel.pacing-bar', () => {
       const text = root.textContent ?? '';
       expect(text.includes('Waiting')).toBe(true);
       expect(text.includes('acme.test')).toBe(true);
-      expect(text.includes('the site asked peerd to wait')).toBe(true);
+      expect(text.includes('the site asked mcdollar to wait')).toBe(true);
       // The countdown lives in its own element: adjacent spans render with no
       // separator, so asserting on the whole string cannot tell "5s" from
       // "Waiting5s".
@@ -49,7 +49,7 @@ describe('sidepanel.pacing-bar', () => {
     } finally { unmount(); }
   });
 
-  it('distinguishes peerd keeping under a learned limit from a stated pause', () => {
+  it('distinguishes mcdollar keeping under a learned limit from a stated pause', () => {
     const { root, unmount } = mount({
       origin: 'https://acme.test', untilMs: Date.now() + 2_000, reason: 'learned-interval',
     });

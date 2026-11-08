@@ -8,7 +8,7 @@ import {
   ACTOR_WORKER_PROTOCOL,
 } from '../../extension/shared/actor-worker-protocol.js';
 import { EXECUTION_PROTOCOL } from '../../extension/shared/execution-protocol.js';
-import { projectContributorSettlement } from '../../extension/peerd-runtime/controller-contributor.js';
+import { projectContributorSettlement } from '../../extension/mcdollar-runtime/controller-contributor.js';
 
 const REALM = {
   dedicatedWorker: true,

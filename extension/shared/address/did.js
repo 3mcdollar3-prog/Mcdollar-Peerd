@@ -1,11 +1,11 @@
 // @ts-check
 // shared/address/did.js: did:key for Ed25519.
 //
-// why: did:key is peerd's identity representation (ARCHITECTURE §3.1).
+// why: did:key is mcdollar's identity representation (ARCHITECTURE §3.1).
 // Format: "did:key:z" + base58btc( 0xed 0x01 || pubkey[32] ), where
 // 0xed01 is the multicodec varint for an Ed25519 public key and 'z' is
 // the multibase tag for base58btc. Ed25519 ONLY: secp256k1 is excluded
-// from peerd entirely, so we reject any other multicodec prefix.
+// from mcdollar entirely, so we reject any other multicodec prefix.
 
 import { base58encode, base58decode } from './base58.js';
 
@@ -35,7 +35,7 @@ export const decodeDidKey = (did) => {
   }
   const tagged = base58decode(did.slice(DID_PREFIX.length));
   if (tagged.length !== 34 || tagged[0] !== 0xed || tagged[1] !== 0x01) {
-    throw new Error('decodeDidKey: unsupported key type (peerd is Ed25519-only)');
+    throw new Error('decodeDidKey: unsupported key type (mcdollar is Ed25519-only)');
   }
   return tagged.slice(2);
 };

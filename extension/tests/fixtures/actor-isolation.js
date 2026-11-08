@@ -65,7 +65,7 @@ const state = {
       {
         role: 'user', id: 'reply-unknown', synthetic: true,
         actorReply: { kind: 'web', instanceId: 'web', failed: true, outcomeKnown: false },
-        content: 'The web actor did not complete cleanly. Its outcome is unknown. Do not retry automatically:\n\n<untrusted_web_content>peerd cannot confirm whether the previous request ran before the background host restarted. Check whether the requested action completed before trying again.</untrusted_web_content>',
+        content: 'The web actor did not complete cleanly. Its outcome is unknown. Do not retry automatically:\n\n<untrusted_web_content>mcdollar cannot confirm whether the previous request ran before the background host restarted. Check whether the requested action completed before trying again.</untrusted_web_content>',
       },
       {
         role: 'user', id: 'actor-recovery:chat-unknown-outcome:queued-1', synthetic: true,

@@ -1,6 +1,6 @@
 // @ts-check
 // Browser-host facts shared by the cold UI projection and sealed semantics.
-// Tool exposure and model copy stay in peerd-runtime/runtime-capabilities.js.
+// Tool exposure and model copy stay in mcdollar-runtime/runtime-capabilities.js.
 
 export const RUNTIME_CAPABILITY_VERSION = 1;
 

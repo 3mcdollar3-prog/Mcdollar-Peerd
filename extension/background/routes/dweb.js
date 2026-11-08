@@ -154,7 +154,7 @@ export const makeDwebRoutes = (deps) => {
     if (parsed?.ok !== true || parsed.address !== address) return refuse('address-not-supported');
     return withReadyPublication(async (/** @type {()=>boolean} */ isCurrent) => {
       if (!publicationCurrent(generation)) return custodyChanged();
-      const uri = `peerd://did:key:${address.slice(16)}`;
+      const uri = `mcdollar://did:key:${address.slice(16)}`;
       if (action === 'install') {
         await Promise.allSettled([...installCallbacks]);
         const existing = (await appRegistry.list()).find((/** @type {any} */ app) =>
@@ -260,7 +260,7 @@ export const makeDwebRoutes = (deps) => {
   /** @param {{hash:string}} dweb @param {Record<string, string|Uint8Array>} files @param {string} entryFile @param {unknown} seedBundle */
   const ownDeclared = (dweb, files, entryFile, seedBundle) => seedBundle ? verifiedDeclaration({ files, entryFile, dweb }) : null;
   // why one check for an update and for Discover: the Library copy is the
-  // release peerd checked only while its files equal the commit peerd made
+  // release mcdollar checked only while its files equal the commit mcdollar made
   // when it stored that release. Runtime data is not part of a release.
   /** @param {string} appId @param {{dweb?: {git_oid?: string, hash?: unknown}}} rec */
   const releaseChanged = async (appId, rec) => !rec.dweb?.git_oid
@@ -311,7 +311,7 @@ export const makeDwebRoutes = (deps) => {
     },
     'dweb/peer-block': ({ did } = {}) => setPeerBlocked(did, true),
     'dweb/peer-unblock': ({ did } = {}) => setPeerBlocked(did, false),
-    // Home only, a read: Discover claims what peerd checked at an install only
+    // Home only, a read: Discover claims what mcdollar checked at an install only
     // while this says the copy is unchanged. `changed` is null with no release
     // to compare. why the write lock: an edit cannot land halfway through it.
     'dweb/app-local-changes': async ({ appId } = {}) => {
@@ -922,7 +922,7 @@ export const makeDwebRoutes = (deps) => {
         }
       });
     },
-    // The READ surface behind peerd.distributed.{whoami,status,peers,presence} in
+    // The READ surface behind mcdollar.distributed.{whoami,status,peers,presence} in
     // a Notebook. Side-effect-free: it reports the base host's CURRENT state with
     // rosters; it never STARTS the lobby (maybeStartBaseNetwork does, on unlock).
     'dweb/distributed/info': async () => withReadyPublication(async (isCurrent) => {

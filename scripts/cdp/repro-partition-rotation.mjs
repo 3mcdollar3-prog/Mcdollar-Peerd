@@ -1,16 +1,16 @@
 // Diagnostic: bilateral admission prevents refusal loss, but rotation must also
 // preserve overlay reachability. Uses signed sessions and deterministic ages.
 import assert from 'node:assert/strict';
-import {generateIdentity} from '../../extension/peerd-distributed/identity/keypair.js';
-import {createRoomMesh} from '../../extension/peerd-distributed/transport/mesh.js';
-import {createSession,ADMISSION_READY} from '../../extension/peerd-distributed/transport/session.js';
-import {memoryPair} from '../../extension/peerd-distributed/transport/channel.js';
-import {NEIGHBOR_GRACE_MS} from '../../extension/peerd-distributed/transport/neighbor-policy.js';
-import {ROUTING_WITNESS} from '../../extension/peerd-distributed/transport/capabilities.js';
-import {createRoutingPathHolds} from '../../extension/peerd-distributed/transport/routing-path-holds.js';
-import {createRoutingRpc} from '../../extension/peerd-distributed/transport/routing-rpc.js';
-import {createRoutingPathSearch} from '../../extension/peerd-distributed/transport/routing-path-search.js';
-import {createRoutingWitnesses} from '../../extension/peerd-distributed/transport/routing-witness.js';
+import {generateIdentity} from '../../extension/mcdollar-distributed/identity/keypair.js';
+import {createRoomMesh} from '../../extension/mcdollar-distributed/transport/mesh.js';
+import {createSession,ADMISSION_READY} from '../../extension/mcdollar-distributed/transport/session.js';
+import {memoryPair} from '../../extension/mcdollar-distributed/transport/channel.js';
+import {NEIGHBOR_GRACE_MS} from '../../extension/mcdollar-distributed/transport/neighbor-policy.js';
+import {ROUTING_WITNESS} from '../../extension/mcdollar-distributed/transport/capabilities.js';
+import {createRoutingPathHolds} from '../../extension/mcdollar-distributed/transport/routing-path-holds.js';
+import {createRoutingRpc} from '../../extension/mcdollar-distributed/transport/routing-rpc.js';
+import {createRoutingPathSearch} from '../../extension/mcdollar-distributed/transport/routing-path-search.js';
+import {createRoutingWitnesses} from '../../extension/mcdollar-distributed/transport/routing-witness.js';
 const disconnected=process.argv.includes('--disconnected');
 const path=process.argv.includes('--path');
 assert.ok(!(disconnected&&path),'Select only one topology');

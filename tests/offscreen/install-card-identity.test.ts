@@ -8,7 +8,7 @@ import {
 describe('discovery-bound install identity', () => {
   const hash = 'a'.repeat(64);
   const otherHash = 'b'.repeat(64);
-  const uri = `peerd://did:key:zPeer/${hash}`;
+  const uri = `mcdollar://did:key:zPeer/${hash}`;
 
   test('returns the complete identity for the exact heard URI', () => {
     expect(identityForDiscoveredUri([{
@@ -22,7 +22,7 @@ describe('discovery-bound install identity', () => {
   test('does not accept a copied identity for another URI', () => {
     expect(identityForDiscoveredUri([{
       dwapp_id: 'dwapp-1', slug: 'notes', seq: 7, publisher: 'did:key:zPeer',
-      head: { version_id: otherHash, content_addr: `peerd://did:key:zPeer/${otherHash}` },
+      head: { version_id: otherHash, content_addr: `mcdollar://did:key:zPeer/${otherHash}` },
     }], uri)).toBe(null);
   });
 
@@ -69,7 +69,7 @@ describe('discovery-bound install identity', () => {
 });
 
 test('verified row projection exposes signed discovery hints and keeps legacy runtime unknown', () => {
-  const head = {version_id:'a'.repeat(64),content_addr:`peerd://did:key:zPeer/${'a'.repeat(64)}`,size:128};
+  const head = {version_id:'a'.repeat(64),content_addr:`mcdollar://did:key:zPeer/${'a'.repeat(64)}`,size:128};
   expect(discoveredAppFromRow({head,description:'Signed text'})).toMatchObject({description:'Signed text',size:128,includes_wasm:null});
   for (const includes_wasm of [true,false]) expect(discoveredAppFromRow({head:{...head,includes_wasm}})).toMatchObject({includes_wasm});
 });
@@ -77,7 +77,7 @@ test('verified row projection exposes signed discovery hints and keeps legacy ru
 
 test('projection exposes only host retrieval history, never signed-head claims', () => {
   const retrieval = {outcome:'no-provider-found',observedAt:100,expiresAt:200};
-  const head = {version_id:'a'.repeat(64),content_addr:`peerd://did:key:zPeer/${'a'.repeat(64)}`,retrieval};
+  const head = {version_id:'a'.repeat(64),content_addr:`mcdollar://did:key:zPeer/${'a'.repeat(64)}`,retrieval};
   expect(discoveredAppFromRow({head}).retrieval).toBeNull();
   expect(discoveredAppFromRow({head,retrieval}).retrieval).toEqual(retrieval);
   expect(discoveredAppFromRow({head,retrieval:{...retrieval,expiresAt:NaN}}).retrieval).toBeNull();

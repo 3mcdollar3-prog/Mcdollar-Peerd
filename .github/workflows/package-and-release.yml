@@ -13,9 +13,9 @@
 #                     time, since a draft cannot merge. Pushes to main still
 #                     run everything.
 #   tag push v*     → additionally: signed preview artifacts, a GitHub
-#                     Release titled peerd-preview-v<X.Y.Z> with the
+#                     Release titled mcdollar-preview-v<X.Y.Z> with the
 #                     preview artifacts + update feeds attached, then a
-#                     peerd-site dispatch to publish the feeds.
+#                     mcdollar-site dispatch to publish the feeds.
 #
 # Store uploads (Chrome Web Store / AMO) stay MANUAL — download the
 # verified store artifacts from the release run and submit them after QA.
@@ -27,8 +27,8 @@
 #   AMO_JWT_SECRET    `web-ext sign` for the Firefox preview package
 # Secret used by the notification job (Settings → Environments →
 # release-notify; leave that environment without required reviewers):
-#   PEERD_SITE_DISPATCH_TOKEN  fine-grained token scoped only to the private
-#                     NotASithLord/peerd-site repo with Contents:write. The
+#   MCDOLLAR_SITE_DISPATCH_TOKEN  fine-grained token scoped only to the private
+#                     NotASithLord/mcdollar-site repo with Contents:write. The
 #                     isolated notify-site job fails visibly if it is absent
 #                     and can be retried without replaying AMO signing. Its
 #                     separate unprotected environment scopes the credential
@@ -67,7 +67,7 @@ permissions:
 #   1. Node-24 runtime — every action below is the first major of its line
 #      that targets node24 (clears GitHub's Node-20 deprecation warnings; no
 #      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 shim. This is GitHub's *action*
-#      runtime — peerd's own tooling is 100% Bun).
+#      runtime — mcdollar's own tooling is 100% Bun).
 #   2. Immutable SHAs, not tags — a major tag (`@v5`) is a mutable ref the
 #      action publisher can move; a moved tag means arbitrary code running in
 #      release CI. Every third-party action is pinned to a full commit SHA
@@ -587,7 +587,7 @@ jobs:
       VISUAL_PLATFORM: linux-x64
       TZ: UTC
       DISPLAY: ':99'
-      PEERD_BROWSER_WINDOW_EVIDENCE: '1'
+      MCDOLLAR_BROWSER_WINDOW_EVIDENCE: '1'
     steps:
       - name: Harden runner (audit egress and source writes)
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -622,8 +622,8 @@ jobs:
       # hit is always the exact build the baselines were seeded against.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.cache/peerd-cft/${{ steps.pin.outputs.version }}
-          key: peerd-cft-${{ runner.os }}-${{ steps.pin.outputs.version }}
+          path: ~/.cache/mcdollar-cft/${{ steps.pin.outputs.version }}
+          key: mcdollar-cft-${{ runner.os }}-${{ steps.pin.outputs.version }}
       - name: Generate dev manifest
         run: bun run gen:dev
       - name: Provision Chrome for Testing (pinned)
@@ -638,7 +638,7 @@ jobs:
         id: render
         run: |
           set -o pipefail
-          bun run test:e2e:visual 2>&1 | tee "$RUNNER_TEMP/peerd-visual-head.log"
+          bun run test:e2e:visual 2>&1 | tee "$RUNNER_TEMP/mcdollar-visual-head.log"
 
       # why before comparison: a slow or cancelled merge-base render must not
       # erase the head's failing checks, screenshots, or crash diagnostics.
@@ -649,7 +649,7 @@ jobs:
           name: visual-head-${{ github.event.pull_request.number && format('pr{0}', github.event.pull_request.number) || github.sha }}-run${{ github.run_number }}.${{ github.run_attempt }}
           path: |
             scripts/cdp/artifacts/
-            ${{ runner.temp }}/peerd-visual-head.log
+            ${{ runner.temp }}/mcdollar-visual-head.log
           if-no-files-found: warn
           retention-days: 14
 
@@ -663,7 +663,7 @@ jobs:
         run: |
           set -o pipefail
           git fetch --no-tags origin main || true
-          bun scripts/cdp/visual-vs-base.mjs --reuse-head 2>&1 | tee "$RUNNER_TEMP/peerd-visual-compare.log"
+          bun scripts/cdp/visual-vs-base.mjs --reuse-head 2>&1 | tee "$RUNNER_TEMP/mcdollar-visual-compare.log"
 
       - name: Write the render report to the job summary
         if: always()
@@ -696,7 +696,7 @@ jobs:
             scripts/cdp/visual-runs/visual-vs-base.json
             scripts/cdp/visual-runs/visual-vs-base.md
             scripts/cdp/visual-runs/base/result.json
-            ${{ runner.temp }}/peerd-visual-compare.log
+            ${{ runner.temp }}/mcdollar-visual-compare.log
           if-no-files-found: warn
           retention-days: 14
 
@@ -727,7 +727,7 @@ jobs:
               git clone --depth 1 "$auth" "$pub"
               git -C "$pub" checkout --orphan visual-diffs
               git -C "$pub" rm -rqf . || true
-              printf '# peerd visual diffs\n\nCI publishes review images under `pr<N>/<sha>/run<id>.<attempt>/`. This branch never merges to main. Images are removed when the PR closes.\n' > "$pub/README.md"
+              printf '# mcdollar visual diffs\n\nCI publishes review images under `pr<N>/<sha>/run<id>.<attempt>/`. This branch never merges to main. Images are removed when the PR closes.\n' > "$pub/README.md"
             }
             rm -rf "$pub/pr${PR}"
             mkdir -p "$pub/pr${PR}/$image_path"
@@ -757,7 +757,7 @@ jobs:
           set -euo pipefail
           bun scripts/cdp/visual-review-comment.mjs \
             --base-url "$BASE_URL" --run-url "$RUN_URL" > "$RUNNER_TEMP/visual-comment.md"
-          MARKER='<!-- peerd-visual -->'
+          MARKER='<!-- mcdollar-visual -->'
           # why `|| true`: --paginate keeps writing after `head -1` closes the
           # pipe, so gh takes SIGPIPE (141); under `set -o pipefail` that would
           # abort this step immediately BEFORE posting, and continue-on-error
@@ -917,7 +917,7 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: github.event_name != 'pull_request'
         with:
-          name: peerd-${{ matrix.channel }}-${{ matrix.browser }}
+          name: mcdollar-${{ matrix.channel }}-${{ matrix.browser }}
           path: |
             artifacts/*.zip
             artifacts/*.xpi
@@ -1030,7 +1030,7 @@ jobs:
           # Positive proof of signing, not just absence of the UNSIGNED marker (a
           # packaging run that died before sign.ts ran prints no marker at all).
           set -euo pipefail
-          CRX=artifacts/peerd-preview-chrome.crx
+          CRX=artifacts/mcdollar-preview-chrome.crx
           [ -f "$CRX" ] || { echo "::error::$CRX missing — CRX signing did not run"; exit 1; }
           [ "$(head -c4 "$CRX")" = "Cr24" ] || { echo "::error::$CRX lacks the Cr24 CRX3 magic — not a signed CRX"; exit 1; }
 
@@ -1043,9 +1043,9 @@ jobs:
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
-            artifacts/peerd-preview-chrome.crx
-            artifacts/peerd-store-chrome.zip
-            artifacts/peerd-store-firefox.xpi
+            artifacts/mcdollar-preview-chrome.crx
+            artifacts/mcdollar-store-chrome.zip
+            artifacts/mcdollar-store-firefox.xpi
 
       # ---- the irreversible step ----
       - name: Package + AMO-sign the Firefox preview (irreversible)
@@ -1065,7 +1065,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          XPI=artifacts/peerd-preview-firefox.xpi
+          XPI=artifacts/mcdollar-preview-firefox.xpi
           [ -f "$XPI" ] || { echo "::error::$XPI missing — Firefox preview was not built"; exit 1; }
           unzip -l "$XPI" META-INF/mozilla.rsa >/dev/null \
             || { echo "::error::$XPI has no META-INF/mozilla.rsa — AMO signing did not run"; exit 1; }
@@ -1076,7 +1076,7 @@ jobs:
       - name: Attest build provenance (AMO-signed XPI)
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: artifacts/peerd-preview-firefox.xpi
+          subject-path: artifacts/mcdollar-preview-firefox.xpi
 
       - name: Regenerate update feeds for this release
         run: bun packaging/gen-update-feeds.ts --version="${GITHUB_REF_NAME#v}" --repo="$GITHUB_REPOSITORY"
@@ -1097,9 +1097,9 @@ jobs:
           set -euo pipefail
           # Basename-relative lines so `sha256sum -c SHA256SUMS` verifies
           # files downloaded from the release page directly.
-          (cd artifacts && sha256sum peerd-preview-chrome.crx peerd-preview-firefox.xpi > SHA256SUMS)
+          (cd artifacts && sha256sum mcdollar-preview-chrome.crx mcdollar-preview-firefox.xpi > SHA256SUMS)
           (cd artifacts && sha256sum chrome-preview.xml firefox-preview.json) >> artifacts/SHA256SUMS
-          (cd artifacts && sha256sum peerd-store-chrome.zip peerd-store-firefox.xpi > SHA256SUMS.store)
+          (cd artifacts && sha256sum mcdollar-store-chrome.zip mcdollar-store-firefox.xpi > SHA256SUMS.store)
           echo '--- SHA256SUMS (release assets; verify with `sha256sum -c SHA256SUMS`) ---'
           cat artifacts/SHA256SUMS
           echo '--- SHA256SUMS.store (manually submitted store packages) ---'
@@ -1115,8 +1115,8 @@ jobs:
           # makes the second run a harmless no-op instead of a duplicate
           # "release already exists" failure.
           ASSETS=(
-            artifacts/peerd-preview-chrome.crx
-            artifacts/peerd-preview-firefox.xpi
+            artifacts/mcdollar-preview-chrome.crx
+            artifacts/mcdollar-preview-firefox.xpi
             artifacts/SHA256SUMS
             artifacts/SHA256SUMS.store
             artifacts/chrome-preview.xml
@@ -1131,13 +1131,13 @@ jobs:
             gh release upload "$GITHUB_REF_NAME" --clobber "${ASSETS[@]}"
           else
             gh release create "$GITHUB_REF_NAME" \
-              --title "peerd-preview-$GITHUB_REF_NAME" \
+              --title "mcdollar-preview-$GITHUB_REF_NAME" \
               --notes-file "$RUNNER_TEMP/release-notes.md" \
               "${ASSETS[@]}"
           fi
 
   notify-site:
-    name: Notify peerd-site release hook
+    name: Notify mcdollar-site release hook
     needs: release
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -1156,35 +1156,35 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Dispatch the exact released tag to peerd-site
+      - name: Dispatch the exact released tag to mcdollar-site
         env:
-          GH_TOKEN: ${{ secrets.PEERD_SITE_DISPATCH_TOKEN }}
+          GH_TOKEN: ${{ secrets.MCDOLLAR_SITE_DISPATCH_TOKEN }}
         run: |
           set -euo pipefail
           if [ -z "$GH_TOKEN" ]; then
-            echo "::error::PEERD_SITE_DISPATCH_TOKEN is not set in the release-notify environment. Add a fine-grained token scoped to NotASithLord/peerd-site with Contents:write, then re-run this failed job."
+            echo "::error::MCDOLLAR_SITE_DISPATCH_TOKEN is not set in the release-notify environment. Add a fine-grained token scoped to NotASithLord/mcdollar-site with Contents:write, then re-run this failed job."
             exit 1
           fi
           # why retry here: this is the only cross-repository handoff. Brief
           # GitHub API failures should not require a human re-run, while the
           # bounded loop still leaves a visible failure for the hourly repair
-          # workflow in peerd-site to reconcile after a longer outage.
+          # workflow in mcdollar-site to reconcile after a longer outage.
           dispatched=false
           for attempt in 1 2 3; do
-            if gh api --method POST repos/NotASithLord/peerd-site/dispatches \
-              -f event_type=peerd-release \
+            if gh api --method POST repos/NotASithLord/mcdollar-site/dispatches \
+              -f event_type=mcdollar-release \
               -F "client_payload[tag]=$GITHUB_REF_NAME"; then
               dispatched=true
               break
             fi
             if [ "$attempt" -lt 3 ]; then
               delay=$((attempt * 10))
-              echo "::warning::peerd-site dispatch attempt $attempt failed; retrying in ${delay}s"
+              echo "::warning::mcdollar-site dispatch attempt $attempt failed; retrying in ${delay}s"
               sleep "$delay"
             fi
           done
           if [ "$dispatched" != true ]; then
-            echo "::error::peerd-site dispatch failed after 3 attempts; the hourly site reconciliation remains the repair path"
+            echo "::error::mcdollar-site dispatch failed after 3 attempts; the hourly site reconciliation remains the repair path"
             exit 1
           fi
-          echo "dispatched peerd release $GITHUB_REF_NAME to peerd-site"
+          echo "dispatched mcdollar release $GITHUB_REF_NAME to mcdollar-site"

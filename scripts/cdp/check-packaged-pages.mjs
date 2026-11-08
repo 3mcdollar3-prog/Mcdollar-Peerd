@@ -2,7 +2,7 @@
 // Behavioral packaged-page BOOT check — the runtime backstop to the static
 // check:imports, and the broad net that catches the WHOLE "works in dev, blank
 // in a packaged install" class. It packages each channel, loads the PRUNED tree
-// headless via launchPeerd(extensionDir) (not extension/), boots every
+// headless via launchMcdollar(extensionDir) (not extension/), boots every
 // user-openable shipped page, and exercises the singleton offscreen page through
 // its real repository-host path, asserting each referenced nothing it didn't ship.
 //
@@ -30,7 +30,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { packageArtifact } from '../../packaging/package.ts';
-import { launchPeerd, openExtPage, evalIn, waitFor, log } from './e2e-harness.mjs';
+import { launchMcdollar, openExtPage, evalIn, waitFor, log } from './e2e-harness.mjs';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const version = String(JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')).version);
@@ -63,10 +63,10 @@ const appReadyProbe = (page) => {
     const selector = page === 'sidepanel/sidepanel.html'
       ? '.app-shell' : '.home-shell, .options-gate';
     return `document.readyState === 'complete'
-      && document.documentElement.dataset.peerdBootModule === 'evaluated'
-      && ((document.documentElement.dataset.peerdBootStage === 'vault-ready'
+      && document.documentElement.dataset.mcdollarBootModule === 'evaluated'
+      && ((document.documentElement.dataset.mcdollarBootStage === 'vault-ready'
           && !!document.querySelector('.gate-card button:not([disabled])'))
-        || (document.documentElement.dataset.peerdBootStage === 'app-ready'
+        || (document.documentElement.dataset.mcdollarBootStage === 'app-ready'
           && !!document.querySelector(${JSON.stringify(selector)})))`;
   }
   return `(document.getElementById('app')?.childElementCount || 0) > 0`;
@@ -90,7 +90,7 @@ const exceptions = (events) => (events || []).filter((e) => /^EXC |^ERR /.test(e
 const packagedRemoteImportProbe = async (remoteUrl, channel, notebookId) => {
   const [{ buildWorkerSource }, { makeFetchRemote }, { REMOTE_MODULE_IMPORTS_ENABLED }] = await Promise.all([
     import('/engine-tabs/notebook-tab/worker-source.js'),
-    import('/peerd-engine/index.js'),
+    import('/mcdollar-engine/index.js'),
     import('/shared/channel-config.js'),
   ]);
   let fetchCalls = 0;
@@ -206,7 +206,7 @@ const preparePackagedVault = async () => {
 };
 
 const packagedAppImportProbe = async () => {
-  const { buildAppExport } = await import('/peerd-engine/index.js');
+  const { buildAppExport } = await import('/mcdollar-engine/index.js');
   const envelope = await buildAppExport({
     record: { name: 'Packaged Git Probe', entryFile: 'index.html', tags: ['ci-probe'] },
     files: {
@@ -242,9 +242,9 @@ for (const channel of ['preview', 'store']) {
   const pages = htmlPages(root);
   let ctx = null;
   try {
-    // Loads the PACKAGED tree (not extension/). launchPeerd opens + mounts the
+    // Loads the PACKAGED tree (not extension/). launchMcdollar opens + mounts the
     // side panel as part of setup, so a packaged side-panel break throws here.
-    ctx = await launchPeerd({ extensionDir: root });
+    ctx = await launchMcdollar({ extensionDir: root });
 
     // All three behavioral probes are post-vault capabilities. Establish that
     // posture through the real Options owner before asking an engine page or
@@ -386,7 +386,7 @@ for (const channel of ['preview', 'store']) {
       let p = null; let mounted = true; let openErr = null;
       const launchSidepanel = page === 'sidepanel/sidepanel.html';
       try {
-        // launchPeerd already opened and mounted the real side panel. Opening a
+        // launchMcdollar already opened and mounted the real side panel. Opening a
         // second copy races the single named UI port and tests an impossible
         // product posture, so validate the existing surface in place.
         p = launchSidepanel ? ctx.page : await openExtPage(ctx, page);

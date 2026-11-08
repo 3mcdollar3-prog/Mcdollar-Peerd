@@ -1,4 +1,4 @@
-// peerd:wasi — run wasm32-wasi command modules against caller-built
+// mcdollar:wasi — run wasm32-wasi command modules against caller-built
 // capabilities. The wrapper is pure values-in/values-out (module bytes + opts
 // → exit/stdout/files), so it's exercised directly in bun; the fixtures are
 // hand-assembled wasm (wasi-test-module.ts), so the whole path — compile,

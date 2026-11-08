@@ -35,7 +35,7 @@ export const makeOffscreenDocClient = ({
    * @param {{ url?: string, bytesB64?: string, name?: string, contentType?: string }} source
    * @param {{ format?: string, engine?: string }} [opts]
    * @param {{ signal?: AbortSignal }} [options]
-   * @returns {Promise<{ format: string, doc?: import('/peerd-runtime/doc/model.js').Document, pdf?: { engine: string, pages: {page:number,text:string}[], pageCount: number, info: object, scanned: boolean, ocrUsed: boolean, ocrAvailable: boolean, textCapped: boolean }, bytes: number, sniffedVia: string }>}
+   * @returns {Promise<{ format: string, doc?: import('/mcdollar-runtime/doc/model.js').Document, pdf?: { engine: string, pages: {page:number,text:string}[], pageCount: number, info: object, scanned: boolean, ocrUsed: boolean, ocrAvailable: boolean, textCapped: boolean }, bytes: number, sniffedVia: string }>}
   */
   extract: async (source, opts = {}, { signal } = {}) => {
     const aborted = () => abortError(signal, 'Document extraction stopped.');

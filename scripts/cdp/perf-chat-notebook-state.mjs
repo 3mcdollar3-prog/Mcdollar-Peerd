@@ -77,7 +77,7 @@ export const PERF_CHAT_NOTEBOOK_STATES = [
         const saved = await evalIn(ctx.page, `(async () => {
           'use strict';
           const { createKernelSessionReader } = await import('/background/kernel-session-reader.js');
-          const idb = await import('/peerd-egress/storage/idb.js');
+          const idb = await import('/mcdollar-egress/storage/idb.js');
           return createKernelSessionReader(idb).get(${JSON.stringify(id)});
         })()`, true);
         rec.check('the long chat contains forty actual saved model replies', saved?.messages?.filter((message) =>
@@ -103,7 +103,7 @@ export const PERF_CHAT_NOTEBOOK_STATES = [
             const calls = await markdownCalls(page, witness);
             const typed = await evalIn(page, `document.querySelector('form.input-bar textarea').value`);
             rec.check(`real keys remain in the ${surface} composer`, typed === 'abcdefghijklmnopqrstuvwxyz1234', typed);
-            if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe(`merge-base ${surface} Markdown calls while typing`, calls);
+            if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe(`merge-base ${surface} Markdown calls while typing`, calls);
             else rec.check(`unchanged ${surface} replies do not parse Markdown while typing`, calls === 0, String(calls));
             await evalIn(page, `document.querySelector('form.input-bar textarea').value = '';
               document.querySelector('form.input-bar textarea').dispatchEvent(new Event('input', { bubbles: true }));`);
@@ -169,7 +169,7 @@ export const PERF_CHAT_NOTEBOOK_STATES = [
         const run = async (lines) => withNotebookProbeDeadline(async (step) => {
           await step(() => page.send('Performance.enable'));
           const beforeLayouts = await step(() => layoutCount(page));
-          const code = `for (let index = 0; index < ${lines}; index += 1) console.log('PERF-LINE-' + index); peerd.self.display('DISPLAY-END'); return 'RETURN-END';`;
+          const code = `for (let index = 0; index < ${lines}; index += 1) console.log('PERF-LINE-' + index); mcdollar.self.display('DISPLAY-END'); return 'RETURN-END';`;
           const started = Date.now();
           const result = await step(() => evalIn(ctx.swConn, `chrome.tabs.sendMessage(${tabId}, {
             type: 'js/eval', notebookId: ${JSON.stringify(id)}, code: ${JSON.stringify(code)}, timeoutMs: ${NOTEBOOK_PROBE_TIMEOUT_MS},
@@ -193,7 +193,7 @@ export const PERF_CHAT_NOTEBOOK_STATES = [
         const background = await evalIn(ctx.swConn, `chrome.tabs.get(${tabId}).then((tab) => tab.active === false)`, true);
         rec.check('the real flood runs in a background Notebook tab', background === true);
         const flood = await run(20_000);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('merge-base real Notebook flood', flood);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('merge-base real Notebook flood', flood);
         else {
           rec.check('the real Notebook flood avoids per-line layouts', flood.layouts < 200 && flood.elapsedMs < 15_000, JSON.stringify(flood));
           rec.check('the real Notebook flood keeps its complete raw result and both rich output paths', flood.ok === true
@@ -204,7 +204,7 @@ export const PERF_CHAT_NOTEBOOK_STATES = [
         await page.send('Page.bringToFront');
         await rec.visualPage('notebook-output-layout', page);
         const children = await evalIn(page, `document.getElementById('console-output').childElementCount`);
-        if (process.env.PEERD_VISUAL_BASE_RENDER === '1') rec.observe('merge-base output children', children);
+        if (process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1') rec.observe('merge-base output children', children);
         else rec.check('the painted output keeps at most five thousand children', children <= 5_000, String(children));
         rec.check('output pruning has no ResizeObserver feedback error', !page.events.some((event) => /ResizeObserver loop/.test(event)), JSON.stringify(page.events));
         const notebookActive = await evalIn(ctx.swConn, `chrome.tabs.get(${tabId}).then((tab) => tab.active)`, true);

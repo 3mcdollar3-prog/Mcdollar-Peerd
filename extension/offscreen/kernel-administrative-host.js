@@ -12,7 +12,7 @@ import {
   parseHookMarkdown,
   parseSkillMd,
   resolveWorkspaceKey,
-} from '/peerd-runtime/controller-administrative.js';
+} from '/mcdollar-runtime/controller-administrative.js';
 import { makeSerialLane } from '/shared/cold-util.js';
 import { DEFAULT_HOOK_MANIFEST } from '/shared/default-hook-manifest.js';
 

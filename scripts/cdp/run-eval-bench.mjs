@@ -2,10 +2,10 @@
 // scripts/cdp/run-eval-bench.mjs — drive the eval/lab task suite over the REAL
 // extension and score one BUILD, so we can diff build-over-build instead of
 // guessing whether a change helped. Reuse, not a new benchmark tool:
-//   - launchPeerd (e2e-harness.mjs) loads the real unpacked extension in
+//   - launchMcdollar (e2e-harness.mjs) loads the real unpacked extension in
 //     headless Chrome for Testing,
 //   - this injects a real provider key + selects the model,
-//   - opens eval/runner.html and runs the suite through the page's __peerdEval
+//   - opens eval/runner.html and runs the suite through the page's __mcdollarEval
 //     hook (the same runSuite the "Run all tasks" button calls),
 //   - writes a commit-tagged scorecard to bench-results/,
 //   - and (optionally) runs the PURE score.compare() against a baseline file to
@@ -16,13 +16,13 @@
 // page state, so a baseline is local + explicit (there's no backend to stash a
 // shared one in).
 //
-// --smoke uses launchPeerd's keyless-Ollama wire fake (no key, no cost, no real
+// --smoke uses launchMcdollar's keyless-Ollama wire fake (no key, no cost, no real
 // model) to verify the DRIVER PLUMBING end to end — open → run → read scorecard.
 // passRate will be ~0 (the faked model can't solve tasks); that's expected, the
 // smoke only asserts a scorecard comes back.
 //
 // Usage:
-//   PEERD_BENCH_KEY=sk-ant-... bun run eval:bench --provider=anthropic --model=claude-haiku-4-5
+//   MCDOLLAR_BENCH_KEY=sk-ant-... bun run eval:bench --provider=anthropic --model=claude-haiku-4-5
 //   bun run eval:bench --provider=anthropic --model=claude-haiku-4-5 --baseline=scripts/cdp/bench-results/<prev>.json
 //   bun run eval:bench --smoke           # zero-cost plumbing check
 //
@@ -43,13 +43,13 @@
 //   --budget-min=N                           max minutes to wait for the run (default 45; smoke 5)
 //   --show-tabs                              open the agent's eval window visibly
 //   --smoke                                  keyless plumbing run (implies provider=ollama, limit=1)
-// Key (real mode): PEERD_BENCH_KEY, else ANTHROPIC_API_KEY / OPENROUTER_API_KEY.
+// Key (real mode): MCDOLLAR_BENCH_KEY, else ANTHROPIC_API_KEY / OPENROUTER_API_KEY.
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
-import { launchPeerd, openExtPage, rpc, evalIn, waitFor, log, PASSPHRASE, sseText } from './e2e-harness.mjs';
+import { launchMcdollar, openExtPage, rpc, evalIn, waitFor, log, PASSPHRASE, sseText } from './e2e-harness.mjs';
 import { compare } from '../../extension/eval/score.js';
 import { startWebFixtureServer } from './fixtures/web-suite.mjs';
 
@@ -82,7 +82,7 @@ const GUARD_TOOL_ERRORS = !!flag('guard-tool-errors', false);
 const SHOW_TABS = !!flag('show-tabs', false);
 const RUN_BUDGET_MS = Number(flag('budget-min', SMOKE ? 5 : 45)) * 60_000;
 
-const KEY = process.env.PEERD_BENCH_KEY
+const KEY = process.env.MCDOLLAR_BENCH_KEY
   || (PROVIDER === 'anthropic' ? process.env.ANTHROPIC_API_KEY : '')
   || (PROVIDER === 'openrouter' ? process.env.OPENROUTER_API_KEY : '')
   || '';
@@ -94,7 +94,7 @@ main();
 
 async function main() {
   if (!SMOKE && !isKeyless(PROVIDER) && !KEY) {
-    console.error('[bench] No provider key. Set PEERD_BENCH_KEY (or ANTHROPIC_API_KEY / OPENROUTER_API_KEY), or run with --smoke for the keyless plumbing check.');
+    console.error('[bench] No provider key. Set MCDOLLAR_BENCH_KEY (or ANTHROPIC_API_KEY / OPENROUTER_API_KEY), or run with --smoke for the keyless plumbing check.');
     process.exit(2);
   }
   if (SMOKE) {
@@ -103,9 +103,9 @@ async function main() {
     log(`REAL benchmark — provider=${PROVIDER} model=${MODEL || '(provider default)'} suite=${SUITE}${LIMIT ? ` limit=${LIMIT}` : ''}. Makes real API calls and COSTS MONEY.`);
   }
 
-  // In smoke mode launchPeerd intercepts the keyless model wire; a fixed no-op
+  // In smoke mode launchMcdollar intercepts the keyless model wire; a fixed no-op
   // answer is fine — we only check the driver yields a scorecard.
-  const ctx = await launchPeerd(SMOKE ? { modelResponder: () => ({ sse: sseText('benchmark smoke: no-op answer.') }) } : {});
+  const ctx = await launchMcdollar(SMOKE ? { modelResponder: () => ({ sse: sseText('benchmark smoke: no-op answer.') }) } : {});
   // The web-actor suite drives a local fixture site (drift-free); start it on an
   // ephemeral port and thread the base URL into the run (the tasks carry the
   // __FIXTURE__ sentinel). Other suites don't need it.
@@ -118,7 +118,7 @@ async function main() {
     // 1) vault + provider
     const vault = await rpc(ctx.page, { type: 'vault/initialize', passphrase: PASSPHRASE });
     if (!vault?.ok) throw new Error(`vault/initialize failed: ${JSON.stringify(vault)}`);
-    await rpc(ctx.page, { type: 'onboarding/complete', peerName: 'peerd', facts: null });
+    await rpc(ctx.page, { type: 'onboarding/complete', peerName: 'mcdollar', facts: null });
 
     if (isKeyless(PROVIDER)) {
       const patch = { providerName: PROVIDER };
@@ -152,8 +152,8 @@ async function main() {
     // 2) open the eval harness page + wait for its driver hook
     const evalPage = await openExtPage(ctx, 'eval/runner.html');
     if (SHOW_TABS) await evalIn(evalPage, `(() => { const c = document.getElementById('showtabs'); if (c) c.checked = true; })()`);
-    const ready = await waitFor(() => evalIn(evalPage, `!!(window.__peerdEval && window.__peerdEval.ready)`), { budgetMs: 30_000 });
-    if (!ready) throw new Error('eval/runner.html never exposed __peerdEval — is the runner hook present?');
+    const ready = await waitFor(() => evalIn(evalPage, `!!(window.__mcdollarEval && window.__mcdollarEval.ready)`), { budgetMs: 30_000 });
+    if (!ready) throw new Error('eval/runner.html never exposed __mcdollarEval — is the runner hook present?');
 
     // 3) start the run (fire-and-forget in the page), then poll — a full suite
     //    outlasts a single awaited CDP call. Smoke targets ONE network-free
@@ -166,17 +166,17 @@ async function main() {
     // — it still "fails" under the wire fake, which is the expected ~0 passRate).
     if (SMOKE) { if (SUITE === 'web-actor') runOpts.limit = 1; else runOpts.taskIds = ['clock-now']; }
     else if (LIMIT) runOpts.limit = LIMIT;
-    await evalIn(evalPage, `(() => { window.__peerdEval.run(${JSON.stringify(runOpts)}); return true; })()`);
+    await evalIn(evalPage, `(() => { window.__mcdollarEval.run(${JSON.stringify(runOpts)}); return true; })()`);
     log(`run started (suite=${SUITE}${LIMIT ? `, first ${LIMIT}` : ''}); polling for the scorecard (budget ${Math.round(RUN_BUDGET_MS / 60000)} min)…`);
 
     const card = await waitFor(async () => {
-      const err = await evalIn(evalPage, `window.__peerdEval.lastError`);
+      const err = await evalIn(evalPage, `window.__mcdollarEval.lastError`);
       if (err) throw new Error(`eval run failed in-page: ${err}`);
-      return evalIn(evalPage, `window.__peerdEval.lastCard`);
+      return evalIn(evalPage, `window.__mcdollarEval.lastCard`);
     }, { budgetMs: RUN_BUDGET_MS, pollMs: 5_000 });
     if (!card) throw new Error(`run did not finish within ${Math.round(RUN_BUDGET_MS / 60000)} min`);
 
-    const results = await evalIn(evalPage, `window.__peerdEval.lastResults`);
+    const results = await evalIn(evalPage, `window.__mcdollarEval.lastResults`);
 
     // 4) persist, tagged by commit + model
     mkdirSync(OUT_DIR, { recursive: true });

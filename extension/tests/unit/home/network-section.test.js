@@ -6,9 +6,9 @@ import { NetworkSection } from '/home/network-section.js';
 // A "live" base-network info snapshot (shape mirrors offscreen/dweb-base.js
 // info()). Only what the view reads.
 const LIVE_INFO = {
-  running: true, did: 'did:key:zSelfAbcdefgh', lobby: 'peerd/base/1',
+  running: true, did: 'did:key:zSelfAbcdefgh', lobby: 'mcdollar/base/1',
   peers: [], peerCount: 0, linkedCount: 0, presentCount: 0, dhtSize: 0,
-  rendezvous: 'up', bootstrapUrl: 'wss://bootstrap.peerd.ai/rendezvous',
+  rendezvous: 'up', bootstrapUrl: 'wss://bootstrap.mcdollar.ai/rendezvous',
 };
 
 /** @typedef {{ type: string } & Record<string, any>} Msg */
@@ -75,7 +75,7 @@ describe('home.network', () => {
   it('offline: shows the Start the network button', async () => {
     const { root, unmount } = await mountView(makeSend());
     try {
-      expect(byText(root, '.peerd-net-btn', 'Start the network')).toBeTruthy();
+      expect(byText(root, '.mcdollar-net-btn', 'Start the network')).toBeTruthy();
     } finally { unmount(); }
   });
 
@@ -87,8 +87,8 @@ describe('home.network', () => {
     try {
       expect(root.textContent).toContain('could not refresh network status');
       expect(root.textContent.includes('raw status transport')).toBe(false);
-      expect(byText(root, '.peerd-net-btn', 'Retry status')).toBeTruthy();
-      expect(byText(root, '.peerd-net-btn', 'Start the network')).toBeFalsy();
+      expect(byText(root, '.mcdollar-net-btn', 'Retry status')).toBeTruthy();
+      expect(byText(root, '.mcdollar-net-btn', 'Start the network')).toBeFalsy();
     } finally { unmount(); }
   });
 
@@ -100,14 +100,14 @@ describe('home.network', () => {
   // (which clears error on a successful info reply).
   it('a failed start surfaces the error inline instead of doing nothing', async () => {
     const send = makeSend({
-      'dweb/base/start': () => ({ ok: false, error: 'signaling: websocket error (wss://bootstrap.peerd.ai/rendezvous)' }),
+      'dweb/base/start': () => ({ ok: false, error: 'signaling: websocket error (wss://bootstrap.mcdollar.ai/rendezvous)' }),
       // info still reports not-running after the failed start (and resolves ok,
       // so refresh would clear `error` unless start re-applies it).
       'dweb/distributed/info': () => ({ running: false }),
     });
     const { root, unmount } = await mountView(send);
     try {
-      clickText(root, '.peerd-net-btn', 'Start the network');
+      clickText(root, '.mcdollar-net-btn', 'Start the network');
       await flush();
       // wiring fired
       expect(send.calls.some((c) => c.type === 'dweb/base/start')).toBe(true);
@@ -115,8 +115,8 @@ describe('home.network', () => {
       expect(root.textContent).toContain('could not start the network');
       expect(root.textContent.includes('websocket error')).toBe(false);
       // and the button is usable again (not stuck on "Starting…")
-      expect(byText(root, '.peerd-net-btn', 'Starting…')).toBeFalsy();
-      expect(byText(root, '.peerd-net-btn', 'Start the network')).toBeTruthy();
+      expect(byText(root, '.mcdollar-net-btn', 'Starting…')).toBeFalsy();
+      expect(byText(root, '.mcdollar-net-btn', 'Start the network')).toBeTruthy();
     } finally { unmount(); }
   });
 
@@ -130,15 +130,15 @@ describe('home.network', () => {
     });
     const { root, unmount } = await mountView(send);
     try {
-      clickText(root, '.peerd-net-btn', 'Start the network');
+      clickText(root, '.mcdollar-net-btn', 'Start the network');
       await flush();
       expect(root.textContent).toContain('could not confirm whether the network start finished');
       expect(root.textContent.includes('raw private host failure')).toBe(false);
       expect(send.calls.filter((call) => call.type === 'dweb/base/start').length).toBe(1);
       expect(send.calls.some((call) => call.type === 'dweb/distributed/info')).toBe(true);
-      expect(byText(root, '.peerd-net-btn', 'Recheck network status')).toBeTruthy();
-      expect(byText(root, '.peerd-net-btn', 'Finish same start')).toBeTruthy();
-      expect(byText(root, '.peerd-net-btn', 'Start the network')).toBeFalsy();
+      expect(byText(root, '.mcdollar-net-btn', 'Recheck network status')).toBeTruthy();
+      expect(byText(root, '.mcdollar-net-btn', 'Finish same start')).toBeTruthy();
+      expect(byText(root, '.mcdollar-net-btn', 'Start the network')).toBeFalsy();
     } finally { unmount(); }
   });
 
@@ -153,14 +153,14 @@ describe('home.network', () => {
     });
     const { root, unmount } = await mountView(send);
     try {
-      clickText(root, '.peerd-net-btn', 'Start the network');
+      clickText(root, '.mcdollar-net-btn', 'Start the network');
       await flush();
-      expect(byText(root, '.peerd-net-btn', 'Recheck network status')).toBeTruthy();
-      clickText(root, '.peerd-net-btn', 'Recheck network status');
+      expect(byText(root, '.mcdollar-net-btn', 'Recheck network status')).toBeTruthy();
+      clickText(root, '.mcdollar-net-btn', 'Recheck network status');
       await flush();
       expect(send.calls.filter((call) => call.type === 'dweb/base/start').length).toBe(1);
       expect(send.calls.filter((call) => call.type === 'dweb/distributed/info').length).toBe(3);
-      expect(byText(root, '.peerd-net-btn', 'Finish same start')).toBeTruthy();
+      expect(byText(root, '.mcdollar-net-btn', 'Finish same start')).toBeTruthy();
     } finally { unmount(); }
   });
 
@@ -178,13 +178,13 @@ describe('home.network', () => {
     });
     const { root, unmount } = await mountView(send);
     try {
-      clickText(root, '.peerd-net-btn', 'Start the network');
+      clickText(root, '.mcdollar-net-btn', 'Start the network');
       await flush();
-      clickText(root, '.peerd-net-btn', 'Finish same start');
+      clickText(root, '.mcdollar-net-btn', 'Finish same start');
       await flush();
       expect(starts).toBe(2);
-      expect(root.querySelector('.peerd-net-facts')).toBeTruthy();
-      expect(byText(root, '.peerd-net-btn', 'Finish same start')).toBeFalsy();
+      expect(root.querySelector('.mcdollar-net-facts')).toBeTruthy();
+      expect(byText(root, '.mcdollar-net-btn', 'Finish same start')).toBeFalsy();
     } finally { unmount(); }
   });
 
@@ -204,15 +204,15 @@ describe('home.network', () => {
     globalThis.confirm = () => true;
     const { root, unmount } = await mountView(send);
     try {
-      clickText(root, '.peerd-net-btn', 'Stop the network');
+      clickText(root, '.mcdollar-net-btn', 'Stop the network');
       await flush();
-      expect(byText(root, '.peerd-net-btn', 'Recheck network status')).toBeTruthy();
-      expect(byText(root, '.peerd-net-btn', 'Finish same stop')).toBeTruthy();
-      expect(byText(root, '.peerd-net-btn', 'Stop the network')).toBeFalsy();
-      clickText(root, '.peerd-net-btn', 'Finish same stop');
+      expect(byText(root, '.mcdollar-net-btn', 'Recheck network status')).toBeTruthy();
+      expect(byText(root, '.mcdollar-net-btn', 'Finish same stop')).toBeTruthy();
+      expect(byText(root, '.mcdollar-net-btn', 'Stop the network')).toBeFalsy();
+      clickText(root, '.mcdollar-net-btn', 'Finish same stop');
       await flush();
       expect(stops).toBe(2);
-      expect(byText(root, '.peerd-net-btn', 'Start the network')).toBeTruthy();
+      expect(byText(root, '.mcdollar-net-btn', 'Start the network')).toBeTruthy();
     } finally {
       globalThis.confirm = priorConfirm;
       unmount();
@@ -227,13 +227,13 @@ describe('home.network', () => {
     });
     const { root, unmount } = await mountView(send);
     try {
-      clickText(root, '.peerd-net-btn', 'Start the network');
+      clickText(root, '.mcdollar-net-btn', 'Start the network');
       await flush();
       expect(send.calls.some((c) => c.type === 'dweb/base/start')).toBe(true);
       // left the offline view for the live one (facts row present, no Start btn)
-      expect(root.querySelector('.peerd-net-facts')).toBeTruthy();
+      expect(root.querySelector('.mcdollar-net-facts')).toBeTruthy();
       expect(root.textContent).toContain('Lobby');
-      expect(byText(root, '.peerd-net-btn', 'Start the network')).toBeFalsy();
+      expect(byText(root, '.mcdollar-net-btn', 'Start the network')).toBeFalsy();
     } finally { unmount(); }
   });
 });

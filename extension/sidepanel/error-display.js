@@ -43,7 +43,7 @@ export const mapError = (e) => {
   // Account/credit/quota limits often arrive as 400/403 with a message,
   // not 429 — catch them by content before the generic HTTP fallback.
   // why no bare 'billing' / 'quota': transient throttles carry them too; this
-  // list follows HARD_LIMIT_NEEDLES in peerd-provider/error-classify.js.
+  // list follows HARD_LIMIT_NEEDLES in mcdollar-provider/error-classify.js.
   if (has('credit balance', 'billing_not_active', 'billing hard limit', 'insufficient_quota', 'usage limit', 'plan limit')) {
     return "Provider account limit — out of credit or over a usage cap. Check your provider's billing, then retry.";
   }
@@ -70,7 +70,7 @@ export const mapError = (e) => {
  *
  * why this gate: the banner used to offer "Open settings" for EVERY error,
  * which misdirects on the most common ones — a 429/529 throttle, a network
- * blip, or an external billing cap aren't fixable in peerd's Settings, so
+ * blip, or an external billing cap aren't fixable in mcdollar's Settings, so
  * sending the user there is a dead end. Only key/auth/config (→ providers)
  * and the spend limit (→ costs) live in Settings; for everything else the
  * banner shows the guidance copy alone (mapError already says "wait and

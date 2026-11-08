@@ -23,7 +23,7 @@ describe('CDP native form submission guard', () => {
       source.indexOf('const readFromExpectedDocument ='),
     );
     expect(helper).toContain("'Page.createIsolatedWorld'");
-    expect(helper).toContain("worldName: 'peerd-browser-action'");
+    expect(helper).toContain("worldName: 'mcdollar-browser-action'");
     expect(helper).toContain('runtimeDocumentMatches(tabId, contextId, expectedDocument)');
     expect(clickBody).toContain('isolatedActionContext(tabId, bound, expectedDocument)');
     expect(clickBody).toContain('executionContextId: actionContextId');

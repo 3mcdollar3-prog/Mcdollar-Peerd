@@ -2,7 +2,7 @@
 // Shallow artifact-channel admission for the cold offscreen supervisor. Exact
 // clone byte rails are rechecked by the lazy host before it allocates a Worker.
 
-export const ARTIFACT_CHANNEL_OFFER = 'peerd/artifact-channel';
+export const ARTIFACT_CHANNEL_OFFER = 'mcdollar/artifact-channel';
 export const ARTIFACT_CHANNEL_PROTOCOL = 1;
 export const ARTIFACT_CHANNEL_OPERATIONS = Object.freeze([
   'buildAppExport', 'buildNotebookExport', 'buildVmRecipeExport',

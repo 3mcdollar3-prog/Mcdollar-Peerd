@@ -4,7 +4,7 @@ import {
   createAppRoomLiveness,
 } from '../../extension/offscreen/app-room-liveness.js';
 
-const APP_URL = 'chrome-extension://peerd/engine-tabs/app-tab/index.html';
+const APP_URL = 'chrome-extension://mcdollar/engine-tabs/app-tab/index.html';
 const claim = {
   roomId: 'room-one',
   clientId: 'room-client-one',

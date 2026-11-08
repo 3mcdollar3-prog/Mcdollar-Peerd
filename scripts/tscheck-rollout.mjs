@@ -27,11 +27,11 @@ const EXT = join(REPO, 'extension');
 // Deliberately-ES5 injected-into-page bodies (eslint.config.js) — never
 // annotate; they are serialized + re-evaluated in a target page.
 const ES5_INJECTED = new Set([
-  'peerd-runtime/dom/walk-injected.js',
-  'peerd-runtime/dom/framework-state.js',
-  'peerd-runtime/dom/pull-in-hint-injected.js',
+  'mcdollar-runtime/dom/walk-injected.js',
+  'mcdollar-runtime/dom/framework-state.js',
+  'mcdollar-runtime/dom/pull-in-hint-injected.js',
   'background/debugger-pool.js',
-  'peerd-runtime/tools/defs/watch-changes.js',
+  'mcdollar-runtime/tools/defs/watch-changes.js',
 ]);
 
 const walk = (dir, out = []) => {

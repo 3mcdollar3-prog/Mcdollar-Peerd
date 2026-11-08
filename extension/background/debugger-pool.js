@@ -16,7 +16,7 @@
 //     on the banner, another extension attached, etc.)
 //
 import browser from '/shared/browser-api.js';
-import { shapeSketch } from '/peerd-runtime/kernel-browser.js';
+import { shapeSketch } from '/mcdollar-runtime/kernel-browser.js';
 import {
   createNetworkCaptureRegistry,
   networkCaptureRequestPolicy,
@@ -172,7 +172,7 @@ export const createDebuggerPool = (/** @type {{bindTabEvents?:boolean,bindTabRem
   // Focus emulation changes the page's observable focus state, so it is armed
   // only after attachToExpectedDocument proves the exact public document.
   const enableFocusEmulation = async (tabId) => {
-    // why: the driven tab is usually BACKGROUNDED — peerd never steals focus
+    // why: the driven tab is usually BACKGROUNDED — mcdollar never steals focus
     // (DESIGN-12). But Gmail-class pages gate keyboard shortcuts, caret
     // placement, and focus/blur-driven behavior on document.hasFocus(), which
     // is false for a background tab. Focus EMULATION makes the page believe
@@ -308,7 +308,7 @@ export const createDebuggerPool = (/** @type {{bindTabEvents?:boolean,bindTabRem
     try {
       const created = await browser.debugger.sendCommand({ tabId }, 'Page.createIsolatedWorld', {
         frameId: bound.frameId,
-        worldName: 'peerd-browser-action',
+        worldName: 'mcdollar-browser-action',
         grantUniveralAccess: false,
       });
       const contextId = created?.executionContextId;
@@ -380,7 +380,7 @@ export const createDebuggerPool = (/** @type {{bindTabEvents?:boolean,bindTabRem
 
   // Fetch the full accessibility tree (CDP semantic subset: role, name,
   // state, backendDOMNodeId per node). The pure serializer in
-  // peerd-runtime/dom/ax-serialize.js turns this into the model's snapshot.
+  // mcdollar-runtime/dom/ax-serialize.js turns this into the model's snapshot.
   const getAxTree = async (tabId, expectedDocument) => {
     const bound = await attachToExpectedDocument(tabId, expectedDocument);
     const res = await readFromExpectedDocument(tabId, expectedDocument, bound, async () => {
@@ -436,7 +436,7 @@ export const createDebuggerPool = (/** @type {{bindTabEvents?:boolean,bindTabRem
           if (!this.ownerDocument || this.ownerDocument.location.href !== expectedHref
               || !this.ownerDocument.defaultView
               || this.ownerDocument.defaultView.performance.timeOrigin !== expectedTimeOrigin) {
-            return { __peerdDocumentGuard: guardTag };
+            return { __mcdollarDocumentGuard: guardTag };
           }
           this.scrollIntoView({ block: 'center', inline: 'center' });
           var tag = this.tagName ? this.tagName.toLowerCase() : '';
@@ -487,7 +487,7 @@ export const createDebuggerPool = (/** @type {{bindTabEvents?:boolean,bindTabRem
         userGesture: true,
       });
       const v = out?.result?.value ?? {};
-      if (v.__peerdDocumentGuard === guardTag) {
+      if (v.__mcdollarDocumentGuard === guardTag) {
         return { ok: false, error: 'browser_target_changed', outcomeKind: 'pre-effect-failure' };
       }
       if (out?.exceptionDetails) {
@@ -533,7 +533,7 @@ export const createDebuggerPool = (/** @type {{bindTabEvents?:boolean,bindTabRem
           if (!this.ownerDocument || this.ownerDocument.location.href !== expectedHref
               || !this.ownerDocument.defaultView
               || this.ownerDocument.defaultView.performance.timeOrigin !== expectedTimeOrigin) {
-            return { __peerdDocumentGuard: guardTag };
+            return { __mcdollarDocumentGuard: guardTag };
           }
           this.scrollIntoView({ block: 'center' });
           // why: refuse before setting actor-provided text or firing input
@@ -612,7 +612,7 @@ export const createDebuggerPool = (/** @type {{bindTabEvents?:boolean,bindTabRem
         userGesture: true,
       });
       const v = out?.result?.value ?? {};
-      if (v.__peerdDocumentGuard === guardTag) {
+      if (v.__mcdollarDocumentGuard === guardTag) {
         return { ok: false, error: 'browser_target_changed', outcomeKind: 'pre-effect-failure' };
       }
       if (out?.exceptionDetails) {
@@ -664,7 +664,7 @@ export const createDebuggerPool = (/** @type {{bindTabEvents?:boolean,bindTabRem
       returnByValue: true,
     });
     const value = out?.result?.value ?? {};
-    if (value.__peerdDocumentGuard === guardTag) {
+    if (value.__mcdollarDocumentGuard === guardTag) {
       return { ok: false, error: 'browser_target_changed', outcomeKind: 'pre-effect-failure' };
     }
     if (out?.exceptionDetails) {
@@ -784,7 +784,7 @@ export const createDebuggerPool = (/** @type {{bindTabEvents?:boolean,bindTabRem
 // __vueParentComponent, Vue 2 via __vue__. safe() caps depth/breadth and
 // stringifies functions so the result is always returnByValue-able.
 //
-// SYNC NOTE: peerd-runtime/dom/framework-state.js (readFrameworkStateInjected)
+// SYNC NOTE: mcdollar-runtime/dom/framework-state.js (readFrameworkStateInjected)
 // is the no-CDP twin of this function — the same fiber/Vue walk reached via
 // chrome.scripting world:'MAIN' (selector-resolved) instead of CDP
 // callFunctionOn (this-bound). The two can't share source (scripting can't
@@ -795,7 +795,7 @@ const FRAMEWORK_STATE_FN = `function (expectedHref, expectedTimeOrigin, guardTag
   if (!el.ownerDocument || el.ownerDocument.location.href !== expectedHref
       || !el.ownerDocument.defaultView
       || el.ownerDocument.defaultView.performance.timeOrigin !== expectedTimeOrigin) {
-    return { __peerdDocumentGuard: guardTag };
+    return { __mcdollarDocumentGuard: guardTag };
   }
   function safe(v, d) {
     d = d || 0;

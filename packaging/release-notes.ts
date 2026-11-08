@@ -19,7 +19,7 @@ export const INSTALL_FOOTER = [
   '**Install (preview):** Firefox: click the `.xpi` on this page. Chrome: drag',
   'the `.crx` into `chrome://extensions` with Developer mode on. Most users',
   'want the store packages (see the README). The auto-update feeds are',
-  'attached here and served at `peerd.ai/updates/`.',
+  'attached here and served at `mcdollar.ai/updates/`.',
 ].join('\n');
 
 // Pure: pull one version's section out of a Keep-a-Changelog document.

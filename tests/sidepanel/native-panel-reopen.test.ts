@@ -9,7 +9,7 @@ const end = source.indexOf('    const target = await openNativePanelTarget(', st
 const makeOpen = (send: (method: string, params: any) => Promise<any>) => new Function(
   'browserConn', 'sw', 'waitFor', 'findNativePanelTarget',
   `${source.slice(start, end)}; return openNativePanelTarget;`,
-)({ send }, { id: 'peerd' }, async (read: () => unknown) => read(), async () => ({ targetId: 'panel' }));
+)({ send }, { id: 'mcdollar' }, async (read: () => unknown) => read(), async () => ({ targetId: 'panel' }));
 
 test('native panel skips a retired toolbar host and reuses the proven live target', async () => {
   const clicks: string[] = [];

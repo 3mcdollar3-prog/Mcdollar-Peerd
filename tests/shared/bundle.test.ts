@@ -1,8 +1,8 @@
 // Unit tests for the shared artifact-bundle codec (pack/unpack).
 //
 // packBundle/unpackBundle are the pure byte<->file-map primitives that back
-// both dweb content transfer and .peerd artifact export. They get incidental
-// coverage from the peerd-distributed transfer e2e tests, but nothing pins
+// both dweb content transfer and .mcdollar artifact export. They get incidental
+// coverage from the mcdollar-distributed transfer e2e tests, but nothing pins
 // their invariants directly:
 //   - round-trip fidelity (arbitrary bytes survive base64 there-and-back),
 //   - deterministic output regardless of file insertion order — the property

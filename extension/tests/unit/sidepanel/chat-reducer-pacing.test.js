@@ -2,7 +2,7 @@
 // #234 - the pacing-wait fold. A wait is per-session lifecycle state, so what
 // has to hold is that it paints only the chat it belongs to, and that it clears
 // on every message meaning the wait is over. A stale wait bar in a settled chat
-// would tell the user peerd is idle on purpose when it is not.
+// would tell the user mcdollar is idle on purpose when it is not.
 
 import { describe, it, expect } from '../../framework.js';
 import { INITIAL_STATE, reduceChat } from '/sidepanel/chat-reducer.js';

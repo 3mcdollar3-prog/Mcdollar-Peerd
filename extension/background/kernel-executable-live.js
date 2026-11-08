@@ -14,12 +14,12 @@ import {
   opfsHelpers,
   parseAppManifest,
   podGitRemoteOperation,
-} from '/peerd-engine/background.js';
-import { makeWebFetch, matchesDenylist } from '/peerd-egress/background.js';
+} from '/mcdollar-engine/background.js';
+import { makeWebFetch, matchesDenylist } from '/mcdollar-egress/background.js';
 import { applyFetchExtract } from '/shared/fetch-extract.js';
 import { bytesToBase64 } from '/shared/cold-util.js';
 import { normalizeApiOrigin } from '/shared/api-origin.js';
-import { needsWebWriteConfirm } from '/peerd-engine/authority.js';
+import { needsWebWriteConfirm } from '/mcdollar-engine/authority.js';
 import { createAppClient } from './app-client.js';
 import { createAppQuiescence } from './app-quiescence.js';
 import { createAppTabTracker } from './app-tab-tracker.js';

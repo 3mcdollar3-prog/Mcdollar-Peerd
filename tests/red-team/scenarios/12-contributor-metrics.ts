@@ -18,10 +18,10 @@ import {
 import {
   ContributorSchemaError, emptyContributorLocalState,
   recordContributorWebTurn, serializeContributorEnvelope,
-} from '../../../extension/peerd-runtime/observability/contributor-metrics.js';
+} from '../../../extension/mcdollar-runtime/observability/contributor-metrics.js';
 import {
   CONTRIBUTOR_LOCAL_KEY, makeContributorStore,
-} from '../../../extension/peerd-runtime/observability/contributor-store.js';
+} from '../../../extension/mcdollar-runtime/observability/contributor-store.js';
 
 const turn = {
   feature: 'web_actor_surface', requested: 'code', resolved: 'tools',
@@ -126,9 +126,9 @@ export const scenario: Scenario = {
       : leaked('encode content in provider or model names', bytes));
 
     const localSources = [
-      'peerd-runtime/observability/contributor-metrics.js',
-      'peerd-runtime/observability/contributor-store.js',
-      'peerd-runtime/observability/contributor-feedback.js',
+      'mcdollar-runtime/observability/contributor-metrics.js',
+      'mcdollar-runtime/observability/contributor-store.js',
+      'mcdollar-runtime/observability/contributor-feedback.js',
       'background/kernel-contributor-feedback-guard.js',
       'background/kernel-contributor-owner.js',
       'offscreen/semantic-routes/contributor.js',

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { createKernelDwebVaultEffects } from '../../extension/background/kernel-preview-addon.js';
-import { encodeDidKey } from '../../extension/peerd-distributed/identity/did.js';
+import { encodeDidKey } from '../../extension/mcdollar-distributed/identity/did.js';
 
 const makeFixture = (overrides: any = {}) => {
   let stored: string | null = overrides.stored ?? null;

@@ -206,7 +206,7 @@ export const runActor = async (job, {
     ? Math.floor(maxLoopEvents) : 256;
   /** @type {Worker | null} */
   let worker = null;
-  const canaryName = `__peerd_actor_host_${Math.random().toString(36).slice(2)}`;
+  const canaryName = `__mcdollar_actor_host_${Math.random().toString(36).slice(2)}`;
   const canaryValue = Object.freeze({});
   try {
     Object.defineProperty(globalThis, canaryName, { value: canaryValue, configurable: true });

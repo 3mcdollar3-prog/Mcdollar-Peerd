@@ -1,5 +1,5 @@
 // @ts-check
-// "Keep peerd as the first tab": the offer after the first setup (on Home and
+// "Keep mcdollar as the first tab": the offer after the first setup (on Home and
 // in the side panel) and the hint in the pinned tab. These pin what each
 // button sends and when each one hides.
 
@@ -53,9 +53,9 @@ describe('home: the first tab offer', () => {
       const section = root.querySelector('section.first-tab-offer');
       const title = root.querySelector('#first-tab-offer-title');
       expect(section?.getAttribute('aria-labelledby')).toBe('first-tab-offer-title');
-      expect(title?.textContent).toBe('Keep peerd as the first tab?');
+      expect(title?.textContent).toBe('Keep mcdollar as the first tab?');
       expect([...root.querySelectorAll('.first-tab-offer p')].map((p) => p.textContent)).toEqual([
-        'It stays at the start of your tabs in every window, so peerd is one click away.',
+        'It stays at the start of your tabs in every window, so mcdollar is one click away.',
         'You can turn this on later in Settings.',
       ]);
       expect(!!button(root, 'Keep it') && !!button(root, 'Not now')).toBe(true);
@@ -96,7 +96,7 @@ describe('home: the first tab offer', () => {
         expect(answers).toEqual([]);
         const error = root.querySelector('.first-tab-offer p.error');
         expect(error?.getAttribute('role')).toBe('alert');
-        expect(error?.textContent).toBe('peerd could not turn this on. Try again, or turn it on in Settings.');
+        expect(error?.textContent).toBe('mcdollar could not turn this on. Try again, or turn it on in Settings.');
         expect(/** @type {HTMLButtonElement} */ (button(root, 'Keep it')).disabled).toBe(false);
       } finally { unmount(); }
     }
@@ -145,13 +145,13 @@ describe('side panel: the first tab offer', () => {
     };
   };
 
-  it('waits until peerd can answer, so it never stacks on the provider setup', () => {
+  it('waits until mcdollar can answer, so it never stacks on the provider setup', () => {
     const panel = mountPanel({ ok: true });
     try {
       panel.show(state({}, { canSend: false }));
       expect(panel.root.querySelector('.first-tab-offer')).toBe(null);
       panel.show(state({}));
-      expect(panel.root.querySelector('.first-tab-offer h2')?.textContent).toBe('Keep peerd as the first tab?');
+      expect(panel.root.querySelector('.first-tab-offer h2')?.textContent).toBe('Keep mcdollar as the first tab?');
     } finally { panel.unmount(); }
   });
 
@@ -166,7 +166,7 @@ describe('side panel: the first tab offer', () => {
       panel.show(state({ firstTabEnabled: true, firstTabOffered: true }));
       const kept = panel.root.querySelector('p.first-tab-kept');
       expect(kept?.getAttribute('role')).toBe('status');
-      expect(kept?.textContent).toBe('peerd is now the first tab in every window.');
+      expect(kept?.textContent).toBe('mcdollar is now the first tab in every window.');
       expect(panel.root.querySelector('.first-tab-offer')).toBe(null);
       panel.show(state({ firstTabEnabled: true, firstTabOffered: true }, { messages: 1 }));
       expect(panel.root.querySelector('.first-tab-kept')).toBe(null);
@@ -220,12 +220,12 @@ describe('home: the first tab hint', () => {
     return { root, dismissed, unmount: () => { m.mount(root, null); root.remove(); } };
   };
 
-  it('says where peerd lives, in a section named by its heading', () => {
+  it('says where mcdollar lives, in a section named by its heading', () => {
     const { root, unmount } = mountHint();
     try {
       expect(root.querySelector('section.first-tab-hint')?.getAttribute('aria-labelledby')).toBe('first-tab-hint-title');
-      expect(root.querySelector('#first-tab-hint-title')?.textContent).toBe('peerd lives here.');
-      expect(root.textContent).toContain('Click P anytime to ask peerd or open your apps.');
+      expect(root.querySelector('#first-tab-hint-title')?.textContent).toBe('mcdollar lives here.');
+      expect(root.textContent).toContain('Click P anytime to ask mcdollar or open your apps.');
     } finally { unmount(); }
   });
 

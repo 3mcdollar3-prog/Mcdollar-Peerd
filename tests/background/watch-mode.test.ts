@@ -1,7 +1,7 @@
 // Watch mode's only non-IO decision: given the live state, do we foreground the
 // agent's tab right now? Every clause below exists because a focus-steal audit
 // found a concrete way to pull the user's window with nobody watching — so these
-// cases are the regression net for a feature whose failure mode is "peerd yanked
+// cases are the regression net for a feature whose failure mode is "mcdollar yanked
 // my browser over the app I was working in".
 
 import { describe, test, expect } from 'bun:test';
@@ -44,7 +44,7 @@ describe('shouldFollowAgentTab — the unattended-Routine guard', () => {
     }
   });
 
-  // why panelOpen and not "any peerd surface": the full-page home is the front
+  // why panelOpen and not "any mcdollar surface": the full-page home is the front
   // door, and its port self-reconnects across every SW respawn — so a home tab
   // parked in a background window would otherwise keep "someone is watching" true
   // forever. The guard takes only the panel, so a parked home tab reads as absent
@@ -54,8 +54,8 @@ describe('shouldFollowAgentTab — the unattended-Routine guard', () => {
   });
 });
 
-// The worst symptom of every path the audit found: peerd hauling Chrome over the
-// app the user had alt-tabbed to. If they aren't in the browser, nothing peerd
+// The worst symptom of every path the audit found: mcdollar hauling Chrome over the
+// app the user had alt-tabbed to. If they aren't in the browser, nothing mcdollar
 // does is being watched.
 describe('shouldFollowAgentTab — never raise the browser over another app', () => {
   test('NEVER follows while the browser is not the focused application', () => {

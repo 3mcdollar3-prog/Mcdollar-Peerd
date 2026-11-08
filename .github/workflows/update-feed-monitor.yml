@@ -1,4 +1,4 @@
-# Update-feed freshness monitor (spec §8). If peerd.ai serves a stale or
+# Update-feed freshness monitor (spec §8). If mcdollar.ai serves a stale or
 # broken feed, preview installs silently stop updating — there is no
 # user-visible error anywhere. This daily probe fetches both live feeds
 # and fails (→ GitHub failure notification) when the version they
@@ -37,16 +37,16 @@ jobs:
           EXPECTED="${LATEST_TAG#v}"
           echo "latest release: $EXPECTED"
 
-          CHROME_FEED="$(curl -fsSL --max-time 30 https://peerd.ai/updates/chrome-preview.xml)" \
-            || { echo '::error::chrome-preview.xml unreachable at peerd.ai/updates/'; exit 1; }
+          CHROME_FEED="$(curl -fsSL --max-time 30 https://mcdollar.ai/updates/chrome-preview.xml)" \
+            || { echo '::error::chrome-preview.xml unreachable at mcdollar.ai/updates/'; exit 1; }
           # Match the version attr ON the <updatecheck> element — a bare
           # version=" grep grabs <?xml version="1.0"?> first and would
           # report the feed stale forever.
           CHROME_VER="$(printf '%s' "$CHROME_FEED" | grep -o '<updatecheck[^>]*version="[0-9.]*"' | grep -o 'version="[0-9.]*"' | tail -1 | cut -d'"' -f2)"
           echo "chrome feed advertises: $CHROME_VER"
 
-          FIREFOX_VER="$(curl -fsSL --max-time 30 https://peerd.ai/updates/firefox-preview.json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(list(d["addons"].values())[0]["updates"][-1]["version"])')" \
-            || { echo '::error::firefox-preview.json unreachable or malformed at peerd.ai/updates/'; exit 1; }
+          FIREFOX_VER="$(curl -fsSL --max-time 30 https://mcdollar.ai/updates/firefox-preview.json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(list(d["addons"].values())[0]["updates"][-1]["version"])')" \
+            || { echo '::error::firefox-preview.json unreachable or malformed at mcdollar.ai/updates/'; exit 1; }
           echo "firefox feed advertises: $FIREFOX_VER"
 
           FAIL=0

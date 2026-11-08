@@ -49,7 +49,7 @@ describe('generated build identity', () => {
   });
 
   test('writes build config before stamping both identity leaves', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-dev-build-config-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-dev-build-config-'));
     try {
       const manifestFile = join(root, 'manifest.json');
       const out = join(root, 'extension', 'shared', 'build-config.js');

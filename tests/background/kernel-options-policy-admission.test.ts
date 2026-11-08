@@ -1,4 +1,4 @@
-import { makeLearnedOrigins } from '../../extension/peerd-runtime/actor/learned-origins.js';
+import { makeLearnedOrigins } from '../../extension/mcdollar-runtime/actor/learned-origins.js';
 import { expect, test } from 'bun:test';
 import { createKernelSenderPolicy } from '../../extension/background/kernel-sender-policy.js';
 import {

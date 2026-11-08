@@ -171,7 +171,7 @@ describe('kernel browser network authority', () => {
   test('verifies the exact installed App egress rule', async () => {
     let drifted = false;
     const harness = setup({
-      tabs: [{ id: 4, url: 'moz-extension://peerd/app#one' }],
+      tabs: [{ id: 4, url: 'moz-extension://mcdollar/app#one' }],
       external: [4], apps: [4], resourceTypes: ['main_frame', 'websocket'],
       buildRuleUpdate: (input: any) => ({
         removeRuleIds: [3],

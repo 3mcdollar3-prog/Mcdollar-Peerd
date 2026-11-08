@@ -1,11 +1,11 @@
 # Changelog
 
-All notable changes to peerd are recorded here. The format follows
+All notable changes to mcdollar are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning
 is **`0.MINOR.PATCH`** (minor = milestone, patch = fix). The
 `store`/`preview`/`dev` channels are a separate axis.
 
-peerd is **0.x, an experimental preview**: breaking changes are likely
+mcdollar is **0.x, an experimental preview**: breaking changes are likely
 and storage formats may move until the surface stabilizes.
 
 ## [Unreleased]
@@ -124,7 +124,7 @@ and storage formats may move until the surface stabilizes.
 - P2P remains opt-in and Chrome-preview-only. App discovery does not execute
   received code automatically. Residential, mobile and corporate network
   reachability, sustained churn and larger-scale capacity remain under test.
-- This runtime release does not claim qualification of a new Peerd Browser
+- This runtime release does not claim qualification of a new Mcdollar Browser
   binary or successful browser-client update delivery.
 
 ## [0.8.0] - 2026-09-26
@@ -152,11 +152,11 @@ and storage formats may move until the surface stabilizes.
 
 - Retired the legacy `page_eval`, `page_exec`, `page_keys`, `wait_until`,
   `dweb_guide`, and `request_review` tool surfaces, along with `toolbox_write`,
-  `toolbox_list`, `toolbox_delete`, and `peerd:toolbox/...` imports. Custom
+  `toolbox_list`, `toolbox_delete`, and `mcdollar:toolbox/...` imports. Custom
   skills and saved instructions that name them need to use the current actor
   and code tools.
 - Removed the unreachable pre-Git edit snapshot store and its retired
-  `peerd-checkpoints` database. Live App history remains in its browser-native
+  `mcdollar-checkpoints` database. Live App history remains in its browser-native
   Git repository; workspace files are unaffected.
 - Removed the transitional `actors.ask`, `mesh.ask`, and `mesh.send` worker
   aliases. Update calls to `actors.call`, `mesh.call`, and `mesh.cast`,
@@ -164,16 +164,16 @@ and storage formats may move until the surface stabilizes.
 
 ### Added
 
-- peerd honors the pause a site asks for. When a site answers that peerd is
-  asking too often, peerd records the wait that site stated and holds off before
+- mcdollar honors the pause a site asks for. When a site answers that mcdollar is
+  asking too often, mcdollar records the wait that site stated and holds off before
   acting there again, learns a slower steady cadence for browser actions on it,
   and stops the turn with a plain explanation rather than napping when the site
-  wants longer than peerd will wait. The recorded wait is an absolute point in
+  wants longer than mcdollar will wait. The recorded wait is an absolute point in
   time, so it survives a browser restart and cannot be shortened by a later
   answer. A rule can only be created by a real response from the site: page
   content and the model cannot create, raise, lower, or clear one. Rules fade on
   their own, and Settings -> Paced sites lists them with a per-site forget
-  control. peerd still does not disguise itself or work around a site's limits.
+  control. mcdollar still does not disguise itself or work around a site's limits.
 
 ### Fixed
 
@@ -205,7 +205,7 @@ and storage formats may move until the surface stabilizes.
 
 ### Added
 
-- App manifests can define a dedicated, code-first developer actor. Peerd binds
+- App manifests can define a dedicated, code-first developer actor. Mcdollar binds
   that actor to the exact App, owning root task, manifest revision, and caller
   authority; the actor can use one sealed `app_code` program to observe,
   exercise, and test the running App before editing its readable working tree.
@@ -222,18 +222,18 @@ and storage formats may move until the surface stabilizes.
 
 - Installed Apps keep their readable source files and byte-exact binary assets
   in the OPFS Git working tree. JavaScript can address separate textures and
-  audio through the narrow `peerd.assets` API, while compression stays outside
+  audio through the narrow `mcdollar.assets` API, while compression stays outside
   the working tree as a network transport concern.
 - Seeders retain and serve the verified compressed chunks that were signed,
   without rebuilding or recompressing them. Isomorphic Git continues to see
   only the decoded source and binary bytes.
 - Publisher-provided App actor instructions are rendered with package
-  provenance beneath Peerd's host policy instead of being represented as
+  provenance beneath Mcdollar's host policy instead of being represented as
   user-authored `/system` instructions.
 
 ### Fixed
 
-- Release publication now requires only one manual approval. The peerd.ai
+- Release publication now requires only one manual approval. The mcdollar.ai
   notification job keeps its own narrowly scoped environment, so a failed
   notification can be retried without repeating irreversible Firefox signing.
 - App actor attachment, reuse, and runtime calls now reconcile manifest and
@@ -258,13 +258,13 @@ and storage formats may move until the surface stabilizes.
   packaging-owned template, with no change to the source-direct development
   workflow or extension runtime behavior.
 - The hosted identity ceremony source and deployment checks now live with
-  `peerd-site`; the extension keeps the opener, protocol validation, and
+  `mcdollar-site`; the extension keeps the opener, protocol validation, and
   cryptographic custody boundary.
 
 ### Fixed
 
 - Releases publish their update-feed descriptors as immutable release assets
-  and dispatch `peerd-site` from an isolated required job. A missing token or
+  and dispatch `mcdollar-site` from an isolated required job. A missing token or
   failed delivery is now visible and fails the release workflow instead of
   silently leaving the public feeds stale.
 
@@ -402,7 +402,7 @@ and storage formats may move until the surface stabilizes.
   `script` and `message_actor` are explicitly granted. Bound environment actors
   remain pinned and cannot cross-delegate.
 - Release CI now exercises the installed extension on current Firefox and
-  dispatches peerd.ai feed deployment after publishing. Repository copy hygiene
+  dispatches mcdollar.ai feed deployment after publishing. Repository copy hygiene
   is enforced as a release gate.
 
 ### Fixed
@@ -419,7 +419,7 @@ and storage formats may move until the surface stabilizes.
 ## [0.5.0] - 2026-08-06
 
 ### Added
-- **Interrupted work can recover instead of disappearing.** peerd now
+- **Interrupted work can recover instead of disappearing.** mcdollar now
   records the lifecycle of operations and reconciles them after a
   service-worker restart, browser interruption, or execution-host loss.
   Recovery distinguishes safe retries from writes that need confirmation,
@@ -447,7 +447,7 @@ and storage formats may move until the surface stabilizes.
   never fills a password or stores a token; ambiguous or unverified targets
   fall back to an assisted-manual handoff rather than an automated click.
 - **The denylist has a browser-level backstop.** Session-scoped declarative
-  network rules protect only the tabs peerd is actively driving, catching
+  network rules protect only the tabs mcdollar is actively driving, catching
   page-initiated navigation and App traffic that bypass the ordinary fetch
   gate. A higher-priority identity-provider corridor preserves legitimate
   sign-in redirects, and browsers without the API retain the previous
@@ -482,7 +482,7 @@ and storage formats may move until the surface stabilizes.
 ## [0.4.0] - 2026-08-01
 
 ### Added
-- **The toolbar button opens the side panel.** Clicking peerd used to
+- **The toolbar button opens the side panel.** Clicking mcdollar used to
   take over a whole tab with the full-page home, so the first click of
   a session landed on a full-tab vault gate instead of next to the page
   you were already on. It now opens the side panel (the sidebar on
@@ -493,19 +493,19 @@ and storage formats may move until the surface stabilizes.
   cold start. One consequence of that native path: for panel users the
   icon becomes a toggle, which is the platform convention. The keyboard
   shortcut still always toggles the panel, whichever default you pick.
-- **You can see which tab peerd is driving, and what it is doing in
-  it.** The driven page joins a collapsible peerd tab group for as long
-  as peerd owns it, so a glance at the tab strip says which tab is not
+- **You can see which tab mcdollar is driving, and what it is doing in
+  it.** The driven page joins a collapsible mcdollar tab group for as long
+  as mcdollar owns it, so a glance at the tab strip says which tab is not
   yours to touch right now. Inside that page, a small corner pill names
   the current action, shows the origin, and carries a Stop button,
   softening to "Thinking..." between calls so a slow step never reads
-  as a hang. The pill is invisible to peerd itself, by three
+  as a hang. The pill is invisible to mcdollar itself, by three
   independent measures, and its wording comes from a fixed vocabulary:
   never the text being typed, never page-authored labels or selectors,
   and only the host of a navigation rather than the full URL.
 - **The orchestrator can wait for a delegation when it needs the
   answer to speak.** `message_actor` takes an opt-in `await`, which
-  resolves the actor's fenced reply into the tool result so peerd
+  resolves the actor's fenced reply into the tool result so mcdollar
   answers in the same turn instead of ending on "I'll report back".
   Delegation stays async by default, which is still the only shape that
   fans out. The wait is bounded: past a wall-clock cap it degrades back
@@ -528,7 +528,7 @@ and storage formats may move until the surface stabilizes.
   on Firefox too, where turns run in the service worker rather than an
   offscreen worker. It previously outlived the turn there, parked on
   "Thinking..." indefinitely.
-- peerd's system prompt described delegation as always asynchronous,
+- mcdollar's system prompt described delegation as always asynchronous,
   which contradicted the new opt-in wait on the same decision and left
   the model with two conflicting statements of the delegation contract.
 
@@ -566,12 +566,12 @@ and storage formats may move until the surface stabilizes.
   as untrusted.
 - **A web build target.** `bun run package:web` cuts the library form of
   the packaging core, with `bun run check:web` gating its boundary in
-  preflight and CI. No demo shell, and no `peerd-distributed`, a
+  preflight and CI. No demo shell, and no `mcdollar-distributed`, a
   posture that is pinned by test.
 
 ### Changed
 - **Apps can be 50M chars, up from 2M.** The write-layer backstop was
-  the real ceiling on every App path, `sandbox_create`, `.peerd`
+  the real ceiling on every App path, `sandbox_create`, `.mcdollar`
   import, and `dweb_install` alike, even though the dweb loader already
   accepted 50M across 256 files. A real dwapp ships a WASM runtime plus
   a 3D engine, and binary assets ride as base64 today, so 2M made the
@@ -580,7 +580,7 @@ and storage formats may move until the surface stabilizes.
 ### Fixed
 - **Watch mode no longer steals focus when nobody is watching.** An
   adversarial audit found four ways the follow could pull your window
-  over. A parked home tab satisfied "a peerd surface is open" forever,
+  over. A parked home tab satisfied "a mcdollar surface is open" forever,
   so only a side-panel port counts now. The browser could be hauled in
   front of another application, so a Chrome-focus gate was added. The
   "already in front" no-op check was dead after any service-worker
@@ -614,8 +614,8 @@ and storage formats may move until the surface stabilizes.
   daily local time, even with the side panel closed. New
   `schedule_create` / `schedule_list` / `schedule_cancel` tools; each
   firing runs in its own fresh session as an autonomous goal loop (or a
-  single turn). A routine that came due while peerd was locked or the
-  browser was off fires once as soon as peerd is back on, never as a
+  single turn). A routine that came due while mcdollar was locked or the
+  browser was off fires once as soon as mcdollar is back on, never as a
   burst, and nothing fires while the vault is locked.
 - **Prewalk (experimental, off by default).** A goal run can open on
   the frontier chat model, which writes a todo plan and lands the first
@@ -762,13 +762,13 @@ and storage formats may move until the surface stabilizes.
   actor bounced the same CompileError back twice). `js_notebook` now marks
   such results `evalError` and the one-shot latch disarms on it, exactly
   like a tool failure: the actor recovers and iterates, as promised. A
-  headless CI test also now pins `peerd:wasi` + `demoModule()` as
+  headless CI test also now pins `mcdollar:wasi` + `demoModule()` as
   importable and runnable from a `script` job (a field session reported
   the import unreachable; current source proves green, so a stale install
   is the likely culprit, reload the extension).
 
 ### Added
-- **`peerd:wasi` ships a self-test module.** `demoModule()` (exported next
+- **`mcdollar:wasi` ships a self-test module.** `demoModule()` (exported next
   to `runWasi`) returns a tiny (187-byte) known-good wasm32-wasi hello
   module, embedded in the extension, so the agent can smoke-test
   `runWasi(demoModule())` inside the sealed worker with no network and no
@@ -810,7 +810,7 @@ and storage formats may move until the surface stabilizes.
   **`actor_cancel`**, `subagent_tasks` is **`actor_tasks`** (pairs with
   `sandbox_create`: a sandbox always has a dedicated bound actor;
   `actor_create` alone makes an ephemeral one). Internally the
-  `peerd-runtime/subagent/` module is `peerd-runtime/actor/`, and the
+  `mcdollar-runtime/subagent/` module is `mcdollar-runtime/actor/`, and the
   spawned-child concept keeps a distinct name where it must not collide
   with bound actors: session kind `'subagent'` is now **`'spawned'`**, and
   the child transcript stream is `turn/spawned-*`. Breaking for stored
@@ -867,7 +867,7 @@ and storage formats may move until the surface stabilizes.
   enters the request body. It shows up in Settings → Providers with the current
   GPT-5.x flagships seeded in the picker. The manifest already covered the
   host via `<all_urls>` + the `https:` CSP, so nothing new is requested.
-- **The debug surface: serious observability without a vendor.** peerd's
+- **The debug surface: serious observability without a vendor.** mcdollar's
   chain of events was already recorded (audit log, lineage, delegation
   traces) but trapped across surfaces. Now it comes OUT, locally, on the
   user's say-so. Three pieces:
@@ -1008,7 +1008,7 @@ and storage formats may move until the surface stabilizes.
   misleading error.** The in-browser Linux VM (CheerpX) needs
   `SharedArrayBuffer`, which the browser grants only to a cross-origin-
   isolated page, and a Firefox extension page can't isolate itself
-  (a Firefox platform limitation, not a peerd bug). The VM boot screen used
+  (a Firefox platform limitation, not a mcdollar bug). The VM boot screen used
   to fail with a "manifest must declare cross_origin_embedder_policy" error
   that read like a config bug; on Firefox it now shows a plain-English notice
   explaining the limitation, noting WebVM works in the Chrome build, and
@@ -1038,7 +1038,7 @@ and storage formats may move until the surface stabilizes.
   the last remaining way for untrusted bytes to reach the orchestrator's
   trusted context. `js_run` gets the same treatment: output from a
   pure-compute run stays raw (it is the agent's own code), but a run that
-  called `peerd.egress.fetch` has its value, console, and error text fenced.
+  called `mcdollar.egress.fetch` has its value, console, and error text fenced.
 
 ### Added
 - **Actor replies now surface in the chat as their own messages.** When a
@@ -1047,7 +1047,7 @@ and storage formats may move until the surface stabilizes.
   actor · Esoteric Math"). Before, it was buried inside the `message_actor`
   tool card of an earlier turn. Failures show the same way, marked failed.
 - **Notebook heatmap charts.** `chart({ type: 'heatmap', data, x, y, v })`
-  from `peerd:std` renders a density grid: rows of `{ x, y, v }` bins shaded
+  from `mcdollar:std` renders a density grid: rows of `{ x, y, v }` bins shaded
   by `v`. This was the missing chart kind that agents kept building with
   hand-rolled Vega specs.
 - **Notebook errors point at your code.** A run error's stack now maps back
@@ -1056,7 +1056,7 @@ and storage formats may move until the surface stabilizes.
   headless `js_run` path too (`job.js:<line>`).
 - **Notebook iteration feel.** When a new run starts, the previous run's
   output stays visible but dims. Consecutive runs read like a loop while
-  every realm stays fresh. The toolbar also gains a `peerd:std ?` cheat
+  every realm stays fresh. The toolbar also gains a `mcdollar:std ?` cheat
   sheet: the import line, the chart spec, and the full helper list at a
   glance.
 
@@ -1093,7 +1093,7 @@ and storage formats may move until the surface stabilizes.
   mid-JSON. The pane dump is now capped with a note, and the tool result's
   `[VALUE]` block is cut cleanly at the source, with an actionable
   instruction to return a compact value or a `chart()`/`table()` descriptor.
-- `peerd.self.import('peerd:std')` failed ("cannot resolve"). The dynamic
+- `mcdollar.self.import('mcdollar:std')` failed ("cannot resolve"). The dynamic
   import shim routed builtins through the OPFS compose path, where a builtin
   has no file. Builtins now import their real URL directly, matching the
   static resolver.
@@ -1119,7 +1119,7 @@ extension's user-facing behavior is identical to 0.2.0.
 
 ## [0.2.0] - 2026-06-29
 
-This release restructures peerd's agent. It lands the staged backlog of
+This release restructures mcdollar's agent. It lands the staged backlog of
 open PRs on one verified branch. Three things get better:
 
 - **Less context on the main agent.** Each environment's operating
@@ -1152,7 +1152,7 @@ open PRs on one verified branch. Three things get better:
   can watch and stop, and they report their own cost. They survive a
   service-worker restart because pending work is written to storage.
 - **API integrations (origin actors).** Send a message to a bare origin
-  like api.github.com and peerd forms a fetch-only, keyless,
+  like api.github.com and mcdollar forms a fetch-only, keyless,
   origin-locked actor for it. The actor remembers what it learns about
   that API across messages.
 - **actor_list.** One tool that lists everything you can message: every
@@ -1184,7 +1184,7 @@ open PRs on one verified branch. Three things get better:
 - The main agent's browser tools are now just actor_list, open_tab, and
   message_actor (plus capture). The low-level page tools and the tools
   that write to an environment moved to the actors.
-- WebVM self-heal. When the browser freezes a backgrounded VM tab, peerd
+- WebVM self-heal. When the browser freezes a backgrounded VM tab, mcdollar
   now checks it and reloads it before a command lands on a dead shell. The
   terminal output stripping was also fixed so output is not eaten when it
   splits across a chunk.
@@ -1207,7 +1207,7 @@ open PRs on one verified branch. Three things get better:
 
 A broad security-hardening pass across the sandbox, egress, runner, agent
 loop, dweb transport, and engine registries. This release also adds the
-autonomous e2e verify loop and the groundwork for the peerd-lite and
+autonomous e2e verify loop and the groundwork for the mcdollar-lite and
 personal-data directions. Every code change went through adversarial-swarm
 review passes (security fixes held to a no-residual-bypass bar) and was
 verified green before merge.
@@ -1256,14 +1256,14 @@ verified green before merge.
   mode-toggle, and vault-lock states were added (#70, #77). The
   goal-state user-message assertion dropped in the consolidation was
   restored (#76). Per-run artifacts are gitignored (#74).
-- **`peerd:std` record helpers.** `parseJsonl` / `toJsonl` / `dedupeBy`
+- **`mcdollar:std` record helpers.** `parseJsonl` / `toJsonl` / `dedupeBy`
   for line-delimited records in code-mode (#92).
-- **peerd-lite groundwork.** A proof that the sealed Notebook substrate
+- **mcdollar-lite groundwork.** A proof that the sealed Notebook substrate
   runs verbatim in a plain web page with only a host adapter, under
   `web-prototype/poc/` (#96). Also durable-OPFS round-trip coverage for
   the on-device personal-data index (#93).
 - **Design specs.** The local-first personal-data agent (#92), the
-  peerd-web / peerd-lite surface (#84), and the site-as-demo reuse plan
+  mcdollar-web / mcdollar-lite surface (#84), and the site-as-demo reuse plan
   (#87).
 
 ### Changed
@@ -1320,17 +1320,17 @@ Initial **experimental preview**. The core buildout, integrated:
   memory, review, clock, web, skills), Plan/Act permissions, sessions,
   cost telemetry, voice (Moonshine + Web Speech), lineage-based context
   compaction, contacts.
-- **The dweb** (`peerd-distributed`, preview channel only). Always-on
+- **The dweb** (`mcdollar-distributed`, preview channel only). Always-on
   P2P base network (mesh + DHT + gossip), did:key identity, signed
   content addressing, the dwapp bridge, and a peer-to-peer app store.
 - **Distribution.** Dual store/preview channels, generated manifests,
   CI gates (bun tests, strict typecheck, lint, dweb boundary, drift,
   in-browser CDP job, artifact matrix).
 
-[Unreleased]: https://github.com/NotASithLord/peerd/compare/v0.8.0...HEAD
-[0.8.0]: https://github.com/NotASithLord/peerd/compare/v0.7.3...v0.8.0
-[0.7.3]: https://github.com/NotASithLord/peerd/compare/v0.7.2...v0.7.3
-[0.7.2]: https://github.com/NotASithLord/peerd/compare/v0.7.1...v0.7.2
-[0.7.1]: https://github.com/NotASithLord/peerd/compare/v0.7.0...v0.7.1
-[0.7.0]: https://github.com/NotASithLord/peerd/compare/v0.6.0...v0.7.0
-[0.1.0]: https://github.com/NotASithLord/peerd/releases/tag/v0.1.0
+[Unreleased]: https://github.com/NotASithLord/mcdollar/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/NotASithLord/mcdollar/compare/v0.7.3...v0.8.0
+[0.7.3]: https://github.com/NotASithLord/mcdollar/compare/v0.7.2...v0.7.3
+[0.7.2]: https://github.com/NotASithLord/mcdollar/compare/v0.7.1...v0.7.2
+[0.7.1]: https://github.com/NotASithLord/mcdollar/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/NotASithLord/mcdollar/compare/v0.6.0...v0.7.0
+[0.1.0]: https://github.com/NotASithLord/mcdollar/releases/tag/v0.1.0

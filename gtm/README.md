@@ -1,10 +1,10 @@
-# gtm/ - graph-based go-to-market for peerd
+# gtm/ - graph-based go-to-market for mcdollar
 
 > The Figma playbook, ported to 2026: before launch, Dylan Field scraped
 > Twitter, built a network graph of the design community in Gephi, found
 > the most influential nodes, and reached out to every one of them
 > personally - so Figma's first few hundred users were the *best* possible
-> few hundred. This directory is that playbook, runnable, for peerd.
+> few hundred. This directory is that playbook, runnable, for mcdollar.
 
 Nothing here ships in the extension. It's a Bun-run analyst toolkit,
 same posture as `packaging/` and `scripts/`.
@@ -17,19 +17,19 @@ The playbook has four steps; only the data sources needed updating:
 
 1. **Map the community.** In 2013 the design community's public graph
    lived on Twitter. In 2026, Twitter/X's API is paywalled and scraping
-   it violates ToS - and peerd's communities don't live there anyway.
-   The public, ToS-clean graphs that matter for a dev tool like peerd:
+   it violates ToS - and mcdollar's communities don't live there anyway.
+   The public, ToS-clean graphs that matter for a dev tool like mcdollar:
    - **GitHub** - the strongest participation graph for developer tools.
      Contributions say "I build in this space"; follows say "I listen to this
      person."
    - **Bluesky** - a genuinely open follow graph (free, unauthenticated
      AppView API), and the network where the local-first / dweb crowd -
-     the `peerd-distributed` audience - actually hangs out.
+     the `mcdollar-distributed` audience - actually hangs out.
    - **Hacker News** - no follow graph, but topic engagement: who writes
      and who discusses "browser agent", "local-first", "BYOK" stories.
 2. **Build the graph.** Every contribution, follow, and comment becomes a
    directed signal edge. The crawl is seeded from communities
-   adjacent to peerd (see `seeds.ts` - editing that file IS the
+   adjacent to mcdollar (see `seeds.ts` - editing that file IS the
    strategy) and - the important trick - follow edges are kept
    **in-community only**: someone with 300 followers *inside this graph*
    beats someone with 100k generic ones.
@@ -45,9 +45,9 @@ The playbook has four steps; only the data sources needed updating:
    worksheet (`out/outreach.md`), not a mailing list - see the etiquette
    section below.
 
-## Why this fits peerd specifically
+## Why this fits mcdollar specifically
 
-peerd's pitch spans four communities that barely overlap: browser
+mcdollar's pitch spans four communities that barely overlap: browser
 automation, BYOK/local-model privacy, local-first software, and the
 dweb/p2p world. That's exactly the situation where the graph beats
 intuition - the people who sit at the *intersections* (high betweenness
@@ -99,7 +99,7 @@ hundred users as a *curated set* worth individual attention:
   story they authored). No templates that smell like templates.
 - **Give before asking.** A preview build, a "you specifically will hate
   or love this because X", an honest question about their local-first /
-  agent-security take. peerd's BYOK/no-backend posture is itself the
+  agent-security take. mcdollar's BYOK/no-backend posture is itself the
   hook for this crowd - lead with the architecture, not adjectives.
 - **Work clusters breadth-first.** `outreach.md` ends with a
   per-community coverage view; recruit a few from *every* cluster before

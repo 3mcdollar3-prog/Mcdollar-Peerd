@@ -68,5 +68,5 @@ if (['unblocked', 'unblocked-last', 'unblock-failed', 'unblock-unknown'].include
 // The activity of someone with no app installed from them.
 if (frame === 'unnamed') {
   void press(() => [...document.querySelectorAll('.contact-row')]
-    .find(row => row.querySelector('.peerd-disc-name')?.textContent === lone.slice(-8))?.querySelector('[aria-expanded]'), 'Activity');
+    .find(row => row.querySelector('.mcdollar-disc-name')?.textContent === lone.slice(-8))?.querySelector('[aria-expanded]'), 'Activity');
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Real-Chrome harness for peerd's IN-BROWSER test suite.
+// Real-Chrome harness for mcdollar's IN-BROWSER test suite.
 //
 // The in-browser runner (extension/tests/runner.html) is designed to run over
 // http too — bootstrap.js synthesizes chrome.runtime.id and the suite uses
@@ -13,7 +13,7 @@
 // Usage:  bun scripts/cdp/run-inbrowser-tests.mjs [path/to/extension]
 // Env:    CHROME_PATH or CHROME — explicit Chrome/Chromium binary
 //         (browser-actions/setup-chrome exports CHROME_PATH in CI).
-//         PEERD_TEST_SUMMARY: path to write the run's counts to as JSON,
+//         MCDOLLAR_TEST_SUMMARY: path to write the run's counts to as JSON,
 //         which is what packaging/gen-inbrowser-test-badge.ts badges.
 // Exit:   0 if all in-browser tests pass, 1 otherwise.
 
@@ -50,7 +50,7 @@ const POLL_INTERVAL_MS = 500;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // --- static file server rooted at extension/ ------------------------------
-// Absolute module specifiers like /peerd-egress/index.js resolve here.
+// Absolute module specifiers like /mcdollar-egress/index.js resolve here.
 // Ephemeral port (listen(0)) — never collides with another dev process.
 const TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.html': 'text/html', '.css': 'text/css', '.json': 'application/json', '.wasm': 'application/wasm', '.txt': 'text/plain' };
 const server = createServer((req, res) => {
@@ -121,7 +121,7 @@ const main = async () => {
   await new Promise((res) => server.listen(0, '127.0.0.1', res));
   const httpPort = server.address().port;
 
-  profile = mkdtempSync(join(tmpdir(), 'peerd-prof-'));
+  profile = mkdtempSync(join(tmpdir(), 'mcdollar-prof-'));
   chrome = spawn(CHROME, [
     '--headless=new', '--no-first-run', '--no-default-browser-check',
     // Native qualification requires the sandbox; ordinary container CI keeps
@@ -180,7 +180,7 @@ const main = async () => {
       if (r.error) throw new Error(r.error.message);
     }
     await send('Page.addScriptToEvaluateOnNewDocument', {
-      source: 'window.__PEERD_VIRTUAL_AUTHENTICATOR__ = true;',
+      source: 'window.__MCDOLLAR_VIRTUAL_AUTHENTICATOR__ = true;',
     });
   } catch (e) {
     console.error('WebAuthn virtual authenticators unavailable — ceremony tests will not register:', e?.message ?? e);
@@ -224,8 +224,8 @@ const main = async () => {
   // (packaging/gen-inbrowser-test-badge.ts) needs these counts as DATA. Scraping
   // the log line below would make a console tweak silently rewrite a published
   // coverage number.
-  if (process.env.PEERD_TEST_SUMMARY) {
-    writeFileSync(process.env.PEERD_TEST_SUMMARY, `${JSON.stringify({
+  if (process.env.MCDOLLAR_TEST_SUMMARY) {
+    writeFileSync(process.env.MCDOLLAR_TEST_SUMMARY, `${JSON.stringify({
       lane: 'inbrowser-chrome',
       passed: result.passed,
       failed: result.failed,

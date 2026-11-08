@@ -1,5 +1,5 @@
 import {
-  launchPeerd, unlockAndReady, evalIn, waitFor, rpc, attach, sleep, sseText, sseToolCall,
+  launchMcdollar, unlockAndReady, evalIn, waitFor, rpc, attach, sleep, sseText, sseToolCall,
 } from './e2e-harness.mjs';
 
 const gap = (message, detail) => { throw new Error(`PROBE-GAP: ${message}${detail ? ` ${JSON.stringify(detail)}` : ''}`); };
@@ -17,7 +17,7 @@ export const openRealVm = async (extensionDir, name) => {
   const wire = [];
   let phase = { kind: 'create', issuedMain: false, issuedActor: false, token: '', command: '' };
   let vmId = '';
-  const ctx = await launchPeerd({ extensionDir, enforceWebSecurity: true,
+  const ctx = await launchMcdollar({ extensionDir, enforceWebSecurity: true,
     modelResponder: (_index, request) => {
       const body = request?.postData ?? '';
       wire.push({ when: Date.now(), body });
@@ -110,9 +110,9 @@ export const WEBVM_TERMINAL_STATE = {
   async run(ctx, rec) {
     // why: the normal runner disables web security. This real VM needs its own strict launch.
     const vm = await openRealVm(ctx.extensionDir, 'Terminal check');
-    const base = process.env.PEERD_VISUAL_BASE_RENDER === '1';
+    const base = process.env.MCDOLLAR_VISUAL_BASE_RENDER === '1';
     try {
-      const directory = '/home/user/peerd-terminal-check';
+      const directory = '/home/user/mcdollar-terminal-check';
       const environment = await vm.run('printf "TERM=%s HOME=%s LANG=%s\\n" "$TERM" "$HOME" "$LANG"; stty size');
       rec.observe('real guest environment', environment);
       if (!base) rec.check('the guest starts with its UTF-8 environment', environment.startsWith('TERM=xterm HOME=/home/user LANG=C.UTF-8\n'));

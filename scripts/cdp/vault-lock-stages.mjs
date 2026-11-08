@@ -32,7 +32,7 @@ export const locateLockStage = (source, marker) => {
 export const armVaultLockStages = async (ctx) => {
   const worker = ctx.swConn;
   if (!worker) throw new Error('vault-lock diagnostic worker connection unavailable');
-  const key = '__peerdVaultLockStages';
+  const key = '__mcdollarVaultLockStages';
   const points = [];
   const remove = async () => {
     await Promise.all(points.map(({ breakpointId }) => worker.send('Debugger.removeBreakpoint', { breakpointId }).catch(() => {})));

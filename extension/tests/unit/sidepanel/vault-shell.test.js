@@ -20,7 +20,7 @@ const waitFor = async (/** @type {() => boolean} */ predicate) => {
  * @param {(frames: FrameRequestCallback[], timers: TimerHandler[], root:HTMLElement) => void} run
  * @param {string} [shell]
  */
-const withPaintGateFakes = (run, shell = '<main class="boot-shell" style="width:1px;height:1px">peerd</main>') => {
+const withPaintGateFakes = (run, shell = '<main class="boot-shell" style="width:1px;height:1px">mcdollar</main>') => {
   const windowApi = /** @type {any} */ (window);
   const prior = {
     requestAnimationFrame: window.requestAnimationFrame,
@@ -45,9 +45,9 @@ const withPaintGateFakes = (run, shell = '<main class="boot-shell" style="width:
   try { run(frames, timers, root); }
   finally {
     root.remove();
-    delete document.documentElement.dataset.peerdStaticShellPainted;
-    delete document.documentElement.dataset.peerdBootStage;
-    delete document.documentElement.dataset.peerdBootError;
+    delete document.documentElement.dataset.mcdollarStaticShellPainted;
+    delete document.documentElement.dataset.mcdollarBootStage;
+    delete document.documentElement.dataset.mcdollarBootError;
     window.requestAnimationFrame = prior.requestAnimationFrame;
     window.setTimeout = prior.setTimeout;
     window.clearTimeout = prior.clearTimeout;
@@ -70,7 +70,7 @@ const unlockedSnapshot = () => ({
     provider: 'ollama', model: 'qwen3:8b', keyless: true,
     credentialReady: true, localReady: true, canSend: true, reason: null,
   },
-  profile: { id: 'default', peerName: 'peerd', onboardingComplete: true },
+  profile: { id: 'default', peerName: 'mcdollar', onboardingComplete: true },
   capabilities: {
     actorExecution: {
       status: 'temporarily_unavailable', host: 'background-page-worker',
@@ -122,7 +122,7 @@ describe('vault shell static paint gate', () => {
       afterStaticShellPaint(() => { starts += 1; });
       /** @type {() => void} */ (timers.shift())();
       expect(starts).toBe(0);
-      expect(document.documentElement.dataset.peerdBootStage).toBe('failed');
+      expect(document.documentElement.dataset.mcdollarBootStage).toBe('failed');
       expect(root.querySelector('[role="alert"]') !== null).toBe(true);
       expect(root.textContent).toContain('Application unavailable.');
       expect(root.textContent).toContain('Retry');
@@ -140,7 +140,7 @@ describe('vault shell static paint gate', () => {
       expect(getComputedStyle(failure).display === 'none').toBe(false);
       expect(getComputedStyle(failure).visibility === 'hidden').toBe(false);
       expect(root.textContent).toContain('Retry');
-    }, '<main class="boot-shell" style="display:none">peerd</main>');
+    }, '<main class="boot-shell" style="display:none">mcdollar</main>');
   });
 });
 
@@ -179,13 +179,13 @@ describe('vault shell application load', () => {
         state: unlockedSnapshot(),
       });
 
-      await waitFor(() => document.documentElement.dataset.peerdBootStage === 'app-ready');
+      await waitFor(() => document.documentElement.dataset.mcdollarBootStage === 'app-ready');
       expect(root.querySelector('.app-shell')?.textContent).toBe('ready');
     } finally {
       root.remove();
-      delete document.documentElement.dataset.peerdBootStage;
-      delete document.documentElement.dataset.peerdBootError;
-      delete document.documentElement.dataset.peerdVaultPosture;
+      delete document.documentElement.dataset.mcdollarBootStage;
+      delete document.documentElement.dataset.mcdollarBootError;
+      delete document.documentElement.dataset.mcdollarVaultPosture;
       if (prior.connect === undefined) delete runtime.connect;
       else runtime.connect = prior.connect;
       if (prior.sendMessage === undefined) delete runtime.sendMessage;
@@ -233,7 +233,7 @@ describe('vault shell application load', () => {
         state: unlockedSnapshot(),
       });
 
-      await waitFor(() => document.documentElement.dataset.peerdBootStage === 'failed');
+      await waitFor(() => document.documentElement.dataset.mcdollarBootStage === 'failed');
       expect(root.textContent).toContain('Application unavailable.');
       expect(root.textContent).toContain('Retry');
       expect(root.querySelector('[role="alert"]') !== null).toBe(true);
@@ -249,8 +249,8 @@ describe('vault shell application load', () => {
       expect(root.textContent).toContain('Application unavailable.');
     } finally {
       root.remove();
-      delete document.documentElement.dataset.peerdBootStage;
-      delete document.documentElement.dataset.peerdVaultPosture;
+      delete document.documentElement.dataset.mcdollarBootStage;
+      delete document.documentElement.dataset.mcdollarVaultPosture;
       if (prior.connect === undefined) delete runtime.connect;
       else runtime.connect = prior.connect;
       if (prior.sendMessage === undefined) delete runtime.sendMessage;

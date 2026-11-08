@@ -12,7 +12,7 @@ the full flow instead.
 
 ## What this extension is
 
-peerd is an AI assistant in the browser side panel. The user types or
+mcdollar is an AI assistant in the browser side panel. The user types or
 speaks a task; the assistant performs it by reading and interacting
 with web pages, and by running computations in sandboxes (a WebAssembly
 Linux VM and a JavaScript sandbox that can also run WebAssembly (WASI)
@@ -26,7 +26,7 @@ extension data through the extension.
 1. Install, open the side panel (toolbar icon).
 2. Create and unlock the local vault, then complete the short profile
    onboarding. Open Settings, then Providers & models. Add a provider key or
-   choose a supported keyless local provider. No hosted peerd account or shared
+   choose a supported keyless local provider. No hosted mcdollar account or shared
    test credential exists; the demo video shows the configured flow.
 3. Ask something that exercises page automation, e.g. open any article
    and ask "summarize this page", or "open hacker news and tell me the
@@ -71,7 +71,7 @@ Other network-loaded assets that a scan may flag are listed below:
    is cached. The code fails closed: an asset with no pinned hash
    refuses to download in production. ONNX model weights are data
    consumed by the bundled inference runtime, not executable code.
-4. **Skills (`peerd-runtime/skills/`)** let the user import a SKILL.md
+4. **Skills (`mcdollar-runtime/skills/`)** let the user import a SKILL.md
    instruction file. It contains markdown instructions for the model, in the
    same category as a user typing a long prompt. It is parsed and stored locally,
    never evaluated as code. The only install path is pasting text; there
@@ -103,7 +103,7 @@ code (nothing fetched or generated remotely). There is no Chrome
 DevTools Protocol use in this package.
 
 The `webNavigation` permission is used only to correlate a page-created child
-tab with its exact source tab. If that source is under assistant control, peerd
+tab with its exact source tab. If that source is under assistant control, mcdollar
 installs the same tab-scoped network guard on the child before it continues.
 Protected children are closed. Events from other tabs are ignored. Navigation
 history is not stored. During a service-worker restart, early handling requires
@@ -126,7 +126,7 @@ and three things keep that honest regardless of channel:
   crypto exchanges and wallets, health portals, government services,
   and password managers (the categories where
   automation could do harm). See
-  `peerd-egress/denylist/default.json`; the service worker blocks all
+  `mcdollar-egress/denylist/default.json`; the service worker blocks all
   tool dispatch until the denylist is loaded (no cold-start race).
 - Page actions run only during an active, user-initiated task.
 - Tool outcomes and policy denials go to the local Activity log.
@@ -164,7 +164,7 @@ We separate two things on purpose:
   Your API key can only reach a provider you configured. Sending the
   key/conversation to an arbitrary host is closed as a class.
 - **Open-web path** (`webFetch`: the agent's web-read tools, the VM HTTP
-  egress, and the Notebook's `peerd.egress.fetch` bridge): this path has no host
+  egress, and the Notebook's `mcdollar.egress.fetch` bridge): this path has no host
   allowlist because the target is user-selected. It enforces a scheme
   check, an SSRF/private-network block (IPv4 + structural IPv6, incl.
   the cloud-metadata IP and IPv4-mapped forms), a sensitive-site
@@ -180,7 +180,7 @@ EventSource / WebTransport, plus native `fetch` recovered off the
 prototype, and any nested `Worker`) are neutralized at the boundary by
 the host page's CSP `connect-src 'none'` (extension/engine-tabs/notebook-tab/index.html),
 which the worker and its descendants inherit and which tests verify. The
-only egress that leaves the Notebook is the audited `peerd.egress.fetch` bridge,
+only egress that leaves the Notebook is the audited `mcdollar.egress.fetch` bridge,
 which is governed by the open-web `webFetch` gates above.
 
 ## CSP note

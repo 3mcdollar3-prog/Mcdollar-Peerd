@@ -30,7 +30,7 @@ import {
   originOfUrl,
   resolveTargetTab,
   scriptingTarget,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 import { clickInjected } from './click.js';
 
 const beforeLoginEffect = (/** @type {string} */ error, /** @type {any} */ structured = null) => ({
@@ -162,7 +162,7 @@ export const performConfirmedOwnedLoginAuthority = async (args, ctx) => {
       ? `Begin a passkey / security-key sign-in on ${origin}? You'll complete it with your device.`
       : v.verified === true && v.idpOrigin
         ? `Begin sign-in with ${v.provider} on ${origin}? The provider page is ${v.idpOrigin}.`
-        : `Begin sign-in with ${v.provider} on ${origin}? peerd could not verify where this ${v.provider} sign-in button leads.`;
+        : `Begin sign-in with ${v.provider} on ${origin}? mcdollar could not verify where this ${v.provider} sign-in button leads.`;
     const ans = await confirmAny({
       tool: 'login',
       kind: 'login',
@@ -170,7 +170,7 @@ export const performConfirmedOwnedLoginAuthority = async (args, ctx) => {
       origins: [origin],
       // Structured fields for a rich login card: safe: origin is system-derived
       // and method/provider/verified come from the ground-truth classifier, not the
-      // model. `verified` lets the card soften copy for a destination peerd could not
+      // model. `verified` lets the card soften copy for a destination mcdollar could not
       // prove is a known IdP (it must not vouch for one).
       method: v.method,
       provider: v.provider ?? null,
@@ -208,11 +208,11 @@ export const performConfirmedOwnedLoginAuthority = async (args, ctx) => {
       return beforeLoginEffect('login_origin_authority_refused');
     }
 
-    // 7) INITIATE. peerd AUTO-CLICKS only when it has (a) VERIFIED the destination is
+    // 7) INITIATE. mcdollar AUTO-CLICKS only when it has (a) VERIFIED the destination is
     //    a known IdP, (b) a STABLE walkId (a snapshot node the page cannot re-point :
     //    a raw selector or a CDP-only backend ref is NOT stable across the up-to-120s
     //    confirm), and it then (c) RE-VERIFIES origin + affordance AFTER the consent.
-    //    Everything else is ASSISTED-MANUAL: peerd verified the origin and took
+    //    Everything else is ASSISTED-MANUAL: mcdollar verified the origin and took
     //    consent, then hands the gesture to the user.
     const canAutoClick = v.method === 'sso' && v.verified === true && walkId != null;
 
@@ -223,7 +223,7 @@ export const performConfirmedOwnedLoginAuthority = async (args, ctx) => {
       // ground-truth READ (walkId/selector), so an auto-fire could be a confused
       // deputy (consent to one element, a trusted click on another). An SSO lands here
       // when its destination is unverified OR it has no stable walkId to pin the
-      // read↔click node. In every case peerd did the load-bearing work: https origin,
+      // read↔click node. In every case mcdollar did the load-bearing work: https origin,
       // ground-truth classify, origin-named consent, and hands off the gesture, where
       // the factor belongs anyway. No fake synthetic click. (Trusted passkey auto-click
       // via a CDP SAME-NODE read is the documented Tier-0.1 follow-up.)
@@ -247,7 +247,7 @@ export const performConfirmedOwnedLoginAuthority = async (args, ctx) => {
         }
       }
       // SSO, not auto-clickable. Be non-committal about the destination when unverified
-      // Peerd must NOT vouch for where the button leads.
+      // Mcdollar must NOT vouch for where the button leads.
       return {
         ok: true,
         receipt: {

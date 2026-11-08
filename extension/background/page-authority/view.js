@@ -34,7 +34,7 @@ import {
   browserTargetRefusalReceipt,
   resolveTargetTab,
   unverifiedBrowserTargetVerdict,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 import { CONTROLLER_PAGE_IMAGE_MAX_BASE64_CHARS } from '/shared/controller-kernel-quota.js';
 
 /** @param {any} args @param {any} ctx */
@@ -82,7 +82,7 @@ export const captureOwnedTabPixelsAuthority = async (args, ctx) => {
       const afterTab = await resolveTargetTab({ tabId: tab.id }, /** @type {any} */ (ctx));
       if (!sameDocument(afterTab, tab, expectedDocument)) {
         return browserTargetRefusalReceipt(unverifiedBrowserTargetVerdict({
-          message: 'The page changed while peerd captured it. The screenshot was discarded.',
+          message: 'The page changed while mcdollar captured it. The screenshot was discarded.',
         }), { effectCompleted: false });
       }
       if (data.length > CONTROLLER_PAGE_IMAGE_MAX_BASE64_CHARS) {

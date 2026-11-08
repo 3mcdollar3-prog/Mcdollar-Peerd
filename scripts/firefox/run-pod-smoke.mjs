@@ -13,7 +13,7 @@ const root = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 // installed stable binary is the browser under test.
 const firefox = process.env.FIREFOX_PATH || '/Applications/Firefox.app/Contents/MacOS/firefox';
 const staging = join(root, 'artifacts/staging/store-firefox');
-const source = await mkdtemp(join(tmpdir(), 'peerd-pod-firefox-'));
+const source = await mkdtemp(join(tmpdir(), 'mcdollar-pod-firefox-'));
 let firefoxProcess;
 let profile;
 let rdpClient;
@@ -63,8 +63,8 @@ try {
   const workerSource = await readFile(workerPath, 'utf8');
   await writeFile(workerPath, `${workerSource}\n
 import { isFirstPartySender as smokeIsFirstPartySender } from '/shared/sender-trust.js';
-import { idb as smokeIdb } from '/peerd-egress/kernel-storage.js';
-import { createPodRegistry as makeSmokePodRegistry } from '/peerd-engine/pod-registry.js';
+import { idb as smokeIdb } from '/mcdollar-egress/kernel-storage.js';
+import { createPodRegistry as makeSmokePodRegistry } from '/mcdollar-engine/pod-registry.js';
 const smokeSenderTrust = {
   runtimeId: browser.runtime?.id,
   extensionOrigin: browser.runtime?.getURL?.('') ?? '',
@@ -135,7 +135,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
         addonPath: source,
       });
       const addons = await client.request('listAddons');
-      const addon = addons.addons?.find((entry) => entry.id === 'peerd@peerd.ai');
+      const addon = addons.addons?.find((entry) => entry.id === 'mcdollar@mcdollar.ai');
       const addonOrigin = [addon?.manifestURL, addon?.url]
         .find((value) => typeof value === 'string' && value.startsWith('moz-extension://'));
       if (!addonOrigin) throw new Error(`installed add-on has no moz-extension origin: ${JSON.stringify(installed.addon)}`);

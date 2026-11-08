@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { createKernelDwebCustodyOwner } from '../../extension/background/kernel-preview-addon.js';
-import { encodeDidKey } from '../../extension/peerd-distributed/identity/did.js';
+import { encodeDidKey } from '../../extension/mcdollar-distributed/identity/did.js';
 
 const event = () => {
   const listeners: Function[] = [];

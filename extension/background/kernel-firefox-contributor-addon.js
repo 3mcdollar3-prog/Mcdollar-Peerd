@@ -146,7 +146,7 @@ export const makeKernelFirefoxContributor = ({
 const contributor = makeKernelFirefoxContributor();
 
 const root = /** @type {any} */ (globalThis);
-const addonId = Symbol.for('peerd.kernel.firefox-addon.v1');
+const addonId = Symbol.for('mcdollar.kernel.firefox-addon.v1');
 const guard = root[addonId];
 if (typeof guard !== 'function' || Object.hasOwn(guard, 'contributor')) {
   throw new Error('kernel-firefox-contributor-addon-owner-conflict');

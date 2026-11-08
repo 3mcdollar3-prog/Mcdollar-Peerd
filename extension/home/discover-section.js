@@ -63,27 +63,27 @@ import {
  * }} Attrs
  */
 
-const PENDING_KEY = 'peerd.manual-app-install.pending';
+const PENDING_KEY = 'mcdollar.manual-app-install.pending';
 const RUNTIME_CODES = Object.freeze(['app-runtime-invalid', 'app-runtime-unsupported', 'app-runtime-mismatch']);
 const POLL_MS = 4000;
 const COPIED_MS = 2000;
 const TECH_ID = 'disc-tech-facts';
-const CHOICE_ERROR = 'peerd could not confirm that the peer network is on. Check again before you try again.';
-const RECEIPT_HELD = 'peerd is not sure the install finished. It may still finish by itself. Install stays off until peerd knows.';
+const CHOICE_ERROR = 'mcdollar could not confirm that the peer network is on. Check again before you try again.';
+const RECEIPT_HELD = 'mcdollar is not sure the install finished. It may still finish by itself. Install stays off until mcdollar knows.';
 const KEEPS_GOING = 'You can leave this page. The install keeps going.';
-const CHECKING_LINK = 'Checking the link. peerd downloads the app and checks every file…';
+const CHECKING_LINK = 'Checking the link. mcdollar downloads the app and checks every file…';
 // why "the Chat rooms app" in a sentence: the name alone reads as many rooms.
-const COMMONS_UNKNOWN = 'peerd is not sure the Chat rooms app was added or opened. Check your Library and your tabs before you try again.';
-const COMMONS_FAILED = 'peerd could not add or open the Chat rooms app. Try again.';
+const COMMONS_UNKNOWN = 'mcdollar is not sure the Chat rooms app was added or opened. Check your Library and your tabs before you try again.';
+const COMMONS_FAILED = 'mcdollar could not add or open the Chat rooms app. Try again.';
 // why the words of every other Open: the line sits in the tile, which may
 // carry the name the Library gave the app.
-const OPEN_FAILED = 'peerd could not open this app. Try again.';
-const OPEN_UNKNOWN = 'peerd is not sure the app opened. Check your tabs.';
+const OPEN_FAILED = 'mcdollar could not open this app. Try again.';
+const OPEN_UNKNOWN = 'mcdollar is not sure the app opened. Check your tabs.';
 const NEEDS_NETWORK = 'New apps need the peer network.';
 const OFFLINE_EMPTY = `You can still open the apps in your Library. ${NEEDS_NETWORK}`;
 const MAKER_EMPTY = 'This maker’s apps show up here when the people you are connected to share them.';
 const OWN_EMPTY = 'Your apps show up here when the people you are connected to share them.';
-const AUDIT_FAILED = 'peerd could not add it to the security log.';
+const AUDIT_FAILED = 'mcdollar could not add it to the security log.';
 const SHARING = 'Sharing means other people can get this app from you while your peer network is on.';
 const BLOCKED_LINK = 'You blocked the maker of this app. To look at it, unblock them in Contacts.';
 const LOOKING = 'Looking for people who share apps…';
@@ -95,8 +95,8 @@ const YOURS_MAX = 6;
 // why a marker: the receipt could not be kept, so the install was never sent.
 const RECEIPT_FAILED = 'receipt-failed';
 // why: a heard card carries the maker's own WebAssembly claim. A share link
-// shows what peerd found in the files instead.
-const WASM_HINT = 'The WebAssembly hint comes from the maker. peerd does not check it.';
+// shows what mcdollar found in the files instead.
+const WASM_HINT = 'The WebAssembly hint comes from the maker. mcdollar does not check it.';
 // The start row names one packaged starter; the others follow it.
 const FEATURED_STARTER = 'csv-lab';
 const FEATURED = packagedStarter(FEATURED_STARTER);
@@ -140,7 +140,7 @@ export const DiscoverSection = (initialVnode) => {
   /** @type {string|null} */ let myDid = null;
   // What the service worker says of an installed copy, by app id and version:
   // true (its files changed on this device), false (they are the release
-  // peerd checked), null (not known yet, or the read failed). `epoch` is the
+  // mcdollar checked), null (not known yet, or the read failed). `epoch` is the
   // ask the value answers; `asking` is a read in flight.
   /** @type {Map<string, {value:boolean|null, epoch:number, asking:boolean}>} */ const localChanges = new Map();
   let localChangesEpoch = 0;
@@ -428,7 +428,7 @@ export const DiscoverSection = (initialVnode) => {
         try {
           const reply = await attrs.send({ type: 'dweb/app-local-changes', appId });
           if (reply?.ok && typeof reply.changed === 'boolean') changed = reply.changed;
-        } catch { /* not known: the page claims nothing peerd checked */ }
+        } catch { /* not known: the page claims nothing mcdollar checked */ }
         entry.asking = false;
         if (dead) return;
         if (epoch === localChangesEpoch) { entry.value = changed; entry.epoch = epoch; }
@@ -535,7 +535,7 @@ export const DiscoverSection = (initialVnode) => {
   const announceInstalled = (appId) => {
     // Tell the Library (sibling section) to re-fetch. No shared store between
     // sections, so a page-level CustomEvent is the decoupled bus.
-    try { window.dispatchEvent(new CustomEvent('peerd:app-installed', { detail: { appId } })); } catch { /* no-op */ }
+    try { window.dispatchEvent(new CustomEvent('mcdollar:app-installed', { detail: { appId } })); } catch { /* no-op */ }
   };
 
   // why: dweb/base/install has no uri dedupe. While a share-link install of
@@ -648,7 +648,7 @@ export const DiscoverSection = (initialVnode) => {
         // why: the host could not stop sharing the old version's files, and it
         // tries again at the next update or delete of this app.
         if (warnings.has('previous-version-cleanup-pending')) {
-          warningMessages.push('peerd still shares the old version. Sharing stops the next time you update or remove this app.');
+          warningMessages.push('mcdollar still shares the old version. Sharing stops the next time you update or remove this app.');
         }
         if (warningMessages.length) notices[id] = warningMessages.join(' ');
         announceInstalled(appId);
@@ -754,12 +754,12 @@ export const DiscoverSection = (initialVnode) => {
         openPage({ page: 'link' }, 'paste');
       } else {
         // why no host text: the share row has no Technical details to hold it.
-        linkError = RUNTIME_CODES.includes(reply?.code) ? 'peerd could not check this app. This browser cannot run it.'
+        linkError = RUNTIME_CODES.includes(reply?.code) ? 'mcdollar could not check this app. This browser cannot run it.'
           : reply?.error === BLOCKED_ERROR ? BLOCKED_LINK
-            : 'peerd could not check this app. The link may be wrong, or the people who have it may be offline. Check the link, then try again.';
+            : 'mcdollar could not check this app. The link may be wrong, or the people who have it may be offline. Check the link, then try again.';
       }
     } catch {
-      if (requestEpoch === linkEpoch) linkError = 'peerd could not check this app. Wait until the peer network is connected, then try again.';
+      if (requestEpoch === linkEpoch) linkError = 'mcdollar could not check this app. Wait until the peer network is connected, then try again.';
     } finally {
       linkBusy = '';
       // why: Check link went off while the check ran, so focus fell to the
@@ -846,8 +846,8 @@ export const DiscoverSection = (initialVnode) => {
       // Library read shows it on its heard page too, as after an install.
       if (match && typeof match.id === 'string') {
         linkPreview ??= { ...pending, name: null }; linkAppId = match.id; linkFresh = true; forgetPending(); void reloadLocal();
-      } else linkNotice = 'peerd still cannot tell if the install finished. It may still finish by itself. Install stays off until peerd knows.';
-    } catch { linkNotice = 'peerd could not read your Library. Check again in a moment.'; }
+      } else linkNotice = 'mcdollar still cannot tell if the install finished. It may still finish by itself. Install stays off until mcdollar knows.';
+    } catch { linkNotice = 'mcdollar could not read your Library. Check again in a moment.'; }
     finally { linkBusy = ''; redraw(); }
   };
 
@@ -872,12 +872,12 @@ export const DiscoverSection = (initialVnode) => {
     let sent = false;
     try {
       const client = await loadDweb();
-      if (!client.loadSeedApp) throw new Error('The Chat rooms app is not in this version of peerd.');
+      if (!client.loadSeedApp) throw new Error('The Chat rooms app is not in this version of mcdollar.');
       const commonsSeed = await client.loadSeedApp({ fetchText: async (/** @type {string} */ path) => {
         // The seed loader selects only our own packaged extension asset.
         // eslint-disable-next-line no-restricted-globals
         const response = await fetch(path);
-        if (!response.ok) throw new Error('peerd could not load the Chat rooms app. Reload the page, then try again.');
+        if (!response.ok) throw new Error('mcdollar could not load the Chat rooms app. Reload the page, then try again.');
         return response.text();
       } });
       sent = true;
@@ -1135,7 +1135,7 @@ export const DiscoverSection = (initialVnode) => {
   const rootOf = (included) => rootView({
     enabled: attrs.enabled, net, heardCount: apps.length, loading, failed: heardFailed, included,
   });
-  // why the pill focus: Comes with peerd can swap the looking or empty root
+  // why the pill focus: Comes with mcdollar can swap the looking or empty root
   // for the grid and back. Focus follows to the pressed pill, or, on a root
   // with no pills, to the link that shows those apps again.
   const pillFocus = '.disc-pill[aria-pressed="true"], [data-included]';
@@ -1166,7 +1166,7 @@ export const DiscoverSection = (initialVnode) => {
     // another maker's uri. Only a card under its own publisher stands for the
     // Library record at that uri, as the share-link page borrows a name only
     // from the card its publisher signed.
-    const byUri = app.uri && app.publisher && app.uri.startsWith(`peerd://${app.publisher}/`) ? installedByUri.get(app.uri) ?? null : null;
+    const byUri = app.uri && app.publisher && app.uri.startsWith(`mcdollar://${app.publisher}/`) ? installedByUri.get(app.uri) ?? null : null;
     const localId = installedId[id] || byUri || tracked?.appId || linked || null;
     // why: until the Library shows the app, a share-link install of it decides
     // its state here too: running, or unconfirmed with Check again.
@@ -1320,10 +1320,10 @@ export const DiscoverSection = (initialVnode) => {
     return link ? m('button.linklike.disc-link-btn', { type: 'button', onclick: props.onclick }, props.label) : secondaryButton(props);
   };
   // why: the looking and empty roots draw no pills, but the apps that come
-  // with peerd need no peer, and only Discover adds Commons.
+  // with mcdollar need no peer, and only Discover adds Commons.
   const includedLink = () => m('button.linklike.disc-link-btn', {
     type: 'button', 'data-included': '', onclick: () => selectPill('included'),
-  }, 'See what comes with peerd');
+  }, 'See what comes with mcdollar');
   const toLibrary = () => attrs.onLibrary?.();
   const libraryButton = () => secondaryButton({ label: 'Go to Library', onclick: toLibrary });
   /** @param {() => void} onclick */
@@ -1347,7 +1347,7 @@ export const DiscoverSection = (initialVnode) => {
     onCheck: () => { void inspectLink(); },
   });
   const heardError = () => heardFailed
-    ? m('p.error', { role: 'alert', 'aria-live': 'assertive' }, 'peerd could not check for new apps. Try again in a moment.')
+    ? m('p.error', { role: 'alert', 'aria-live': 'assertive' }, 'mcdollar could not check for new apps. Try again in a moment.')
     : null;
   /** @param {string} [key] @param {boolean} [small] */
   const rootAlert = (key, small = false) => alertLine && (!key || alertLine.key === key)
@@ -1381,12 +1381,12 @@ export const DiscoverSection = (initialVnode) => {
       // why these words: Try opens a Settings page that adds the app, and it
       // opens from the Library. Discover cannot tell when it is there.
       FEATURED ? startRow({
-        icon: 'cube', title: 'Try an app that comes with peerd',
+        icon: 'cube', title: 'Try an app that comes with mcdollar',
         text: `Add the ${FEATURED.name} app to your Library, then open it from there. It needs no network and no setup.`, action: tryStarter(),
       }) : null,
       startRow({
         icon: 'globe', title: 'See apps other people share',
-        text: 'Turn on the peer network to connect straight to other people who use peerd. There is no central store.',
+        text: 'Turn on the peer network to connect straight to other people who use mcdollar. There is no central store.',
         note: 'It uses some internet and storage, and other people can see your network address. Your files, chats and keys stay private.',
         action: secondaryButton({
           label: 'Turn on', onclick: enableNetwork, disabled: choiceBusy || !!choiceError,
@@ -1429,7 +1429,7 @@ export const DiscoverSection = (initialVnode) => {
       yours: yoursRow(),
       waiting: emptyState({
         title: connected ? undefined : LOOKING, waiting: !connected,
-        text: 'This can take a minute. While you wait, try an app that comes with peerd.',
+        text: 'This can take a minute. While you wait, try an app that comes with mcdollar.',
         actions: [tryStarter(), shareOpen || connected ? null : pasteButton(false), includedLink()],
       }),
     });
@@ -1479,7 +1479,7 @@ export const DiscoverSection = (initialVnode) => {
     // why the Library's name: the user can rename the app there.
     const commons = {
       key: 'commons', tone: 'commons', name: libraryName(records.find(record => record.id === commonsId)) || COMMONS_NAME,
-      description: 'Chat with other people who use peerd. Adding it does not join a room. You choose one inside the app.',
+      description: 'Chat with other people who use mcdollar. Adding it does not join a room. You choose one inside the app.',
       // why keyed: a Commons deleted elsewhere must not turn a focused Open into an add.
       action: keyedParts(commonsId
         ? { open: tileButton({ label: 'Open', open: true, disabled: commonsBusy, onclick: () => { void openCommons(); } }) }
@@ -1490,7 +1490,7 @@ export const DiscoverSection = (initialVnode) => {
     };
     return matchQuery([...starters, commons], query).map(item => tile({
       key: item.key, name: item.name, letter: letterOf(item.name), tone: toneOf(item.tone),
-      meta: 'Comes with peerd', description: item.description, action: item.action,
+      meta: 'Comes with mcdollar', description: item.description, action: item.action,
       error: rootAlert(item.key, true),
     }));
   };
@@ -1499,7 +1499,7 @@ export const DiscoverSection = (initialVnode) => {
   const gridView = (offline) => {
     const list = offline ? offlineApps() : apps;
     const shownApps = pill === 'included' ? [] : ordered(list, offline);
-    // why the apps that come with peerd after the shared ones in a search on
+    // why the apps that come with mcdollar after the shared ones in a search on
     // All: their words match too, and the design draws them in that grid.
     const included = pill === 'included' || (pill === 'all' && !!query.trim());
     const tiles = [...shownApps.slice(0, limit).map(app => tile(appTileProps(app, offline))), ...included ? includedTiles() : []];
@@ -1620,12 +1620,12 @@ export const DiscoverSection = (initialVnode) => {
     const notice = notices[f.id] ?? (state === 'review' && !localReady ? libraryStatus({ ready: false, failed: localFailed })
       : offline && (state === 'review' || state === 'failed') ? NEEDS_NETWORK : null);
     const error = rootAlert(f.id);
-    // why checked only for the version the Library holds: peerd checked
+    // why checked only for the version the Library holds: mcdollar checked
     // every file of it when it installed it. A card heard from peers is only
     // what they said, so it never fills The app says it, whatever it claims.
     // An app the user made here has no facts recorded, so it gets no section.
     // why the service worker's word on the copy: an edit on this device keeps
-    // the version, so only the files can say it is still the one peerd checked.
+    // the version, so only the files can say it is still the one mcdollar checked.
     const checked = f.localId && f.sameVersion ? (updatedNow.has(f.id) ? 'updated' : 'installed') : null;
     const changed = checked && f.localId && !f.mine ? localChangesOf(f.localId, app.version_id) : null;
     const panel = state === 'cant-run' ? cantRunPanel()
@@ -1744,7 +1744,7 @@ export const DiscoverSection = (initialVnode) => {
         error: rootAlert('link'),
         primary, steps: !(mine && state === 'installed'), sharing: state === 'review' ? SHARING : null, onLibrary: toLibrary,
       }),
-      // why checked: the page opens only after peerd checked every file of the link.
+      // why checked: the page opens only after mcdollar checked every file of the link.
       // why `mine`: a link to the user's own app speaks to them, as its app page does.
       state === 'cant-run' ? null : [safetyLines({ maker, checked: 'link', mine, installed: !!localId, changed: changed === true }),
         says ? saysItSection(says) : null],
@@ -1781,9 +1781,9 @@ export const DiscoverSection = (initialVnode) => {
         value: form.value, busy: form.busy, failed: form.failed, canSave: !!form.value.trim() && form.value.trim() !== (name ?? ''),
         oninput: (value) => { form.value = value; }, onSave: () => { void saveName(did); }, onCancel: cancelRename,
       }) : null,
-      // why only until a read shows the name: then peerd knows it was saved.
+      // why only until a read shows the name: then mcdollar knows it was saved.
       renameUnknown?.did === did && contactNames.get(did) !== renameUnknown.name
-        ? m('p.type-body-sm', { role: 'status' }, 'peerd is not sure the name was saved. Check Contacts before you try again.') : null,
+        ? m('p.type-body-sm', { role: 'status' }, 'mcdollar is not sure the name was saved. Check Contacts before you try again.') : null,
       isBlocked ? blockedLine({ maker }) : m('.disc-section.disc-section--tight', [
         m('.type-label-strong', you ? 'Apps you made' : ['Apps from ', name ? m('bdi', name) : m('bdi.type-code.disc-maker-key', title)]),
         // why a line: a share link's maker often has no app that peers share.
@@ -1847,7 +1847,7 @@ export const DiscoverSection = (initialVnode) => {
           if (effects.link?.address === saved) { linkBusy = 'install'; void followLink(effects.link); }
         }
       } catch {
-        linkError = 'peerd could not check an earlier install. Reload the page before you install.';
+        linkError = 'mcdollar could not check an earlier install. Reload the page before you install.';
         linkBusy = 'receipt';
         shareOpen = true;
       }

@@ -11,7 +11,7 @@
 //
 // Run: bun scripts/cdp/diagnose-actor-spend.mjs   (exit 0 = proven)
 
-import { launchPeerd, openExtPage, rpc, evalIn, waitFor, log, PASSPHRASE, sseText, sseToolCall } from './e2e-harness.mjs';
+import { launchMcdollar, openExtPage, rpc, evalIn, waitFor, log, PASSPHRASE, sseText, sseToolCall } from './e2e-harness.mjs';
 
 let orchDelegated = false;
 let actorTurn = 0;
@@ -26,24 +26,24 @@ const modelResponder = (_i, request) => {
   return { sse: sseText('The domain is for use in illustrative examples in documents.') };
 };
 
-const ctx = await launchPeerd({ modelResponder });
+const ctx = await launchMcdollar({ modelResponder });
 try {
   const vault = await rpc(ctx.page, { type: 'vault/initialize', passphrase: PASSPHRASE });
   if (!vault?.ok) throw new Error(`vault/initialize failed: ${JSON.stringify(vault)}`);
-  await rpc(ctx.page, { type: 'onboarding/complete', peerName: 'peerd', facts: null });
+  await rpc(ctx.page, { type: 'onboarding/complete', peerName: 'mcdollar', facts: null });
   await rpc(ctx.page, { type: 'settings/update', patch: { providerName: 'ollama' } });
 
   const evalPage = await openExtPage(ctx, 'eval/runner.html');
-  if (!await waitFor(() => evalIn(evalPage, `!!(window.__peerdEval && window.__peerdEval.ready)`), { budgetMs: 30_000 })) {
-    throw new Error('eval/runner.html never exposed __peerdEval');
+  if (!await waitFor(() => evalIn(evalPage, `!!(window.__mcdollarEval && window.__mcdollarEval.ready)`), { budgetMs: 30_000 })) {
+    throw new Error('eval/runner.html never exposed __mcdollarEval');
   }
   // One delegated task from the fetch suite; the wire fake stands in for the
   // model, so only the DELEGATION MACHINERY (and its cost events) is under test.
-  await evalIn(evalPage, `(() => { window.__peerdEval.run({ suite: 'fetch', taskIds: ['fetch-nonarticle-fallback'] }); return true; })()`);
+  await evalIn(evalPage, `(() => { window.__mcdollarEval.run({ suite: 'fetch', taskIds: ['fetch-nonarticle-fallback'] }); return true; })()`);
   const card = await waitFor(async () => {
-    const err = await evalIn(evalPage, `window.__peerdEval.lastError`);
+    const err = await evalIn(evalPage, `window.__mcdollarEval.lastError`);
     if (err) throw new Error(`in-page: ${err}`);
-    return evalIn(evalPage, `window.__peerdEval.lastCard`);
+    return evalIn(evalPage, `window.__mcdollarEval.lastCard`);
   }, { budgetMs: 120_000, pollMs: 2_000 });
   if (!card) throw new Error('no scorecard within budget');
 

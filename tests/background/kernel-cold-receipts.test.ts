@@ -122,18 +122,18 @@ describe('native kernel cold receipts', () => {
     };
     attachKernelLifecycleEvents({
       browser, registry: receipts,
-      alarmName: 'peerd-schedule',
+      alarmName: 'mcdollar-schedule',
       onStartup: () => {},
       onAlarm: async () => { throw new Error('schedule owner unavailable'); },
     });
 
     expect(browser.alarms.onAlarm.emit({ name: 'another-feature' })).toBeUndefined();
     await waitForCount(receipts, 0);
-    await expect(browser.alarms.onAlarm.emit({ name: 'peerd-schedule' }))
+    await expect(browser.alarms.onAlarm.emit({ name: 'mcdollar-schedule' }))
       .rejects.toThrow('schedule owner unavailable');
     const retained = await waitForCount(receipts, 1);
     expect(retained.entries[0]).toMatchObject({
-      event: 'alarms.onAlarm', payload: { name: 'peerd-schedule' },
+      event: 'alarms.onAlarm', payload: { name: 'mcdollar-schedule' },
     });
   });
 

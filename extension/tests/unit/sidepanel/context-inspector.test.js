@@ -82,7 +82,7 @@ for (const closing of ['Escape', 'Close', 'backdrop']) {
         m.redraw.sync();
         if (closing === 'Escape') dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
         else if (closing === 'Close') close.click();
-        else /** @type {HTMLElement} */ (root.querySelector('.peerd-modal-backdrop')).click();
+        else /** @type {HTMLElement} */ (root.querySelector('.mcdollar-modal-backdrop')).click();
         await settle();
         expect(root.querySelector('.context-inspector')).toBe(null);
         expect(root.querySelector('.debug-menu')).toBe(null);
@@ -94,7 +94,7 @@ for (const closing of ['Escape', 'Close', 'backdrop']) {
       } finally {
         finish({ ok: true, snapshots: [] });
         m.mount(root, null); root.remove();
-        localStorage.removeItem(`peerd.draft.${sessionId}`);
+        localStorage.removeItem(`mcdollar.draft.${sessionId}`);
       }
     });
   });

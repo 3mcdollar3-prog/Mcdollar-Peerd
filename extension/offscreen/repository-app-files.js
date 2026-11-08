@@ -3,8 +3,8 @@
 // module owns no catalog/vault authority and can touch only one validated App
 // directory per call. Git credentials remain unavailable in this realm.
 
-import { inferAppFileKind } from '/peerd-engine/app-assets.js';
-import { buildAppManifest, parseAppManifest } from '/peerd-engine/app-manifest.js';
+import { inferAppFileKind } from '/mcdollar-engine/app-assets.js';
+import { buildAppManifest, parseAppManifest } from '/mcdollar-engine/app-manifest.js';
 
 const MAX_APP_FILES = 256;
 const MAX_APP_TOTAL_BYTES = 50_000_000;
@@ -47,7 +47,7 @@ export const createRepositoryAppFileService = ({
 } = {}) => {
   const appDirectory = async (/** @type {string} */ appId, create = false) => {
     let directory = await getRootDirectory();
-    directory = await directory.getDirectoryHandle('peerd-apps', { create });
+    directory = await directory.getDirectoryHandle('mcdollar-apps', { create });
     return directory.getDirectoryHandle(appId, { create });
   };
   /** @param {string} appId @param {string} path @param {boolean} create */
@@ -120,22 +120,22 @@ export const createRepositoryAppFileService = ({
         ref, { path, encoding: 'bytes', signal: options.signal },
       ));
       fileKinds[path] = inferAppFileKind(path, bytes);
-      if (path === 'peerd.json' && fileKinds[path] === 'text') {
+      if (path === 'mcdollar.json' && fileKinds[path] === 'text') {
         manifest = new TextDecoder().decode(bytes);
       }
     }
-    if (paths.includes('peerd.json') && fileKinds['peerd.json'] !== 'text') {
-      throw new Error('peerd.json must be text');
+    if (paths.includes('mcdollar.json') && fileKinds['mcdollar.json'] !== 'text') {
+      throw new Error('mcdollar.json must be text');
     }
-    if (paths.includes('peerd.json') && typeof manifest !== 'string') {
-      throw new Error('peerd.json must be text');
+    if (paths.includes('mcdollar.json') && typeof manifest !== 'string') {
+      throw new Error('mcdollar.json must be text');
     }
-    const contract = paths.includes('peerd.json')
+    const contract = paths.includes('mcdollar.json')
       ? parseAppManifest(/** @type {string} */ (manifest))
       : paths.includes('index.html')
         ? parseAppManifest(JSON.stringify(buildAppManifest({ entry: 'index.html' })))
-        : (() => { throw new Error('repository is not an App: add peerd.json or index.html'); })();
-    if (!paths.includes(contract.entry)) throw new Error(`peerd.json entry is missing: ${contract.entry}`);
+        : (() => { throw new Error('repository is not an App: add mcdollar.json or index.html'); })();
+    if (!paths.includes(contract.entry)) throw new Error(`mcdollar.json entry is missing: ${contract.entry}`);
     if (fileKinds[contract.entry] !== 'text') throw new Error(`entryFile must be text: ${contract.entry}`);
     return { fileKinds, contract };
   };

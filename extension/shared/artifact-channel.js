@@ -20,8 +20,8 @@ export {
   parseArtifactChannelOffer,
 };
 
-export const ARTIFACT_CHANNEL_CANCEL = 'peerd/artifact-cancel';
-export const ARTIFACT_WORKER_RUN = 'peerd/artifact-worker-run';
+export const ARTIFACT_CHANNEL_CANCEL = 'mcdollar/artifact-cancel';
+export const ARTIFACT_WORKER_RUN = 'mcdollar/artifact-worker-run';
 const MIB = 1024 * 1024;
 const SMALL = 256 * 1024;
 

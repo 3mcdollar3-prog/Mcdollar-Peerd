@@ -39,17 +39,17 @@
 import {
   type Scenario, type Probe, blocked, leaked, summarize,
 } from '../harness.ts';
-import { disarmText, disarmMarkup } from '../../../extension/peerd-runtime/dom/cdr.js';
+import { disarmText, disarmMarkup } from '../../../extension/mcdollar-runtime/dom/cdr.js';
 import { createPageToolAuthority } from '../../../extension/background/page-tool-authority.js';
-import { inspectTabToolCall } from '../../../extension/peerd-runtime/tools/egress-heuristics.js';
-import { validateActorReply } from '../../../extension/peerd-runtime/actor/reply-schema.js';
+import { inspectTabToolCall } from '../../../extension/mcdollar-runtime/tools/egress-heuristics.js';
+import { validateActorReply } from '../../../extension/mcdollar-runtime/actor/reply-schema.js';
 import { clickInjected } from '../../../extension/background/page-authority/click.js';
 import { typeInjected } from '../../../extension/background/page-authority/type.js';
 
 interface Case {
   payload: string;   // what the hostile page plants, or the hijacked actor emits
   seeks: string;     // what it is trying to achieve
-  defense: string;   // the peerd mechanism that denies it
+  defense: string;   // the mcdollar mechanism that denies it
   check(): { denied: boolean; evidence: string }
     | Promise<{ denied: boolean; evidence: string }>;
 }

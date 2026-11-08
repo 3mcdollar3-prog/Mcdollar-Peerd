@@ -8,7 +8,7 @@ import {
   createRepositoryService,
   isBinaryAssetPath,
   opfsHelpers,
-} from '/peerd-engine/index.js';
+} from '/mcdollar-engine/index.js';
 import { AppFileContentError, AppFileLimitError, createAppClient, MAX_APP_FILES } from '/background/app-client.js';
 import { createAppDataClient, MAX_APP_DATA_BYTES } from '../../../../engine-tabs/app-tab/app-data-client.js';
 
@@ -75,7 +75,7 @@ describe('App storage binary contract', () => {
       clone: async (/** @type {any} */ ref, /** @type {any} */ options) => {
         const files = holder.client?.opfsForApp(ref.id);
         if (!files) throw new Error('App client is unavailable');
-        await files.write('peerd.json', JSON.stringify({
+        await files.write('mcdollar.json', JSON.stringify({
           schema: 1, kind: 'app', entry: 'index.html',
           agent: { kind: 'bound-app', profile: 'developer', surface: 'code' },
           capabilities: [],
@@ -100,7 +100,7 @@ describe('App storage binary contract', () => {
     });
     if (!result?.record) throw new Error('Git import did not create an App record');
     try {
-      expect(result.record.fileKinds['peerd.json']).toBe('text');
+      expect(result.record.fileKinds['mcdollar.json']).toBe('text');
       expect(result.record.fileKinds['index.html']).toBe('text');
       expect(result.record.fileKinds['model.custom']).toBe('binary');
       expect(Array.from(await client.readFileBytes({ appId: result.record.id, path: 'model.custom' })))
@@ -145,7 +145,7 @@ describe('App storage binary contract', () => {
     expect(initializations[0].includeIgnored).toBe(false);
     const installed = await client.create({
       name: 'Installed storage', files: { 'index.html': '<h1>peer</h1>' },
-      source: 'dweb', dweb: { uri: 'peerd://signed-hash', publisher: 'did:key:zPeer', hash: 'signed-hash' },
+      source: 'dweb', dweb: { uri: 'mcdollar://signed-hash', publisher: 'did:key:zPeer', hash: 'signed-hash' },
     });
     expect(initializations[1].includeIgnored).toBe(true);
     await client.opfsForApp(record.id).nuke();
@@ -174,7 +174,7 @@ describe('App storage binary contract', () => {
     });
     await client.replaceVersionedFilesUnlocked({
       appId: record.id,
-      files: { 'index.html': 'new', 'peerd.json': '{}' },
+      files: { 'index.html': 'new', 'mcdollar.json': '{}' },
       entryFile: 'index.html',
       afterCommit: async () => {},
     });
@@ -191,7 +191,7 @@ describe('App storage binary contract', () => {
     try {
       await client.replaceVersionedFilesUnlocked({
         appId: capped.id,
-        files: { 'index.html': 'new', 'peerd.json': '{}', 'new.js': 'x' },
+        files: { 'index.html': 'new', 'mcdollar.json': '{}', 'new.js': 'x' },
         entryFile: 'index.html',
         afterCommit: async () => {},
       });
@@ -262,7 +262,7 @@ describe('App storage binary contract', () => {
     expect(failed).toBe(true);
     expect(registry.records.size).toBe(0);
     expect(registry.deleted.length).toBe(1);
-    await opfsHelpers(['peerd-apps', 'binary-client-1']).nuke();
+    await opfsHelpers(['mcdollar-apps', 'binary-client-1']).nuke();
   });
 
   it('validates entry changes before writes and rolls bytes back on metadata failure', async () => {
@@ -579,15 +579,15 @@ const runDirectRunner = () => new Promise((resolve, reject) => {
   }, 8000);
   const html = `<script>
     Promise.resolve().then(async () => {
-      const bytes = window.peerd.assets.bytes('asset.bin');
-      const wasm = window.peerd.assets.bytes('./empty.wasm');
+      const bytes = window.mcdollar.assets.bytes('asset.bin');
+      const wasm = window.mcdollar.assets.bytes('./empty.wasm');
       const instantiated = await WebAssembly.instantiate(wasm);
       parent.postMessage({
         type: 'runner-binary-result',
         bytes: Array.from(bytes),
-        has: window.peerd.assets.has('empty.wasm'),
-        missing: window.peerd.assets.bytes('missing.bin'),
-        list: window.peerd.assets.list().sort(),
+        has: window.mcdollar.assets.has('empty.wasm'),
+        missing: window.mcdollar.assets.bytes('missing.bin'),
+        list: window.mcdollar.assets.list().sort(),
         exports: Object.keys(instantiated.instance.exports),
       }, '*');
     }).catch((error) => parent.postMessage({ type: 'runner-binary-error', error: String(error) }, '*'));
@@ -643,25 +643,25 @@ const runDirectData = () => new Promise((resolve, reject) => {
   }, 8000);
   const html = `<script>
     Promise.resolve().then(async () => {
-      await window.peerd.data.set('document', { text: 'hello', version: 1 });
-      const value = await window.peerd.data.get('document');
-      const keys = await window.peerd.data.list();
-      await window.peerd.data.delete('document');
-      const missing = await window.peerd.data.get('document');
+      await window.mcdollar.data.set('document', { text: 'hello', version: 1 });
+      const value = await window.mcdollar.data.get('document');
+      const keys = await window.mcdollar.data.list();
+      await window.mcdollar.data.delete('document');
+      const missing = await window.mcdollar.data.get('document');
       parent.postMessage({ type: 'runner-data-result', value, keys, missing }, '*');
     }).catch((error) => parent.postMessage({ type: 'runner-data-error', error: String(error) }, '*'));
   <\/script>`;
   /** @param {MessageEvent} event */
   const onMessage = (event) => {
     if (event.source !== iframe.contentWindow) return;
-    if (event.data?.peerd === 'app:data:request') {
+    if (event.data?.mcdollar === 'app:data:request') {
       const { id, op, key } = event.data;
       /** @type {any} */ let value = true;
       if (op === 'set') values.set(key, JSON.parse(event.data.json));
       else if (op === 'get') value = values.get(key) ?? null;
       else if (op === 'list') value = [...values.keys()].sort();
       else if (op === 'delete') values.delete(key);
-      iframe.contentWindow?.postMessage({ peerd: 'app:data:result', id, ok: true, value }, '*');
+      iframe.contentWindow?.postMessage({ mcdollar: 'app:data:result', id, ok: true, value }, '*');
       return;
     }
     if (event.data?.type === 'runner-data-error') {
@@ -708,7 +708,7 @@ describe('App runner durable data', () => {
   });
 
   it('maps safe App-local JSON writes onto the existing mutation routes', async () => {
-    const root = ['peerd-apps', 'app-data-client-test'];
+    const root = ['mcdollar-apps', 'app-data-client-test'];
     const opfs = opfsHelpers(root);
     await opfs.nuke();
     /** @type {any[]} */
@@ -740,7 +740,7 @@ describe('App runner durable data', () => {
 
 describe('App editor binary asset UX', () => {
   it('shows a read-only row and does not open the asset as text', async () => {
-    const root = ['peerd-apps', 'binary-editor-test'];
+    const root = ['mcdollar-apps', 'binary-editor-test'];
     const opfs = opfsHelpers(root);
     await opfs.nuke();
     await opfs.write('index.html', '<h1>x</h1>');
@@ -769,7 +769,7 @@ describe('App editor binary asset UX', () => {
   });
 
   it('uses one roving tree stop and exposes hierarchy and selection state', async () => {
-    const root = ['peerd-apps', 'binary-editor-a11y'];
+    const root = ['mcdollar-apps', 'binary-editor-a11y'];
     const opfs = opfsHelpers(root);
     await opfs.nuke();
     await opfs.write('index.html', '<h1>x</h1>');
@@ -794,7 +794,7 @@ describe('App editor binary asset UX', () => {
   });
 
   it('keeps the delete target on the same file when deletion fails', async () => {
-    const root = ['peerd-apps', 'binary-editor-delete-failure'];
+    const root = ['mcdollar-apps', 'binary-editor-delete-failure'];
     const opfs = opfsHelpers(root);
     await opfs.nuke();
     await opfs.write('index.html', 'entry');
@@ -839,7 +839,7 @@ describe('App editor binary asset UX', () => {
   });
 
   it('does not autosave programmatic loads and keeps failed edits open', async () => {
-    const root = ['peerd-apps', 'binary-editor-save-failure'];
+    const root = ['mcdollar-apps', 'binary-editor-save-failure'];
     const opfs = opfsHelpers(root);
     await opfs.nuke();
     await opfs.write('index.html', '<h1>x</h1>');
@@ -890,7 +890,7 @@ describe('App editor binary asset UX', () => {
   });
 
   it('keeps file loads out of undo history', async () => {
-    const root = ['peerd-apps', 'binary-editor-undo-load'];
+    const root = ['mcdollar-apps', 'binary-editor-undo-load'];
     const opfs = opfsHelpers(root);
     await opfs.nuke();
     await opfs.write('index.html', 'entry');
@@ -924,7 +924,7 @@ describe('App editor binary asset UX', () => {
   });
 
   it('saves the latest revision when an edit arrives during a write', async () => {
-    const root = ['peerd-apps', 'binary-editor-save-race'];
+    const root = ['mcdollar-apps', 'binary-editor-save-race'];
     const opfs = opfsHelpers(root);
     await opfs.nuke();
     await opfs.write('index.html', 'old');
@@ -974,7 +974,7 @@ describe('App editor binary asset UX', () => {
   });
 
   it('rejects an external active-file write while the user buffer is dirty', async () => {
-    const root = ['peerd-apps', 'binary-editor-external-conflict'];
+    const root = ['mcdollar-apps', 'binary-editor-external-conflict'];
     const opfs = opfsHelpers(root);
     await opfs.nuke();
     await opfs.write('index.html', 'old');
@@ -1013,7 +1013,7 @@ describe('App editor binary asset UX', () => {
   });
 
   it('layers user edits made after an external active-file write begins', async () => {
-    const root = ['peerd-apps', 'binary-editor-external-followup'];
+    const root = ['mcdollar-apps', 'binary-editor-external-followup'];
     const opfs = opfsHelpers(root);
     await opfs.nuke();
     await opfs.write('index.html', 'old');
@@ -1055,7 +1055,7 @@ describe('App editor binary asset UX', () => {
   });
 
   it('does not recreate an active file when deletion overlaps a save', async () => {
-    const root = ['peerd-apps', 'binary-editor-delete-race'];
+    const root = ['mcdollar-apps', 'binary-editor-delete-race'];
     const opfs = opfsHelpers(root);
     await opfs.nuke();
     await opfs.write('index.html', 'entry');
@@ -1112,7 +1112,7 @@ describe('App editor binary asset UX', () => {
   });
 
   it('does not report a discarded save after confirmed deletion succeeds', async () => {
-    const root = ['peerd-apps', 'binary-editor-delete-failed-save'];
+    const root = ['mcdollar-apps', 'binary-editor-delete-failed-save'];
     const opfs = opfsHelpers(root);
     await opfs.nuke();
     await opfs.write('index.html', 'entry');

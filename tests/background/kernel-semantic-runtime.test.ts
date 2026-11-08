@@ -253,7 +253,7 @@ describe('kernel semantic runtime', () => {
       }) },
       appFiles: {
         readText: async () => '{"schema":1}',
-        listApp: async () => ['/peerd.json', '/index.html'],
+        listApp: async () => ['/mcdollar.json', '/index.html'],
       },
       isAppSender: (sender: unknown) => sender === 'owned-app',
     });
@@ -265,7 +265,7 @@ describe('kernel semantic runtime', () => {
     expect(payloads[0]).toMatchObject({
       route: 'app/get-meta', message: {
         app: { id: 'a', name: 'Alpha', entryFile: 'index.html', fileKinds: {}, dweb: null },
-        manifestText: '{"schema":1}', paths: ['/peerd.json', '/index.html'],
+        manifestText: '{"schema":1}', paths: ['/mcdollar.json', '/index.html'],
       },
     });
     expect(JSON.stringify(payloads[0])).not.toContain('private-');

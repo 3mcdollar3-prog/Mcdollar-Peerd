@@ -1,5 +1,5 @@
 // @ts-check
-// Lightweight supervisor for the pure .peerd codec. The multi-MiB codec graph
+// Lightweight supervisor for the pure .mcdollar codec. The multi-MiB codec graph
 // runs in a per-operation module Worker so compression or integrity checking
 // cannot stall controller, dweb, media, or feature-lease heartbeats.
 
@@ -27,7 +27,7 @@ const post = (port, value, transfer = []) => {
 const createWorkerRun = (offer) => {
   const worker = new Worker(new URL('./artifact-worker.js', import.meta.url), {
     type: 'module',
-    name: 'peerd-artifact-codec',
+    name: 'mcdollar-artifact-codec',
   });
   let settled = false;
   /** @type {(cause?:unknown)=>void} */

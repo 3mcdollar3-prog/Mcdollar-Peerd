@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Provision Chrome for Testing into ~/.cache/peerd-cft for the side-panel E2E
+// Provision Chrome for Testing into ~/.cache/mcdollar-cft for the side-panel E2E
 // verify loop (scripts/cdp/run-e2e-verify.mjs).
 //
 // why a dedicated binary: branded "Google Chrome" IGNORES --load-extension /
@@ -27,7 +27,7 @@ import { spawnSync } from 'node:child_process';
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const PINNED_VERSION = readFileSync(join(HERE, 'chrome-version.txt'), 'utf8').trim();
 
-const CACHE = join(homedir(), '.cache', 'peerd-cft', PINNED_VERSION);
+const CACHE = join(homedir(), '.cache', 'mcdollar-cft', PINNED_VERSION);
 
 // CfT platform key + the binary path inside the unzipped tree.
 function platform() {

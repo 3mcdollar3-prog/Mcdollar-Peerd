@@ -254,7 +254,7 @@ export const ActorFabric = {
         onclick: () => { ui.expanded = !ui.expanded; },
       }, [
         ui.settled ? m('span.actor-fabric-finished-mark', { 'aria-hidden': 'true' }, '✓')
-          : m('span.peerd-spinner.peerd-spinner--sm', { 'aria-hidden': 'true' }),
+          : m('span.mcdollar-spinner.mcdollar-spinner--sm', { 'aria-hidden': 'true' }),
         m('strong.actor-fabric-title', 'Actor fabric'),
         m('span.actor-fabric-working', ui.settled
           ? 'all actor work finished'

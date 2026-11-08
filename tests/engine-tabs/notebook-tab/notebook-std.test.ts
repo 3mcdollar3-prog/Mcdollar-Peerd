@@ -1,4 +1,4 @@
-// peerd:std — the Notebook standard library. Pure functions (no DOM, no I/O),
+// mcdollar:std — the Notebook standard library. Pure functions (no DOM, no I/O),
 // so exercised directly in bun. Display helpers return descriptors the page-side
 // renderer turns into a table/SVG; data helpers are the "batteries".
 
@@ -13,17 +13,17 @@ import {
   gcd, lcm, factorial, modpow,
 } from '../../../extension/engine-tabs/notebook-tab/notebook-std.js';
 
-describe('peerd:std display helpers (pure descriptors)', () => {
+describe('mcdollar:std display helpers (pure descriptors)', () => {
   test('table → a table descriptor; non-array → empty rows', () => {
     const d = table([{ a: 1 }, { a: 2 }]);
-    expect(d.__peerd_display).toBe('table');
+    expect(d.__mcdollar_display).toBe('table');
     expect(d.rows.length).toBe(2);
     expect(table('nope' as any).rows).toEqual([]);
   });
 
   test('chart normalizes the spec; defaults type to bar and data to []', () => {
     const d = chart({ type: 'line', data: [1, 2, 3], title: 'T' });
-    expect(d.__peerd_display).toBe('chart');
+    expect(d.__mcdollar_display).toBe('chart');
     expect(d.type).toBe('line');
     expect(d.data).toEqual([1, 2, 3]);
     expect(d.title).toBe('T');
@@ -40,7 +40,7 @@ describe('peerd:std display helpers (pure descriptors)', () => {
   });
 });
 
-describe('peerd:std data helpers (pure)', () => {
+describe('mcdollar:std data helpers (pure)', () => {
   test('stats ignore non-finite / non-number values', () => {
     expect(sum([1, 2, 3, 'x', NaN, Infinity])).toBe(6);
     expect(mean([2, 4, 6])).toBe(4);
@@ -78,7 +78,7 @@ describe('peerd:std data helpers (pure)', () => {
   });
 });
 
-describe('peerd:std exact integer / ratio math (no floats)', () => {
+describe('mcdollar:std exact integer / ratio math (no floats)', () => {
   test('divmod returns exact BigInt quotient + remainder', () => {
     expect(divmod(8944394323791464n, 9n)).toEqual({
       quotient: 993821591532384n, remainder: 8n,
@@ -111,7 +111,7 @@ describe('peerd:std exact integer / ratio math (no floats)', () => {
   });
 });
 
-describe('peerd:std stats + reshaping (pure)', () => {
+describe('mcdollar:std stats + reshaping (pure)', () => {
   test('clamp keeps x inside [lo, hi]', () => {
     expect(clamp(5, 0, 10)).toBe(5);
     expect(clamp(-1, 0, 10)).toBe(0);
@@ -169,7 +169,7 @@ describe('peerd:std stats + reshaping (pure)', () => {
   });
 });
 
-describe('peerd:std line-delimited records (JSONL)', () => {
+describe('mcdollar:std line-delimited records (JSONL)', () => {
   test('parseJsonl: one value per non-blank line, skipping blanks + non-JSON lines', () => {
     const text = '{"id":1,"a":"x"}\n\n  \n{"id":2}\nnot json\n{"id":3}';
     expect(parseJsonl(text)).toEqual([{ id: 1, a: 'x' }, { id: 2 }, { id: 3 }]);
@@ -201,7 +201,7 @@ describe('peerd:std line-delimited records (JSONL)', () => {
   });
 });
 
-describe('peerd:std CSV (RFC-4180-quote-aware)', () => {
+describe('mcdollar:std CSV (RFC-4180-quote-aware)', () => {
   test('parseCsv: header row → objects; quoted fields carry delimiters, "" and newlines', () => {
     const text = 'name,note,n\n"Smith, Jane","says ""hi""",1\n"multi\nline",plain,2';
     expect(parseCsv(text)).toEqual([
@@ -244,7 +244,7 @@ describe('peerd:std CSV (RFC-4180-quote-aware)', () => {
   });
 });
 
-describe('peerd:std HTML string helpers (regex-grade, honestly limited)', () => {
+describe('mcdollar:std HTML string helpers (regex-grade, honestly limited)', () => {
   test('stripTags drops tags + script/style bodies + comments, decodes entities, collapses whitespace', () => {
     const html = '<div><script>evil()</script><style>.x{}</style><!-- note --><p>A &amp; B&#39;s &lt;win&gt;</p>\n<p>next</p></div>';
     expect(stripTags(html)).toBe("A & B's <win>\nnext");
@@ -273,7 +273,7 @@ describe('peerd:std HTML string helpers (regex-grade, honestly limited)', () => 
   });
 });
 
-describe('peerd:std number theory (exact BigInt)', () => {
+describe('mcdollar:std number theory (exact BigInt)', () => {
   test('gcd / lcm are non-negative and accept Number/string/BigInt', () => {
     expect(gcd(12, 18)).toBe(6n);
     expect(gcd(-12n, 18n)).toBe(6n);

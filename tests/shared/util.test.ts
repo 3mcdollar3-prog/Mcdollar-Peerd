@@ -159,9 +159,9 @@ describe('sha256Hex', () => {
   });
 
   test('is 64 lowercase hex chars and content-addresses deterministically', async () => {
-    const digest = await sha256Hex('peerd');
+    const digest = await sha256Hex('mcdollar');
     expect(digest).toMatch(/^[0-9a-f]{64}$/);
-    expect(digest).toBe(await sha256Hex('peerd'));
+    expect(digest).toBe(await sha256Hex('mcdollar'));
     expect(digest).not.toBe(await sha256Hex('peere'));
   });
 });

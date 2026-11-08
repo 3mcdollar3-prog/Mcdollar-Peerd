@@ -8,7 +8,7 @@ import {
   LOCKED_PROVIDER_AUTHORITY_VIEW,
 } from '../../extension/background/vault-kernel-core.js';
 import { validateKernelStateProjection } from '../../extension/shared/kernel-state-contract.js';
-import { createVault } from '../../extension/peerd-egress/vault/vault.js';
+import { createVault } from '../../extension/mcdollar-egress/vault/vault.js';
 
 const getVaultGateStatus = async (vault: any) => {
   const [prf, hasRecovery] = await Promise.all([
@@ -105,7 +105,7 @@ describe('minimal vault authority-kernel prototype', () => {
       locked: true, unlockedAt: 0, lockReason: null, autoLockMs: 1_000, ...lockedUi });
     const note = { id: 'goal-end-receipt', text: 'Goal run stopped (needs verification).', at: 1 };
     const state = { ...base, vault: { ...base.vault, locked: false },
-      profile: { id: 'default', peerName: 'peerd', onboardingComplete: true },
+      profile: { id: 'default', peerName: 'mcdollar', onboardingComplete: true },
       session: { ...base.session, sessionId: 'owning-chat', goalStopNote: note } };
     expect(validateKernelStateProjection(state).ok).toBe(true);
     for (const invalid of [
@@ -147,7 +147,7 @@ describe('minimal vault authority-kernel prototype', () => {
       providers: { current: 'anthropic', model: 'claude-sonnet-4-6', hasKey: false },
       composer: { provider: 'anthropic', model: 'claude-sonnet-4-6', keyless: false,
         credentialReady: false, localReady: true, canSend: false, reason: 'missing-key' },
-      profile: { id: 'default', peerName: 'peerd', onboardingComplete: false },
+      profile: { id: 'default', peerName: 'mcdollar', onboardingComplete: false },
       runtimeCapabilities,
       actorIsolation: {
         status: 'available', host: 'offscreen-document-worker',
@@ -235,25 +235,25 @@ describe('minimal vault authority-kernel prototype', () => {
       EXTENSION_DIR,
       join(EXTENSION_DIR, 'background/vault-kernel.js'),
     )].map((path) => path.slice(EXTENSION_DIR.length + 1));
-    expect(graph).not.toContain('peerd-runtime/tools/prompt-wrap.js');
+    expect(graph).not.toContain('mcdollar-runtime/tools/prompt-wrap.js');
     expect(graph).toContain('shared/model-context-snapshot.js');
     expect(graph).not.toContain('background/routes/contacts.js');
-    expect(graph).not.toContain('peerd-runtime/contacts/aggregate.js');
-    expect(graph).not.toContain('peerd-runtime/contacts/store.js');
+    expect(graph).not.toContain('mcdollar-runtime/contacts/aggregate.js');
+    expect(graph).not.toContain('mcdollar-runtime/contacts/store.js');
     expect(graph).not.toContain('background/kernel-semantic-demand.js');
     expect(graph).not.toContain('background/semantic-demand-client.js');
     expect(graph).not.toContain('shared/semantic-demand-policy.js');
     expect(graph).not.toContain('background/kernel-command-reader.js');
     expect(graph).not.toContain('background/kernel-app-file-reader.js');
-    expect(graph).not.toContain('peerd-runtime/skills/registry.js');
-    expect(graph).not.toContain('peerd-runtime/skills/store.js');
+    expect(graph).not.toContain('mcdollar-runtime/skills/registry.js');
+    expect(graph).not.toContain('mcdollar-runtime/skills/store.js');
     expect(graph).not.toContain('background/app-client.js');
-    expect(graph).not.toContain('peerd-engine/opfs.js');
+    expect(graph).not.toContain('mcdollar-engine/opfs.js');
     expect(graph).not.toContain('background/offscreen-controller-client.js');
     expect(graph).not.toContain('background/kernel-demand-plane.js');
     expect(graph).not.toContain('background/kernel-production-runtime.js');
     expect(graph).not.toContain('offscreen/semantic-route-host.js');
     expect(graph).not.toContain('offscreen/controller-runtime.js');
-    expect(graph).not.toContain('peerd-runtime/loop/agent-loop.js');
+    expect(graph).not.toContain('mcdollar-runtime/loop/agent-loop.js');
   });
 });

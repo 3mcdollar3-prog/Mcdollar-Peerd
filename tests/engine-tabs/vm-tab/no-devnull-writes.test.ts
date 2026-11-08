@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 // bash a FAILED redirection makes the command not run at all — so any
 // `cmd 2>/dev/null` (or `>/dev/null`, `&>/dev/null`) inside the VM bash
 // wrappers silently breaks that command's step. This bit `git clone`
-// (peerd-fetch/mkdir/unzip all "failed"). Keep the VM wrapper source free
+// (mcdollar-fetch/mkdir/unzip all "failed"). Keep the VM wrapper source free
 // of write-redirects to /dev/null forever; use `2>>/tmp/...err` instead.
 describe('vm-tab bash wrappers', () => {
   test('never write-redirect to /dev/null (CheerpX denies it)', () => {

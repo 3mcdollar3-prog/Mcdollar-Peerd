@@ -132,7 +132,7 @@ export const startOllamaAcceptanceFixture = async ({
 
 export const completeOnboardingAndSelectFixture = async (page, origin) => {
   const onboarding = await rpc(page, {
-    type: 'onboarding/complete', peerName: 'peerd', facts: null,
+    type: 'onboarding/complete', peerName: 'mcdollar', facts: null,
   });
   if (onboarding?.ok !== true) {
     throw new Error(`onboarding/complete failed: ${JSON.stringify(onboarding)}`);
@@ -191,7 +191,7 @@ export const browserVerifyAcceptanceAppPayload = async (appId) => {
   if (exported?.ok !== true || !exported.envelope) {
     return { ok: false, phase: 'export', exported };
   }
-  const { openEnvelope } = await import('/peerd-engine/index.js');
+  const { openEnvelope } = await import('/mcdollar-engine/index.js');
   const opened = await openEnvelope(exported.envelope);
   const expected = {
     'index.html': '<!doctype html><title>Cutover App</title><main>ready</main>',
@@ -219,7 +219,7 @@ export const browserVerifyAcceptanceAppPayload = async (appId) => {
 // binary OPFS persistence, the authenticated lazy repository host,
 // isomorphic-git branch creation, and history before cleaning up the fixture.
 export const browserAppGitProbe = async (retain = false, verifyPayload = null) => {
-  const { buildAppExport } = await import('/peerd-engine/index.js');
+  const { buildAppExport } = await import('/mcdollar-engine/index.js');
   const extensionApi = globalThis.browser ?? globalThis.chrome;
   if (!extensionApi?.runtime?.sendMessage) {
     return { ok: false, phase: 'runtime-api', detail: 'WebExtension runtime API unavailable' };
@@ -318,7 +318,7 @@ export const verifyRetainedAppGitProbe = async (page, appId, { cleanup = true } 
 };
 
 export const REMOTE_GIT_PROOF_PATH = 'acceptance/remote-proof.txt';
-export const REMOTE_GIT_PROOF_TEXT = 'peerd installed smart-http round-trip\n';
+export const REMOTE_GIT_PROOF_TEXT = 'mcdollar installed smart-http round-trip\n';
 
 // Runs in the installed extension page. The credential is write-only: the
 // result deliberately contains booleans, hosts, branch/OIDs, and payload

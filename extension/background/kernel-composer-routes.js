@@ -17,8 +17,8 @@ export {
   createKernelDenylistPolicy,
   makeKernelDenylistRoutes,
 } from './kernel-denylist-policy.js';
-const COMMAND_PREFIX = 'peerd.commands.';
-const SKILLS_DB = 'peerd-skills';
+const COMMAND_PREFIX = 'mcdollar.commands.';
+const SKILLS_DB = 'mcdollar-skills';
 const SKILLS_VERSION = 1;
 const SKILL_META = 'meta';
 

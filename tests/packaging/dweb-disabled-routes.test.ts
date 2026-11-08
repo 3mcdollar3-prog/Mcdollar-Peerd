@@ -21,7 +21,7 @@ import {
 
 const temporaryRoots: string[] = [];
 const temporaryRoot = (): string => {
-  const root = mkdtempSync(join(tmpdir(), 'peerd-dweb-disabled-routes-'));
+  const root = mkdtempSync(join(tmpdir(), 'mcdollar-dweb-disabled-routes-'));
   temporaryRoots.push(root);
   return root;
 };

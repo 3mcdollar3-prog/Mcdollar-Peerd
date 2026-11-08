@@ -29,14 +29,14 @@ Example private configuration (keep addresses, sockets and credentials outside G
     {
       "name": "studio",
       "ssh": "studio-test",
-      "directory": "/absolute/peerd-test-checkout",
+      "directory": "/absolute/mcdollar-test-checkout",
       "bun": "/absolute/bun",
       "chrome": "/absolute/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
     },
     {
       "name": "mini",
       "ssh": "mini-test",
-      "directory": "/absolute/peerd-test-checkout",
+      "directory": "/absolute/mcdollar-test-checkout",
       "bun": "/absolute/bun",
       "chrome": "/absolute/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
     }

@@ -18,7 +18,7 @@ describe('Firefox installed runtime identity', () => {
   });
 
   test('records executable identity and rejects a mismatched session', async () => {
-    const directory = mkdtempSync(join(tmpdir(), 'peerd-firefox-identity-'));
+    const directory = mkdtempSync(join(tmpdir(), 'mcdollar-firefox-identity-'));
     const firefox = join(directory, 'firefox');
     const geckodriver = join(directory, 'geckodriver');
     writeFileSync(firefox, 'fake-firefox');

@@ -8,7 +8,7 @@
 import { rmSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { launchPeerd, unlockAndReady, resetSession, freezeAnimations, setEmulatedTheme, capturePage, visualSourceIdentity, THEMES, sleep, log } from './e2e-harness.mjs';
+import { launchMcdollar, unlockAndReady, resetSession, freezeAnimations, setEmulatedTheme, capturePage, visualSourceIdentity, THEMES, sleep, log } from './e2e-harness.mjs';
 import { STATES } from './states.mjs';
 import {
   compareToBaseline, decodePng, writeDiffImage, BASELINE_DIR, UPDATE_BASELINES,
@@ -134,7 +134,7 @@ async function runState(ctx, state, results) {
   // why: real VM boot needs the browser's cross-origin isolation guarantees;
   // a private profile keeps this state independent of the shared fixture browser.
   if (state.isolatedWebSecurity === true) {
-    const isolated = await launchPeerd({ extensionDir: ctx.extensionDir, enforceWebSecurity: true });
+    const isolated = await launchMcdollar({ extensionDir: ctx.extensionDir, enforceWebSecurity: true });
     try {
       await unlockAndReady(isolated.page);
       await freezeAnimations(isolated);
@@ -175,7 +175,7 @@ async function main() {
   const postUnlock = states.filter((s) => s.phase === 'post-unlock').sort((a, b) =>
     postUnlockPriority(a) - postUnlockPriority(b));
   const results = [];
-  const ctx = await launchPeerd({ extensionDir: EXTENSION_DIR, enforceWebSecurity: process.argv.includes('--enforce-web-security') });
+  const ctx = await launchMcdollar({ extensionDir: EXTENSION_DIR, enforceWebSecurity: process.argv.includes('--enforce-web-security') });
   try {
     await freezeAnimations(ctx);
     for (const s of preUnlock) await runState(ctx, s, results);

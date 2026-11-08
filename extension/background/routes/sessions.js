@@ -13,7 +13,7 @@ export const makeSessionRoutes = (deps) => {
     startGoalRun, haltGoalRun, ensureSession, actorRecoveryReady, actorMessaging,
     actorLifecycle, admitSend, clearGoalStopNote,
     // The debug surface: the pure assembler + tree walk from
-    // peerd-runtime/observability, the SW's live snapshot ring, and the
+    // mcdollar-runtime/observability, the SW's live snapshot ring, and the
     // settings/channel/version identity the bundle stamps.
     settingsStore, contextSnapshots, assembleDebugBundle, childSessionIdsOf, CHANNEL,
   } = deps;
@@ -67,7 +67,7 @@ export const makeSessionRoutes = (deps) => {
       if (sessionId && haltGoalRun) {
         try { await haltGoalRun(/** @type {any} */ (sessionId)); }
         catch {
-          postChatNote('Goal Stop was not saved. Retry before you close peerd.');
+          postChatNote('Goal Stop was not saved. Retry before you close mcdollar.');
           return { ok: false, error: 'goal-stop-persistence-failed' };
         }
       }
@@ -279,7 +279,7 @@ export const makeSessionRoutes = (deps) => {
       }
       // Composer expansion (feature 04): rewrite /commands and @-references
       // BEFORE the turn starts. @tab/@file pulls (possibly untrusted)
-      // content; the resolvers wrap it (<untrusted_web_content>/<peerd_file>)
+      // content; the resolvers wrap it (<untrusted_web_content>/<mcdollar_file>)
       // and apply the denylist origin gate. Build a tool context for them.
       let userText = trimmed;
       try {
@@ -402,7 +402,7 @@ export const makeSessionRoutes = (deps) => {
 
     // --- spawned actors ---
     //
-    // The peerd.runtime.runAgent shim (an App/Notebook the agent built embedding its
+    // The mcdollar.runtime.runAgent shim (an App/Notebook the agent built embedding its
     // own agent) posts here. Notebook tabs are extension-origin pages, so
     // runtime.onMessage reaches us directly — the caller is already
     // authenticated as our own extension. The parent is whichever chat

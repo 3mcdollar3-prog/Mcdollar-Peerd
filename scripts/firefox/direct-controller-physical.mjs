@@ -17,7 +17,7 @@ import { startGeckodriver } from './webdriver.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..', '..');
 const VERSION = String(JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version);
-const ADDON_ID = 'peerd@peerd.ai';
+const ADDON_ID = 'mcdollar@mcdollar.ai';
 const FIREFOX_UUID = '7d12f198-31fc-4e95-9184-e954123981b6';
 const FIREFOX_ORIGIN = `moz-extension://${FIREFOX_UUID}`;
 const WORKER_IDLE_MS = 75;
@@ -57,7 +57,7 @@ const authority = Object.freeze({
   replayClass: 'E',
 });
 
-globalThis.__peerdDirectControllerBootId = crypto.randomUUID();
+globalThis.__mcdollarDirectControllerBootId = crypto.randomUUID();
 let controller = null;
 const openController = async () => {
   controller ??= await connectDirectController({
@@ -73,7 +73,7 @@ const openController = async () => {
   return controller;
 };
 
-globalThis.__peerdDirectControllerProbe = async (operation = 'call') => {
+globalThis.__mcdollarDirectControllerProbe = async (operation = 'call') => {
   if (operation === 'retire') {
     const retired = await openController();
     const retiredEpoch = retired.epoch;
@@ -84,7 +84,7 @@ globalThis.__peerdDirectControllerProbe = async (operation = 'call') => {
     const retiredRefusal = await retired.call('probe.read', { value: 99 });
     return {
       protocol: CONTROLLER_CHANNEL_PROTOCOL,
-      bootId: globalThis.__peerdDirectControllerBootId,
+      bootId: globalThis.__mcdollarDirectControllerBootId,
       retiredEpoch,
       replacementEpoch: replacement.epoch,
       retiredRefusal,
@@ -94,7 +94,7 @@ globalThis.__peerdDirectControllerProbe = async (operation = 'call') => {
   const active = await openController();
   return {
     protocol: CONTROLLER_CHANNEL_PROTOCOL,
-    bootId: globalThis.__peerdDirectControllerBootId,
+    bootId: globalThis.__mcdollarDirectControllerBootId,
     epoch: active.epoch,
     result: await active.call('probe.read', { value: 7 }),
   };
@@ -211,7 +211,7 @@ const invokeProbe = async (driver, operation = 'call') => {
     const operation = arguments[0];
     const done = arguments[arguments.length - 1];
     browser.runtime.getBackgroundPage().then(
-      (page) => page.__peerdDirectControllerProbe(operation).then(done, (error) => done({
+      (page) => page.__mcdollarDirectControllerProbe(operation).then(done, (error) => done({
         error: error?.message || String(error),
       })),
       (error) => done({ error: error?.message || String(error) }),
@@ -231,8 +231,8 @@ export const runDirectControllerPhysicalSmoke = async () => {
     channel: 'store', browser: 'firefox', version: VERSION, sign: false, verify: true,
   });
   const source = join(ROOT, 'artifacts', 'staging', 'store-firefox');
-  const tree = mkdtempSync(join(tmpdir(), 'peerd-direct-controller-physical-'));
-  const xpi = join(tmpdir(), `peerd-direct-controller-physical-${crypto.randomUUID()}.xpi`);
+  const tree = mkdtempSync(join(tmpdir(), 'mcdollar-direct-controller-physical-'));
+  const xpi = join(tmpdir(), `mcdollar-direct-controller-physical-${crypto.randomUUID()}.xpi`);
   let driver;
   try {
     cpSync(source, tree, { recursive: true });

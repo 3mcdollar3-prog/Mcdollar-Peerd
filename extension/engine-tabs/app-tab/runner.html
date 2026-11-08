@@ -6,7 +6,7 @@
     Sandboxed page (declared in manifest.json sandbox.pages). MV3
     strips ALL chrome.* APIs from sandboxed pages, but we get:
       - opaque origin
-      - peerd's narrowed sandbox CSP, which allows inline <script>
+      - mcdollar's narrowed sandbox CSP, which allows inline <script>
       - postMessage with the parent window
 
     This page lives inside an iframe in app-tab/index.html. Its only
@@ -119,13 +119,13 @@
         }, 12_000);
         dataPending.set(id, { resolve, reject, timer });
         window.parent.postMessage({
-          peerd: 'app:data:request', id, op,
+          mcdollar: 'app:data:request', id, op,
           ...(typeof key === 'string' ? { key } : {}),
           ...(typeof json === 'string' ? { json } : {}),
         }, '*');
       });
       const handleDataResult = (event) => {
-        if (event.source !== window.parent || event.data?.peerd !== 'app:data:result') return;
+        if (event.source !== window.parent || event.data?.mcdollar !== 'app:data:result') return;
         const pending = dataPending.get(event.data.id);
         if (!pending) return;
         dataPending.delete(event.data.id);
@@ -138,9 +138,9 @@
         set: (key, value) => {
           let json;
           try { json = JSON.stringify(value); }
-          catch { return Promise.reject(new TypeError('peerd.data.set value must be JSON-serializable')); }
+          catch { return Promise.reject(new TypeError('mcdollar.data.set value must be JSON-serializable')); }
           if (typeof json !== 'string' || new TextEncoder().encode(json).byteLength > 1_000_000) {
-            return Promise.reject(new TypeError('peerd.data.set value is too large'));
+            return Promise.reject(new TypeError('mcdollar.data.set value is too large'));
           }
           return requestData('set', key, json);
         },
@@ -160,12 +160,12 @@
         // form, observe the transcript, or invoke a model through this method.
         open() {
           if (navigator.userActivation?.isActive !== true) return false;
-          window.parent.postMessage({ peerd: 'app:agent:open' }, '*');
+          window.parent.postMessage({ mcdollar: 'app:agent:open' }, '*');
           return true;
         },
         expose(definition) {
           if (!definition || typeof definition !== 'object') {
-            throw new TypeError('peerd.agent.expose requires an operation map');
+            throw new TypeError('mcdollar.agent.expose requires an operation map');
           }
           const next = {};
           if (requestedAgentRuntime.observe === true && typeof definition.observe === 'function') {
@@ -178,7 +178,7 @@
           return Object.keys(next);
         },
       });
-      Object.defineProperty(window, 'peerd', {
+      Object.defineProperty(window, 'mcdollar', {
         value: Object.freeze({
           assets: assetsApi,
           data: dataApi,
@@ -213,27 +213,27 @@
       document.close();
 
       // App-defined playtest operations are intentionally narrower than DOM
-      // automation: a dwapp opts in through peerd.json, exposes handlers here,
+      // automation: a dwapp opts in through mcdollar.json, exposes handlers here,
       // and receives only JSON-like arguments. Results return to the trusted
       // parent as untrusted App data. The parent pins every request to this App
       // actor and applies its own size/timeout limits.
       window.addEventListener('message', (event) => {
         if (event.source !== window.parent) return;
         const request = event.data;
-        if (request?.peerd !== 'app:agent:request'
+        if (request?.mcdollar !== 'app:agent:request'
             || typeof request.id !== 'string' || request.id.length > 100
             || (request.op !== 'observe' && request.op !== 'act')) return;
         const handler = agentHandlers[request.op];
         if (agentRuntimePoisoned) {
           window.parent.postMessage({
-            peerd: 'app:agent:result', id: request.id, ok: false, poisoned: true,
+            mcdollar: 'app:agent:result', id: request.id, ok: false, poisoned: true,
             error: 'App runtime generation is poisoned after a timed-out operation',
           }, '*');
           return;
         }
         if (typeof handler !== 'function') {
           window.parent.postMessage({
-            peerd: 'app:agent:result', id: request.id, ok: false,
+            mcdollar: 'app:agent:result', id: request.id, ok: false,
             error: `App did not expose ${request.op}`,
           }, '*');
           return;
@@ -277,12 +277,12 @@
               throw new Error('App runtime result is not bounded JSON');
             }
             window.parent.postMessage({
-              peerd: 'app:agent:result', id: request.id, ok: true, value: JSON.parse(encoded),
+              mcdollar: 'app:agent:result', id: request.id, ok: true, value: JSON.parse(encoded),
             }, '*');
           } catch (error) {
             if (request.op === 'act') agentRuntimePoisoned = true;
             window.parent.postMessage({
-              peerd: 'app:agent:result', id: request.id, ok: false,
+              mcdollar: 'app:agent:result', id: request.id, ok: false,
               poisoned: request.op === 'act',
               outcomeKnown: request.op === 'act' ? false : true,
               outcomeKind: request.op === 'act' ? 'transport-lost' : 'pre-effect-failure',
@@ -292,7 +292,7 @@
         }, (error) => {
           if (request.op === 'act') agentRuntimePoisoned = true;
           window.parent.postMessage({
-            peerd: 'app:agent:result', id: request.id, ok: false,
+            mcdollar: 'app:agent:result', id: request.id, ok: false,
             poisoned: request.op === 'act' || error?.poisoned === true,
             outcomeKnown: request.op === 'act' ? false : error?.poisoned !== true,
             outcomeKind: request.op === 'act' || error?.poisoned === true

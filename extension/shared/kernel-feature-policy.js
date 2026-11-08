@@ -14,7 +14,7 @@ export { KERNEL_ADMINISTRATIVE_ROUTE_NAMES } from './kernel-feature-route-invent
 const KIB = 1024;
 const MIB = 1024 * KIB;
 const SESSION_READ_BYTES = 32 * MIB;
-const OWNER_ID = 'peerd-authority-kernel';
+const OWNER_ID = 'mcdollar-authority-kernel';
 const DISPATCH_ID = /^[A-Za-z0-9._-]{8,512}$/;
 export const KERNEL_FEATURE_DISPATCH_CAPABILITY = 'feature.dispatch';
 

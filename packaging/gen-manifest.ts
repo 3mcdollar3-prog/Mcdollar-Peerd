@@ -3,10 +3,10 @@
 // patch document. See PACKAGING.md §"Manifest variants".
 //
 // Channels:
-//   store    → "peerd"          (Chrome Web Store / AMO; no dweb)
-//   preview  → "peerd preview"  (GitHub Releases; dweb on supported targets,
+//   store    → "mcdollar"          (Chrome Web Store / AMO; no dweb)
+//   preview  → "mcdollar preview"  (GitHub Releases; dweb on supported targets,
 //                                update_url + locked extension ID)
-//   dev      → "peerd (dev)"    (the checked-in extension/manifest.json
+//   dev      → "mcdollar (dev)"    (the checked-in extension/manifest.json
 //                                for the load-unpacked dev loop; includes
 //                                the in-browser test runner)
 //
@@ -58,7 +58,7 @@ const CHROME_ONLY_KEYS = ['update_url', 'key', 'side_panel',
 // validation clean; Firefox runtime parity is its own workstream — the
 // packaging system's job is only to emit a structurally valid manifest.
 const CHROME_ONLY_PERMISSIONS = ['sidePanel', 'offscreen', 'debugger', 'tabGroups'];
-// Firefox keeps MV3 blocking webRequest for extensions. peerd uses it only to
+// Firefox keeps MV3 blocking webRequest for extensions. mcdollar uses it only to
 // close the first-request race for an exact child of a driven tab while the
 // child's durable declarativeNetRequest rules are being installed. Chrome
 // rejects this permission for ordinary MV3 extensions.
@@ -73,7 +73,7 @@ const FIREFOX_ONLY_PERMISSIONS = ['webRequest', 'webRequestBlocking'];
 // default. CDP is re-added to a store UPDATE after the first approval — a
 // one-line flip: delete 'debugger' from this list. Keeping it in base.json
 // (not moving it into patches) means base stays the single list of every
-// permission peerd can use, and deepMerge — which REPLACES arrays wholesale
+// permission mcdollar can use, and deepMerge — which REPLACES arrays wholesale
 // (packaging/lib.ts), so a patch cannot subtract — never has to re-enumerate.
 // Exported so verify-store-artifact.ts can assert the shipped zip honors it.
 export const STORE_STRIPPED_PERMISSIONS = ['debugger'];
@@ -91,7 +91,7 @@ const applyBrowserTransform = (manifest: any, browser: GenBrowser): any => {
       ...FIREFOX_ONLY_PERMISSIONS,
     ];
     // Defensive: also strip these from optional_permissions if a future
-    // patch ever adds the key. NOTE: peerd does NOT use optional_permissions
+    // patch ever adds the key. NOTE: mcdollar does NOT use optional_permissions
     // for `debugger` — Chrome forbids it ("Permission 'debugger' cannot be
     // listed as optional. This permission will be omitted."), so `debugger`
     // is a REQUIRED install-time permission in the channels that ship it
@@ -121,7 +121,7 @@ const applyBrowserTransform = (manifest: any, browser: GenBrowser): any => {
       };
     }
     // AMO requires a data-collection declaration for all new Firefox
-    // submissions (web-ext MISSING_DATA_COLLECTION_PERMISSIONS). peerd's
+    // submissions (web-ext MISSING_DATA_COLLECTION_PERMISSIONS). mcdollar's
     // honest answer is "none": no backend, no telemetry, no account —
     // the agent talks only to the user's own model API. Centralized here
     // (not per channel patch) because it's true of every channel by
@@ -185,7 +185,7 @@ export const generateManifest = (
     const extensionPages = manifest.content_security_policy?.extension_pages;
     if (typeof extensionPages === 'string') {
       manifest.content_security_policy.extension_pages = extensionPages
-        .replace(' wss://bootstrap.peerd.ai', '');
+        .replace(' wss://bootstrap.mcdollar.ai', '');
     }
   }
 

@@ -84,7 +84,7 @@ describe('denylist-format', () => {
     test('user-added patterns get a true Remove', () => {
       const { verb, consequence } = removalCopy('evil.example', true);
       expect(verb).toBe('Remove');
-      expect(consequence).toContain('peerd will be able to act on evil.example again');
+      expect(consequence).toContain('mcdollar will be able to act on evil.example again');
       // No false promise of reversibility-by-re-enable on a deleted row.
       expect(consequence).not.toContain('re-enable');
     });
@@ -92,7 +92,7 @@ describe('denylist-format', () => {
     test('seed patterns get Disable and say so', () => {
       const { verb, consequence } = removalCopy('chase.com', false);
       expect(verb).toBe('Disable');
-      expect(consequence).toContain('peerd will be able to act on chase.com again');
+      expect(consequence).toContain('mcdollar will be able to act on chase.com again');
       expect(consequence).toContain("can't be deleted");
       expect(consequence).toContain('re-enable');
     });

@@ -20,7 +20,7 @@ import {
   browserTargetRefusalReceiptFrom,
   captureVisible,
   resolveTargetTab,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 import { CONTROLLER_PAGE_IMAGE_MAX_BASE64_CHARS } from '/shared/controller-kernel-quota.js';
 
 /** @param {any} args @param {any} ctx */
@@ -102,7 +102,7 @@ export const captureForegroundPixelsAuthority = async (args, ctx) => {
       if (!afterTab
         || afterTab.id !== tab.id
         || afterTab.url !== tab.url
-        || afterTab.peerdDocumentId !== tab.peerdDocumentId
+        || afterTab.mcdollarDocumentId !== tab.mcdollarDocumentId
         || afterForeground.id !== beforeForeground.id
         || activationWatch.changedIn(windowId)) {
         return { ok: false, error: 'capture_target_changed: screenshot discarded because the foreground tab changed' };

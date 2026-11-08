@@ -5,7 +5,7 @@
 import m from '/vendor/mithril/mithril.js';
 import { DiscoverSection } from '/home/discover-section.js';
 import { StarterReview } from '/options/sections/starter-review.js';
-import { inspectEnvelope } from '/peerd-engine/export.js';
+import { inspectEnvelope } from '/mcdollar-engine/export.js';
 const params = new URLSearchParams(location.search);
 const key = params.get('starter');
 const added = params.get('state') === 'added';

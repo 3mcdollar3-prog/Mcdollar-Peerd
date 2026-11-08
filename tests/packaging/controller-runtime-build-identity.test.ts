@@ -70,7 +70,7 @@ describe('controller runtime build identity', () => {
   });
 
   test('changes when the rich relay host changes', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-controller-runtime-digest-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-controller-runtime-digest-'));
     roots.push(root);
     const extension = join(root, 'extension');
     cpSync(join(process.cwd(), 'extension'), extension, { recursive: true });
@@ -81,7 +81,7 @@ describe('controller runtime build identity', () => {
   });
 
   test('binds representative compose, lease, actor, voice, and contributor demand hosts', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-controller-demand-digest-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-controller-demand-digest-'));
     roots.push(root);
     const extension = join(root, 'extension');
     cpSync(join(process.cwd(), 'extension'), extension, { recursive: true });
@@ -102,7 +102,7 @@ describe('controller runtime build identity', () => {
   });
 
   test('binds every runtime-selected executable asset owned by controller hosts', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-controller-runtime-assets-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-controller-runtime-assets-'));
     roots.push(root);
     const extension = join(root, 'extension');
     cpSync(join(process.cwd(), 'extension'), extension, { recursive: true });
@@ -127,7 +127,7 @@ describe('controller runtime build identity', () => {
   });
 
   test('binds every module emitted into the headless sealed Worker source', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-controller-generated-worker-roots-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-controller-generated-worker-roots-'));
     roots.push(root);
     const extension = join(root, 'extension');
     cpSync(join(process.cwd(), 'extension'), extension, { recursive: true });
@@ -148,14 +148,14 @@ describe('controller runtime build identity', () => {
   });
 
   test('controller-only feature growth leaves every normalized SW authority target unchanged', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'peerd-controller-feature-growth-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-controller-feature-growth-'));
     roots.push(root);
     const baseline = join(root, 'baseline');
     const candidate = join(root, 'candidate');
     cpSync(join(process.cwd(), 'extension'), baseline, { recursive: true });
     cpSync(join(process.cwd(), 'extension'), candidate, { recursive: true });
 
-    const previewController = join(candidate, 'peerd-runtime/controller-contributor.js');
+    const previewController = join(candidate, 'mcdollar-runtime/controller-contributor.js');
     writeFileSync(previewController, [
       readFileSync(previewController, 'utf8'),
       '// Representative Preview-only semantic growth in the sealed controller.',
@@ -165,7 +165,7 @@ describe('controller runtime build identity', () => {
       '',
     ].join('\n'));
 
-    writeFileSync(join(candidate, 'peerd-runtime/controller-feature-fixture.js'), [
+    writeFileSync(join(candidate, 'mcdollar-runtime/controller-feature-fixture.js'), [
       '// Representative catalog-registered semantic feature reusing one exact read authority.',
       "export const CONTROLLER_FEATURE_TOOL_NAME = 'fixture_feature';",
       'export const controllerFeatureTool = Object.freeze({',
@@ -176,7 +176,7 @@ describe('controller runtime build identity', () => {
       '});',
       '',
     ].join('\n'));
-    const catalog = join(candidate, 'peerd-runtime/tools/metadata/catalog.js');
+    const catalog = join(candidate, 'mcdollar-runtime/tools/metadata/catalog.js');
     writeFileSync(catalog, readFileSync(catalog, 'utf8')
       .replace('export const TOOL_METADATA_RECORDS = {', [
         'export const TOOL_METADATA_RECORDS = {',
@@ -190,7 +190,7 @@ describe('controller runtime build identity', () => {
         '  },',
       ].join('\n')));
     const introspectionTools = join(
-      candidate, 'peerd-runtime/controller-introspection-tools.js',
+      candidate, 'mcdollar-runtime/controller-introspection-tools.js',
     );
     writeFileSync(introspectionTools, readFileSync(introspectionTools, 'utf8')
       .replace("import { loadSkillTool } from './skills/load-skill-tool.js';", [
@@ -203,7 +203,7 @@ describe('controller runtime build identity', () => {
         'const tools = Object.freeze({',
         'const tools = Object.freeze({\n  [CONTROLLER_FEATURE_TOOL_NAME]: controllerFeatureTool,',
       ));
-    const ownership = join(candidate, 'peerd-runtime/controller-tool-ownership.js');
+    const ownership = join(candidate, 'mcdollar-runtime/controller-tool-ownership.js');
     writeFileSync(ownership, readFileSync(ownership, 'utf8').replace(
       "  load_skill: ['turn.introspection.installed-skill'],",
       [
@@ -246,7 +246,7 @@ describe('controller runtime build identity', () => {
       .toEqual({ surface: 'contributor', value: 'preview' });
 
     const candidateProjection = await import(
-      `${pathToFileURL(join(candidate, 'peerd-runtime/controller-tool-projection.js')).href}?fixture=${Date.now()}`
+      `${pathToFileURL(join(candidate, 'mcdollar-runtime/controller-tool-projection.js')).href}?fixture=${Date.now()}`
     );
     expect(candidateProjection.projectControllerToolSurface({
       surface: 'selection', toolNames: ['fixture_feature'],
@@ -292,17 +292,17 @@ describe('controller runtime build identity', () => {
       expect(candidateGraph.bytes, target.label).toBe(baselineGraph.bytes);
       expect(candidateGraph.inputSha256, target.label).toBe(baselineGraph.inputSha256);
       expect(candidateGraph.inputs, target.label)
-        .not.toContain('peerd-runtime/controller-feature-fixture.js');
+        .not.toContain('mcdollar-runtime/controller-feature-fixture.js');
     }
 
     const controllerGraph = await collectStaticModuleGraph(
       candidate, join(candidate, 'offscreen/controller-turn-runtime.js'),
     );
     expect([...controllerGraph].some((path) =>
-      path.endsWith('/peerd-runtime/controller-feature-fixture.js'))).toBe(true);
+      path.endsWith('/mcdollar-runtime/controller-feature-fixture.js'))).toBe(true);
 
     const fixture = readFileSync(
-      join(candidate, 'peerd-runtime/controller-feature-fixture.js'), 'utf8',
+      join(candidate, 'mcdollar-runtime/controller-feature-fixture.js'), 'utf8',
     );
     expect(readFileSync(catalog, 'utf8')).toContain('"fixture_feature"');
     expect(fixture).toContain('controllerFeatureTool');
@@ -371,16 +371,16 @@ describe('controller runtime build identity', () => {
       );
       expect(candidateStagedGraph, stagingName).toEqual(baselineStagedGraph);
       expect(candidateStagedGraph.inputs, stagingName)
-        .not.toContain('peerd-runtime/controller-feature-fixture.js');
+        .not.toContain('mcdollar-runtime/controller-feature-fixture.js');
       expect(candidateStagedGraph.inputs, stagingName)
-        .not.toContain('peerd-runtime/controller-contributor.js');
+        .not.toContain('mcdollar-runtime/controller-contributor.js');
 
       if (target.channel === 'store') {
         const stagedControllerGraph = await collectStaticModuleGraph(
           candidateStaging, join(candidateStaging, 'offscreen/controller-turn-runtime.js'),
         );
         expect([...stagedControllerGraph].some((path) =>
-          path.endsWith('/peerd-runtime/controller-feature-fixture.js'))).toBe(true);
+          path.endsWith('/mcdollar-runtime/controller-feature-fixture.js'))).toBe(true);
       } else {
         const baselineSemanticGraph = await authorityGraphFingerprint(
           baselineStaging, 'offscreen/semantic-routes/contributor.js',
@@ -417,7 +417,7 @@ describe('controller runtime build identity', () => {
     for (const entry of governed) {
       expect(identityGraph, entry).toContain(join(process.cwd(), 'extension', entry));
     }
-    const root = mkdtempSync(join(tmpdir(), 'peerd-dweb-runtime-digest-'));
+    const root = mkdtempSync(join(tmpdir(), 'mcdollar-dweb-runtime-digest-'));
     roots.push(root);
     const extension = join(root, 'extension');
     cpSync(join(process.cwd(), 'extension'), extension, { recursive: true });

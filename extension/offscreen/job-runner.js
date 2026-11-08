@@ -2,7 +2,7 @@
 // offscreen/job-runner.js — runs a HEADLESS JS job in a sealed Worker.
 //
 // The headless sibling of the Notebook tab's runEval (DECISIONS #25, "runJob"):
-// the SAME sealed worker (worker-source.js — realm seal first, peerd.* surface,
+// the SAME sealed worker (worker-source.js — realm seal first, mcdollar.* surface,
 // the fetch/opfs/actor bridges), but hosted in the offscreen document with NO
 // UI, an EPHEMERAL OPFS scratch that is nuked when the job ends, and output
 // ACCUMULATED into the return value. Egress + actor relay through the SAME
@@ -30,7 +30,7 @@ import {
   MODULE_SYNTAX_ERROR_CODE,
   remoteModuleCapabilityBlockedMessage,
   UnsupportedNativeModuleImportError,
-} from '/peerd-engine/offscreen.js';
+} from '/mcdollar-engine/offscreen.js';
 import {
   buildWorkerSource, mapWorkerError, NOTEBOOK_BUILTINS,
   DEFAULT_WORKER_CAPS, REMOTE_MODULE_WORKER_CAPS,
@@ -43,7 +43,7 @@ import {
   CODE_RUN_MAX_TRACE_OPS, MAX_FILE_CONTENT_CHARS,
   pageCallToToolCall, shapePageCallOutcome,
   shapeActorRoster, shapeActorsResult,
-} from '/peerd-runtime/offscreen.js';
+} from '/mcdollar-runtime/offscreen.js';
 import {
   capturePageProgramSite,
   clickPageProgram,
@@ -308,7 +308,7 @@ const _runJob = async ({ code, timeoutMs = 30000, startedAt, deadlineAt, a2a = f
   // to the site lane.
   // distributed is ALWAYS off headless (caller caps can't re-open it): this host
   // has no 'distributed-request' handler — the tab does — so without the in-realm
-  // throw a peerd.distributed.* touch would hang to the job wall-clock for a
+  // throw a mcdollar.distributed.* touch would hang to the job wall-clock for a
   // one-word answer (design 7.3). If a headless lane ever legitimately needs
   // base-network reads, that is a deliberate caps flag + host relay at that point.
   const profile = siteFetch
@@ -318,13 +318,13 @@ const _runJob = async ({ code, timeoutMs = 30000, startedAt, deadlineAt, a2a = f
   const execution = describeCodeExecution({
     code, a2a, actors, siteFetch, ownerSessionId, workspaceSessionId,
   }, runId || jobId, profile);
-  // The OPFS root: per-job EPHEMERAL scratch by default (peerd.self.* +
+  // The OPFS root: per-job EPHEMERAL scratch by default (mcdollar.self.* +
   // relative imports work within the run, then it's nuked) — or, for a
   // workspace run, the DURABLE per-session subtree, which survives the run
   // (the nukes below are all skipped). The worker API is unchanged either way;
   // only where the root points differs, and only the SW ever picks it.
   const usedWorkspace = typeof workspaceSessionId === 'string' && workspaceSessionId.length > 0;
-  const opfs = opfsForRoot(usedWorkspace ? ['peerd-workspace', workspaceSessionId] : ['peerd-jobs', jobId]);
+  const opfs = opfsForRoot(usedWorkspace ? ['mcdollar-workspace', workspaceSessionId] : ['mcdollar-jobs', jobId]);
   const assertWorkspaceWritable = async () => {
     if (!usedWorkspace) return;
     const response = await sendToSW('lifecycle/assert-opfs-writable', {});
@@ -941,7 +941,7 @@ const _runJob = async ({ code, timeoutMs = 30000, startedAt, deadlineAt, a2a = f
         if (m.type === 'fetch-request') {
           // Same envoy posture: the dweb actor has no egress (no fetch_url in its
           // allow-set). The a2a worker still carries the seal's bridged fetch +
-          // peerd.egress.fetch, so the host is where we deny it — the mesh is the
+          // mcdollar.egress.fetch, so the host is where we deny it — the mesh is the
           // ONLY outward edge an a2a run gets. The caps profile (PR #119: the
           // page_code worker) is the second no-egress lane, same choke point.
           if (a2a || !runtimeProfile.egress) {
@@ -1169,7 +1169,7 @@ const _runJob = async ({ code, timeoutMs = 30000, startedAt, deadlineAt, a2a = f
                 // per-file ceiling js_write_file applies tool-side, so worker
                 // writes can't dodge it; plus the mount-time budget refusal.
                 if (usedWorkspace) {
-                  if (workspaceOverBudget) throw new Error('workspace over budget — writes are refused this run; peerd.self.deleteFile files first to get back under it');
+                  if (workspaceOverBudget) throw new Error('workspace over budget — writes are refused this run; mcdollar.self.deleteFile files first to get back under it');
                   // chars for strings, bytes for binary payloads — same ceiling
                   // either way. Shape-ALLOWLISTED, fail closed: opfs.write feeds
                   // FileSystemWritableFileStream.write, which also accepts a

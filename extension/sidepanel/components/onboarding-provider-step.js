@@ -9,7 +9,7 @@
 // just created" is only true in that order.
 //
 // It CALLS the shipped plumbing, never forks it: the paste sanity check is
-// the shared checkApiKeyFormat (peerd-provider/key-format.js), the save is
+// the shared checkApiKeyFormat (mcdollar-provider/key-format.js), the save is
 // the same provider/setKey route the options card uses, the verification is
 // the same provider/test one-token ping, and the Ollama reachability mark is
 // EARNED by the same live daemon probe - green is never assumed.
@@ -20,7 +20,7 @@
 // composer's add-a-key-in-Settings empty state).
 
 import m from '/vendor/mithril/mithril.js';
-import { checkApiKeyFormat, KEY_PREFIX } from '/peerd-provider/ui.js';
+import { checkApiKeyFormat, KEY_PREFIX } from '/mcdollar-provider/ui.js';
 
 /** @typedef {(msg: object) => Promise<any>} Send */
 
@@ -171,7 +171,7 @@ export const ProviderStep = {
             if (!saved?.ok) {
               ui.uncertain = saved?.outcomeKnown === false ? 'save' : null;
               ui.msg = { ok: false, text: ui.uncertain
-                ? 'Peerd could not confirm the save. Finish the same save before changing the key.'
+                ? 'Mcdollar could not confirm the save. Finish the same save before changing the key.'
                 : saved?.error === 'locked' ? 'Vault is locked; unlock it and try again.'
                   : 'The provider key could not be saved.' };
               return;
@@ -188,7 +188,7 @@ export const ProviderStep = {
             if (!test?.ok) {
               ui.uncertain = test?.outcomeKnown === false ? 'test' : null;
               ui.msg = { ok: false, text: ui.uncertain
-                ? 'The key is saved, but Peerd could not confirm the test. Verify again when ready.'
+                ? 'The key is saved, but Mcdollar could not confirm the test. Verify again when ready.'
                 : test?.error === 'invalid-key'
                   ? 'Provider rejected the key (401). Double-check it.'
                   : 'Saved, but the key could not be verified.' };
@@ -201,7 +201,7 @@ export const ProviderStep = {
           if (!switched?.ok) {
             ui.uncertain = switched?.outcomeKnown === false ? 'switch' : null;
             ui.msg = { ok: false, text: ui.uncertain
-              ? 'Peerd could not confirm the provider selection. Finish the same selection to continue.'
+              ? 'Mcdollar could not confirm the provider selection. Finish the same selection to continue.'
               : 'The provider selection could not be saved.' };
             return;
           }
@@ -233,7 +233,7 @@ export const ProviderStep = {
         if (!switched?.ok) {
           ui.uncertain = switched?.outcomeKnown === false ? 'switch' : null;
           ui.msg = { ok: false, text: ui.uncertain
-            ? 'Peerd could not confirm the provider selection. Finish the same selection to continue.'
+            ? 'Mcdollar could not confirm the provider selection. Finish the same selection to continue.'
             : 'The provider selection could not be saved.' };
           return;
         }
@@ -268,11 +268,11 @@ export const ProviderStep = {
       m('h3.onb-provider-heading', 'Choose a provider'),
       m('p.muted.onb-provider-sub',
         'Your key is encrypted in the vault you just created and is sent ' +
-        'only to the provider you choose. There is no peerd account.'),
+        'only to the provider you choose. There is no mcdollar account.'),
       rows === null
         ? ui.statusError
           ? m('.onb-provider-status-error', { role: 'alert' }, [
-              m('p', 'Peerd could not load provider choices. No key or setting was changed.'),
+              m('p', 'Mcdollar could not load provider choices. No key or setting was changed.'),
               m('button', {
                 type: 'button',
                 onclick: () => ProviderStep.loadStatus(vnode),

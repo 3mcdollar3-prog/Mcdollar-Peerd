@@ -20,11 +20,11 @@ const Fixture = {
     ? m(NoticeBar, {
         notices: [{
           id: 1,
-          text: 'peerd v0.7.0 is available (you have v0.6.0). Firefox installs preview updates on its own daily check, or install it now.',
+          text: 'mcdollar v0.7.0 is available (you have v0.6.0). Firefox installs preview updates on its own daily check, or install it now.',
           action: {
             kind: 'open-url',
             label: 'Install update',
-            url: 'https://github.com/NotASithLord/peerd/releases/download/v0.7.0/peerd-preview-firefox.xpi',
+            url: 'https://github.com/NotASithLord/mcdollar/releases/download/v0.7.0/mcdollar-preview-firefox.xpi',
           },
         }],
         uiActions: {

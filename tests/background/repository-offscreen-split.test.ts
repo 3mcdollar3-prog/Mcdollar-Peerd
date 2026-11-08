@@ -461,7 +461,7 @@ describe('operation-lazy offscreen repository split', () => {
       hostEpoch: 'renderer-host-integration',
     };
     const offer = {
-      type: 'peerd/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
+      type: 'mcdollar/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
       channelId, method: 'status', args: [ref], lease,
     };
     const first = new MessageChannel();
@@ -497,7 +497,7 @@ describe('operation-lazy offscreen repository split', () => {
     const channelId = 'repository-worker-target-one';
     const lease = { ...testLease, leaseId: 'repository-worker-target-lease' };
     const offer = {
-      type: 'peerd/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
+      type: 'mcdollar/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
       channelId, method: 'status', args: [ref], lease,
     };
     const channel = new MessageChannel();
@@ -544,7 +544,7 @@ describe('operation-lazy offscreen repository split', () => {
     const channel = new MessageChannel();
     const worker = new FakeRepositoryWorker();
     expect(acceptRepositoryWorkerHost({ data: {
-      type: 'peerd/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
+      type: 'mcdollar/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
       channelId, method: 'status', args: [ref], lease,
     }, ports: [channel.port2] } as any, {
       ownsLease: () => true,
@@ -566,7 +566,7 @@ describe('operation-lazy offscreen repository split', () => {
     for (const [index, worker] of workers.entries()) {
       const channel = new MessageChannel();
       expect(acceptRepositoryWorkerHost({ data: {
-        type: 'peerd/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
+        type: 'mcdollar/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
         channelId: `repository-worker-abort-${index}`, method: 'status', args: [ref],
         lease: { ...testLease, leaseId: `repository-worker-abort-lease-${index}` },
       }, ports: [channel.port2] } as any, {
@@ -587,7 +587,7 @@ describe('operation-lazy offscreen repository split', () => {
       hostEpoch: 'host-revoked-during-load',
     };
     const offer = {
-      type: 'peerd/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
+      type: 'mcdollar/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
       channelId: 'repository-revoked-during-load', method: 'commit', args: [ref], lease,
     };
     const channel = new MessageChannel();
@@ -789,14 +789,14 @@ describe('operation-lazy offscreen repository split', () => {
       agent: { kind: 'bound-app', profile: 'developer', surface: 'code' },
       capabilities: [],
     });
-    await files.appWrite(ref, { path: 'peerd.json', value: manifest });
+    await files.appWrite(ref, { path: 'mcdollar.json', value: manifest });
     await files.appWrite(ref, { path: 'src/main.html', value: '<main>ok</main>' });
     await files.appWrite(ref, {
       path: 'assets/pixel.png', value: new TextEncoder().encode('valid text, binary suffix'),
     });
     await expect(files.appInspect(ref)).resolves.toEqual({
       fileKinds: {
-        'peerd.json': 'text', 'src/main.html': 'text', 'assets/pixel.png': 'binary',
+        'mcdollar.json': 'text', 'src/main.html': 'text', 'assets/pixel.png': 'binary',
       },
       contract: {
         schema: 1, kind: 'app', entry: 'src/main.html',
@@ -857,7 +857,7 @@ describe('operation-lazy offscreen repository split', () => {
       hostEpoch: 'host-admission-proof',
     };
     const offer = {
-      type: 'peerd/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
+      type: 'mcdollar/repository-channel', protocol: REPOSITORY_CHANNEL_PROTOCOL,
       channelId: 'repository-admission-proof', method: 'status', args: [ref], lease,
     };
     const port = new MessageChannel().port1;

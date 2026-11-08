@@ -29,7 +29,7 @@ export const injectFirefoxLifetimeProbe = (source) => replaceUnique(
     if (!parameter) throw new Error('Firefox lifetime probe parameter is missing');
     return statement.replace(
       /([$\w]+\s*\?\.\s*onChanged\s*\(\s*[$\w]+\s*\)\s*;?)/,
-      `globalThis.peerdFirefoxLifetimeProbe?.record(${parameter});$1`,
+      `globalThis.mcdollarFirefoxLifetimeProbe?.record(${parameter});$1`,
     );
   },
   'Firefox lifetime probe',
@@ -38,7 +38,7 @@ export const injectFirefoxLifetimeProbe = (source) => replaceUnique(
 export const injectFirefoxKeepaliveLossFault = (source) => replaceUnique(
   source,
   /const\s+write\s*=\s*storage\s*\.\s*set\s*\(\s*\{\s*\[\s*key\s*\]\s*:\s*value\s*\}\s*\)\s*;/g,
-  () => `const write = globalThis.peerdFirefoxKeepaliveLossFault?.consume()
+  () => `const write = globalThis.mcdollarFirefoxKeepaliveLossFault?.consume()
       ? Promise.reject(new Error('Firefox runtime test fault: keepalive heartbeat failed'))
       : storage.set({ [key]: value });`,
   'Firefox keepalive fault',

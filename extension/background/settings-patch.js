@@ -165,7 +165,7 @@ export const makeKernelSettingsRoutes = ({
 }) => {
   const failure = (/** @type {string} */ code, /** @type {string} */ action) => ({
     ok: false,
-    error: `Peerd could not confirm whether ${action} finished. Refresh settings before trying again.`,
+    error: `Mcdollar could not confirm whether ${action} finished. Refresh settings before trying again.`,
     code, outcomeKnown: false, outcomeKind: 'unknown', retryable: false,
     settings: { ...settingsStore.get() },
   });

@@ -83,7 +83,7 @@ describe('modular native-kernel browser event owners', () => {
     attachKernelLifecycleEvents({
       browser, registry, firefox: true, selfHostedChrome: true,
       onStartup: async () => { calls.push('startup'); },
-      alarmName: 'peerd-schedule',
+      alarmName: 'mcdollar-schedule',
       onAlarm: async () => { calls.push('alarm'); },
       onSessionChanged: async () => { calls.push('session'); },
       onUpdateAvailable: async () => { calls.push('update'); },
@@ -91,7 +91,7 @@ describe('modular native-kernel browser event owners', () => {
     expect(browser.alarms.onAlarm.emit({ name: 'some-other-feature' })).toEqual([undefined]);
     const results = [
       ...browser.runtime.onStartup.emit(),
-      ...browser.alarms.onAlarm.emit({ name: 'peerd-schedule' }),
+      ...browser.alarms.onAlarm.emit({ name: 'mcdollar-schedule' }),
       ...browser.storage.session.onChanged.emit({}, 'session'),
       ...browser.runtime.onUpdateAvailable.emit({ version: '1.2.3' }),
     ];
@@ -130,7 +130,7 @@ describe('modular native-kernel browser event owners', () => {
     const registry = makeRegistry({ firefox: true });
     attachKernelLifecycleEvents({
       browser, registry, firefox: true,
-      onStartup: () => {}, alarmName: 'peerd-schedule', onAlarm: () => {},
+      onStartup: () => {}, alarmName: 'mcdollar-schedule', onAlarm: () => {},
     });
     expect(browser.storage.session.onChanged.listeners).toHaveLength(0);
   });

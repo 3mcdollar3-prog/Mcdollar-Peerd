@@ -12,16 +12,16 @@ import { createAuthorityEffectScheduler } from '../../extension/background/autho
 import {
   createControllerTurnRuntime,
 } from '../../extension/offscreen/controller-turn-runtime.js';
-import { toToolDescriptor, projectToolAuthority } from '../../extension/peerd-runtime/tools/metadata/descriptor.js';
-import { getToolAuthority } from '../../extension/peerd-runtime/tools/metadata/authority.js';
-import { controllerOperationsForTools } from '../../extension/peerd-runtime/controller-tool-ownership.js';
+import { toToolDescriptor, projectToolAuthority } from '../../extension/mcdollar-runtime/tools/metadata/descriptor.js';
+import { getToolAuthority } from '../../extension/mcdollar-runtime/tools/metadata/authority.js';
+import { controllerOperationsForTools } from '../../extension/mcdollar-runtime/controller-tool-ownership.js';
 import { ORCHESTRATOR_OPERATION_GRANT } from '../../extension/shared/controller-kernel-quota.js';
-import { makeScriptedProviderAuthority } from '../peerd-provider/model-egress-fixture';
+import { makeScriptedProviderAuthority } from '../mcdollar-provider/model-egress-fixture';
 import { createProviderEgressAuthority } from '../../extension/background/provider-egress-authority.js';
 import { createSessionTurnStore } from '../../extension/shared/session-turn-store.js';
-import { makeDispatchTracker } from '../../extension/peerd-runtime/lifecycle/dispatch-tracking.js';
-import { createOperationLog } from '../../extension/peerd-runtime/lifecycle/operation-log.js';
-import { retryClassForTool } from '../../extension/peerd-runtime/lifecycle/tool-retry-class.js';
+import { makeDispatchTracker } from '../../extension/mcdollar-runtime/lifecycle/dispatch-tracking.js';
+import { createOperationLog } from '../../extension/mcdollar-runtime/lifecycle/operation-log.js';
+import { retryClassForTool } from '../../extension/mcdollar-runtime/lifecycle/tool-retry-class.js';
 
 const PROTOCOL_FIXTURE_TOOL = 'a2a_run';
 const authorityDescriptor = (name: string) => projectToolAuthority(
@@ -2343,7 +2343,7 @@ describe('controller turn finite tool protocol', () => {
     };
     const tab = {
       id: 7, windowId: 1, url: 'https://example.test/',
-      peerdDocumentId: 'document-7', peerdDocumentTimeOrigin: 1,
+      mcdollarDocumentId: 'document-7', mcdollarDocumentTimeOrigin: 1,
     };
     const host = {
       session: { sessionId: 'session-tool-protocol', kind: 'actor' },
@@ -2477,8 +2477,8 @@ describe('controller turn finite tool protocol', () => {
     const signal = new AbortController().signal;
     const calls = { scripting: 0, confirm: 0, authorizeSignIn: 0 };
     const tab = {
-      id: 7, url: 'https://example.test/login', peerdDocumentId: 'document-7',
-      peerdDocumentTimeOrigin: 1,
+      id: 7, url: 'https://example.test/login', mcdollarDocumentId: 'document-7',
+      mcdollarDocumentTimeOrigin: 1,
     };
     const host = {
       session: { sessionId: 'session-tool-protocol', kind: 'actor' },

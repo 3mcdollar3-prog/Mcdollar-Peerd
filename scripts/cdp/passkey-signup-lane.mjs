@@ -13,7 +13,7 @@ import { ARTIFACTS_DIR, REPO_ROOT } from '../../packaging/lib.ts';
 import { packageArtifact } from '../../packaging/package.ts';
 import { collectStaticModuleGraph } from '../../packaging/static-module-graph.ts';
 import {
-  evalIn, hostMonotonicMs, launchPeerd, resolveChrome, rpc, waitFor,
+  evalIn, hostMonotonicMs, launchMcdollar, resolveChrome, rpc, waitFor,
 } from './e2e-harness.mjs';
 import {
   completeOnboardingAndSelectFixture,
@@ -246,9 +246,9 @@ export const actionableCta = (page) => evalIn(page, `(() => {
   const shellRect = shell?.getBoundingClientRect();
   const buttonRect = button?.getBoundingClientRect();
   const shellStyle = shell ? getComputedStyle(shell) : null;
-  if (html.dataset.peerdStaticShellPainted !== 'true'
-      || html.dataset.peerdBootModule !== 'evaluated'
-      || html.dataset.peerdBootStage !== 'vault-ready'
+  if (html.dataset.mcdollarStaticShellPainted !== 'true'
+      || html.dataset.mcdollarBootModule !== 'evaluated'
+      || html.dataset.mcdollarBootStage !== 'vault-ready'
       || !button || !buttonRect || buttonRect.width <= 0 || buttonRect.height <= 0
       || !shellRect || shellRect.width <= 0 || shellRect.height <= 0
       || shellStyle?.visibility === 'hidden' || shellStyle?.display === 'none') return null;
@@ -266,23 +266,23 @@ export const readUi = (page) => evalIn(page, `(() => {
   const style = root ? getComputedStyle(root) : null;
   const text = root?.innerText || '';
   const boot = root?.querySelector(':scope > .boot-shell');
-  const terminalBusy = html.dataset.peerdBootStage !== 'app-ready'
-    || !!boot || /Opening peerd…|Waiting for passkey…|Finishing setup…|Passkey verified\. Finishing secure vault setup…/.test(text);
+  const terminalBusy = html.dataset.mcdollarBootStage !== 'app-ready'
+    || !!boot || /Opening mcdollar…|Waiting for passkey…|Finishing setup…|Passkey verified\. Finishing secure vault setup…/.test(text);
   return {
-    stage: html.dataset.peerdBootStage || '',
+    stage: html.dataset.mcdollarBootStage || '',
     rootVisible: !!root && !!rect && rect.width > 0 && rect.height > 0
       && style?.visibility !== 'hidden' && style?.display !== 'none',
     rootTextLength: text.trim().length,
     appShell: !!root?.querySelector('.app-shell'),
     gate: !!root?.querySelector('.gate-card'),
-    failure: html.dataset.peerdBootStage === 'failed'
+    failure: html.dataset.mcdollarBootStage === 'failed'
       || !!root?.querySelector('.boot-shell[role="alert"]'),
     spinnerTerminal: terminalBusy,
   };
 })()`);
 
 const stageTrace = (page) => evalIn(
-  page, `window.__peerdPasskeyTrace?.map((entry) => entry.stage) || []`,
+  page, `window.__mcdollarPasskeyTrace?.map((entry) => entry.stage) || []`,
 );
 
 const offscreenContexts = (page) => evalIn(page, `(async () => {
@@ -301,37 +301,37 @@ const offscreenContexts = (page) => evalIn(page, `(async () => {
 
 export const installPageTrace = async (ctx, onAuthenticatorReturn) => {
   const listener = (method, params) => {
-    if (method !== 'Runtime.bindingCalled' || params?.name !== '__peerdHostMilestone') return;
+    if (method !== 'Runtime.bindingCalled' || params?.name !== '__mcdollarHostMilestone') return;
     try {
       const payload = JSON.parse(params.payload);
       if (payload?.stage === 'authenticator-return') onAuthenticatorReturn();
     } catch { /* malformed page diagnostics cannot satisfy the milestone */ }
   };
   ctx.page.on(listener);
-  await ctx.page.send('Runtime.addBinding', { name: '__peerdHostMilestone' });
+  await ctx.page.send('Runtime.addBinding', { name: '__mcdollarHostMilestone' });
   await evalIn(ctx.page, `(() => {
-    window.__peerdPasskeyTrace = [];
+    window.__mcdollarPasskeyTrace = [];
     let lastStage = '';
     let authenticatorReported = false;
     const record = () => {
-      const bootStage = document.documentElement.dataset.peerdBootStage || '';
+      const bootStage = document.documentElement.dataset.mcdollarBootStage || '';
       if (bootStage && bootStage !== lastStage) {
         lastStage = bootStage;
-        window.__peerdPasskeyTrace.push({ stage: bootStage, pageAt: performance.now() });
+        window.__mcdollarPasskeyTrace.push({ stage: bootStage, pageAt: performance.now() });
       }
       const text = document.body?.innerText || '';
       if (!authenticatorReported
           && text.includes('Passkey verified. Finishing secure vault setup…')) {
         authenticatorReported = true;
-        window.__peerdPasskeyTrace.push({
+        window.__mcdollarPasskeyTrace.push({
           stage: 'authenticator-return', pageAt: performance.now(),
         });
-        window.__peerdHostMilestone(JSON.stringify({ stage: 'authenticator-return' }));
+        window.__mcdollarHostMilestone(JSON.stringify({ stage: 'authenticator-return' }));
       }
     };
     new MutationObserver(record).observe(document.documentElement, {
       subtree: true, childList: true, characterData: true, attributes: true,
-      attributeFilter: ['data-peerd-boot-stage'],
+      attributeFilter: ['data-mcdollar-boot-stage'],
     });
     record();
   })()`);
@@ -457,7 +457,7 @@ export async function runPackagedPasskeySignup({
       );
     }
     fixture = await startOllamaAcceptanceFixture();
-    ctx = await launchPeerd({
+    ctx = await launchMcdollar({
       extensionDir: treePath,
       interceptModel: false,
       captureBootTimeline: true,

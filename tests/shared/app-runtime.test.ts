@@ -21,12 +21,12 @@ test('malformed declarations fail instead of becoming legacy unspecified', () =>
   expect(() => assertAppRuntime(core, [])).toThrow('unavailable');
 });
 
-test('runtime extraction comes from the actual peerd.json bytes', () => {
-  const files = { 'peerd.json': new TextEncoder().encode(JSON.stringify({ runtime: core })) };
+test('runtime extraction comes from the actual mcdollar.json bytes', () => {
+  const files = { 'mcdollar.json': new TextEncoder().encode(JSON.stringify({ runtime: core })) };
   expect(appRuntimeFromFiles(files)).toEqual(core);
   expect(appRuntimeFromFiles({ 'index.html': 'legacy' })).toBeUndefined();
-  expect(() => appRuntimeFromFiles({ 'peerd.json': '{bad' })).toThrow('valid JSON');
-  expect(() => appRuntimeFromFiles({ 'peerd.json': new Uint8Array([255]) })).toThrow('valid UTF-8');
+  expect(() => appRuntimeFromFiles({ 'mcdollar.json': '{bad' })).toThrow('valid JSON');
+  expect(() => appRuntimeFromFiles({ 'mcdollar.json': new Uint8Array([255]) })).toThrow('valid UTF-8');
   expect(() => assertAppRuntimeAgreement(undefined, core)).toThrow('signed version');
   expect(() => assertAppRuntimeAgreement(core, { ...core, requires: [] })).toThrow('signed version');
 });

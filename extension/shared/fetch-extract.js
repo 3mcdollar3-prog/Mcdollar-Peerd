@@ -1,6 +1,6 @@
 // @ts-check
 // shared/fetch-extract.js — the post-fetch `extract` step for code mode's
-// bridged fetch: peerd.egress.fetch(url, { extract: 'markdown' }).
+// bridged fetch: mcdollar.egress.fetch(url, { extract: 'markdown' }).
 //
 // why here (shared/) and IO-injected: the sealed worker's fetch bridge has two
 // hosts — the offscreen job runner (script) applies extraction against the
@@ -35,7 +35,7 @@ import { responseTextDecoder } from './abort.js';
  */
 
 // Only 'markdown' ships (design 02 open question 2: 'text' is a stripTags call
-// away in peerd:std). Any other value is treated as absent so a future mode
+// away in mcdollar:std). Any other value is treated as absent so a future mode
 // can never silently change bytes on a build that doesn't know it.
 /** @param {unknown} value @returns {'markdown' | undefined} */
 const normalizeExtract = (value) => (value === 'markdown' ? 'markdown' : undefined);

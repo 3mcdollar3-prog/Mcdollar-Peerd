@@ -4,7 +4,7 @@ import {
   createKernelSiteClientRoutes,
   makeKernelVoiceAuditRoute,
 } from '../../extension/background/kernel-utility-routes.js';
-import { createSiteClientStore } from '../../extension/peerd-runtime/site-clients/store.js';
+import { createSiteClientStore } from '../../extension/mcdollar-runtime/site-clients/store.js';
 
 beforeAll(async () => { await useFakeIndexedDB(); });
 let sequence = 0;

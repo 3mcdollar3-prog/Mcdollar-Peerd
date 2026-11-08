@@ -15,7 +15,7 @@ export const APP_RUNTIME_STATES = ['legacy', 'core', 'simd', 'unsupported'].map(
   name: `app-runtime-${variant}`, kind: 'functional', phase: 'post-unlock',
   responder: (callIndex) => ({ sse: callIndex === 0 ? sseToolCall('sandbox_create', {
     kind: 'app', name: `Runtime ${variant}`, files: {
-      'peerd.json': descriptor(variant === 'legacy' ? undefined : variant === 'core' ? core : variant === 'simd' ? simd : unsupported),
+      'mcdollar.json': descriptor(variant === 'legacy' ? undefined : variant === 'core' ? core : variant === 'simd' ? simd : unsupported),
       'index.html': '<!doctype html><title>Runtime canary</title><script>parent.postMessage({runtimeCanary:"executed"},"*")</script>',
     },
   }) : sseText('RUNTIME-READY') }),
@@ -80,7 +80,7 @@ export const APP_RUNTIME_STATES = ['legacy', 'core', 'simd', 'unsupported'].map(
         // the next host document must read the edited descriptor, not a cached
         // installation declaration or the preceding runner's successful probe.
         const edited = await rpc(page, { type: 'app/editor-write', appId,
-          path: 'peerd.json', content: descriptor(unsupported) });
+          path: 'mcdollar.json', content: descriptor(unsupported) });
         rec.check('local descriptor edit accepted', edited?.ok === true, JSON.stringify(edited));
         await inspect(true);
       }

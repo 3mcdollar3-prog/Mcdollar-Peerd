@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import { makeGoalRunner, GOAL_RUNS_KEY } from '../../extension/peerd-runtime/loop/goal-runner.js';
-import { makeTurnSlots } from '../../extension/peerd-runtime/loop/turn-slots.js';
+import { makeGoalRunner, GOAL_RUNS_KEY } from '../../extension/mcdollar-runtime/loop/goal-runner.js';
+import { makeTurnSlots } from '../../extension/mcdollar-runtime/loop/turn-slots.js';
 import { makeSessionRoutes } from '../../extension/background/routes/sessions.js';
 import { createKernelTurnRuntime } from '../../extension/background/kernel-turn-runtime.js';
-import { makeAgentSendCustody } from '../../extension/peerd-egress/storage/session-cache.js';
+import { makeAgentSendCustody } from '../../extension/mcdollar-egress/storage/session-cache.js';
 
 const deferred = <T>() => {
   let resolve!: (value: T) => void;

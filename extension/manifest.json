@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "peerd (dev)",
+  "name": "mcdollar (dev)",
   "version": "0.10.0",
   "description": "An AI assistant that automates tasks in your browser. Local-first: your own API key, no account, no servers, no tracking.",
   "side_panel": {
@@ -50,7 +50,7 @@
     "value": "same-origin"
   },
   "action": {
-    "default_title": "peerd (dev)",
+    "default_title": "mcdollar (dev)",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
@@ -59,12 +59,12 @@
     }
   },
   "commands": {
-    "pull-in-peerd": {
+    "pull-in-mcdollar": {
       "suggested_key": {
         "default": "Alt+Shift+P",
         "mac": "Command+Shift+P"
       },
-      "description": "Toggle the peerd side panel"
+      "description": "Toggle the mcdollar side panel"
     }
   },
   "web_accessible_resources": [

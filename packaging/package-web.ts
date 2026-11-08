@@ -16,7 +16,7 @@
 //      REFUSING any path
 //      collision with staged source (shadowing = silent fork; fail loudly)
 //   5. stamp build.json ({version, buildId, gitHead}) and rewrite sw.js's
-//      __PEERD_WEB_*__ tokens (per-build cache name + generated precache list)
+//      __MCDOLLAR_WEB_*__ tokens (per-build cache name + generated precache list)
 //   6. run check-web-boundary over the assembled tree
 
 import {
@@ -141,7 +141,7 @@ export const buildWebTarget = async (): Promise<void> => {
 
   // Generated + swapped channel files. Web flavor = CHANNEL "web",
   // DWEB_ENABLED false: the agent-side dweb gate stays shut (loader stubbed),
-  // and peerd-distributed itself is not staged at all (web-target.ts).
+  // and mcdollar-distributed itself is not staged at all (web-target.ts).
   writeFileSync(join(WEB_DIST, 'shared', 'channel-config.js'), genChannelConfigSource('web'));
   copyFileSync(STORE_LOADER_TEMPLATE, join(WEB_DIST, 'shared', 'dweb-loader.js'));
 
@@ -176,8 +176,8 @@ export const buildWebTarget = async (): Promise<void> => {
     .map((rel) => '/' + rel)];
   const swPath = join(WEB_DIST, 'sw.js');
   const swSrc = readFileSync(swPath, 'utf8');
-  if (!swSrc.includes('__PEERD_WEB_BUILD__') || !swSrc.includes('__PEERD_WEB_PRECACHE__')) {
-    throw new Error('web-shell/sw.js is missing a __PEERD_WEB_*__ stamp token; the SW template drifted.');
+  if (!swSrc.includes('__MCDOLLAR_WEB_BUILD__') || !swSrc.includes('__MCDOLLAR_WEB_PRECACHE__')) {
+    throw new Error('web-shell/sw.js is missing a __MCDOLLAR_WEB_*__ stamp token; the SW template drifted.');
   }
   // quote-agnostic: match the PRECACHE token however it is quoted, then assert
   // NOTHING token-shaped survived — a quoting change in sw.js must fail the
@@ -185,10 +185,10 @@ export const buildWebTarget = async (): Promise<void> => {
   // JSON.parse of the literal throws, is caught, and the page loses its
   // entire precache with every gate green).
   const stamped = swSrc
-    .replace('__PEERD_WEB_BUILD__', buildId)
-    .replace(/['"`]__PEERD_WEB_PRECACHE__['"`]/, JSON.stringify(JSON.stringify(precache)));
-  if (stamped.includes('__PEERD_WEB_BUILD__') || stamped.includes('__PEERD_WEB_PRECACHE__')) {
-    throw new Error('web-shell/sw.js stamp did not apply; a __PEERD_WEB_*__ token is malformed in the SW template.');
+    .replace('__MCDOLLAR_WEB_BUILD__', buildId)
+    .replace(/['"`]__MCDOLLAR_WEB_PRECACHE__['"`]/, JSON.stringify(JSON.stringify(precache)));
+  if (stamped.includes('__MCDOLLAR_WEB_BUILD__') || stamped.includes('__MCDOLLAR_WEB_PRECACHE__')) {
+    throw new Error('web-shell/sw.js stamp did not apply; a __MCDOLLAR_WEB_*__ token is malformed in the SW template.');
   }
   writeFileSync(swPath, stamped);
 

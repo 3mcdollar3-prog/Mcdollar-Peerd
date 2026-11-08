@@ -1,11 +1,11 @@
 // Release diagnostic: a refused candidate must not cost an established edge.
 // Uses authenticated sessions and a deterministic clock; no native ICE required.
 import assert from 'node:assert/strict';
-import {generateIdentity} from '../../extension/peerd-distributed/identity/keypair.js';
-import {createRoomMesh} from '../../extension/peerd-distributed/transport/mesh.js';
-import {createSession} from '../../extension/peerd-distributed/transport/session.js';
-import {memoryPair} from '../../extension/peerd-distributed/transport/channel.js';
-import {NEIGHBOR_GRACE_MS} from '../../extension/peerd-distributed/transport/neighbor-policy.js';
+import {generateIdentity} from '../../extension/mcdollar-distributed/identity/keypair.js';
+import {createRoomMesh} from '../../extension/mcdollar-distributed/transport/mesh.js';
+import {createSession} from '../../extension/mcdollar-distributed/transport/session.js';
+import {memoryPair} from '../../extension/mcdollar-distributed/transport/channel.js';
+import {NEIGHBOR_GRACE_MS} from '../../extension/mcdollar-distributed/transport/neighbor-policy.js';
 const identities=await Promise.all(Array.from({length:4},()=>generateIdentity()));
 let now=1;
 const events=[];

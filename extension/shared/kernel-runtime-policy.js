@@ -25,7 +25,7 @@ export const RUNTIME_DISPATCH_MANIFEST = Object.freeze({
       }),
     }),
     authority: Object.freeze({
-      ownerId: 'peerd-authority-kernel',
+      ownerId: 'mcdollar-authority-kernel',
       target: 'kernel-runtime',
       replayClass: 'A',
     }),
@@ -38,7 +38,7 @@ export const RUNTIME_DISPATCH_MANIFEST = Object.freeze({
     maxDurationMs: 10_000,
     effects: Object.freeze({}),
     authority: Object.freeze({
-      ownerId: 'peerd-authority-kernel',
+      ownerId: 'mcdollar-authority-kernel',
       target: 'kernel-runtime',
       replayClass: 'A',
     }),
@@ -117,7 +117,7 @@ export const RUNTIME_DISPATCH_MANIFEST = Object.freeze({
       }),
     }),
     authority: Object.freeze({
-      ownerId: 'peerd-authority-kernel',
+      ownerId: 'mcdollar-authority-kernel',
       target: 'kernel-runtime-rich-relay',
       replayClass: 'E',
     }),
@@ -138,7 +138,7 @@ export const RUNTIME_DISPATCH_MANIFEST = Object.freeze({
       }),
     }),
     authority: Object.freeze({
-      ownerId: 'peerd-authority-kernel',
+      ownerId: 'mcdollar-authority-kernel',
       target: 'kernel-runtime-rich-abort',
       replayClass: 'E',
     }),

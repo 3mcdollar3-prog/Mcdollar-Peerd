@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { makeSessionRoutes } from '../../extension/background/routes/sessions.js';
-import { makeAgentSendCustody } from '../../extension/peerd-egress/background.js';
+import { makeAgentSendCustody } from '../../extension/mcdollar-egress/background.js';
 
 // session/agent/composer/actor routes — moved verbatim. Pin the slash-command
 // short-circuits in agent/send, the vault gates, actor list-filtering, and

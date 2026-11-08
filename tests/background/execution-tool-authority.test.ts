@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { createExecutionToolAuthority } from '../../extension/background/execution-tool-authority.js';
 import { createVmTabTracker } from '../../extension/background/tab-tracker.js';
-import { createVmRegistry, VMBootFailedError } from '../../extension/peerd-engine/background.js';
+import { createVmRegistry, VMBootFailedError } from '../../extension/mcdollar-engine/background.js';
 import { createStorageStub } from '../setup.ts';
 import {
   snapshotControllerTurnAuthorityBinding, projectControllerTurnAuthorityClass,

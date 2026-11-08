@@ -1,7 +1,7 @@
 /* home.css: the full-tab SPA shell (DESIGN-12). A left rail switches between
    the agent Chat and the Library / Discover / Network sections; the content
    area swaps per selection. Monochrome per the brand rule; color rides only
-   on the wordmark and peerd orbs (including live Actor Space nodes). Base
+   on the wordmark and mcdollar orbs (including live Actor Space nodes). Base
    component styling (cards, inputs, the chat surface) comes from styles.css;
    the locked-vault gate comes from options.css. */
 
@@ -136,8 +136,8 @@
 
 /* --- Actors: the instance-wide, full-screen runtime map ------------------ *
  * The compact chat fabric answers "what is this chat delegating?"; this room
- * view answers "what is peerd running anywhere?". Cards remain grayscale.
- * Live contexts carry the sanctioned five-color peerd orb, so the playful
+ * view answers "what is mcdollar running anywhere?". Cards remain grayscale.
+ * Live contexts carry the sanctioned five-color mcdollar orb, so the playful
  * color moment is still the brand mark rather than a second status language. */
 .home-content--actors {
   background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
@@ -643,13 +643,13 @@
 }
 
 /* --- Contacts (home/contacts-section.js) --------------------------------- *
- * Rides the shared .peerd-disc-row skeleton (options.css). contact-row adds
+ * Rides the shared .mcdollar-disc-row skeleton (options.css). contact-row adds
  * an avatar + an inline-editable name + an expandable activity panel; the
  * panel takes a full row via flex-wrap so it drops BELOW the row contents. */
 .contact-row { flex-wrap: wrap; align-items: center; }
 /* why a basis: the key of a person with no name must show in full. On a
  * narrow row the buttons move under the name instead of cutting it. */
-.contact-row .peerd-disc-meta { flex: 1 1 72px; }
+.contact-row .mcdollar-disc-meta { flex: 1 1 72px; }
 .contact-avatar {
   width: 30px; height: 30px; border-radius: 50%; flex: none;
   display: flex; align-items: center; justify-content: center;
@@ -682,8 +682,8 @@
 .contact-tech summary { cursor: pointer; font-size: 12px; color: var(--fg-muted); }
 .contact-tech .contact-did { margin-top: 6px; }
 /* why plain words under a name: only the short key is a code. */
-.contacts .peerd-disc-pub { font-family: inherit; }
-.contacts .peerd-disc-pub .contact-key { font-size: inherit; }
+.contacts .mcdollar-disc-pub { font-family: inherit; }
+.contacts .mcdollar-disc-pub .contact-key { font-size: inherit; }
 .contact-activity { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
 .contact-stat-label { color: var(--fg); }
 .contact-app { color: var(--fg-muted); }
@@ -734,7 +734,7 @@
    (sidepanel/styles.css). why wider here: in the 420px column, the security
    key label broke onto two lines at 300px. */
 .auth-actions:not(.auth-actions--row) { width: min(100%, 360px); }
-/* The boot shell ("Starting secure vault…", "Opening peerd…") shows before
+/* The boot shell ("Starting secure vault…", "Opening mcdollar…") shows before
    and after the gate. why at the gate's height: in the center of the tab,
    the wordmark jumped down and back up. 74px is the lock chip (42px) and its
    margins (8px + 24px) above the gate's wordmark. */
@@ -766,7 +766,7 @@
 }
 .home-panel-bar button { margin-left: auto; }
 
-/* "Keep peerd as the first tab": the one-time offer after onboarding (its
+/* "Keep mcdollar as the first tab": the one-time offer after onboarding (its
    look is in styles.css, shared with the side panel) and the one-time hint
    in the pinned tab (a dark card, as in the design). Both sit above the
    content. why sticky: the content scrolls, for example when the chat
@@ -882,7 +882,7 @@
   to { max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; border-width: 0; }
 }
 
-/* peerd notifications — rail bell (count + dropdown) and an in-chat banner. */
+/* mcdollar notifications — rail bell (count + dropdown) and an in-chat banner. */
 .notif { position: relative; }
 /* .notif-bell's layout lives with .home-rail-action near the top of this file
    (one rule for all three rail action rows), BEFORE the narrow-rail media

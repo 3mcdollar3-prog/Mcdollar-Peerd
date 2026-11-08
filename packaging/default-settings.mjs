@@ -34,7 +34,7 @@ export const defaults = {
   // surprise them. (Deliberate deviation from the spec's illustrative
   // "voice auto-on for preview" example.)
   voiceEnabled: { store: false, preview: false },
-  // why: peerd ships exactly ONE Moonshine model — `base`, the more
+  // why: mcdollar ships exactly ONE Moonshine model — `base`, the more
   // accurate of upstream's two real variants (there is no 'small'/'tiny'
   // shipped). The key is retained for storage back-compat; any other
   // value is coerced to `base` at every read (normalizeVariant). The old
@@ -63,7 +63,7 @@ export const defaults = {
   // Verbose VM diagnostics (Settings → Behavior). OFF by default on BOTH
   // channels — its own UI copy already calls it "extra noise". On, it surfaces
   // the one-time wrapper install/verify output in the WebVM terminal at boot;
-  // it does NOT trace the shell (no `set -x` — that used to leak peerd's
+  // it does NOT trace the shell (no `set -x` — that used to leak mcdollar's
   // internal markers + bridge plumbing into every interactive command). The
   // verify results reach the boot LOG regardless, so debugging keeps its signal.
   devMode: { store: false, preview: false },
@@ -124,8 +124,8 @@ export const defaults = {
   advancedAutomationEnabled: { store: false, preview: true },
 
   // Watch mode (background/watch-mode.js): the OPT-IN inverse of DESIGN-12's
-  // no-focus-steal. OFF by default — peerd drives its tab in the background so
-  // it never interrupts you. Toggle it on from the side-panel top bar and peerd
+  // no-focus-steal. OFF by default — mcdollar drives its tab in the background so
+  // it never interrupts you. Toggle it on from the side-panel top bar and mcdollar
   // brings the agent's current tab to the foreground and FOLLOWS it as the agent
   // moves between tabs, so you watch the real page live (the browser is the
   // viewer — no screenshot/capture, no new permission, both channels). Off both
@@ -134,8 +134,8 @@ export const defaults = {
 
   frontDoorView: { store: 'panel', preview: 'panel' },
 
-  // "Keep peerd as the first tab" (background/kernel-first-tab.js): one pinned
-  // Home tab at the start of each window, so peerd is one click away. OFF on
+  // "Keep mcdollar as the first tab" (background/kernel-first-tab.js): one pinned
+  // Home tab at the start of each window, so mcdollar is one click away. OFF on
   // BOTH channels: it adds a tab to every new window, so it is the user's
   // choice. Home offers it once after onboarding; Settings, Behavior has the
   // switch. firstTabOffered records that the user answered that offer.
@@ -197,7 +197,7 @@ export const defaults = {
   //
   // OFF on both channels for now, and deliberately so: it changes the web
   // actor's output CONTRACT (prompt half + validator are one switch —
-  // peerd-runtime/loop/system-prompt.js SCHEMA_REPLY_RULE arms with it), and a
+  // mcdollar-runtime/loop/system-prompt.js SCHEMA_REPLY_RULE arms with it), and a
   // model that drifts from the envelope has its reply dropped. It ships wired
   // and one flip from live so it can be exercised end-to-end; the default moves
   // only after that field evidence, not before.
@@ -245,7 +245,7 @@ export const defaults = {
   vaultAutoLockMs: { store: 2700000, preview: 2700000 },
 
   // Audit-log retention cap (entry count; oldest pruned first, amortized
-  // on append — peerd-egress/audit/retention.js). NOT a user setting:
+  // on append — mcdollar-egress/audit/retention.js). NOT a user setting:
   // the SW reads it straight from CHANNEL_DEFAULTS at audit-log
   // construction, so stored settings never override it; it lives here so
   // a channel COULD diverge. Retention depth isn't a safety floor
@@ -255,8 +255,8 @@ export const defaults = {
 
   // ── preview-only keys ──────────────────────────────────────────────
   // Self-update check at startup (background/kernel-preview-addon.js). Preview
-  // installs are self-hosted (update_url → the peerd.ai feeds → GitHub
-  // release artifacts), and peerd's offscreen keepalive holds the MV3 SW
+  // installs are self-hosted (update_url → the mcdollar.ai feeds → GitHub
+  // release artifacts), and mcdollar's offscreen keepalive holds the MV3 SW
   // alive - the exact state where Chrome parks a downloaded extension
   // update waiting for an "idle" that never comes. ON by default on
   // preview: testers should just be current. Chrome checks + reloads when

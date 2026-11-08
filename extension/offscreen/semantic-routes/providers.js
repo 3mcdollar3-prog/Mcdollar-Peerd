@@ -1,6 +1,6 @@
 // @ts-check
 
-import { PROVIDER_METADATA } from '/peerd-provider/controller.js';
+import { PROVIDER_METADATA } from '/mcdollar-provider/controller.js';
 
 /**
  * @param {string} route

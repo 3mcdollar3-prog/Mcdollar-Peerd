@@ -1,6 +1,6 @@
 // @ts-check
 // Instance-wide Actor Space. Unlike the compact chat fabric, this full-screen
-// monitor intentionally spans every active root session in this peerd instance.
+// monitor intentionally spans every active root session in this mcdollar instance.
 // Its input is the SW-owned projection, never actor-authored claims.
 
 import m from '/vendor/mithril/mithril.js';
@@ -36,7 +36,7 @@ const actorNode = (node, selectedId, select) => m('button.actor-space-node', {
   'aria-label': `${node.label}: ${node.name}; ${nodeStatus(node)}`,
   onclick: () => select(node),
 }, [
-  m('span.peerd-spinner.actor-space-node-orb', { 'aria-hidden': 'true' }),
+  m('span.mcdollar-spinner.actor-space-node-orb', { 'aria-hidden': 'true' }),
   m('span.actor-space-node-copy', [
     m('span.actor-space-node-topline', [
       m('span.actor-space-node-kind', node.label),
@@ -133,7 +133,7 @@ const orchestratorRoom = (
   }, [
     m('header.actor-space-room-head', [
       m('.actor-space-room-identity', [
-        m('span.peerd-spinner.actor-space-room-orb', { 'aria-hidden': 'true' }),
+        m('span.mcdollar-spinner.actor-space-room-orb', { 'aria-hidden': 'true' }),
         m('div', [
           m('span.actor-space-room-kicker', 'Orchestrator'),
           m('h2', root.session?.title?.trim() || 'Untitled chat'),
@@ -342,7 +342,7 @@ export const ActorsSection = {
         m('.actor-space-hero-copy', [
           m('span.actor-space-eyebrow', 'Live instance map'),
           m('h1#actor-space-title', 'Actors'),
-          m('p', 'Every active orchestrator and isolated worker in this peerd instance, across every chat.'),
+          m('p', 'Every active orchestrator and isolated worker in this mcdollar instance, across every chat.'),
         ]),
         m('.actor-space-summary', { 'aria-label': 'Actor totals' }, [
           m('.actor-space-stat', [m('strong', String(roots.length)),
@@ -352,8 +352,8 @@ export const ActorsSection = {
         ]),
       ]),
       m('.actor-space-trust-line', [
-        m('span.peerd-spinner.peerd-spinner--sm', { 'aria-hidden': 'true' }),
-        m('span', 'Live from peerd runtime · worker boundaries are physical, access is server-resolved'),
+        m('span.mcdollar-spinner.mcdollar-spinner--sm', { 'aria-hidden': 'true' }),
+        m('span', 'Live from mcdollar runtime · worker boundaries are physical, access is server-resolved'),
         m('button.actor-space-refresh', {
           type: 'button', disabled: ui.loading, onclick: () => void ui.load(true),
         }, ui.loading ? 'Refreshing…' : 'Refresh'),
@@ -362,10 +362,10 @@ export const ActorsSection = {
         ui.announcement),
       ui.error ? m('.actor-space-error', { role: 'alert' }, `Could not refresh actors: ${ui.error}`) : null,
       ui.loading && !ui.overview
-        ? m('.actor-space-loading', [m('span.peerd-spinner', { 'aria-hidden': 'true' }), 'Mapping actors…'])
+        ? m('.actor-space-loading', [m('span.mcdollar-spinner', { 'aria-hidden': 'true' }), 'Mapping actors…'])
         : roots.length === 0
           ? m('.actor-space-empty', [
-              m('span.peerd-spinner.actor-space-empty-orb', { 'aria-hidden': 'true' }),
+              m('span.mcdollar-spinner.actor-space-empty-orb', { 'aria-hidden': 'true' }),
               m('h2', 'The instance is quiet'),
               m('p', 'When any chat starts reasoning or delegates work, its orchestrator and actors will appear here.'),
             ])

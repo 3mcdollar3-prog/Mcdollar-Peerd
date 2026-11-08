@@ -133,7 +133,7 @@ describe('Firefox direct controller adapter', () => {
       newId: ids('inner-one', 'inner-two'),
       createWorker: (url, options) => {
         expect(url).toBe('moz-extension://id/offscreen/controller-worker.js');
-        expect(options).toMatchObject({ type: 'module', name: 'peerd-controller' });
+        expect(options).toMatchObject({ type: 'module', name: 'mcdollar-controller' });
         const generation = created.length + 1;
         created.push(generation);
         return makeWorker(generation, terminated);

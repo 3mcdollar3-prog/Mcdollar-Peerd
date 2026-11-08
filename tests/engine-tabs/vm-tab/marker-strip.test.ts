@@ -1,8 +1,8 @@
 import { describe, test, expect } from 'bun:test';
-import { stripChunk, peerdTailLen, stripPeerdMarkers } from '../../../extension/engine-tabs/vm-tab/marker-strip.js';
+import { stripChunk, mcdollarTailLen, stripMcdollarMarkers } from '../../../extension/engine-tabs/vm-tab/marker-strip.js';
 import { buildWrappedCommand } from '../../../extension/engine-tabs/vm-tab/run-capture.js';
 
-// The WebVM terminal must show clean command output: peerd's wrapped-run
+// The WebVM terminal must show clean command output: mcdollar's wrapped-run
 // machinery (run-capture.js) types a `{ cmd\n} 2>'<errfile>'; printf …` block —
 // the wrapper line's ECHO (with its PS2 `> ` prompt) and the three marker
 // OUTPUT lines (`<marker>:<exit>`, `<marker>-err`, `<marker>-end`) are stripped
@@ -11,8 +11,8 @@ import { buildWrappedCommand } from '../../../extension/engine-tabs/vm-tab/run-c
 // boundary — a boundary landing inside the machinery used to leak crumbs into
 // the terminal (and eat the real output line with them). These pin that down.
 
-const MARKER = '___PEERD_p5m46sghpw_mqyj4wy9___';
-const ERRFILE = '/tmp/.peerd-stderr-ab12cd34';
+const MARKER = '___MCDOLLAR_p5m46sghpw_mqyj4wy9___';
+const ERRFILE = '/tmp/.mcdollar-stderr-ab12cd34';
 const CMD = 'python3 -c "print(sum(range(1,101)))"';
 // The echoed input: line 1 is `{ cmd`, line 2 the wrapper (echoed behind the
 // PS2 `> ` continuation prompt the open group makes bash draw). Derive it from
@@ -43,16 +43,16 @@ const feed = (chunks: string[]): string => {
 };
 
 const noCrumbs = (s: string) => {
-  expect(s.includes('PEERD')).toBe(false);
+  expect(s.includes('MCDOLLAR')).toBe(false);
   expect(s.includes("printf '")).toBe(false);
   expect(s.includes('%s:%s')).toBe(false);
   expect(s.includes('"$?"')).toBe(false);
-  expect(s.includes('.peerd-stderr-')).toBe(false);
+  expect(s.includes('.mcdollar-stderr-')).toBe(false);
 };
 
 // The marker lines' LEADING newlines are ambiguous with real line-ending
 // newlines when streamed byte-at-a-time, so an adversarial split landing
-// exactly between one and `___PEERD_` can leave a cosmetic blank line (a real
+// exactly between one and `___MCDOLLAR_` can leave a cosmetic blank line (a real
 // PTY delivers each printf whole, so this never happens in practice — and
 // holding trailing newlines to kill it would lag live output). The marker
 // MACHINERY never leaks; only a blank line might.
@@ -60,7 +60,7 @@ const collapseBlankRuns = (s: string) => s.replace(/\n\n+/g, '\n');
 
 describe('marker-strip — whole-buffer', () => {
   test('strips the wrapper echo (PS2 included) + all three marker lines, keeps output and stderr', () => {
-    expect(stripPeerdMarkers(STREAM)).toBe(CLEAN);
+    expect(stripMcdollarMarkers(STREAM)).toBe(CLEAN);
   });
 
   test('a single chunk is stripped clean', () => {
@@ -69,12 +69,12 @@ describe('marker-strip — whole-buffer', () => {
 
   test('\\r\\n line endings strip the same', () => {
     const crlf = STREAM.replace(/\n/g, '\r\n');
-    expect(stripPeerdMarkers(crlf)).toBe(CLEAN.replace(/\n/g, '\r\n'));
+    expect(stripMcdollarMarkers(crlf)).toBe(CLEAN.replace(/\n/g, '\r\n'));
   });
 
   test('empty stderr leaves just the command + output', () => {
     const stream = CMD_ECHO + WRAP_ECHO + OUTPUT + MARKER_OUT + ERR_OPEN + ERR_CLOSE;
-    expect(stripPeerdMarkers(stream)).toBe(CMD_ECHO + OUTPUT);
+    expect(stripMcdollarMarkers(stream)).toBe(CMD_ECHO + OUTPUT);
   });
 });
 
@@ -94,9 +94,9 @@ describe('marker-strip — chunk boundaries (the leak)', () => {
   });
 
   test('a boundary INSIDE the wrapper echo holds the whole line, PS2 prefix included', () => {
-    // tail ends mid-errfile: `> } 2>'/tmp/.peerd-s` — the echo is incomplete.
-    const buf = CMD_ECHO + `> } 2>'/tmp/.peerd-s`;
-    const hold = peerdTailLen(buf);
+    // tail ends mid-errfile: `> } 2>'/tmp/.mcdollar-s` — the echo is incomplete.
+    const buf = CMD_ECHO + `> } 2>'/tmp/.mcdollar-s`;
+    const hold = mcdollarTailLen(buf);
     const heldTail = buf.slice(buf.length - hold);
     // The whole echo (PS2 included) is held — NOT just from `}`, which would
     // flush the `> ` and leak it as a stray prompt.
@@ -108,7 +108,7 @@ describe('marker-strip — chunk boundaries (the leak)', () => {
   test('a boundary INSIDE a section marker holds it (-err and -end forms)', () => {
     for (const partial of [`${MARKER}-e`, `${MARKER}-err`, `${MARKER}-en`, `${MARKER}-end`]) {
       const buf = OUTPUT + partial;
-      const hold = peerdTailLen(buf);
+      const hold = mcdollarTailLen(buf);
       expect(buf.slice(0, buf.length - hold)).toBe(OUTPUT.slice(0, -1)); // trailing \n held with the marker
     }
   });
@@ -145,7 +145,7 @@ describe('marker-strip — chunk boundaries on the CRLF wire (tty ONLCR)', () =>
     // Pre-fix, `<marker>:0\r` was NOT held (the prefix matcher rejected the
     // trailing \r) and the whole marker line leaked into the terminal.
     const buf = `${OUTPUT.replace(/\n/g, '\r\n')}\r\n${MARKER}:0\r`;
-    const hold = peerdTailLen(buf);
+    const hold = mcdollarTailLen(buf);
     expect(buf.slice(buf.length - hold)).toBe(`\r\n${MARKER}:0\r`);
   });
 });
@@ -160,7 +160,7 @@ describe('marker-strip — does not over-hold', () => {
   // diverging next char releases it, so a user typing at a real continuation
   // lags one keystroke at most.
   test('a bare PS2 is held, then released as soon as the line diverges', () => {
-    expect(peerdTailLen('> ')).toBe(2);
+    expect(mcdollarTailLen('> ')).toBe(2);
     expect(feed(['> ', 'ls\n'])).toBe('> ls\n');
   });
 

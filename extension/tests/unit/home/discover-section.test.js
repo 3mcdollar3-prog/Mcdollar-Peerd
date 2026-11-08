@@ -23,20 +23,20 @@ import { DiscoverSection } from '/home/discover-section.js';
  *   lease:string, heardFails:boolean, libraryFails:boolean, changedHere:string[]}} HostState
  */
 
-const KEY = 'peerd.manual-app-install.pending';
+const KEY = 'mcdollar.manual-app-install.pending';
 const READS = Object.freeze(['bootstrap/ready', 'dweb/distributed/info', 'dweb/base/heard', 'apps/list', 'contacts/list', 'dweb/blocked-peers',
   'dweb/app-local-changes', 'dweb/base/install-status']);
-const UNKNOWN_INSTALL = 'peerd is not sure the install finished. It may still finish by itself.';
-const RECEIPT_HELD = 'peerd is not sure the install finished. It may still finish by itself. Install stays off until peerd knows.';
+const UNKNOWN_INSTALL = 'mcdollar is not sure the install finished. It may still finish by itself.';
+const RECEIPT_HELD = 'mcdollar is not sure the install finished. It may still finish by itself. Install stays off until mcdollar knows.';
 const NO_SUGGESTION = 'No new suggestions here. Show all apps, then try again.';
 const ALL_IN_LIBRARY = 'No new suggestions. Every app here is already in your Library.';
 const MAKER_EMPTY = 'This maker’s apps show up here when the people you are connected to share them.';
 const OFFLINE_EMPTY = 'You can still open the apps in your Library. New apps need the peer network.';
-const COMMONS_UNKNOWN = 'peerd is not sure the Chat rooms app was added or opened. Check your Library and your tabs before you try again.';
-const COMMONS_FAILED = 'peerd could not add or open the Chat rooms app. Try again.';
+const COMMONS_UNKNOWN = 'mcdollar is not sure the Chat rooms app was added or opened. Check your Library and your tabs before you try again.';
+const COMMONS_FAILED = 'mcdollar could not add or open the Chat rooms app. Try again.';
 const KEEPS_GOING = 'You can leave this page. The install keeps going.';
-const OPEN_FAILED = 'peerd could not open this app. Try again.';
-const WASM_HINT = 'The WebAssembly hint comes from the maker. peerd does not check it.';
+const OPEN_FAILED = 'mcdollar could not open this app. Try again.';
+const WASM_HINT = 'The WebAssembly hint comes from the maker. mcdollar does not check it.';
 /** @param {number} n */
 const didOf = (n) => encodeDidKey(new Uint8Array(32).fill(n));
 const ANA = didOf(1);
@@ -53,7 +53,7 @@ const SELF = didOf(9);
 const card = (id, name, publisher, extra = {}) => {
   const version = extra.version_id ?? `${id}-v1`;
   return {
-    dwapp_id: id, name, publisher, slug: id, seq: 1, version_id: version, uri: `peerd://${publisher}/${version}`, description: '', ...extra,
+    dwapp_id: id, name, publisher, slug: id, seq: 1, version_id: version, uri: `mcdollar://${publisher}/${version}`, description: '', ...extra,
   };
 };
 /** @param {string} id @param {DwebApp} app @param {Record<string, unknown>} [dweb] @returns {LibraryRow} */
@@ -228,9 +228,9 @@ describe('home.discover start list', () => {
       await settle();
       expect(el(view.root, 'h1').textContent).toBe('Discover');
       expect(view.root.querySelectorAll('li.disc-start-row').length).toBe(3);
-      for (const line of ['Try an app that comes with peerd', 'See apps other people share', 'Open an app a friend sent you',
+      for (const line of ['Try an app that comes with mcdollar', 'See apps other people share', 'Open an app a friend sent you',
         `Add the ${packagedStarter('csv-lab')?.name} app to your Library, then open it from there. It needs no network and no setup.`,
-        'Turn on the peer network to connect straight to other people who use peerd. There is no central store.',
+        'Turn on the peer network to connect straight to other people who use mcdollar. There is no central store.',
         'It uses some internet and storage, and other people can see your network address. Your files, chats and keys stay private.',
         'Paste the link they shared. You can look at the app before you install it. This needs the peer network.']) {
         expect(text(view.root)).toContain(line);
@@ -260,7 +260,7 @@ describe('home.discover start list', () => {
       enable.click(); await settle();
       expect(host.calls).toEqual([{ type: 'settings/update', patch: { dwebEnabled: true } }]);
       save.resolve({ ok: false }); await settle();
-      expect(text(el(view.root, '[role="alert"]'))).toBe('peerd could not confirm that the peer network is on. Check again before you try again.');
+      expect(text(el(view.root, '[role="alert"]'))).toBe('mcdollar could not confirm that the peer network is on. Check again before you try again.');
       expect(enable.disabled).toBe(true);
       expect(reconciles).toBe(1);
       await click(view.root, 'Check again');
@@ -272,14 +272,14 @@ describe('home.discover start list', () => {
     } finally { save.resolve({ ok: false }); view.close(); }
   });
 
-  it('network off: the start row names one app that comes with peerd, in plain words, and Try opens its page', async () => {
+  it('network off: the start row names one app that comes with mcdollar, in plain words, and Try opens its page', async () => {
     const host = fakeHost();
     const view = mount({ send: host.send, enabled: false });
     try {
       await withTabs(async (opened) => {
         const row = el(view.root, '.disc-start-text');
         // Try opens a page that adds it, so the row never says it works right away.
-        expect(text(row)).toBe(`Try an app that comes with peerdAdd the ${packagedStarter('csv-lab')?.name} app to your Library, then open it from there. It needs no network and no setup.`);
+        expect(text(row)).toBe(`Try an app that comes with mcdollarAdd the ${packagedStarter('csv-lab')?.name} app to your Library, then open it from there. It needs no network and no setup.`);
         expect(row.querySelector('button')).toBe(null);
         expect(text(view.root).includes(packagedStarter('wasm-image')?.name ?? '')).toBe(false);
         await click(view.root, `Try ${packagedStarter('csv-lab')?.name}`);
@@ -353,11 +353,11 @@ describe('home.discover root states', () => {
       const waiting = el(view.root, '.disc-empty');
       const title = el(waiting, 'h2');
       expect([text(title), title.getAttribute('role')]).toEqual(['Looking for people who share apps…', 'status']);
-      expect(waiting.querySelector('.peerd-spinner')?.getAttribute('aria-hidden')).toBe('true');
-      expect(text(el(waiting, 'p'))).toBe('This can take a minute. While you wait, try an app that comes with peerd.');
+      expect(waiting.querySelector('.mcdollar-spinner')?.getAttribute('aria-hidden')).toBe('true');
+      expect(text(el(waiting, 'p'))).toBe('This can take a minute. While you wait, try an app that comes with mcdollar.');
       expect(text(el(view.root, 'h1'))).toBe('Discover');
-      // One way to start, Paste link while no status row shows, and a way to the apps that come with peerd.
-      expect(boxActions(view.root)).toEqual([csv, 'Paste link', 'See what comes with peerd']);
+      // One way to start, Paste link while no status row shows, and a way to the apps that come with mcdollar.
+      expect(boxActions(view.root)).toEqual([csv, 'Paste link', 'See what comes with mcdollar']);
       expect(view.root.querySelector('input.disc-search')).toBe(null);
       expect(view.root.querySelector('.disc-pills')).toBe(null);
     } finally { view.close(); }
@@ -369,7 +369,7 @@ describe('home.discover root states', () => {
       expect(text(el(view.root, '.disc-empty h2'))).toBe('No shared apps yet');
       expect(view.root.querySelector('.disc-pills')).toBe(null);
       expect(text(view.root)).toContain('Apps show up here when the people you are connected to share them. You can share one of yours from your Library.');
-      expect(boxActions(view.root)).toEqual(['Go to Library', csv, 'See what comes with peerd']);
+      expect(boxActions(view.root)).toEqual(['Go to Library', csv, 'See what comes with mcdollar']);
       expect(button(view.root, csv)?.classList.contains('linklike')).toBe(true);
       await click(view.root, 'Go to Library');
       expect(library).toBe(1);
@@ -402,7 +402,7 @@ describe('home.discover root states', () => {
 
   it('offline grid shows only Library apps from peers, each with Open', async () => {
     const kept = card('kept', 'Kept app', ANA, { description: 'Already here.' });
-    const newer = card('kept', 'Kept app', ANA, { version_id: 'kept-v2', seq: 2, uri: `peerd://${ANA}/kept-v2` });
+    const newer = card('kept', 'Kept app', ANA, { version_id: 'kept-v2', seq: 2, uri: `mcdollar://${ANA}/kept-v2` });
     const host = fakeHost({
       heard: [newer, card('new', 'New app', BOB)], running: false,
       library: [local('local-kept', kept), { id: 'local-only', name: 'Made here' }],
@@ -433,7 +433,7 @@ describe('home.discover root states', () => {
       first.resolve({ ok: false }); await settle();
       // The offline root offers no Install, so the line names what it shows.
       expect(text(/** @type {Element} */ (libraryLine(view.root))))
-        .toBe('peerd could not read your Library. peerd tries again by itself.');
+        .toBe('mcdollar could not read your Library. mcdollar tries again by itself.');
       expect(text(view.root).includes(OFFLINE_EMPTY)).toBe(false);
       await focusPoll();
       expect(text(view.root).includes(OFFLINE_EMPTY)).toBe(false);
@@ -444,7 +444,7 @@ describe('home.discover root states', () => {
       replies.push({ ok: false });
       await focusPoll();
       expect(text(/** @type {Element} */ (libraryLine(view.root))))
-        .toBe('peerd could not refresh your Library. This list may be out of date. peerd tries again by itself.');
+        .toBe('mcdollar could not refresh your Library. This list may be out of date. mcdollar tries again by itself.');
       expect(text(el(view.root, '.disc-empty'))).toBe(OFFLINE_EMPTY);
       expect(host.writes().length).toBe(0);
     } finally { first.resolve({ ok: false }); view.close(); }
@@ -505,7 +505,7 @@ describe('home.discover root states', () => {
       host.state.running = false;
       await focusPoll();
       expect(tileKeys(view.root)).toEqual(['gone']);
-      // Nothing peers said is kept, and peerd does not know what the maker
+      // Nothing peers said is kept, and mcdollar does not know what the maker
       // said, so the tile claims nothing: never that the maker gave none.
       expect(el(view.root, '[data-key="gone"]').querySelector('.disc-tile-desc')).toBe(null);
       expect(text(view.root).includes('No description from the maker.')).toBe(false);
@@ -604,24 +604,24 @@ describe('home.discover root states', () => {
   });
 });
 
-describe('home.discover apps that come with peerd', () => {
+describe('home.discover apps that come with mcdollar', () => {
   // The looking and empty roots draw no pills, so a link opens the list there.
   for (const [label, initial, root, opener, back] of /** @type {const} */ ([
-    ['looking', { lease: 'starting' }, 'Looking for people who share apps…', 'See what comes with peerd', 'See what comes with peerd'],
-    ['connected and empty', { linked: 3 }, 'No shared apps yet', 'See what comes with peerd', 'See what comes with peerd'],
-    ['offline with no Library apps', { running: false }, 'Peer network is offline', 'Comes with peerd', 'All'],
+    ['looking', { lease: 'starting' }, 'Looking for people who share apps…', 'See what comes with mcdollar', 'See what comes with mcdollar'],
+    ['connected and empty', { linked: 3 }, 'No shared apps yet', 'See what comes with mcdollar', 'See what comes with mcdollar'],
+    ['offline with no Library apps', { running: false }, 'Peer network is offline', 'Comes with mcdollar', 'All'],
   ])) {
-    it(`the ${label} root reaches Comes with peerd: both starters and Commons, and focus follows the change`, async () => {
+    it(`the ${label} root reaches Comes with mcdollar: both starters and Commons, and focus follows the change`, async () => {
       const host = fakeHost(initial);
       const view = mount({ send: host.send });
       try {
         await settle();
         expect(text(view.root)).toContain(root);
-        expect(!!view.root.querySelector('.disc-pills')).toBe(opener === 'Comes with peerd');
+        expect(!!view.root.querySelector('.disc-pills')).toBe(opener === 'Comes with mcdollar');
         await press(view.root, opener);
         expect(tileNames(view.root)).toEqual(['Tables and charts', 'Desaturator', 'Chat rooms']);
         expect(button(view.root, 'Add and open Chat rooms')?.disabled).toBe(false);
-        expect(document.activeElement).toBe(button(view.root, 'Comes with peerd'));
+        expect(document.activeElement).toBe(button(view.root, 'Comes with mcdollar'));
         await press(view.root, 'All');
         expect(view.root.querySelector('.disc-tile')).toBe(null);
         expect(text(view.root)).toContain(root);
@@ -631,13 +631,13 @@ describe('home.discover apps that come with peerd', () => {
     });
   }
 
-  it('leaving Comes with peerd for a root with no pills lands focus on its heading', async () => {
+  it('leaving Comes with mcdollar for a root with no pills lands focus on its heading', async () => {
     const host = fakeHost({ heard: [card('a', 'App A', ANA)] });
     const view = mount({ send: host.send });
     try {
       await settle();
-      await press(view.root, 'Comes with peerd');
-      // Peers stop sharing meanwhile; the pill keeps the apps that come with peerd on screen.
+      await press(view.root, 'Comes with mcdollar');
+      // Peers stop sharing meanwhile; the pill keeps the apps that come with mcdollar on screen.
       host.state.heard = [];
       await focusPoll();
       expect(tileNames(view.root)).toEqual(['Tables and charts', 'Desaturator', 'Chat rooms']);
@@ -652,7 +652,7 @@ describe('home.discover apps that come with peerd', () => {
 
   it('an earlier add of Chat rooms under a former name shows as Chat rooms; a name the user gave it shows as given', async () => {
     const host = fakeHost({ heard: [card('a', 'App', ANA)],
-      library: [{ id: 'app-commons', name: 'Peerd-to-Peerd Commons', dweb: { seed: 'commons' } }] });
+      library: [{ id: 'app-commons', name: 'Mcdollar-to-Mcdollar Commons', dweb: { seed: 'commons' } }] });
     const view = mount({ send: host.send });
     /** @param {string} name */
     const named = async (name) => {
@@ -662,7 +662,7 @@ describe('home.discover apps that come with peerd', () => {
     };
     try {
       await settle();
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       expect(tileNames(view.root)).toEqual(['Tables and charts', 'Desaturator', 'Chat rooms']);
       expect([...view.root.querySelectorAll('.disc-yours-name')].map(node => text(node))).toEqual(['Chat rooms']);
       expect(tileAction(view.root, 'commons')).toBe('Open');
@@ -670,10 +670,10 @@ describe('home.discover apps that come with peerd', () => {
       expect(await named('commons')).toEqual(['Chat rooms', ['Chat rooms']]);
       // A name the user gave it in the Library shows on the tile and in Your apps.
       expect(await named('Team chat')).toEqual(['Team chat', ['Team chat']]);
-      // Only Chat rooms has those names from peerd: another app keeps its own.
-      host.state.library = [{ id: 'app-other', name: 'Peerd-to-Peerd Commons' }];
+      // Only Chat rooms has those names from mcdollar: another app keeps its own.
+      host.state.library = [{ id: 'app-other', name: 'Mcdollar-to-Mcdollar Commons' }];
       await focusPoll();
-      expect([...view.root.querySelectorAll('.disc-yours-name')].map(node => text(node))).toEqual(['Peerd-to-Peerd Commons']);
+      expect([...view.root.querySelectorAll('.disc-yours-name')].map(node => text(node))).toEqual(['Mcdollar-to-Mcdollar Commons']);
       // With no Chat rooms in the Library, the tile has the name the app comes with.
       host.state.library = [];
       await focusPoll();
@@ -769,7 +769,7 @@ describe('home.discover your apps', () => {
       outcome = 'lost';
       el(view.root, '[data-app-id="mine"] button').click(); await settle();
       const line = el(view.root, '[data-app-id="mine"] [role="status"]');
-      expect([text(line), line.classList.contains('error')]).toEqual(['peerd is not sure the app opened. Check your tabs.', false]);
+      expect([text(line), line.classList.contains('error')]).toEqual(['mcdollar is not sure the app opened. Check your tabs.', false]);
       expect(host.count('apps/open')).toBe(2);
     } finally { view.close(); }
   });
@@ -782,7 +782,7 @@ describe('home.discover tiles and filters', () => {
     const host = fakeHost({
       heard: [
         card('cant', 'Cant run', CARL, { version_id: 'cant-v2', seq: 2, runtimeCompatibility: { status: 'unsupported', message: 'Unsupported App runtime target: wasi.' } }),
-        card('upd', 'Updater', BOB, { version_id: 'upd-v2', seq: 2, uri: `peerd://${BOB}/upd-v2` }),
+        card('upd', 'Updater', BOB, { version_id: 'upd-v2', seq: 2, uri: `mcdollar://${BOB}/upd-v2` }),
         card('open', 'Opener', ANA),
         card('rev', 'Reviewer', ANA),
         card('mine', 'Mine', SELF, { version_id: 'mine-v2', seq: 2 }),
@@ -862,7 +862,7 @@ describe('home.discover tiles and filters', () => {
     } finally { view.close(); }
   });
 
-  it('a search on All finds the apps that come with peerd too, after the shared apps; a pill of shared apps keeps them out', async () => {
+  it('a search on All finds the apps that come with mcdollar too, after the shared apps; a pill of shared apps keeps them out', async () => {
     const effects = createEffects();
     // An earlier add whose outcome is not known: its line shows where the Chat rooms tile can.
     effects.commons = 'unknown';
@@ -874,7 +874,7 @@ describe('home.discover tiles and filters', () => {
       expect(commonsNote(view.root)).toBe(null);
       search(view.root, 'chat');
       expect(tileNames(view.root)).toEqual(['Group chat', 'Chat rooms']);
-      expect(text(el(view.root, '[data-key="commons"] .disc-tile-meta'))).toBe('Comes with peerd');
+      expect(text(el(view.root, '[data-key="commons"] .disc-tile-meta'))).toBe('Comes with mcdollar');
       expect(commonsNote(view.root)?.getAttribute('role')).toBe('status');
       search(view.root, 'chart');
       expect(tileNames(view.root)).toEqual(['Tables and charts']);
@@ -887,7 +887,7 @@ describe('home.discover tiles and filters', () => {
     } finally { view.close(); }
   });
 
-  it('pills: All, From people you know (saved only), Updates, Comes with peerd, and Show all apps', async () => {
+  it('pills: All, From people you know (saved only), Updates, Comes with mcdollar, and Show all apps', async () => {
     const host = fakeHost({
       heard: [
         card('upd', 'Updater', CARL, { version_id: 'upd-v2', seq: 2 }),
@@ -904,7 +904,7 @@ describe('home.discover tiles and filters', () => {
     try {
       await settle();
       expect(el(view.root, '.disc-pills').getAttribute('role')).toBe('group');
-      expect([...view.root.querySelectorAll('.disc-pill')].map(node => text(node))).toEqual(['All', 'From people you know', 'Updates', 'Comes with peerd']);
+      expect([...view.root.querySelectorAll('.disc-pill')].map(node => text(node))).toEqual(['All', 'From people you know', 'Updates', 'Comes with mcdollar']);
       expect(pressed('All')).toBe('true');
       expect(tileKeys(view.root).length).toBe(4);
       await click(view.root, 'Updates');
@@ -913,10 +913,10 @@ describe('home.discover tiles and filters', () => {
       expect(tileKeys(view.root)).toEqual(['upd']);
       await click(view.root, 'From people you know');
       expect(tileKeys(view.root)).toEqual(['ana']);
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       const included = [...view.root.querySelectorAll('.disc-tile')];
       expect(included.map(node => text(el(node, '.disc-tile-name')))).toEqual(['Tables and charts', 'Desaturator', 'Chat rooms']);
-      expect(included.every(node => text(node).includes('Comes with peerd'))).toBe(true);
+      expect(included.every(node => text(node).includes('Comes with mcdollar'))).toBe(true);
       expect(included.slice(0, 2).map(node => text(el(node, '.disc-actions')))).toEqual(['Try it', 'Try it']);
       // Each name starts with the label on screen, so "Try it" said to voice control reaches the button.
       expect(included.slice(0, 2).map(node => el(node, '.disc-actions button').getAttribute('aria-label')))
@@ -944,7 +944,7 @@ describe('home.discover tiles and filters', () => {
       await settle();
       const live = announced();
       expect(live && text(live)).toBe('');
-      // Every installed app is current: peerd offers no update and claims no more than it heard.
+      // Every installed app is current: mcdollar offers no update and claims no more than it heard.
       await click(view.root, 'Updates');
       expect(empty()).toEqual(['No updates right now', 'When someone shares a new version of an app in your Library, it shows up here.']);
       expect(announced()).toBe(live);
@@ -1081,8 +1081,8 @@ describe('home.discover tiles and filters', () => {
     const address = formatDwappUri({ did: ANA, hash: 'a'.repeat(64) });
     const target = immutableAppRoot(address);
     const signed = card('signed', 'Signed app', ANA, { version_id: target.hash });
-    const forged = card('forged', 'peerd Wallet (official)', BOB, {
-      version_id: target.hash, uri: target.uri, description: 'Reviewed and approved by the peerd team.',
+    const forged = card('forged', 'mcdollar Wallet (official)', BOB, {
+      version_id: target.hash, uri: target.uri, description: 'Reviewed and approved by the mcdollar team.',
     });
     const host = fakeHost({ heard: [signed, forged] }, {
       'dweb/base/inspect-address': () => ({ ok: true, summary: { ...target, name: 'Signed app', decodedBytes: 3, fileCount: 1, entryFile: 'index.html', containsWasm: false } }),
@@ -1114,7 +1114,7 @@ describe('home.discover tiles and filters', () => {
       await click(view.root, 'Discover');
       // Surprise me still has it to suggest: it is not in the Library.
       await click(view.root, 'Surprise me');
-      expect(text(el(view.root, '.disc-app-title'))).toBe('peerd Wallet (official)');
+      expect(text(el(view.root, '.disc-app-title'))).toBe('mcdollar Wallet (official)');
       expect(host.writes().map(call => call.type)).toEqual(['dweb/base/inspect-address', 'dweb/base/install-address']);
     } finally { view.close(); sessionStorage.removeItem(KEY); }
   });
@@ -1143,7 +1143,7 @@ describe('home.discover app page', () => {
     } finally { view.close(); scroller.remove(); }
   });
 
-  it('install success: the installed panel, Open sends apps/open, Go to Library leaves, peerd:app-installed fires once', async () => {
+  it('install success: the installed panel, Open sends apps/open, Go to Library leaves, mcdollar:app-installed fires once', async () => {
     const app = card('a', 'Expense splitter', ANA, { description: 'Split shared costs.', size: 48213 });
     const host = fakeHost({ heard: [app] }, {
       'dweb/base/install': () => ({ ok: true, app: { id: 'local-a' } }),
@@ -1152,7 +1152,7 @@ describe('home.discover app page', () => {
     /** @type {unknown[]} */ const events = [];
     /** @param {Event} event */
     const listen = (event) => { events.push(/** @type {CustomEvent} */ (event).detail); };
-    window.addEventListener('peerd:app-installed', listen);
+    window.addEventListener('mcdollar:app-installed', listen);
     let library = 0;
     const view = mount({ send: host.send, onLibrary: () => { library++; } });
     const safety = () => [...view.root.querySelectorAll('.disc-safety-text')].map(node => text(node));
@@ -1162,13 +1162,13 @@ describe('home.discover app page', () => {
       expect([...panel(view.root).querySelectorAll('.disc-step')].map(step => step.className.split(' ').at(-1))).toEqual(['is-current', 'is-pending', 'is-pending']);
       expect([...panel(view.root).querySelectorAll('.disc-step-title')].map(node => text(node))).toEqual(['Look at it', 'Install', 'Open']);
       expect(text(el(view.root, '.disc-app-size'))).toBe('48 KB');
-      // Before the install, What to know says what peerd will check; the sharing line sits under the button.
+      // Before the install, What to know says what mcdollar will check; the sharing line sits under the button.
       // It is a section labelled by its heading, as The app says it is.
       const know = el(view.root, 'section.disc-safety');
       expect(text(el(know, 'h3'))).toBe('What to know');
       expect(el(know, 'h3').id).toBe(know.getAttribute('aria-labelledby') ?? '');
       expect(safety()).toEqual([
-        `Made by ${shortKey(ANA)}. When you install it, peerd checks that every file is exactly what its maker shared. Nobody reviewed it for safety.`,
+        `Made by ${shortKey(ANA)}. When you install it, mcdollar checks that every file is exactly what its maker shared. Nobody reviewed it for safety.`,
         'It runs in its own tab and cannot reach the internet by itself.',
         'You can remove it from your Library at any time.',
       ]);
@@ -1183,7 +1183,7 @@ describe('home.discover app page', () => {
       expect(text(el(view.root, '.disc-panel .disc-installed bdi'))).toBe('Expense splitter');
       expect(text(el(view.root, '.disc-app-size'))).toBe('In your Library');
       // The check belongs to the install: an edit on this device can change the files later.
-      expect(safety()[0]).toBe(`Made by ${shortKey(ANA)}. When you installed it, peerd checked that it was exactly the app its maker shared. `
+      expect(safety()[0]).toBe(`Made by ${shortKey(ANA)}. When you installed it, mcdollar checked that it was exactly the app its maker shared. `
         + 'Nobody reviewed it for safety.');
       expect(view.root.querySelector('.disc-panel-cta')).toBe(null);
       expect(events).toEqual([{ appId: 'local-a' }]);
@@ -1217,7 +1217,7 @@ describe('home.discover app page', () => {
         await openTile(later.root, 'a');
         expect(text(el(later.root, '.disc-panel .disc-installed'))).toBe('In your Library. Other people can get it from you while your peer network is on.');
       } finally { later.close(); }
-    } finally { window.removeEventListener('peerd:app-installed', listen); view.close(); }
+    } finally { window.removeEventListener('mcdollar:app-installed', listen); view.close(); }
   });
 
   it('a settled install moves focus to its status line only from the removed button, never from a control the user moved to', async () => {
@@ -1260,7 +1260,7 @@ describe('home.discover app page', () => {
       await settle();
       await openTile(view.root, 'a');
       await click(view.root, 'Install and share');
-      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('peerd could not install App.');
+      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('mcdollar could not install App.');
       expect(text(el(view.root, '.disc-panel [role="alert"] bdi'))).toBe('App');
       expect(hint()).toBe('The person who shares it may have gone offline. Try again in a moment.');
       expect(panel(view.root).querySelector('.disc-step.is-failed')).toBeTruthy();
@@ -1268,7 +1268,7 @@ describe('home.discover app page', () => {
       expect(button(view.root, 'Install and share')).toBe(undefined);
       await click(view.root, 'Try again');
       expect(host.count('dweb/base/install')).toBe(2);
-      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('peerd could not install App.');
+      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('mcdollar could not install App.');
       expect(hint()).toBe('This browser cannot run it. Technical details says why.');
       // The host's words stay off the main path.
       expect(text(panel(view.root)).includes('Unsupported App runtime target')).toBe(false);
@@ -1288,13 +1288,13 @@ describe('home.discover app page', () => {
       await settle();
       await openTile(view.root, 'a');
       await click(view.root, 'Install and share');
-      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('peerd could not install App.');
+      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('mcdollar could not install App.');
       expect(text(el(view.root, '.disc-panel .disc-hint'))).toBe('You blocked the maker of this app. To install it, unblock them in Contacts.');
       // Only an unblock helps, so the page offers no Try again that can only fail the same way.
       expect(panel(view.root).querySelector('button')).toBe(null);
       await click(view.root, 'Discover');
       el(view.root, '[data-key="upd"] .disc-tile-action').click(); await settle();
-      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('peerd could not update Updater.');
+      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('mcdollar could not update Updater.');
       expect(text(el(view.root, '.disc-panel .disc-hint'))).toBe('You blocked the maker of this app. To update it, unblock them in Contacts.');
       // The installed version still runs, so Open stays.
       expect([...panel(view.root).querySelectorAll('button')].map(node => text(node).trim())).toEqual(['Open']);
@@ -1317,24 +1317,24 @@ describe('home.discover app page', () => {
     try {
       await settle();
       el(view.root, '[data-key="upd"] .disc-tile-action').click(); await settle();
-      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('peerd could not update Updater.');
+      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('mcdollar could not update Updater.');
       expect(text(el(view.root, '.disc-panel .disc-hint'))).toBe('The person who shares it may have gone offline. Try again in a moment.');
       expect(labels()).toEqual(['Try again', 'Open']);
       // The page updates, so its steps say update, and so does every line under the panel.
       /** @returns {string[]} */
       const steps = () => [...panel(view.root).querySelectorAll('.disc-step-title, .disc-step-sub')].map(node => text(node));
-      expect(steps()).toEqual(['Look at it', 'Update', 'peerd checks every file, then updates the app in your Library',
+      expect(steps()).toEqual(['Look at it', 'Update', 'mcdollar checks every file, then updates the app in your Library',
         'Open', 'It opens in its own tab']);
       // A screen reader hears the list by the same word.
       expect(el(view.root, '.disc-steps').getAttribute('aria-label')).toBe('Update steps');
-      expect(text(el(view.root, '.disc-safety-text'))).toContain('When you update it, peerd checks that every file is exactly what its maker shared.');
-      expect(text(el(view.root, '.disc-says'))).toContain('Paste its link or update it, and peerd checks every file first.');
+      expect(text(el(view.root, '.disc-safety-text'))).toContain('When you update it, mcdollar checks that every file is exactly what its maker shared.');
+      expect(text(el(view.root, '.disc-says'))).toContain('Paste its link or update it, and mcdollar checks every file first.');
       expect(text(panel(view.root))).toContain('Another version of this app is in your Library. Open runs the version you have.');
       await click(view.root, 'Open');
       expect(host.writes().at(-1)).toEqual({ type: 'apps/open', appId: 'local-upd' });
       await click(view.root, 'Try again');
       expect(text(el(view.root, '.disc-panel > [role="status"]:not(.disc-installed)')))
-        .toBe('peerd is not sure the update finished. It may still finish by itself.');
+        .toBe('mcdollar is not sure the update finished. It may still finish by itself.');
       expect(text(el(view.root, '.disc-panel .disc-hint'))).toBe('Check again before you try to update it again.');
       expect(labels()).toEqual(['Check again', 'Open']);
       expect(steps()[1]).toBe('Update');
@@ -1407,7 +1407,7 @@ describe('home.discover app page', () => {
       el(view.root, '[data-key="upd"] .disc-tile-action').click(); await settle();
       expect(document.activeElement).toBe(view.root.querySelector('.disc-back'));
       expect(host.writes().map(call => [call.type, call.appId])).toEqual([['dweb/base/update-app', 'local-upd']]);
-      expect(text(el(view.root, '.disc-panel > [role="status"]:not(.disc-installed)'))).toBe('peerd is not sure the update finished. It may still finish by itself.');
+      expect(text(el(view.root, '.disc-panel > [role="status"]:not(.disc-installed)'))).toBe('mcdollar is not sure the update finished. It may still finish by itself.');
       for (const drift of [{ version: 'upd-v1', seq: 1 }, { version: 'upd-other', seq: 2 }]) {
         version = drift.version; seq = drift.seq; refreshLibrary();
         await click(view.root, 'Check again');
@@ -1471,7 +1471,7 @@ describe('home.discover app page', () => {
       await click(view.root, 'Discover');
       await openTile(view.root, 'upd');
       expect(text(el(view.root, '.disc-panel > [role="status"]:not(.disc-installed)')))
-        .toBe('peerd is not sure the update finished. It may still finish by itself.');
+        .toBe('mcdollar is not sure the update finished. It may still finish by itself.');
       expect(host.count('dweb/base/install')).toBe(1);
       expect(host.count('dweb/base/update-app')).toBe(1);
     } finally { view.close(); }
@@ -1516,7 +1516,7 @@ describe('home.discover app page', () => {
       expect(text(panel(view.root))).toContain('Installed. App A is now in your Library.');
       await click(view.root, 'Discover');
       el(view.root, '[data-key="upd"] .disc-tile-action').click(); await settle();
-      expect(text(panel(view.root))).toContain('peerd could not update Updater.');
+      expect(text(panel(view.root))).toContain('mcdollar could not update Updater.');
       view.close();
       // Meanwhile, in the Library: App A was deleted and Updater was updated.
       host.state.library = [local('local-upd', announced)];
@@ -1645,16 +1645,16 @@ describe('home.discover app page', () => {
       await settle();
       await openTile(view.root, 'fresh');
       await click(view.root, 'Install and share');
-      expect(panelNotice(view.root)).toBe('Installed, but peerd could not add it to the security log.');
+      expect(panelNotice(view.root)).toBe('Installed, but mcdollar could not add it to the security log.');
       await click(view.root, 'Discover');
       await click(view.root, 'From people you know');
       expect(tileKeys(view.root)).toEqual(['fresh']);
       await click(view.root, 'All');
       el(view.root, '[data-key="upd"] .disc-tile-action').click(); await settle();
       const status = panelNotice(view.root);
-      expect(status).toContain('Updated, but peerd could not add it to the security log.');
+      expect(status).toContain('Updated, but mcdollar could not add it to the security log.');
       // The old version's files stay shared until the next update or delete: plain words, no bytes.
-      expect(status).toContain('peerd still shares the old version. Sharing stops the next time you update or remove this app.');
+      expect(status).toContain('mcdollar still shares the old version. Sharing stops the next time you update or remove this app.');
       expect(status.includes('bytes')).toBe(false);
     } finally { view.close(); }
   });
@@ -1668,7 +1668,7 @@ describe('home.discover app page', () => {
     try {
       await settle();
       // What failed, why Install is off, then what to do.
-      const line = 'peerd could not read your Library. Install stays off until peerd can read it. Try again in a moment.';
+      const line = 'mcdollar could not read your Library. Install stays off until mcdollar can read it. Try again in a moment.';
       expect(text(/** @type {Element} */ (libraryLine(view.root)))).toBe(line);
       await openTile(view.root, 'a');
       const install = /** @type {HTMLButtonElement} */ (button(view.root, 'Install and share'));
@@ -1706,7 +1706,7 @@ describe('home.discover app page', () => {
       try {
         await settle();
         if (commons) {
-          await click(view.root, 'Comes with peerd');
+          await click(view.root, 'Comes with mcdollar');
           await click(view.root, 'Add and open Chat rooms');
           await until(() => host.count('dweb/open-commons') === 1);
         } else {
@@ -1842,11 +1842,11 @@ describe('home.discover app page', () => {
       expect(host.count('apps/open')).toBe(3);
       for (openOutcome of ['unknown', 'lost']) {
         el(view.root, '[data-key="a"] .disc-tile-action').click(); await settle();
-        expect(text(el(view.root, '[data-key="a"] [role="status"]'))).toBe('peerd is not sure the app opened. Check your tabs.');
+        expect(text(el(view.root, '[data-key="a"] [role="status"]'))).toBe('mcdollar is not sure the app opened. Check your tabs.');
         expect(el(view.root, '[data-key="a"]').querySelector('.error')).toBe(null);
         await openTile(view.root, 'a');
         await click(view.root, 'Open');
-        expect(text(panel(view.root))).toContain('peerd is not sure the app opened. Check your tabs.');
+        expect(text(panel(view.root))).toContain('mcdollar is not sure the app opened. Check your tabs.');
         expect(panel(view.root).querySelector('.error')).toBe(null);
         await click(view.root, `Made by ${shortKey(ANA)}`);
       }
@@ -1866,7 +1866,7 @@ describe('home.discover app page', () => {
       expect(text(panel(view.root))).toContain('Update ready');
       // Update installs and shares, so What to know stays, about the version peers announce.
       expect(text(view.root)).toContain('What to know');
-      expect(text(el(view.root, '.disc-safety-text'))).toContain('When you update it, peerd checks that every file is exactly what its maker shared.');
+      expect(text(el(view.root, '.disc-safety-text'))).toContain('When you update it, mcdollar checks that every file is exactly what its maker shared.');
       // The panel says update, never share, so its footnote says what an update does.
       expect(text(panel(view.root))).toContain('After you update, other people can get the new version from you while your peer network is on.');
       expect(text(el(view.root, '.disc-panel .disc-primary'))).toBe('Update');
@@ -1885,7 +1885,7 @@ describe('home.discover app page', () => {
   it('an installed app whose new version can not run still opens; its page says the update can not run and offers no Update', async () => {
     const installed = card('wasi', 'WASI app', CARL);
     const host = fakeHost({
-      heard: [card('wasi', 'WASI app', CARL, { version_id: 'wasi-v2', seq: 2, uri: `peerd://${CARL}/wasi-v2`,
+      heard: [card('wasi', 'WASI app', CARL, { version_id: 'wasi-v2', seq: 2, uri: `mcdollar://${CARL}/wasi-v2`,
         runtimeCompatibility: { status: 'unsupported', message: 'Unsupported App runtime target: wasi.' } })],
       library: [local('local-wasi', installed)],
     }, { 'apps/open': () => ({ ok: true }) });
@@ -1969,16 +1969,16 @@ describe('home.discover app page', () => {
       expect(panel(view.root).querySelector('.disc-steps')).toBe(null);
       expect([...panel(view.root).querySelectorAll('button')].map(node => text(node).trim())).toEqual(['Open', 'Go to Library']);
       expect(text(el(view.root, '.disc-safety-text'))).toBe('You made this app. Other people get the files you share from your Library.');
-      expect(text(el(view.root, '.disc-safety')).includes('peerd checked')).toBe(false);
+      expect(text(el(view.root, '.disc-safety')).includes('mcdollar checked')).toBe(false);
       expect(view.root.querySelector('.disc-says')).toBe(null);
-      // No install checked its files, so peerd asks nothing about them, and edits made here are not news.
+      // No install checked its files, so mcdollar asks nothing about them, and edits made here are not news.
       expect(text(el(view.root, '.disc-app-head')).includes('Changed on this device')).toBe(false);
       expect(host.count('dweb/app-local-changes')).toBe(0);
       expect(host.writes().length).toBe(0);
     } finally { view.close(); }
   });
 
-  it('offline, the user\'s own shared app stays theirs: peerd knows them from the Library and asks nothing about its files', async () => {
+  it('offline, the user\'s own shared app stays theirs: mcdollar knows them from the Library and asks nothing about its files', async () => {
     const mine = card('mine', 'My app', SELF);
     // A share from this device whose record names no maker: the share alone says the user made it.
     const unsigned = card('unsigned', 'Notes to self', SELF);
@@ -1994,9 +1994,9 @@ describe('home.discover app page', () => {
         await openTile(view.root, 'mine'); await settle();
         expect(text(el(view.root, '.disc-app-maker'))).toBe('Made by you');
         expect(text(el(view.root, '.disc-safety-text'))).toBe('You made this app. Other people get the files you share from your Library.');
-        expect(text(el(view.root, '.disc-safety')).includes('peerd checked')).toBe(false);
+        expect(text(el(view.root, '.disc-safety')).includes('mcdollar checked')).toBe(false);
         expect(text(el(view.root, '.disc-app-head')).includes('Changed on this device')).toBe(false);
-        // No install checked its files, so peerd asks nothing about them.
+        // No install checked its files, so mcdollar asks nothing about them.
         expect(host.count('dweb/app-local-changes')).toBe(0);
         await click(view.root, 'Made by you');
         expect(text(el(view.root, '.disc-person-head h2'))).toBe('You');
@@ -2050,7 +2050,7 @@ describe('home.discover app page', () => {
 });
 
 describe('home.discover the app says it', () => {
-  const NOT_KNOWN = 'Not known yet. peerd reads this from the app itself when it checks it. Paste its link or install it, and peerd checks every file first.';
+  const NOT_KNOWN = 'Not known yet. mcdollar reads this from the app itself when it checks it. Paste its link or install it, and mcdollar checks every file first.';
   const ALL = { dweb: true, instructions: true, observeAct: true };
   /** What a host records after it checked the files of the version `hash` names.
    * @param {string|undefined} hash @param {Partial<typeof ALL>} [flags] */
@@ -2089,7 +2089,7 @@ describe('home.discover the app says it', () => {
     } finally { view.close(); }
   });
 
-  it('installed: the facts peerd read when it installed this version, the strongest last; none recorded, no section', async () => {
+  it('installed: the facts mcdollar read when it installed this version, the strongest last; none recorded, no section', async () => {
     const app = card('a', 'Expense splitter', ANA);
     const plain = card('b', 'Reading list', BOB);
     const kept = card('c', 'Chess clock', CARL);
@@ -2099,30 +2099,30 @@ describe('home.discover the app says it', () => {
       local('local-b', plain, { hash: plain.version_id, declared: declared(plain.version_id) }),
       // Kept from the version it was first installed at, so it names no version on screen.
       local('local-c', kept, { hash: kept.version_id, declared: declared('c-v0', ALL) }),
-      // Installed before peerd kept the facts.
+      // Installed before mcdollar kept the facts.
       local('local-d', older, { hash: older.version_id }),
     ] });
     const view = mount({ send: host.send });
     try {
       await settle();
       const calls = host.calls.length;
-      // why a second settle after each open: the facts wait for peerd's answer about the copy.
+      // why a second settle after each open: the facts wait for mcdollar's answer about the copy.
       await openTile(view.root, 'a'); await settle();
       expect(chips(view.root)).toEqual([
-        ['Uses the peer network', false], ['Comes with instructions for peerd', false], ['Lets peerd see and use it', true],
+        ['Uses the peer network', false], ['Comes with instructions for mcdollar', false], ['Lets mcdollar see and use it', true],
       ]);
-      expect(text(el(view.root, '.disc-says .disc-footnote'))).toBe('From the app’s own files, checked when peerd installed it.');
+      expect(text(el(view.root, '.disc-says .disc-footnote'))).toBe('From the app’s own files, checked when mcdollar installed it.');
       await click(view.root, 'Discover');
       await openTile(view.root, 'b'); await settle();
       expect(chips(view.root)).toEqual([]);
-      expect(text(el(view.root, '.disc-says p'))).toBe('It does not use the peer network and has no instructions for peerd.');
+      expect(text(el(view.root, '.disc-says p'))).toBe('It does not use the peer network and has no instructions for mcdollar.');
       // The facts belong to the install: an edit on this device can change the files later.
-      expect(text(el(view.root, '.disc-says .disc-footnote'))).toBe('From the app’s own files, checked when peerd installed it.');
-      // What to know says peerd checked it, so no "Not known yet" sits under it.
+      expect(text(el(view.root, '.disc-says .disc-footnote'))).toBe('From the app’s own files, checked when mcdollar installed it.');
+      // What to know says mcdollar checked it, so no "Not known yet" sits under it.
       for (const key of ['c', 'd']) {
         await click(view.root, 'Discover');
         await openTile(view.root, key); await settle();
-        expect(text(el(view.root, '.disc-safety'))).toContain('When you installed it, peerd checked that it was exactly the app');
+        expect(text(el(view.root, '.disc-safety'))).toContain('When you installed it, mcdollar checked that it was exactly the app');
         expect(says(view.root)).toBe(null);
       }
       // Each page only asked whether its copy changed on this device: no check, no download.
@@ -2201,16 +2201,16 @@ describe('home.discover the app says it', () => {
     try {
       await settle();
       await check(first);
-      expect(chips(view.root)).toEqual([['Uses the peer network', false], ['Lets peerd see and use it', true]]);
-      expect(text(el(view.root, '.disc-says .disc-footnote'))).toBe('From the app’s own files, checked when peerd looked at it.');
+      expect(chips(view.root)).toEqual([['Uses the peer network', false], ['Lets mcdollar see and use it', true]]);
+      expect(text(el(view.root, '.disc-says .disc-footnote'))).toBe('From the app’s own files, checked when mcdollar looked at it.');
       await click(view.root, 'Discover');
       await check(second);
-      expect(text(el(view.root, '.disc-says p'))).toBe('It does not use the peer network and has no instructions for peerd.');
-      // Facts for another version, or none the check could read: no section under "peerd checked".
+      expect(text(el(view.root, '.disc-says p'))).toBe('It does not use the peer network and has no instructions for mcdollar.');
+      // Facts for another version, or none the check could read: no section under "mcdollar checked".
       for (let i = 0; i < 2; i++) {
         await click(view.root, 'Discover');
         await check(first);
-        expect(text(el(view.root, '.disc-safety'))).toContain('peerd checked that this is exactly the app');
+        expect(text(el(view.root, '.disc-safety'))).toContain('mcdollar checked that this is exactly the app');
         expect(says(view.root)).toBe(null);
       }
       expect(host.writes().map(call => call.type)).toEqual(Array.from({ length: 4 }, () => 'dweb/base/inspect-address'));
@@ -2231,9 +2231,9 @@ describe('home.discover the app says it', () => {
       await settle();
       await click(view.root, 'Check again');
       expect(button(panel(view.root), 'Open')?.disabled).toBe(false);
-      expect(chips(view.root)).toEqual([['Comes with instructions for peerd', false]]);
-      expect(text(el(view.root, '.disc-says .disc-footnote'))).toBe('From the app’s own files, checked when peerd installed it.');
-      // Changed on this device since: once peerd's next check answers, the Library's facts no longer stand for it.
+      expect(chips(view.root)).toEqual([['Comes with instructions for mcdollar', false]]);
+      expect(text(el(view.root, '.disc-says .disc-footnote'))).toBe('From the app’s own files, checked when mcdollar installed it.');
+      // Changed on this device since: once mcdollar's next check answers, the Library's facts no longer stand for it.
       checkingChange = true;
       await focusPoll(); await settle();
       expect(says(view.root)).toBe(null);
@@ -2244,7 +2244,7 @@ describe('home.discover the app says it', () => {
     } finally { copyRead.resolve({ ok: false }); view.close(); sessionStorage.removeItem(KEY); }
   });
 
-  it('a copy changed on this device says so, and shows none of the facts peerd checked when it installed it', async () => {
+  it('a copy changed on this device says so, and shows none of the facts mcdollar checked when it installed it', async () => {
     const app = card('a', 'Expense splitter', ANA);
     const host = fakeHost({
       heard: [app], contacts: [{ did: ANA, name: 'Ana', saved: true }], changedHere: ['local-a'],
@@ -2257,10 +2257,10 @@ describe('home.discover the app says it', () => {
       expect(text(el(view.root, '.disc-app-head'))).toContain('Changed on this device');
       expect(text(el(view.root, '.disc-safety-text'))).toBe('Made by Ana. It changed on this device after you installed it. '
         + 'It is no longer exactly the app Ana shared. Nobody reviewed it for safety.');
-      expect(text(el(view.root, '.disc-safety')).includes('peerd checked')).toBe(false);
+      expect(text(el(view.root, '.disc-safety')).includes('mcdollar checked')).toBe(false);
       // "It does not use the peer network…" would be a claim about files that changed since.
       expect(says(view.root)).toBe(null);
-      // Peers get the version peerd checked from the user, never the edits, and the panel says so.
+      // Peers get the version mcdollar checked from the user, never the edits, and the panel says so.
       expect(text(el(view.root, '.disc-panel .disc-installed'))).toBe('In your Library. Other people can get the version its maker shared '
         + 'from you while your peer network is on. They do not get your changes.');
       expect(host.writes()).toEqual([]);
@@ -2274,7 +2274,7 @@ describe('home.discover the app says it', () => {
     try {
       await settle();
       await openTile(view.root, 'a'); await settle();
-      expect(text(el(view.root, '.disc-says p'))).toBe('It does not use the peer network and has no instructions for peerd.');
+      expect(text(el(view.root, '.disc-says p'))).toBe('It does not use the peer network and has no instructions for mcdollar.');
       // Changed meanwhile, with no return to this tab: the next visit asks again.
       await click(view.root, 'Discover');
       host.state.changedHere = ['local-a'];
@@ -2299,7 +2299,7 @@ describe('home.discover the app says it', () => {
       await settle();
       await openTile(view.root, 'a');
       // Not known yet: What to know says what the install checked, and no fact shows.
-      expect(safety()).toContain('When you installed it, peerd checked that it was exactly the app');
+      expect(safety()).toContain('When you installed it, mcdollar checked that it was exactly the app');
       expect(says(view.root)).toBe(null);
       // Back to the tab again and again while the first read runs: each read waits for
       // the app's write lock, so no second one starts beside it.
@@ -2319,7 +2319,7 @@ describe('home.discover the app says it', () => {
       expect(says(view.root)).toBe(null);
       expect(safety()).toContain('It changed on this device after you installed it.');
       expect(head()).toContain('Changed on this device');
-      // The warning stays on screen while peerd checks again.
+      // The warning stays on screen while mcdollar checks again.
       await focusPoll();
       expect(reads.length).toBe(4);
       expect(head()).toContain('Changed on this device');
@@ -2328,7 +2328,7 @@ describe('home.discover the app says it', () => {
       reads[3].resolve({ ok: false, error: 'vault-locked' }); await settle();
       expect(says(view.root)).toBe(null);
       expect(head().includes('Changed on this device')).toBe(false);
-      expect(safety()).toContain('When you installed it, peerd checked');
+      expect(safety()).toContain('When you installed it, mcdollar checked');
       await focusPoll();
       reads[4].resolve({ ok: true, changed: null }); await settle();
       expect(says(view.root)).toBe(null);
@@ -2410,7 +2410,7 @@ describe('home.discover the app says it', () => {
     } finally { view.close(); sessionStorage.removeItem(KEY); }
   });
 
-  it('a finished update says update throughout: its line, its steps, What to know and when peerd read the facts', async () => {
+  it('a finished update says update throughout: its line, its steps, What to know and when mcdollar read the facts', async () => {
     const newer = card('upd', 'Trip planner', BOB, { version_id: 'upd-v2', seq: 2 });
     const older = local('local-upd', newer, { version_id: 'upd-v1', seq: 1, hash: 'upd-v1' });
     const row = local('local-upd', newer, { hash: newer.version_id, declared: declared(newer.version_id, { dweb: true }) });
@@ -2427,10 +2427,10 @@ describe('home.discover the app says it', () => {
       expect(text(el(view.root, '.disc-panel .disc-installed bdi'))).toBe('Trip planner');
       expect([...panel(view.root).querySelectorAll('.disc-step-title')].map(node => text(node))).toEqual(['Look at it', 'Update', 'Open']);
       expect(el(view.root, '.disc-steps').getAttribute('aria-label')).toBe('Update steps');
-      expect(text(el(view.root, '.disc-safety-text'))).toBe(`Made by ${shortKey(BOB)}. When you updated it, peerd checked that it was `
+      expect(text(el(view.root, '.disc-safety-text'))).toBe(`Made by ${shortKey(BOB)}. When you updated it, mcdollar checked that it was `
         + 'exactly the app its maker shared. Nobody reviewed it for safety.');
       expect(chips(view.root)).toEqual([['Uses the peer network', false]]);
-      expect(text(el(view.root, '.disc-says .disc-footnote'))).toBe('From the app’s own files, checked when peerd updated it.');
+      expect(text(el(view.root, '.disc-says .disc-footnote'))).toBe('From the app’s own files, checked when mcdollar updated it.');
       // A plain update adds no line of its own: the installed line says it.
       expect(panel(view.root).querySelector('.disc-footnote[role="status"]')).toBe(null);
       expect(host.writes().map(call => call.type)).toEqual(['dweb/base/update-app']);
@@ -2460,7 +2460,7 @@ describe('home.discover the app says it', () => {
 
 describe('home.discover technical details', () => {
   const hash = 'a'.repeat(64);
-  const app = card('copy', 'Copy app', ANA, { version_id: hash, uri: `peerd://${ANA}/${hash}`, size: 48213, includes_wasm: false });
+  const app = card('copy', 'Copy app', ANA, { version_id: hash, uri: `mcdollar://${ANA}/${hash}`, size: 48213, includes_wasm: false });
   /**
    * @param {unknown} clipboard
    * @param {(view: ReturnType<typeof mount>, host: ReturnType<typeof fakeHost>) => Promise<void>} run
@@ -2521,7 +2521,7 @@ describe('home.discover technical details', () => {
     await withClipboard({ writeText: async () => {} }, async (view) => {
       await click(view.root, 'Technical details');
       expect(facts(view.root).map(([label]) => label)).toEqual(['Made by', 'Version', 'WebAssembly', 'Runtime']);
-    }, card('drift', 'Drift app', ANA, { version_id: hash, uri: 'peerd://other/hash' }));
+    }, card('drift', 'Drift app', ANA, { version_id: hash, uri: 'mcdollar://other/hash' }));
   });
 
   for (const clipboard of [undefined, { writeText: async () => { throw new Error('permission denied raw error'); } }]) {
@@ -2547,7 +2547,7 @@ describe('home.discover technical details', () => {
         copyFor(view.root, 'Share link').click(); await settle();
         expect(copyFor(view.root, 'Made by').disabled).toBe(true);
         const next = 'b'.repeat(64);
-        const newer = { ...app, seq: 2, version_id: next, uri: `peerd://${ANA}/${next}` };
+        const newer = { ...app, seq: 2, version_id: next, uri: `mcdollar://${ANA}/${next}` };
         host.state.heard = [newer];
         window.dispatchEvent(new Event('focus'));
         await settle();
@@ -2563,7 +2563,7 @@ describe('home.discover technical details', () => {
 
 describe('home.discover share dialog', () => {
   const hash = 'a'.repeat(64);
-  const app = card('share', 'Expense splitter', ANA, { version_id: hash, uri: `peerd://${ANA}/${hash}` });
+  const app = card('share', 'Expense splitter', ANA, { version_id: hash, uri: `mcdollar://${ANA}/${hash}` });
   /**
    * @param {unknown} clipboard
    * @param {(view: ReturnType<typeof mount>, host: ReturnType<typeof fakeHost>) => Promise<void>} run
@@ -2604,7 +2604,7 @@ describe('home.discover share dialog', () => {
       const input = /** @type {HTMLInputElement} */ (el(box, 'input'));
       expect(text(el(box, `label[for="${input.id}"]`))).toBe('Share link');
       expect([input.value, input.readOnly]).toEqual([discoveryAddress(app), true]);
-      expect(text(box)).toContain('Send this link to a friend. They open it in peerd with the peer network on, and can look at the app before they install it.');
+      expect(text(box)).toContain('Send this link to a friend. They open it in mcdollar with the peer network on, and can look at the app before they install it.');
       expect(text(box)).toContain('The link points to this exact version. If its maker updates the app later, your friend gets the version you shared.');
       // Focus moves into the dialog, onto its action.
       expect(document.activeElement).toBe(button(box, 'Copy link'));
@@ -2642,7 +2642,7 @@ describe('home.discover share dialog', () => {
       // A click inside keeps it open; a click on the backdrop closes it.
       el(view.root, '[role="dialog"] p').click(); await settle();
       expect(dialog(view.root)).toBeTruthy();
-      el(view.root, '.peerd-modal-backdrop').click(); await settle();
+      el(view.root, '.mcdollar-modal-backdrop').click(); await settle();
       expect(dialog(view.root)).toBe(null);
       expect(document.activeElement).toBe(el(view.root, '[data-share-open]'));
     });
@@ -2675,7 +2675,7 @@ describe('home.discover share dialog', () => {
     }, { contacts: [{ did: ANA, name: 'Ana', saved: true }] });
     await withShare({ writeText: async () => {} }, async (view) => {
       expect(view.root.querySelector('[data-share-open]')).toBe(null);
-    }, { heard: [card('drift', 'Drift app', ANA, { version_id: hash, uri: 'peerd://other/hash' })] });
+    }, { heard: [card('drift', 'Drift app', ANA, { version_id: hash, uri: 'mcdollar://other/hash' })] });
   });
 
   it('a share dialog whose link goes away closes, and stays closed when the link comes back', async () => {
@@ -2683,7 +2683,7 @@ describe('home.discover share dialog', () => {
       await press(view.root, 'Share');
       expect(dialog(view.root)).toBeTruthy();
       // Peers now send a card whose coordinates disagree, so it has no share link.
-      host.state.heard = [{ ...app, uri: 'peerd://other/hash' }];
+      host.state.heard = [{ ...app, uri: 'mcdollar://other/hash' }];
       await focusPoll();
       expect(dialog(view.root)).toBe(null);
       expect(view.root.querySelector('[data-share-open]')).toBe(null);
@@ -2701,7 +2701,7 @@ describe('home.discover share dialog', () => {
         await press(view.root, 'Share');
         await click(view.root, 'Copy link');
         const box = el(view.root, '[role="dialog"]');
-        expect(text(el(box, '[role="status"]'))).toBe('peerd could not copy the link. Select it and copy it yourself.');
+        expect(text(el(box, '[role="status"]'))).toBe('mcdollar could not copy the link. Select it and copy it yourself.');
         expect(text(view.root).includes('Link copied.')).toBe(false);
         expect(text(view.root).includes('permission denied raw error')).toBe(false);
         expect(button(box, 'Copy link')?.disabled).toBe(false);
@@ -2723,7 +2723,7 @@ describe('home.discover share dialog', () => {
         await click(view.root, 'Copy link');
         expect(button(view.root, 'Copy link')?.disabled).toBe(true);
         const next = 'b'.repeat(64);
-        const newer = { ...app, seq: 2, version_id: next, uri: `peerd://${ANA}/${next}` };
+        const newer = { ...app, seq: 2, version_id: next, uri: `mcdollar://${ANA}/${next}` };
         host.state.heard = [newer];
         await focusPoll();
         expect(/** @type {HTMLInputElement} */ (el(view.root, '[role="dialog"] input')).value).toBe(discoveryAddress(newer));
@@ -2797,8 +2797,8 @@ describe('home.discover suggestions', () => {
       }
       expect(seen.slice(0, 2).sort()).toEqual(['First', 'Second']);
       expect(['First', 'Second']).toContain(seen[2]);
-      // Nothing to pick on the Comes with peerd pill: the button stays on, as drawn, and says why no page opened.
-      await click(view.root, 'Comes with peerd');
+      // Nothing to pick on the Comes with mcdollar pill: the button stays on, as drawn, and says why no page opened.
+      await click(view.root, 'Comes with mcdollar');
       expect(button(view.root, 'Surprise me')?.disabled).toBe(false);
       await click(view.root, 'Surprise me');
       expect(view.root.querySelector('.disc-back')).toBe(null);
@@ -2810,7 +2810,7 @@ describe('home.discover suggestions', () => {
       el(view.root, 'button.disc-refresh').click(); await settle();
       expect(button(view.root, 'Surprise me')?.disabled).toBe(true);
       expect(text(/** @type {Element} */ (libraryLine(view.root))))
-        .toBe('peerd could not refresh your Library. Surprise me stays off until peerd can read it. Try again in a moment.');
+        .toBe('mcdollar could not refresh your Library. Surprise me stays off until mcdollar can read it. Try again in a moment.');
       expect(host.writes().length).toBe(0);
     } finally { library.resolve({ ok: false }); view.close(); }
   });
@@ -2902,7 +2902,7 @@ describe('home.discover share link', () => {
 
       enterLink(view.root, address);
       await click(view.root, 'Check link');
-      expect(text(el(view.root, '.disc-start-row [role="alert"]'))).toBe('peerd could not check this app. The link may be wrong, or the people who have it may be offline. Check the link, then try again.');
+      expect(text(el(view.root, '.disc-start-row [role="alert"]'))).toBe('mcdollar could not check this app. The link may be wrong, or the people who have it may be offline. Check the link, then try again.');
       expect(view.root.querySelector('.disc-back')).toBe(null);
 
       await click(view.root, 'Check link');
@@ -2946,11 +2946,11 @@ describe('home.discover share link', () => {
       await click(view.root, 'Paste link');
       enterLink(view.root, address);
       await click(view.root, 'Check link');
-      expect(text(el(view.root, '.disc-start-row [role="alert"]'))).toBe('peerd could not check this app. This browser cannot run it.');
+      expect(text(el(view.root, '.disc-start-row [role="alert"]'))).toBe('mcdollar could not check this app. This browser cannot run it.');
       expect(text(view.root).includes('Unsupported App runtime target')).toBe(false);
       await click(view.root, 'Check link');
       await click(view.root, 'Install and share');
-      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('peerd could not install Signed app.');
+      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('mcdollar could not install Signed app.');
       expect(text(el(view.root, '.disc-panel .disc-hint'))).toBe('This browser cannot run it. Technical details says why.');
       expect(text(panel(view.root)).includes('do not match')).toBe(false);
       await click(view.root, 'Technical details');
@@ -2970,7 +2970,7 @@ describe('home.discover share link', () => {
       Storage.prototype.setItem = () => { throw new Error('quota exceeded'); };
       await click(view.root, 'Install and share');
       Storage.prototype.setItem = original;
-      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('peerd could not install Signed app.');
+      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('mcdollar could not install Signed app.');
       expect(text(el(view.root, '.disc-panel .disc-hint'))).toBe('Reload the page, then try again.');
       expect(host.writes().map(call => call.type)).toEqual(['dweb/base/inspect-address']);
     } finally { Storage.prototype.setItem = original; view.close(); sessionStorage.removeItem(KEY); }
@@ -3012,7 +3012,7 @@ describe('home.discover share link', () => {
         expect(text(panel(view.root))).toContain(UNKNOWN_INSTALL);
         expect(button(view.root, 'Install and share')).toBe(undefined);
         await click(view.root, 'Check again');
-        expect(text(panel(view.root))).toContain('peerd still cannot tell if the install finished.');
+        expect(text(panel(view.root))).toContain('mcdollar still cannot tell if the install finished.');
         expect(sessionStorage.getItem(KEY)).toBe(address);
         await click(view.root, 'Discover');
         expect(/** @type {HTMLInputElement} */ (el(view.root, '.disc-start-form input')).disabled).toBe(true);
@@ -3067,7 +3067,7 @@ describe('home.discover share link', () => {
       enterLink(view.root, address);
       await click(view.root, 'Check link');
       await click(view.root, 'Install and share');
-      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('peerd could not install Signed app.');
+      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('mcdollar could not install Signed app.');
       expect(text(el(view.root, '.disc-panel .disc-hint'))).toBe('The person who shares it may have gone offline. Try again in a moment.');
       expect(text(view.root).includes('raw host install text')).toBe(false);
       expect(text(el(view.root, '.disc-app-title'))).toBe('Signed app');
@@ -3091,8 +3091,8 @@ describe('home.discover share link', () => {
       await click(view.root, 'Paste link');
       enterLink(view.root, address);
       await click(view.root, 'Check link');
-      // The page opens after peerd checked every file, so What to know says so.
-      expect(text(el(view.root, '.disc-safety-text'))).toBe(`Made by ${shortKey(ANA)}. peerd checked that this is exactly the app its maker shared. Nobody reviewed it for safety.`);
+      // The page opens after mcdollar checked every file, so What to know says so.
+      expect(text(el(view.root, '.disc-safety-text'))).toBe(`Made by ${shortKey(ANA)}. mcdollar checked that this is exactly the app its maker shared. Nobody reviewed it for safety.`);
       expect(text(el(view.root, '.disc-panel-cta .disc-footnote'))).toBe('Sharing means other people can get this app from you while your peer network is on.');
       await press(view.root, 'Install and share');
       expect(document.activeElement).toBe(view.root.querySelector('.disc-panel .disc-installed'));
@@ -3129,7 +3129,7 @@ describe('home.discover share link', () => {
       await click(view.root, 'Paste link');
       enterLink(view.root, address);
       await click(view.root, 'Check link');
-      // peerd knows the block, so it sends no check: the host would refuse their files.
+      // mcdollar knows the block, so it sends no check: the host would refuse their files.
       expect(shareError()).toBe(BLOCKED_LINK);
       expect(host.count('dweb/base/inspect-address')).toBe(0);
       // Blocked in another tab before this view read the list: the host refuses the check.
@@ -3140,7 +3140,7 @@ describe('home.discover share link', () => {
       // Blocked after the check: the install fails, and says why.
       await click(view.root, 'Check link');
       await click(view.root, 'Install and share');
-      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('peerd could not install Signed app.');
+      expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('mcdollar could not install Signed app.');
       expect(text(el(view.root, '.disc-panel .disc-hint'))).toBe('You blocked the maker of this app. To install it, unblock them in Contacts.');
       expect(button(panel(view.root), 'Try again')).toBe(undefined);
       expect(host.writes().map(call => call.type)).toEqual(['dweb/base/inspect-address', 'dweb/base/inspect-address', 'dweb/base/install-address']);
@@ -3167,9 +3167,9 @@ describe('home.discover share link', () => {
       // An admitted failure or a lost reply can leave the App open.
       for (const expectedCount of [2, 3]) {
         await click(view.root, 'Open');
-        expect(text(panel(view.root))).toContain('peerd is not sure the app opened. Check your tabs.');
+        expect(text(panel(view.root))).toContain('mcdollar is not sure the app opened. Check your tabs.');
         expect(panel(view.root).querySelector('.error')).toBe(null);
-        expect([...panel(view.root).querySelectorAll('[role="status"]')].some(node => text(node) === 'peerd is not sure the app opened. Check your tabs.')).toBe(true);
+        expect([...panel(view.root).querySelectorAll('[role="status"]')].some(node => text(node) === 'mcdollar is not sure the app opened. Check your tabs.')).toBe(true);
         expect(host.count('apps/open')).toBe(expectedCount);
       }
     } finally { view.close(); sessionStorage.removeItem(KEY); }
@@ -3206,7 +3206,7 @@ describe('home.discover share link', () => {
           await click(view.root, 'Open');
           expect(host.writes().at(-1)).toEqual({ type: 'apps/open', appId: 'app-link' });
         } else {
-          expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('peerd could not install Unnamed app.');
+          expect(text(el(view.root, '.disc-panel [role="alert"]'))).toBe('mcdollar could not install Unnamed app.');
           await click(view.root, 'Try again');
           expect(host.count('dweb/base/install-address')).toBe(2);
           await click(view.root, 'Discover');
@@ -3327,7 +3327,7 @@ describe('home.discover share link', () => {
       const read = deferred();
       let hold = false;
       const host = fakeHost({
-        heard: [same], library: update ? [local(appId, same, { uri: 'peerd://older', version_id: 'same-v1', seq: 1 })] : [],
+        heard: [same], library: update ? [local(appId, same, { uri: 'mcdollar://older', version_id: 'same-v1', seq: 1 })] : [],
       }, {
         'dweb/base/inspect-address': () => ({ ok: true, summary }), [type]: () => reply.promise,
         'apps/list': () => hold ? read.promise : { ok: true, apps: host.state.library },
@@ -3351,7 +3351,7 @@ describe('home.discover share link', () => {
         await click(view.root, 'Discover');
         await click(view.root, 'Paste link');
         await click(view.root, 'Check link');
-        const message = unknown ? `peerd is not sure the ${update ? 'update' : 'install'} finished. It may still finish by itself.`
+        const message = unknown ? `mcdollar is not sure the ${update ? 'update' : 'install'} finished. It may still finish by itself.`
           : `You can leave this page. The ${update ? 'update' : 'install'} keeps going.`;
         expect(text(el(view.root, '.disc-panel > [role="status"]:not(.disc-installed)'))).toBe(message);
         expect(button(view.root, 'Install and share')).toBe(undefined);
@@ -3394,7 +3394,7 @@ describe('home.discover share link', () => {
       const appId = 'local-same';
       const reply = deferred();
       const host = fakeHost({
-        heard: [same], library: action === 'update' ? [local(appId, same, { uri: 'peerd://older', version_id: 'same-v1', seq: 1 })] : [],
+        heard: [same], library: action === 'update' ? [local(appId, same, { uri: 'mcdollar://older', version_id: 'same-v1', seq: 1 })] : [],
       }, { 'dweb/base/inspect-address': () => ({ ok: true, summary }), [type]: () => reply.promise, 'apps/open': () => ({ ok: true }) });
       const effects = createEffects();
       let view = mount({ send: host.send, effects });
@@ -3481,7 +3481,7 @@ describe('home.discover share link', () => {
       enterLink(view.root, address);
       await click(view.root, 'Check link');
       expect(status()).toBe(idleStatus);
-      expect(text(idleStatus)).toBe('Checking the link. peerd downloads the app and checks every file…');
+      expect(text(idleStatus)).toBe('Checking the link. mcdollar downloads the app and checks every file…');
       // Cancel while the check runs: the row closes, and the late result opens nothing.
       await press(view.root, 'Cancel');
       expect(view.root.querySelector('.disc-start-form')).toBe(null);
@@ -3524,8 +3524,8 @@ describe('home.discover share link', () => {
   });
 
   it('borrows a name and description only from the card its own publisher signed', async () => {
-    const forged = card('forged', 'peerd Wallet (official)', BOB, {
-      version_id: target.hash, uri: target.uri, description: 'Reviewed and approved by the peerd team.',
+    const forged = card('forged', 'mcdollar Wallet (official)', BOB, {
+      version_id: target.hash, uri: target.uri, description: 'Reviewed and approved by the mcdollar team.',
     });
     const signed = card('signed', 'Signed card name', ANA, { version_id: target.hash, description: 'From the maker.' });
     const host = fakeHost({ heard: [forged], contacts: [{ did: ANA, name: 'Ana', saved: true }] }, {
@@ -3539,7 +3539,7 @@ describe('home.discover share link', () => {
       await click(view.root, 'Check link');
       expect(text(el(view.root, '.disc-app-maker'))).toBe('Made by Ana, someone you know');
       expect(text(el(view.root, '.disc-app-title'))).toBe('Unnamed app');
-      // No card its publisher signed: peerd does not know the description, so it claims none.
+      // No card its publisher signed: mcdollar does not know the description, so it claims none.
       expect(view.root.querySelector('.disc-app-desc')).toBe(null);
       await click(view.root, 'Technical details');
       expect(text(view.root).includes(WASM_HINT)).toBe(false);
@@ -3686,7 +3686,7 @@ describe('home.discover makers', () => {
       } }),
     });
     const view = mount({ send: host.send });
-    const NOT_IN_LIBRARY = 'You made this app. It is not in your Library now. When you install it, peerd checks that every file is exactly what you shared.';
+    const NOT_IN_LIBRARY = 'You made this app. It is not in your Library now. When you install it, mcdollar checks that every file is exactly what you shared.';
     try {
       await settle();
       // The tile and the page never show the user their own key as a maker.
@@ -3954,7 +3954,7 @@ describe('home.discover block a maker', () => {
     } finally { view.close(); }
   });
 
-  it('your own maker page offers no Block, and neither does a page while peerd has not read your key', async () => {
+  it('your own maker page offers no Block, and neither does a page while mcdollar has not read your key', async () => {
     const host = fakeHost({ heard: [card('mine', 'My app', SELF), card('a', 'Ana app', ANA)] });
     const view = mount({ send: host.send });
     try {
@@ -3996,7 +3996,7 @@ describe('home.discover block a maker', () => {
       const dialog = el(view.root, '.disc-block[role="dialog"]');
       expect(dialog.getAttribute('aria-modal')).toBe('true');
       expect(text(el(dialog, `#${dialog.getAttribute('aria-labelledby')}`))).toBe('Block Ana?');
-      expect(text(el(dialog, `#${dialog.getAttribute('aria-describedby')}`))).toBe('Their apps leave Discover. peerd stops downloading their files '
+      expect(text(el(dialog, `#${dialog.getAttribute('aria-describedby')}`))).toBe('Their apps leave Discover. mcdollar stops downloading their files '
         + 'and disconnects from them. Apps you already installed stay in your Library.');
       expect(text(dialog)).toContain('You can undo this in Contacts.');
       expect(view.root.querySelector('.disc-menu')).toBe(null);
@@ -4076,25 +4076,25 @@ describe('home.discover block a maker', () => {
       const dialog = el(view.root, '.disc-block');
       await pressOff(view.root, 'Block Ana');
       const alert = el(dialog, '[role="alert"]');
-      expect([text(alert), alert.classList.contains('error')]).toEqual(['peerd could not block Ana. Try again.', true]);
+      expect([text(alert), alert.classList.contains('error')]).toEqual(['mcdollar could not block Ana. Try again.', true]);
       expect(document.activeElement).toBe(el(dialog, '[data-block-confirm]'));
       expect(text(view.root)).toContain('Apps from Ana');
       await pressOff(view.root, 'Block Ana');
       const status = el(dialog, 'p[role="status"]');
       // The fix is on screen: Check again reads the list here.
-      expect([text(status), status.classList.contains('error')]).toEqual(['peerd is not sure Ana is blocked. Check again before you try again.', false]);
+      expect([text(status), status.classList.contains('error')]).toEqual(['mcdollar is not sure Ana is blocked. Check again before you try again.', false]);
       expect(dialog.querySelector('[role="alert"]')).toBe(null);
       expect(button(dialog, 'Block Ana')).toBe(undefined);
       expect(document.activeElement).toBe(el(dialog, '[data-block-check]'));
       // The list does not name the maker, so the block did not happen.
       await pressOff(view.root, 'Check again');
-      expect(text(el(dialog, '[role="alert"]'))).toBe('peerd could not block Ana. Try again.');
+      expect(text(el(dialog, '[role="alert"]'))).toBe('mcdollar could not block Ana. Try again.');
       expect(document.activeElement).toBe(el(dialog, '[data-block-confirm]'));
       await pressOff(view.root, 'Block Ana');
       // A list read that fails decides nothing: the neutral line stays, and focus returns to Check again.
       listFails = true;
       await pressOff(view.root, 'Check again');
-      expect(text(el(dialog, 'p[role="status"]'))).toBe('peerd is not sure Ana is blocked. Check again before you try again.');
+      expect(text(el(dialog, 'p[role="status"]'))).toBe('mcdollar is not sure Ana is blocked. Check again before you try again.');
       expect(document.activeElement).toBe(el(dialog, '[data-block-check]'));
       listFails = false;
       // This time the host stored it after all: the list is the receipt.
@@ -4133,7 +4133,7 @@ describe('home.discover block a maker', () => {
       expect(view.root.querySelector('.disc-block')).toBe(dialog);
       expect(button(dialog, 'Blocking…')).toBeTruthy();
       reply.resolve({ ok: false, error: 'vault-locked' }); await settle();
-      expect(text(el(dialog, '[role="alert"]'))).toBe('peerd could not block Ana. Try again.');
+      expect(text(el(dialog, '[role="alert"]'))).toBe('mcdollar could not block Ana. Try again.');
       expect(document.activeElement).toBe(el(dialog, '[data-block-confirm]'));
       expect(host.count('dweb/peer-block')).toBe(1);
     } finally { reply.resolve({ ok: false }); view.close(); }
@@ -4275,12 +4275,12 @@ describe('home.discover block a maker', () => {
         await click(view.root, 'Made by Ana, someone you know');
         if (reply.outcomeKnown) {
           // The form comes back as the user left it, with the line that says what failed.
-          expect(text(el(view.root, '.disc-rename [role="alert"]'))).toBe('peerd could not save the name. Try again.');
+          expect(text(el(view.root, '.disc-rename [role="alert"]'))).toBe('mcdollar could not save the name. Try again.');
           expect(/** @type {HTMLInputElement} */ (el(view.root, '.disc-rename input')).value).toBe('Ana Lopez');
         } else {
           expect(view.root.querySelector('.disc-rename')).toBe(null);
           expect([...view.root.querySelectorAll('.disc-page p[role="status"]')].map(node => text(node)))
-            .toContain('peerd is not sure the name was saved. Check Contacts before you try again.');
+            .toContain('mcdollar is not sure the name was saved. Check Contacts before you try again.');
         }
         expect(host.count('contacts/set')).toBe(1);
       } finally { save.resolve({ ok: false }); view.close(); }
@@ -4305,7 +4305,7 @@ describe('home.discover block a maker', () => {
       await click(view.root, 'Made by Ana, someone you know');
       expect(button(el(view.root, '.disc-block'), 'Blocking…')?.disabled).toBe(true);
       reply.resolve({ ok: false, error: 'vault-locked' }); await settle();
-      expect(text(el(view.root, '.disc-block [role="alert"]'))).toBe('peerd could not block Ana. Try again.');
+      expect(text(el(view.root, '.disc-block [role="alert"]'))).toBe('mcdollar could not block Ana. Try again.');
       expect(host.count('dweb/peer-block')).toBe(1);
     } finally { reply.resolve({ ok: false }); view.close(); }
   });
@@ -4329,7 +4329,7 @@ describe('home.discover block a maker', () => {
   });
 
   it('a lost rename reply stays unsure only until a read shows the name as the store saves it', async () => {
-    const unsure = 'peerd is not sure the name was saved. Check Contacts before you try again.';
+    const unsure = 'mcdollar is not sure the name was saved. Check Contacts before you try again.';
     const host = fakeHost({ heard: [card('b', 'Trip planner', BOB)] }, { 'contacts/set': (message) => {
       // The store trims the name and collapses its inner spaces.
       host.state.contacts = [{ did: BOB, name: String(message.name).trim().replace(/\s+/g, ' '), saved: true }];
@@ -4372,7 +4372,7 @@ describe('home.discover block a maker', () => {
       await focusPoll();
       expect(tileKeys(view.root)).toEqual(['b']);
       expect(view.root.querySelector('.disc-yours')).toBe(null);
-      // Unblocked in Contacts: their apps come back the next time peerd hears from them.
+      // Unblocked in Contacts: their apps come back the next time mcdollar hears from them.
       host.state.running = true;
       host.state.blocked = [];
       await focusPoll();
@@ -4482,7 +4482,7 @@ describe('home.discover block a maker', () => {
       await click(view.root, 'Add a name');
       type('  Bob  ');
       await pressOff(view.root, 'Save');
-      expect(text(el(view.root, '.disc-rename [role="alert"]'))).toBe('peerd could not save the name. Try again.');
+      expect(text(el(view.root, '.disc-rename [role="alert"]'))).toBe('mcdollar could not save the name. Try again.');
       expect(document.activeElement).toBe(button(view.root, 'Save'));
       await pressOff(view.root, 'Save');
       expect(host.writes()).toEqual([{ type: 'contacts/set', did: BOB, name: 'Bob' }, { type: 'contacts/set', did: BOB, name: 'Bob' }]);
@@ -4496,7 +4496,7 @@ describe('home.discover block a maker', () => {
       expect(/** @type {HTMLInputElement} */ (el(view.root, '.disc-rename input')).value).toBe('Bob');
       type('Bobby');
       await pressOff(view.root, 'Save');
-      const unsure = 'peerd is not sure the name was saved. Check Contacts before you try again.';
+      const unsure = 'mcdollar is not sure the name was saved. Check Contacts before you try again.';
       expect(text(el(view.root, '.disc-page > p[role="status"]'))).toBe(unsure);
       expect(text(el(view.root, '.disc-person-head h2'))).toBe('Bob');
       host.state.contacts = [{ did: BOB, name: 'Bobby', saved: true }];
@@ -4562,7 +4562,7 @@ describe('home.discover keyboard focus', () => {
       // The button is off while the check runs, so focus fell to the body.
       expect(document.activeElement).toBe(document.body);
       inspect.resolve({ ok: false }); await settle();
-      expect(text(el(view.root, '.disc-start-row [role="alert"]'))).toContain('peerd could not check this app.');
+      expect(text(el(view.root, '.disc-start-row [role="alert"]'))).toContain('mcdollar could not check this app.');
       expect(document.activeElement).toBe(view.root.querySelector('.disc-start-form input'));
       await press(view.root, 'Show more');
       const keys = /** @type {string[]} */ (tileKeys(view.root));
@@ -4832,7 +4832,7 @@ describe('home.discover entry points', () => {
       };
       try {
         await settle();
-        await click(view.root, 'Comes with peerd');
+        await click(view.root, 'Comes with mcdollar');
         expect(button(view.root, 'Add and open Chat rooms')?.disabled).toBe(true);
         gate = false;
         library.resolve({ ok: true, apps: [] }); await settle();
@@ -4848,12 +4848,12 @@ describe('home.discover entry points', () => {
         await click(view.root, 'All');
         await openTile(view.root, 'a');
         await click(view.root, 'Discover');
-        await click(view.root, 'Comes with peerd');
+        await click(view.root, 'Comes with mcdollar');
         expect(reason(view)).toEqual(['status', false]);
         view.close();
         view = mount({ send: host.send, effects });
         await settle();
-        await click(view.root, 'Comes with peerd');
+        await click(view.root, 'Comes with mcdollar');
         expect(reason(view)).toEqual(['status', false]);
         expect(button(view.root, 'Add and open Chat rooms')?.disabled).toBe(true);
         // Commons in the catalog is the receipt: the fence and its reason go.
@@ -4877,7 +4877,7 @@ describe('home.discover entry points', () => {
     const second = mount({ send: installed.send });
     try {
       await settle();
-      await click(second.root, 'Comes with peerd');
+      await click(second.root, 'Comes with mcdollar');
       expect(button(second.root, 'Add and open Chat rooms')).toBe(undefined);
       // The tile's own Open; the Your apps row above it lists Commons too.
       const tileOpen = () => el(second.root, '[data-key="commons"]');
@@ -4888,7 +4888,7 @@ describe('home.discover entry points', () => {
       expect(text(el(second.root, '[data-key="commons"] .error[role="alert"]'))).toBe(OPEN_FAILED);
       for (openOutcome of ['unknown', 'lost']) {
         await click(tileOpen(), 'Open');
-        expect(text(el(second.root, '[data-key="commons"] [role="status"]'))).toBe('peerd is not sure the app opened. Check your tabs.');
+        expect(text(el(second.root, '[data-key="commons"] [role="status"]'))).toBe('mcdollar is not sure the app opened. Check your tabs.');
         expect(el(second.root, '[data-key="commons"]').querySelector('.error')).toBe(null);
       }
       // Commons is deleted elsewhere while Open has focus: the add is a new
@@ -4907,15 +4907,15 @@ describe('home.discover entry points', () => {
     const effects = createEffects();
     const view = mount({ send: host.send, effects });
     Object.defineProperty(window, 'fetch', { configurable: true, writable: true,
-      value: async (/** @type {RequestInfo|URL} */ input, /** @type {RequestInit|undefined} */ init) => String(input).includes('/peerd-distributed/apps/commons/')
+      value: async (/** @type {RequestInfo|URL} */ input, /** @type {RequestInit|undefined} */ init) => String(input).includes('/mcdollar-distributed/apps/commons/')
         ? new Response('', { status: 500 }) : original(input, init),
     });
     try {
       await settle();
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       await click(view.root, 'Add and open Chat rooms');
       await until(() => !!view.root.querySelector('[role="alert"]'));
-      expect(text(el(view.root, '[data-key="commons"] [role="alert"]'))).toBe('peerd could not load the Chat rooms app. Reload the page, then try again.');
+      expect(text(el(view.root, '[data-key="commons"] [role="alert"]'))).toBe('mcdollar could not load the Chat rooms app. Reload the page, then try again.');
       expect(effects.commons).toBe(null);
       expect(commonsNote(view.root)).toBe(null);
       expect(button(view.root, 'Add and open Chat rooms')?.disabled).toBe(false);
@@ -4933,7 +4933,7 @@ describe('home.discover entry points', () => {
     let view = mount({ send: host.send, effects });
     try {
       await settle();
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       await click(view.root, 'Add and open Chat rooms');
       await until(() => host.count('dweb/open-commons') === 1 && !!view.root.querySelector('[role="alert"]'));
       expect(text(el(view.root, '[data-key="commons"] [role="alert"]'))).toBe(COMMONS_FAILED);
@@ -4946,7 +4946,7 @@ describe('home.discover entry points', () => {
       view.close();
       view = mount({ send: host.send, effects });
       await settle();
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       expect(button(view.root, 'Opening…')?.disabled).toBe(true);
       expect(commonsNote(view.root)).toBe(null);
       later.resolve({ ok: false, outcomeKnown: false });
@@ -4963,13 +4963,13 @@ describe('home.discover entry points', () => {
     let view = mount({ send: host.send, effects });
     try {
       await settle();
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       // The user leaves at once, while the seed still loads and nothing is sent.
       button(view.root, 'Add and open Chat rooms')?.click();
       view.close();
       view = mount({ send: host.send, effects });
       await settle();
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       const add = button(view.root, 'Opening…');
       expect(add?.disabled).toBe(true);
       add?.click();
@@ -4989,7 +4989,7 @@ describe('home.discover entry points', () => {
     let view = mount({ send: host.send, effects });
     try {
       await settle();
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       await click(view.root, 'Add and open Chat rooms');
       await until(() => host.count('dweb/open-commons') === 1);
       // The user leaves while the add runs. It is confirmed, then Commons is deleted in the Library.
@@ -4999,7 +4999,7 @@ describe('home.discover entry points', () => {
       expect(effects.commons).toBe('adding');
       view = mount({ send: host.send, effects });
       await settle();
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       expect(effects.commons).toBe(null);
       expect(button(view.root, 'Add and open Chat rooms')?.disabled).toBe(false);
       await click(view.root, 'Add and open Chat rooms');
@@ -5019,7 +5019,7 @@ describe('home.discover entry points', () => {
     const view = mount({ send: host.send, effects });
     try {
       await settle();
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       // A poll's read is in flight when the add is sent and confirmed.
       held = [first.promise, second.promise];
       await focusPoll();
@@ -5044,13 +5044,13 @@ describe('home.discover entry points', () => {
     let view = mount({ send: host.send, effects });
     try {
       await settle();
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       await click(view.root, 'Add and open Chat rooms');
       await until(() => host.count('dweb/open-commons') === 1);
       view.close();
       view = mount({ send: host.send, effects });
       await settle();
-      await click(view.root, 'Comes with peerd');
+      await click(view.root, 'Comes with mcdollar');
       host.state.library = [{ id: 'app-commons', dweb: { seed: 'commons' } }];
       const reads = host.count('apps/list');
       reply.resolve({ ok: true });

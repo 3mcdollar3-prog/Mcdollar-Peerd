@@ -65,7 +65,7 @@ export const orderHooks = (hooks) => [...hooks].sort((a, b) =>
   || String(a.id).localeCompare(String(b.id)));
 
 // Authoring placeholder — the declarative (no-code) shape from
-// peerd-runtime/tools/hooks/compile.js, which works under any CSP.
+// mcdollar-runtime/tools/hooks/compile.js, which works under any CSP.
 const ADD_PLACEHOLDER = [
   '---',
   'id: block-typed-secrets',
@@ -168,7 +168,7 @@ export const HooksView = {
         }),
         m('p.muted', { style: 'font-size:11px; margin:0;' },
           'Markdown with frontmatter (id, event, match, an optional declarative '
-          + 'rule block) — the .peerd/hooks/*.md format. Compile errors surface here.'),
+          + 'rule block) — the .mcdollar/hooks/*.md format. Compile errors surface here.'),
         m('button', { type: 'submit', disabled: ui.busy || !ui.addText.trim() },
           ui.busy ? 'Saving…' : 'Save hook'),
       ]) : null,

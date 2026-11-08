@@ -11,7 +11,7 @@ let root: string;
 const put = (name: string, contents: string) => writeFileSync(join(root, name), contents);
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), 'peerd-osv-scope-'));
+  root = mkdtempSync(join(tmpdir(), 'mcdollar-osv-scope-'));
   for (const directory of ['extension', 'packaging', 'scripts', '.github']) mkdirSync(join(root, directory));
   put('package.json', '{}');
   put('bun.lock', lock);

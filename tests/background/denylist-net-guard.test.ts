@@ -4,7 +4,7 @@ import {
   denylistSessionRuleUpdate,
   PRIVATE_NETWORK_INITIATOR_RULE_IDS,
   PRIVATE_NETWORK_RULE_IDS,
-} from '../../extension/peerd-egress/denylist/dnr-rules.js';
+} from '../../extension/mcdollar-egress/denylist/dnr-rules.js';
 
 // The imperative half of the denylist's DNR backstop: does it keep the exact
 // session rule set, and does it stay harmless when the API isn't there?

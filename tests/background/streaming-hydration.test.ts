@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { makeTurnSlots } from '../../extension/peerd-runtime/loop/turn-slots.js';
+import { makeTurnSlots } from '../../extension/mcdollar-runtime/loop/turn-slots.js';
 
 // why: the private shell has no import seam. Execute its exact function body.
 // This checks the body only. A real panel reload must still check module wiring.

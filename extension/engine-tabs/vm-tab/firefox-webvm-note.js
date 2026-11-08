@@ -4,7 +4,7 @@
 // why: WebVM (CheerpX) needs SharedArrayBuffer, which the browser grants only to
 // a cross-origin-ISOLATED page. Firefox doesn't honor COOP/COEP as manifest keys,
 // so an extension page can't isolate itself there — a Firefox PLATFORM limitation,
-// not a peerd bug (packaging/gen-manifest.ts already strips the dead keys from the
+// not a mcdollar bug (packaging/gen-manifest.ts already strips the dead keys from the
 // Firefox manifest). Rather than fail the boot with a misleading "manifest must
 // declare…" error, Firefox users get a clear explanation and the two open threads
 // to push on, so the fix gets weight.
@@ -34,7 +34,7 @@ export const buildFirefoxWebVmNote = ({ bugUrl = FIREFOX_WEBVM_BUG, wecgUrl = WE
   const body = doc.createElement('p');
   body.textContent = 'The Linux VM (CheerpX) needs SharedArrayBuffer, which browsers grant '
     + 'only to cross-origin-isolated pages. Firefox doesn’t let an extension page isolate '
-    + 'itself, so the VM can’t start here. This is a Firefox platform limitation, not a peerd '
+    + 'itself, so the VM can’t start here. This is a Firefox platform limitation, not a mcdollar '
     + 'bug — everything else works, and WebVM runs today in the Chrome build.';
 
   const cta = doc.createElement('p');

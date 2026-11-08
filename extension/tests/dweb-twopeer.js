@@ -16,17 +16,17 @@
 // node, then polls window.__DWEB__.report() until both peers link and each has
 // heard the other's gossip. State on a global; no UI.
 
-import { generateIdentity, joinRoom } from '/peerd-distributed/index.js';
-import { createBaseNetwork } from '/peerd-distributed/base-network.js';
+import { generateIdentity, joinRoom } from '/mcdollar-distributed/index.js';
+import { createBaseNetwork } from '/mcdollar-distributed/base-network.js';
 // The PRODUCTION a2a ask/reply correlation core — driven here over the REAL mesh
 // direct channel so the live two-peer round-trip exercises the same code the
 // dweb actor's a2a_run uses (envelope tag + request/reply, the did-bound resolve).
-// why the DEEP import (not /peerd-runtime/index.js): the barrel transitively pulls
+// why the DEEP import (not /mcdollar-runtime/index.js): the barrel transitively pulls
 // in browser-polyfill, which throws off an extension origin — this harness page
 // runs on plain http. a2a-dispatch.js is a pure, import-free module, so it loads
 // cleanly here. (tests/ is exempt from the no-deep-import rule.)
-import { makeMeshDispatch } from '/peerd-runtime/actor/a2a-dispatch.js';
-import { createConversationRegistry } from '/peerd-runtime/actor/conversation-registry.js';
+import { makeMeshDispatch } from '/mcdollar-runtime/actor/a2a-dispatch.js';
+import { createConversationRegistry } from '/mcdollar-runtime/actor/conversation-registry.js';
 import { twoPeerEndpoint } from './dweb-twopeer-endpoint.js';
 
 const params = new URLSearchParams(location.search);
@@ -38,7 +38,7 @@ const a2aOn = params.get('a2a') === '1';   // add the live ask/reply beat on top
 // layer (gossip flood + dedup) works over the live mesh, not just that a data
 // channel opened. Presence (snapshot.present) rides gossip too, so a green run
 // proves both the mesh AND the pub/sub that sits on it.
-const CHAT_TOPIC = 'peerd-harness/hello';
+const CHAT_TOPIC = 'mcdollar-harness/hello';
 
 const out = document.getElementById('out');
 /** @type {Set<string>} */

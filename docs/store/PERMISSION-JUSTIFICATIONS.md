@@ -8,7 +8,7 @@ blocker below is resolved against the package being uploaded.
 
 ## Single-purpose statement
 
-> peerd has one purpose: it is an AI assistant that performs tasks in
+> mcdollar has one purpose: it is an AI assistant that performs tasks in
 > the user's browser on the user's instruction. The user types or
 > speaks a request in the side panel; the assistant carries it out by
 > reading and interacting with web pages in the user's tabs. Every
@@ -75,7 +75,7 @@ blocker below is resolved against the package being uploaded.
 > both, the extension leaves the child alone until ownership data has loaded.
 >
 > Firefox may summarize this as "Access browser activity during navigation."
-> In peerd, the permission is used only for the child-tab correlation above.
+> In mcdollar, the permission is used only for the child-tab correlation above.
 
 ### `webRequest` and `webRequestBlocking` (Firefox only)
 
@@ -83,7 +83,7 @@ blocker below is resolved against the package being uploaded.
 > local, cloud-metadata, or denylisted request from the exact child of a tab the
 > assistant is already driving. This closes the first-request gap while the child's
 > tab-scoped network rules are installed, then the temporary child marker is
-> released. peerd does not read request bodies, alter public requests, or apply
+> released. mcdollar does not read request bodies, alter public requests, or apply
 > this guard to children from ordinary user tabs. A subrequest stopped by this
 > temporary guard produces a URL-free tool and Activity receipt. A request
 > blocked first by the declarative rule is silent. Chrome packages do not
@@ -92,14 +92,14 @@ blocker below is resolved against the package being uploaded.
 ### `tabGroups`
 
 > The assistant's sandboxes (Linux VM, Notebook, app pages) each run
-> in their own tab; peerd groups these working tabs so the user's
+> in their own tab; mcdollar groups these working tabs so the user's
 > window stays organized and the assistant's tabs are visually
 > distinguishable from the user's own browsing.
 
 ### `storage`
 
 > The encrypted API-key vault, conversation history, settings, denylist,
-> and audit log are stored in `chrome.storage.local` or IndexedDB. peerd
+> and audit log are stored in `chrome.storage.local` or IndexedDB. mcdollar
 > does not sync this storage to a developer server. Messages and task
 > context are sent only as needed to the model provider selected by the
 > user.
@@ -156,7 +156,7 @@ data and later use local JavaScript or WebAssembly execution surfaces. The open
 fetched-data execution policy must decide and document that broader contract
 before the dashboard answer is final.
 
-Current source: `extension/peerd-engine/module-resolver.js`,
+Current source: `extension/mcdollar-engine/module-resolver.js`,
 `extension/offscreen/job-runner.js`,
 `extension/engine-tabs/notebook-tab/notebook-tab.js`,
 `packaging/gen-channel-config.ts`, and
@@ -177,9 +177,9 @@ The current behavior handles at least:
   may also request the third-party site needed for the task. Those paths use
   SSRF checks, a sensitive-site denylist where applicable, and the local audit
   log. No website content is sent to the developer.
-- **Web browsing activity:** peerd reads task-relevant tab URLs and titles. The
+- **Web browsing activity:** mcdollar reads task-relevant tab URLs and titles. The
   local Activity log records tool outcomes, direct open-web fetches, and policy
-  denials. peerd does not read or upload the browser's general history database.
+  denials. mcdollar does not read or upload the browser's general history database.
 - **Personal communications and user-provided content:** prompts, conversation
   history, and task-relevant page content may be stored locally and sent to the
   selected model provider. Page content can itself contain messages or other
@@ -190,7 +190,7 @@ The current behavior handles at least:
   audio on the device.
 
 Do not use a blanket "everything else not collected" statement. A user can ask
-peerd to process page content containing personally identifiable, financial, or
+mcdollar to process page content containing personally identifiable, financial, or
 health information, even though the default denylist reduces that exposure.
 Review the current dashboard category names and the uploaded package before
 selecting the final checkboxes.
@@ -203,5 +203,5 @@ Certifications (check all three):
 - I do not use or transfer user data to determine creditworthiness or
   for lending purposes ✔
 
-Privacy policy URL: `https://peerd.ai/privacy` (publish
-`docs/store/PRIVACY.md` through the `peerd-site` repository first).
+Privacy policy URL: `https://mcdollar.ai/privacy` (publish
+`docs/store/PRIVACY.md` through the `mcdollar-site` repository first).

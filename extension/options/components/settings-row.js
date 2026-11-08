@@ -21,7 +21,7 @@
 //
 // TIERS. `band: 'safety'` raises the group and rules it; everything else sits
 // flush. That is the only visual difference, and it is deliberate: a user
-// skimming for "what can peerd do to me" should find those four rows without
+// skimming for "what can mcdollar do to me" should find those four rows without
 // reading a word of copy.
 
 import m from '/vendor/mithril/mithril.js';
@@ -62,8 +62,8 @@ export const toggleSwitch = ({ on, busy = false, disabled = false, label, onclic
  *     aria-controls on the rationale region it expands. Absent = the button
  *     still carries aria-expanded, but controls nothing nameable.
  *   summary — present tense, describing the CURRENT state. Not a description of
- *     the setting: "peerd clicks and types without asking" tells you where you
- *     stand; "controls whether peerd asks" does not.
+ *     the setting: "mcdollar clicks and types without asking" tells you where you
+ *     stand; "controls whether mcdollar asks" does not.
  *   why — the long rationale, collapsed. Absent = no disclosure trigger.
  *   children — controls that only make sense while this row is on (an effort
  *     select, a model input). They render under the row; collapsing hides them

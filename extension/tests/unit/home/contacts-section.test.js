@@ -107,18 +107,18 @@ describe('home.contacts', () => {
     }] }) });
     const { root, unmount } = await mountView(send);
     try {
-      const names = [...root.querySelectorAll('.peerd-disc-name')].map((n) => n.textContent);
+      const names = [...root.querySelectorAll('.mcdollar-disc-name')].map((n) => n.textContent);
       expect(names.some((t) => t === 'Alice')).toBe(true);          // the saved overlay name
       // The live-only peer shows its short key alone (the last 8 characters), as
       // Discover and Blocked makers show a person, and the line under it does not repeat it.
       const live = rowWith(root, 'LIVELIVE');
-      expect(need(live, '.peerd-disc-name').textContent).toBe('LIVELIVE');
-      expect(live.querySelector('.peerd-disc-pub')).toBe(null);
+      expect(need(live, '.mcdollar-disc-name').textContent).toBe('LIVELIVE');
+      expect(live.querySelector('.mcdollar-disc-pub')).toBe(null);
       expect(root.textContent.includes('peer LIVELIVE')).toBe(false);
       // Someone unnamed with an app: the line under the key names the app count only.
-      expect(need(rowWith(root, 'UNNAMED'), '.peerd-disc-pub').textContent).toBe('1 app');
+      expect(need(rowWith(root, 'UNNAMED'), '.mcdollar-disc-pub').textContent).toBe('1 app');
       // Under a name, the key shows the same way, and only the key is a code.
-      const alice = need(rowWith(root, 'Alice'), '.peerd-disc-pub');
+      const alice = need(rowWith(root, 'Alice'), '.mcdollar-disc-pub');
       expect(alice.textContent).toBe('AAAAAAAA · 1 app');
       expect(need(alice, 'bdi.contact-key').textContent).toBe('AAAAAAAA');
       // its live status is rendered honestly
@@ -274,9 +274,9 @@ describe('home.contacts', () => {
       await flush();
       expect(send.calls.filter((call) => call.type === 'contacts/set').length).toBe(1);
       expect(send.calls.filter((call) => call.type === 'contacts/list').length).toBe(2);
-      // Neutral words: the change may have happened, and peerd reads the list again.
-      expect(need(root, '.peerd-disc-err[role="alert"]').textContent)
-        .toBe('peerd is not sure the favorite changed. Check the list before you try again.');
+      // Neutral words: the change may have happened, and mcdollar reads the list again.
+      expect(need(root, '.mcdollar-disc-err[role="alert"]').textContent)
+        .toBe('mcdollar is not sure the favorite changed. Check the list before you try again.');
       expect([...root.querySelectorAll('button')].some((button) =>
         button.textContent === 'Retry' || button.textContent === 'Retry update')).toBe(false);
       expect(need(rowWith(root, 'Alice'), '.contact-detail-actions button', HTMLButtonElement).disabled)
@@ -288,7 +288,7 @@ describe('home.contacts', () => {
     } finally { unmount(); }
   });
 
-  it('a name that peerd could not save says what failed, then what to do', async () => {
+  it('a name that mcdollar could not save says what failed, then what to do', async () => {
     const send = makeSend({
       'contacts/set': () => ({ ok: false, error: 'contact-store-unavailable', outcomeKnown: true }),
       'dweb/distributed/info': () => ({ ok: true, peers: [] }),
@@ -303,7 +303,7 @@ describe('home.contacts', () => {
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
       await flush();
       await flush();
-      expect(need(root, '.peerd-disc-err[role="alert"]').textContent).toBe('peerd could not save the name. Try again.');
+      expect(need(root, '.mcdollar-disc-err[role="alert"]').textContent).toBe('mcdollar could not save the name. Try again.');
       expect(send.calls.filter((call) => call.type === 'contacts/set').length).toBe(1);
     } finally { unmount(); }
   });
@@ -322,8 +322,8 @@ describe('home.contacts', () => {
       await flush();
       expect(send.calls.filter((call) => call.type === 'contacts/forget').length).toBe(1);
       expect(send.calls.filter((call) => call.type === 'contacts/list').length).toBe(2);
-      expect(root.textContent).toContain('peerd is not sure the contact was forgotten. Check the list before you try again.');
-      expect(root.textContent.includes('Peerd')).toBe(false);
+      expect(root.textContent).toContain('mcdollar is not sure the contact was forgotten. Check the list before you try again.');
+      expect(root.textContent.includes('Mcdollar')).toBe(false);
       expect(root.textContent.includes('Loading contacts…')).toBe(false);
     } finally { unmount(); }
   });
@@ -341,7 +341,7 @@ describe('home.contacts blocked makers', () => {
       const section = need(root, 'section.contacts-blocked');
       expect(need(section, 'h2').textContent).toBe('Blocked makers');
       expect(section.getAttribute('aria-labelledby')).toBe(need(section, 'h2').id);
-      expect(section.textContent).toContain('Their apps are hidden in Discover, and peerd does not connect to them.');
+      expect(section.textContent).toContain('Their apps are hidden in Discover, and mcdollar does not connect to them.');
       const rows = [...section.querySelectorAll('.contacts-blocked-row')];
       expect(rows.map((row) => row.querySelector('.contacts-blocked-name')?.textContent)).toEqual(['Alice', '2nYtLs6D']);
       expect(rows.map((row) => row.querySelector('.contacts-blocked-avatar')?.textContent)).toEqual(['A', '2n']);
@@ -373,7 +373,7 @@ describe('home.contacts blocked makers', () => {
       expect(root.querySelector('.contacts-blocked-row')).toBe(null);
       const line = need(root, '.contacts-unblocked');
       expect([line.textContent, line.getAttribute('role')])
-        .toEqual(['After you unblock someone, their apps show up again the next time peerd hears from them.', 'status']);
+        .toEqual(['After you unblock someone, their apps show up again the next time mcdollar hears from them.', 'status']);
       // Nobody is left, so the list says so, and the line about what a block does goes.
       expect(root.textContent).toContain('Nobody is blocked now.');
       expect(root.textContent.includes('Their apps are hidden')).toBe(false);
@@ -392,12 +392,12 @@ describe('home.contacts blocked makers', () => {
       // The pressed button is off while each request runs, so focus comes back to the row's button.
       await press('Unblock');
       const alert = need(row(), '[role="alert"]');
-      expect([alert.textContent, alert.classList.contains('error')]).toEqual(['peerd could not unblock Alice. Try again.', true]);
+      expect([alert.textContent, alert.classList.contains('error')]).toEqual(['mcdollar could not unblock Alice. Try again.', true]);
       expect(document.activeElement).toBe(need(row(), '[data-unblock]'));
       await press('Unblock');
       const status = need(row(), 'p[role="status"]');
       expect([status.textContent, status.classList.contains('error')])
-        .toEqual(['peerd is not sure Alice is unblocked. Check again before you try again.', false]);
+        .toEqual(['mcdollar is not sure Alice is unblocked. Check again before you try again.', false]);
       expect(row().querySelector('[role="alert"]')).toBe(null);
       // The unblock may be done, so the row claims neither outcome.
       expect(row().querySelector('.contacts-blocked-meta')).toBe(null);
@@ -405,14 +405,14 @@ describe('home.contacts blocked makers', () => {
       expect(document.activeElement).toBe(need(row(), '[data-unblock]'));
       // The list still names them, so the unblock did not happen.
       await press('Check again');
-      expect(need(row(), '[role="alert"]').textContent).toBe('peerd could not unblock Alice. Try again.');
+      expect(need(row(), '[role="alert"]').textContent).toBe('mcdollar could not unblock Alice. Try again.');
       expect(document.activeElement).toBe(need(row(), '[data-unblock]'));
       await press('Unblock');
       // This time it was stored after all: the list is the receipt.
       blocked = [];
       await press('Check again');
       expect(root.querySelector('.contacts-blocked-row')).toBe(null);
-      expect(root.textContent).toContain('After you unblock someone, their apps show up again the next time peerd hears from them.');
+      expect(root.textContent).toContain('After you unblock someone, their apps show up again the next time mcdollar hears from them.');
       expect(document.activeElement).toBe(need(root, '.contacts-unblocked'));
       expect(sent(send, 'dweb/peer-unblock').length).toBe(3);
     } finally { unmount(); }
@@ -481,7 +481,7 @@ describe('home.contacts blocked makers', () => {
       await flush();
       await flush();
       expect(root.querySelector('.contacts-blocked-row')).toBe(null);
-      expect(root.textContent).toContain('After you unblock someone, their apps show up again the next time peerd hears from them.');
+      expect(root.textContent).toContain('After you unblock someone, their apps show up again the next time mcdollar hears from them.');
       expect(sent(send, 'dweb/peer-unblock').length).toBe(1);
     } finally { for (const release of held) release(); unmount(); }
   });
@@ -507,7 +507,7 @@ describe('home.contacts blocked makers', () => {
       await polled(() => !root.querySelector('.contacts-blocked-row'));
       expect(root.querySelector('.contacts-blocked-row')).toBe(null);
       expect(need(root, '.contacts-unblocked').textContent)
-        .toBe('After you unblock someone, their apps show up again the next time peerd hears from them.');
+        .toBe('After you unblock someone, their apps show up again the next time mcdollar hears from them.');
       // Blocked again in Discover: the row offers Unblock, and nothing is left of the last try.
       blocked = [DID_A];
       await polled(() => !!root.querySelector('.contacts-blocked-row'));
@@ -567,7 +567,7 @@ describe('home.contacts blocked makers', () => {
     const { root, unmount } = await mountView(send);
     try {
       const section = need(root, 'section.contacts-blocked');
-      expect(need(section, '[role="alert"]').textContent).toBe('peerd could not load your blocked makers. Try again.');
+      expect(need(section, '[role="alert"]').textContent).toBe('mcdollar could not load your blocked makers. Try again.');
       fail = false;
       clickText(section, 'button', 'Try again');
       await flush();

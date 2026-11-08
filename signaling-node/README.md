@@ -33,11 +33,11 @@ DID and creates no peer ban. These limits do not provide per-person fairness,
 Sybil resistance, cross-process/account quotas, or HTTP front-door/WAF limits.
 Deployment ownership and account-wide admission remain separate work.
 
-The [real Bun budget regression](../tests/peerd-distributed/signaling-bun-budget.test.ts)
+The [real Bun budget regression](../tests/mcdollar-distributed/signaling-bun-budget.test.ts)
 exercises compatibility, aggregate refusal and recovery, and a bounded opaque
 negotiation burst. The
-[policy tests](../tests/peerd-distributed/signaling-budget.test.ts) and
-[cleanup tests](../tests/peerd-distributed/signaling-bun-cleanup.test.ts)
+[policy tests](../tests/mcdollar-distributed/signaling-budget.test.ts) and
+[cleanup tests](../tests/mcdollar-distributed/signaling-bun-cleanup.test.ts)
 cover accounting and failure paths. These prove shell behavior, not native
 WebRTC capacity or WAN performance. Benchmark paced admission separately
 from simultaneous negotiation storms, and report honest overload rather
@@ -62,8 +62,8 @@ ping/pong responses bypass handler quotas. Private keys map to distinct Durable
 Objects, so neither this record nor Bun's process budget supplies account-wide
 protection. Deployment, WAF policy and native runtime hibernation acceptance
 remain separate gates. The
-[Worker shell regressions](../tests/peerd-distributed/signaling-worker.test.ts)
-and [durable policy regressions](../tests/peerd-distributed/durable-room-budget.test.ts)
+[Worker shell regressions](../tests/mcdollar-distributed/signaling-worker.test.ts)
+and [durable policy regressions](../tests/mcdollar-distributed/durable-room-budget.test.ts)
 use a fake storage/runtime boundary and do not prove actual runtime eviction
 or persistence behavior.
 

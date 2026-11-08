@@ -17,7 +17,7 @@ const makeHarness = (over: Record<string, unknown> = {}) => {
     timeoutMs: 1000,
     ...over,
   } as any);
-  const sender = { tab: { id: 7, url: 'chrome-extension://peerd/engine-tabs/app-tab/index.html#app-1?owner=owner-claim' } };
+  const sender = { tab: { id: 7, url: 'chrome-extension://mcdollar/engine-tabs/app-tab/index.html#app-1?owner=owner-claim' } };
   return { handler, calls, sender };
 };
 

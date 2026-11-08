@@ -17,7 +17,7 @@ import {
   disarmMarkup,
   resolveTargetTab,
   scriptingTarget,
-} from '/peerd-runtime/browser-authority.js';
+} from '/mcdollar-runtime/browser-authority.js';
 
 /** @param {any} args @param {any} ctx */
 export const readOwnedPageAuthority = async (args, ctx) => {

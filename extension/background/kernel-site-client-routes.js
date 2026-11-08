@@ -1,7 +1,7 @@
 // @ts-check
 // Native nonsecret Site Client management. Rich derivation/runtime code stays lazy.
 
-const DB_NAME = 'peerd-site-clients';
+const DB_NAME = 'mcdollar-site-clients';
 const DB_VERSION = 1;
 const META_STORE = 'meta';
 const BODY_STORE = 'bodies';

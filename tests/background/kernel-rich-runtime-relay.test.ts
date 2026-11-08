@@ -30,17 +30,17 @@ describe('sealed rich relay host', () => {
       extensionRoot,
       join(extensionRoot, 'offscreen/kernel-rich-relay-host.js'),
     )].map((file) => relative(extensionRoot, file).replaceAll('\\', '/')));
-    expect(graph.has('peerd-runtime/controller-model.js')).toBe(true);
-    expect(graph.has('peerd-runtime/actor/provider-call-api.js')).toBe(true);
+    expect(graph.has('mcdollar-runtime/controller-model.js')).toBe(true);
+    expect(graph.has('mcdollar-runtime/actor/provider-call-api.js')).toBe(true);
     for (const module of [
-      'peerd-runtime/tools/registry.js',
-      'peerd-runtime/tools/metadata-registry.js',
-      'peerd-runtime/controller-turn-semantics.js',
-      'peerd-runtime/semantic.js',
+      'mcdollar-runtime/tools/registry.js',
+      'mcdollar-runtime/tools/metadata-registry.js',
+      'mcdollar-runtime/controller-turn-semantics.js',
+      'mcdollar-runtime/semantic.js',
     ]) expect(graph.has(module), `rich relay imports ${module}`).toBe(false);
     expect([...graph].filter((module) =>
-      module.startsWith('peerd-runtime/tools/defs/')
-        || module.startsWith('peerd-runtime/tools/metadata/'))).toEqual([]);
+      module.startsWith('mcdollar-runtime/tools/defs/')
+        || module.startsWith('mcdollar-runtime/tools/metadata/'))).toEqual([]);
   });
 
   test('keeps provider semantics controller-side and privileged transport worker-side', async () => {
@@ -48,10 +48,10 @@ describe('sealed rich relay host', () => {
       readFile(new URL('../../extension/offscreen/kernel-rich-relay-host.js', import.meta.url), 'utf8'),
       readFile(new URL('../../extension/background/kernel-rich-effect-authority.js', import.meta.url), 'utf8'),
     ]);
-    expect(relay).toContain("from '/peerd-provider/controller.js'");
-    expect(relay).toContain("from '/peerd-runtime/controller-model.js'");
+    expect(relay).toContain("from '/mcdollar-provider/controller.js'");
+    expect(relay).toContain("from '/mcdollar-runtime/controller-model.js'");
     for (const forbidden of [
-      '/peerd-provider/kernel.js', '/peerd-provider/background.js',
+      '/mcdollar-provider/kernel.js', '/mcdollar-provider/background.js',
       'getSecret', 'safeFetch', 'rich.model.call',
     ]) expect(authority).not.toContain(forbidden);
     expect(authority).not.toContain('callModel');

@@ -21,15 +21,15 @@ import { join } from 'node:path';
 import { REPO_ROOT } from './lib.ts';
 
 // Whole module dirs imported verbatim from extension/ — the DI'd core + its
-// deps. peerd-distributed is deliberately ABSENT: nothing staged imports it
+// deps. mcdollar-distributed is deliberately ABSENT: nothing staged imports it
 // (the dweb boundary), the loader is swapped to the store stub, and excluding
 // it makes "no dweb in the web tree" a posture guarantee just like the store
 // build's dweb-prune (tests/web/web-posture.test.ts pins this).
 export const WEB_INCLUDE_DIRS = [
-  'peerd-runtime',
-  'peerd-provider',
-  'peerd-engine',
-  'peerd-egress',
+  'mcdollar-runtime',
+  'mcdollar-provider',
+  'mcdollar-engine',
+  'mcdollar-egress',
   'shared',
   'vendor',
 ] as const;
@@ -94,9 +94,9 @@ export const WEB_STUB_PATHS = [
 // means a new shim-coverage review, then a deliberate entry here.
 // Format: '<staged-relative-path>|<trimmed source line>'.
 export const KNOWN_BROWSER_TOUCHES = new Set<string>([
-  "shared/pull-in-peerd.js|browser.runtime.sendMessage({ type: 'sidepanel/close' })",
-  "shared/pull-in-peerd.js|browser.runtime.sendMessage({ type: 'surfaces/get' })",
-  'shared/pull-in-peerd.js|browser.runtime.onMessage.addListener((/** @type {unknown} */ raw) => {',
+  "shared/pull-in-mcdollar.js|browser.runtime.sendMessage({ type: 'sidepanel/close' })",
+  "shared/pull-in-mcdollar.js|browser.runtime.sendMessage({ type: 'surfaces/get' })",
+  'shared/pull-in-mcdollar.js|browser.runtime.onMessage.addListener((/** @type {unknown} */ raw) => {',
   'shared/peer-notifications.js|browser.runtime?.onMessage?.addListener((/** @type {unknown} */ raw) => {',
   'shared/open-options.js|browser.runtime.openOptionsPage();',
   'shared/open-options.js|browser.tabs.create({',
@@ -105,7 +105,7 @@ export const KNOWN_BROWSER_TOUCHES = new Set<string>([
   // there is no extension runtime to message — the button simply does nothing
   // and the pill stays up. The side panel's Stop is the backstop there, exactly
   // as it is when the extension's own SW has been evicted.
-  "peerd-runtime/dom/activity-overlay-injected.js|chrome.runtime.sendMessage({ type: 'agent/stop', activity: 'live' });",
+  "mcdollar-runtime/dom/activity-overlay-injected.js|chrome.runtime.sendMessage({ type: 'agent/stop', activity: 'live' });",
 ]);
 
 // The web shell: a MINIMAL smoke page + the build-stamped service worker.

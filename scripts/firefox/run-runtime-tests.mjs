@@ -36,15 +36,15 @@ const ROOT = resolve(HERE, '..', '..');
 const EXTENSION = join(ROOT, 'extension');
 const OUTPUT = join(ROOT, 'artifacts', 'firefox-runtime');
 const VERSION = String(JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version);
-const ADDON_ID = 'peerd@peerd.ai';
+const ADDON_ID = 'mcdollar@mcdollar.ai';
 const TEST_UUID = '7d12f198-31fc-4e95-9184-e954123981a6';
 const EXTENSION_ORIGIN = `moz-extension://${TEST_UUID}`;
-const PREVIEW_ADDON_ID = 'peerd-preview@peerd.ai';
+const PREVIEW_ADDON_ID = 'mcdollar-preview@mcdollar.ai';
 const PREVIEW_TEST_UUID = '7d12f198-31fc-4e95-9184-e954123981a7';
 const PREVIEW_EXTENSION_ORIGIN = `moz-extension://${PREVIEW_TEST_UUID}`;
 const FIREFOX_SIDEBAR_IDS = Object.freeze({
-  [EXTENSION_ORIGIN]: 'peerd_peerd_ai-sidebar-action',
-  [PREVIEW_EXTENSION_ORIGIN]: 'peerd-preview_peerd_ai-sidebar-action',
+  [EXTENSION_ORIGIN]: 'mcdollar_mcdollar_ai-sidebar-action',
+  [PREVIEW_EXTENSION_ORIGIN]: 'mcdollar-preview_mcdollar_ai-sidebar-action',
 });
 const NOTEBOOK_PROBE_TYPE = 'firefox-notebook-probe/call';
 const NOTEBOOK_PROBE_TOKEN = 'firefox-notebook-probe-7d12f198';
@@ -55,8 +55,8 @@ const REMOTE_MODULE_ROOT_PATH = '/__firefox-remote-module.js';
 const REMOTE_MODULE_CHILD_PATH = '/__firefox-remote-child.js';
 const REMOTE_MODULE_SLOW_PATH = '/__firefox-remote-slow.js';
 const REMOTE_MODULE_SLOW_STATUS_PATH = '/__firefox-remote-slow-status.json';
-const DNR_PUBLIC_HOST = 'guard.peerd.test';
-const DNR_FRAME_HOST = 'frame.peerd.test';
+const DNR_PUBLIC_HOST = 'guard.mcdollar.test';
+const DNR_FRAME_HOST = 'frame.mcdollar.test';
 const DNR_FIXTURE_PATH = '/__firefox-dnr-fixture';
 const DNR_REDIRECT_PATH = '/__firefox-dnr-redirect';
 const DNR_META_PATH = '/__firefox-dnr-meta';
@@ -77,7 +77,7 @@ const ACTOR_PROMPT = 'Return the Firefox bound actor proof token.';
 const LIFETIME_ACTOR_REPLY_CANARY = 'firefox-lifetime-actor-reply-7d12f198';
 const LIFETIME_FINAL_REPLY_CANARY = 'firefox-lifetime-parent-final-7d12f198';
 const LIFETIME_ACTOR_PROMPT = 'Return the Firefox background lifetime proof token.';
-const LIFETIME_HEARTBEAT_KEY = 'peerdActorHostKeepAlive';
+const LIFETIME_HEARTBEAT_KEY = 'mcdollarActorHostKeepAlive';
 const LIFETIME_RESPONSE_DELAY_MS = 65_000;
 const FIREFOX_EVENT_PAGE_IDLE_MS = 30_000;
 const FIREFOX_EVENT_PAGE_RESTART_MARGIN_MS = 15_000;
@@ -109,10 +109,10 @@ const ROOT_GOAL_TOOL_ID = 'firefox-root-goal-complete';
 const ROOT_GOAL_DONE_CANARY = 'firefox-root-goal-done-7d12f198';
 const ROOT_PROBE_PROMPT = 'Return the Firefox direct-controller idle proof.';
 const ROOT_PROBE_CANARY = 'firefox-root-controller-idle-7d12f198';
-const RECOVERY_SEED_KEY = 'peerdFirefoxActorRecoverySeed';
-const RECOVERY_BOOT_KEY = 'peerdFirefoxActorRecoveryBoot';
-const LIFECYCLE_OPERATIONS_KEY = 'peerd.lifecycle.operations';
-const LIFECYCLE_NOTICES_KEY = 'peerd.lifecycle.pendingNotices';
+const RECOVERY_SEED_KEY = 'mcdollarFirefoxActorRecoverySeed';
+const RECOVERY_BOOT_KEY = 'mcdollarFirefoxActorRecoveryBoot';
+const LIFECYCLE_OPERATIONS_KEY = 'mcdollar.lifecycle.operations';
+const LIFECYCLE_NOTICES_KEY = 'mcdollar.lifecycle.pendingNotices';
 const FAILURE_FINAL_CANARY = 'firefox-actor-not-run-final-7d12f198';
 const FAILURE_ACTOR_PROMPT = 'Click the Firefox parity action and report the page status.';
 const BROKEN_WORKER_SCREENSHOT = 'broken-worker.png';
@@ -554,7 +554,7 @@ const startProviderServer = async () => {
   let nextDnrVectorId = 0;
   let dnrFlow = null;
   let lastDnrFlow = null;
-  const certificateDirectory = mkdtempSync(join(tmpdir(), 'peerd-firefox-provider-'));
+  const certificateDirectory = mkdtempSync(join(tmpdir(), 'mcdollar-firefox-provider-'));
   const certificatePath = join(certificateDirectory, 'provider-cert.pem');
   const keyPath = join(certificateDirectory, 'provider-key.pem');
   try {
@@ -1934,9 +1934,9 @@ const runNumericTabAuthoritySmoke = async (driver, providerServer) => {
 };
 
 const createBrokenWorkerArtifact = () => {
-  const directory = mkdtempSync(join(tmpdir(), 'peerd-firefox-broken-worker-'));
+  const directory = mkdtempSync(join(tmpdir(), 'mcdollar-firefox-broken-worker-'));
   const staging = join(directory, 'staging');
-  const artifact = join(directory, `peerd-${VERSION}-store-firefox-broken-worker.xpi`);
+  const artifact = join(directory, `mcdollar-${VERSION}-store-firefox-broken-worker.xpi`);
   cpSync(join(ROOT, 'artifacts', 'staging', 'store-firefox'), staging, { recursive: true });
   const probe = join(staging, 'background', 'firefox-broken-worker-probe.js');
   writeFileSync(probe, `const bootId = crypto.randomUUID();
@@ -1967,9 +1967,9 @@ throw new Error('Firefox runtime test fault: actor worker failed before ready');
 // narrow relay in the background page; all Notebook/editor/worker code remains
 // byte-for-byte the staged Store or Preview package, and the relay never ships.
 const createNotebookProbeArtifact = (channel) => {
-  const directory = mkdtempSync(join(tmpdir(), `peerd-firefox-${channel}-notebook-probe-`));
+  const directory = mkdtempSync(join(tmpdir(), `mcdollar-firefox-${channel}-notebook-probe-`));
   const staging = join(directory, 'staging');
-  const artifact = join(directory, `peerd-${VERSION}-${channel}-firefox-notebook-probe.xpi`);
+  const artifact = join(directory, `mcdollar-${VERSION}-${channel}-firefox-notebook-probe.xpi`);
   cpSync(join(ROOT, 'artifacts', 'staging', `${channel}-firefox`), staging, { recursive: true });
   const serviceWorker = backgroundEntryPath(staging);
   const source = readFileSync(serviceWorker, 'utf8');
@@ -2009,14 +2009,14 @@ const createNotebookProbeArtifact = (channel) => {
 };
 
 const createLifetimeArtifact = () => {
-  const directory = mkdtempSync(join(tmpdir(), 'peerd-firefox-lifetime-'));
+  const directory = mkdtempSync(join(tmpdir(), 'mcdollar-firefox-lifetime-'));
   const staging = join(directory, 'staging');
-  const artifact = join(directory, `peerd-${VERSION}-store-firefox-lifetime.xpi`);
+  const artifact = join(directory, `mcdollar-${VERSION}-store-firefox-lifetime.xpi`);
   cpSync(join(ROOT, 'artifacts', 'staging', 'store-firefox'), staging, { recursive: true });
   const probe = join(staging, 'background', 'firefox-lifetime-probe.js');
   writeFileSync(probe, `const bootId = crypto.randomUUID();
 const heartbeats = [];
-globalThis.peerdFirefoxLifetimeProbe = {
+globalThis.mcdollarFirefoxLifetimeProbe = {
   record(changes) {
     const change = changes?.[${JSON.stringify(LIFETIME_HEARTBEAT_KEY)}];
     if (!change) return;
@@ -2043,13 +2043,13 @@ browser.runtime.onMessage.addListener((message) =>
 };
 
 const createKeepaliveLossArtifact = () => {
-  const directory = mkdtempSync(join(tmpdir(), 'peerd-firefox-keepalive-loss-'));
+  const directory = mkdtempSync(join(tmpdir(), 'mcdollar-firefox-keepalive-loss-'));
   const staging = join(directory, 'staging');
-  const artifact = join(directory, `peerd-${VERSION}-store-firefox-keepalive-loss.xpi`);
+  const artifact = join(directory, `mcdollar-${VERSION}-store-firefox-keepalive-loss.xpi`);
   cpSync(join(ROOT, 'artifacts', 'staging', 'store-firefox'), staging, { recursive: true });
   const probe = join(staging, 'background', 'firefox-keepalive-loss-probe.js');
   writeFileSync(probe, `let armed = false;
-globalThis.peerdFirefoxKeepaliveLossFault = {
+globalThis.mcdollarFirefoxKeepaliveLossFault = {
   consume() {
     if (!armed) return false;
     armed = false;
@@ -2076,9 +2076,9 @@ browser.runtime.onMessage.addListener((message) => {
 };
 
 const createRecoveryArtifact = () => {
-  const directory = mkdtempSync(join(tmpdir(), 'peerd-firefox-recovery-'));
+  const directory = mkdtempSync(join(tmpdir(), 'mcdollar-firefox-recovery-'));
   const staging = join(directory, 'staging');
-  const artifact = join(directory, `peerd-${VERSION}-store-firefox-recovery.xpi`);
+  const artifact = join(directory, `mcdollar-${VERSION}-store-firefox-recovery.xpi`);
   cpSync(join(ROOT, 'artifacts', 'staging', 'store-firefox'), staging, { recursive: true });
   const probe = join(staging, 'background', 'firefox-recovery-probe.js');
   writeFileSync(probe, `const bootId = crypto.randomUUID();
@@ -2109,9 +2109,9 @@ browser.runtime.onMessage.addListener((message) => {
   }
   if (message?.type !== 'firefox-recovery/seed-operations') return undefined;
   return (async () => {
-    const { createOperationLog } = await import('/peerd-runtime/index.js');
+    const { createOperationLog } = await import('/mcdollar-runtime/index.js');
     const operationLog = createOperationLog({ storage: lifecycleStorage });
-    const generation = await lifecycleStorage.get('peerd.lifecycle.generation');
+    const generation = await lifecycleStorage.get('mcdollar.lifecycle.generation');
     if (!generation?.id) throw new Error('lifecycle generation is not ready');
     const sessionId = String(message.sessionId ?? '');
     const seeds = [
@@ -3551,7 +3551,7 @@ return 'REACHED';`;
   try {
     const policy = await driver.executeAsync(`
       const done = arguments[arguments.length - 1];
-      import(browser.runtime.getURL('peerd-engine/index.js'))
+      import(browser.runtime.getURL('mcdollar-engine/index.js'))
         .then((engine) => done({
           ok: true,
           unsupportedCode: engine.UNSUPPORTED_NATIVE_MODULE_IMPORT_CODE,
@@ -3723,7 +3723,7 @@ const runLocalModuleGraphSmoke = async (driver) => {
       export const tlaValue = 43;
     `))?.ok === true, 'Firefox writes the module-semantics fixture');
     assert((await write('lib/failure.js', `
-      /*__peerd_module:00000000-0000-4000-8000-000000000000:module:%__*/
+      /*__mcdollar_module:00000000-0000-4000-8000-000000000000:module:%__*/
       throw new Error('imported-source-path-probe');
     `))?.ok === true,
       'Firefox writes the imported failure fixture');
@@ -4047,13 +4047,13 @@ let dwebBlocked = false;
 let providerBlocked = false;
 let pageBlocked = false;
 let siteBlocked = false;
-try { await peerd.self.writeFile('remote.txt', 'no'); } catch { fileBlocked = true; }
-try { await peerd.egress.fetch('https://example.com'); } catch { networkBlocked = true; }
-try { await peerd.runtime.runAgent({ task: 'no' }); } catch { subagentBlocked = true; }
-try { await peerd.distributed.peers(); } catch { dwebBlocked = true; }
-try { await peerd.provider.call({ prompt: 'no' }); } catch { providerBlocked = true; }
-try { await peerd.page.goto('https://example.com'); } catch { pageBlocked = true; }
-try { await peerd.site.fetch('/private'); } catch { siteBlocked = true; }
+try { await mcdollar.self.writeFile('remote.txt', 'no'); } catch { fileBlocked = true; }
+try { await mcdollar.egress.fetch('https://example.com'); } catch { networkBlocked = true; }
+try { await mcdollar.runtime.runAgent({ task: 'no' }); } catch { subagentBlocked = true; }
+try { await mcdollar.distributed.peers(); } catch { dwebBlocked = true; }
+try { await mcdollar.provider.call({ prompt: 'no' }); } catch { providerBlocked = true; }
+try { await mcdollar.page.goto('https://example.com'); } catch { pageBlocked = true; }
+try { await mcdollar.site.fetch('/private'); } catch { siteBlocked = true; }
 for (const envelope of [
   { type: 'actor-request', rid: 'forged-actor', args: { task: 'leak' } },
   { type: 'fetch-request', rid: 'forged-fetch', url: 'https://example.com', method: 'GET' },
@@ -4432,7 +4432,7 @@ const runPrivateNetworkDnrSmoke = async (driver, providerServer) => {
       const [actorCanary, finalCanary, fixtureUrl] = arguments;
       const done = arguments[arguments.length - 1];
       (async () => {
-        const policy = await import(browser.runtime.getURL('peerd-egress/index.js'));
+        const policy = await import(browser.runtime.getURL('mcdollar-egress/index.js'));
         if (typeof browser.declarativeNetRequest?.getSessionRules !== 'function') {
           return { failed: 'declarativeNetRequest session rules unavailable' };
         }
@@ -4565,7 +4565,7 @@ const runPrivateNetworkDnrSmoke = async (driver, providerServer) => {
         const [tabId] = arguments;
         const done = arguments[arguments.length - 1];
         (async () => {
-          const policy = await import(browser.runtime.getURL('peerd-egress/index.js'));
+          const policy = await import(browser.runtime.getURL('mcdollar-egress/index.js'));
           const rules = await browser.declarativeNetRequest.getSessionRules();
           return {
             tabId,
@@ -4837,7 +4837,7 @@ const runPrivateNetworkDnrSmoke = async (driver, providerServer) => {
         const [tabId] = arguments;
         const done = arguments[arguments.length - 1];
         (async () => {
-          const policy = await import(browser.runtime.getURL('peerd-egress/index.js'));
+          const policy = await import(browser.runtime.getURL('mcdollar-egress/index.js'));
           await browser.tabs.remove(tabId);
           for (let attempt = 0; attempt < 120; attempt += 1) {
             const rules = await browser.declarativeNetRequest.getSessionRules();
@@ -4925,7 +4925,7 @@ const runPrivateNetworkDnrSmoke = async (driver, providerServer) => {
       const [tabId, extensionTabId] = arguments;
       const done = arguments[arguments.length - 1];
       (async () => {
-        const policy = await import(browser.runtime.getURL('peerd-egress/index.js'));
+        const policy = await import(browser.runtime.getURL('mcdollar-egress/index.js'));
         if (Number.isInteger(extensionTabId)) {
           await browser.tabs.update(extensionTabId, { active: true }).catch(() => {});
         }
@@ -5005,7 +5005,7 @@ const runPrivateNetworkDnrSmoke = async (driver, providerServer) => {
   }
 };
 
-// "Keep peerd as the first tab" in Firefox: the pinned Home tab shows peerd's
+// "Keep mcdollar as the first tab" in Firefox: the pinned Home tab shows mcdollar's
 // icon at rest, and a turn changes that icon without the attention mark that
 // Firefox draws when a pinned tab's title changes in the background (only a
 // click on the tab clears that mark). The turn uses an unreachable keyless
@@ -5043,7 +5043,7 @@ const runFirstTabSmoke = async (driver) => {
       return tab?.index === 0 && tab.image ? tab : null;
     }, { budgetMs: 15_000, pollMs: 200 });
     assert(!!rest && rest.selected === false && rest.image.startsWith('data:image/png'),
-      'Firefox shows the peerd icon on the pinned Home tab at rest, not a blank globe', JSON.stringify(rest));
+      'Firefox shows the mcdollar icon on the pinned Home tab at rest, not a blank globe', JSON.stringify(rest));
     const sent = JSON.parse(await executeInBrowsingContext(driver, rest.context, `
       const done = arguments[arguments.length - 1];
       (async () => {
@@ -5287,7 +5287,7 @@ const main = async () => {
         }), (error) => done({ ok: false, error: error?.message || String(error) }));
     `);
     assert(privateTransfer?.ok === true
-      && privateTransfer?.format === 'peerd-export'
+      && privateTransfer?.format === 'mcdollar-export'
       && Number.isInteger(privateTransfer?.version),
     'Firefox backup uses the exact-options private background Port', JSON.stringify(privateTransfer));
     await driver.navigate(`${EXTENSION_ORIGIN}/sidepanel/sidepanel.html`);
@@ -5336,7 +5336,7 @@ const main = async () => {
         let tab;
         try {
           const [{ captureSnapshot }, { clickInjected }, { typeInjected }] = await Promise.all([
-            import(browser.runtime.getURL('peerd-runtime/dom/index.js')),
+            import(browser.runtime.getURL('mcdollar-runtime/dom/index.js')),
             import(browser.runtime.getURL('background/page-authority/click.js')),
             import(browser.runtime.getURL('background/page-authority/type.js')),
           ]);
@@ -5362,7 +5362,7 @@ const main = async () => {
             throw new Error('fixture tab did not produce an exact scriptable document');
           }
           const snapshot = await captureSnapshot(
-            { id: tab.id, peerdDocumentId: fixtureDocumentId },
+            { id: tab.id, mcdollarDocumentId: fixtureDocumentId },
             { scripting: browser.scripting },
             { budget: 4_000 },
           );
@@ -5433,7 +5433,7 @@ const main = async () => {
         buttons: [...document.querySelectorAll('button')].map((button) => button.textContent),
       };
     `), { budgetMs: 30_000 });
-    assert(voicePosture?.voice?.includes('Talk to peerd instead of typing')
+    assert(voicePosture?.voice?.includes('Talk to mcdollar instead of typing')
       && voicePosture?.voice?.includes('Moonshine')
       && voicePosture?.ocr?.includes('PDF OCR is unavailable in this browser'),
     'Firefox Voice settings offer Moonshine while OCR names its unavailable host alternative',
@@ -5598,8 +5598,8 @@ const main = async () => {
     // for a SUBSET, and packaging/gen-gecko-test-badge.ts publishes what it is
     // handed. Writing nothing here makes a partial run fail the badge rather
     // than advertise itself as full Gecko coverage.
-    if (process.env.PEERD_TEST_SUMMARY && !only && !requestedShard) {
-      writeFileSync(process.env.PEERD_TEST_SUMMARY, `${JSON.stringify({
+    if (process.env.MCDOLLAR_TEST_SUMMARY && !only && !requestedShard) {
+      writeFileSync(process.env.MCDOLLAR_TEST_SUMMARY, `${JSON.stringify({
         lane: 'inbrowser-gecko',
         passed,
         failed: executed - passed,

@@ -4,7 +4,7 @@ import { describe, expect, it } from '../../framework.js';
 import { createAppTabTracker } from '/background/app-tab-tracker.js';
 import browser from '/shared/browser-api.js';
 import { AppRoomAuthorityChangedError, createAppRoomAuthority } from '/offscreen/app-room-authority.js';
-import { makeEngineLiveness } from '/peerd-runtime/index.js';
+import { makeEngineLiveness } from '/mcdollar-runtime/index.js';
 
 const deferred = () => {
   /** @type {(value:any)=>void} */ let resolve = () => {};

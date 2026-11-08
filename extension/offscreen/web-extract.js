@@ -12,6 +12,6 @@
 //
 // why client-side at all: the hosted "clean content" APIs other agents lean on
 // (Firecrawl etc.) are forbidden here — BYOK / no backend / no third party
-// sees the user's browsing. This is peerd's privacy-preserving substitute.
+// sees the user's browsing. This is mcdollar's privacy-preserving substitute.
 
 export { extractWeb as handleWebExtract } from './web-extract-core.js';

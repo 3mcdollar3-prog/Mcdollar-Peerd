@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { makeOriginLockResolver } from '../../extension/background/origin-lock-controller.js';
-import { makeApiActorBindings } from '../../extension/peerd-runtime/actor/web-actor.js';
+import { makeApiActorBindings } from '../../extension/mcdollar-runtime/actor/web-actor.js';
 
 const makeHarness = (over: { provisional?: boolean, siteActorBindings?: any } = {}) => {
   const turnTokens = new Map([['actor', 1]]);

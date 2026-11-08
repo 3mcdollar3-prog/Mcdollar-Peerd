@@ -13,7 +13,7 @@
 //      there is no threshold to argue about — zero, always.
 //
 //   2. Chrome-only API usage is a RATCHET against a named allowlist, the same
-//      shape as check-tscheck.ts's complete-coverage invariant. peerd legitimately ships some
+//      shape as check-tscheck.ts's complete-coverage invariant. mcdollar legitimately ships some
 //      Chrome-only code into the Firefox package: the module is loaded but the
 //      call site is guarded by a runtime capability probe (`offscreenAvailable`,
 //      `debuggerApiAvailable()`, and friends), which is a pattern a static linter
@@ -130,7 +130,7 @@ export const main = () => {
     }
   }
   for (const { name, dir } of builds) {
-    if (existsSync(join(dir, 'peerd-distributed'))) {
+    if (existsSync(join(dir, 'mcdollar-distributed'))) {
       problems.push(`  [${name}] dweb module is present without a Firefox mesh host`);
     }
     for (const relativePath of [

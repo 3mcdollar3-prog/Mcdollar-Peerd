@@ -5,7 +5,7 @@ import {
   kernelSessionAppId,
   parseKernelAppCatalogRow,
 } from '../../extension/background/kernel-app-catalog.js';
-import { createAppRegistry } from '../../extension/peerd-engine/background.js';
+import { createAppRegistry } from '../../extension/mcdollar-engine/background.js';
 
 const initialRow = () => ({
   key: 'apps.v1',

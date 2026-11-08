@@ -19,7 +19,7 @@ const renderSection = (mode) => `(async () => {
   const { immutableAppRoot } = await import('/shared/address/immutable-app-root.js');
   const address = formatDwappUri({ did: encodeDidKey(new Uint8Array(32)), hash: 'a'.repeat(64) });
   const target = immutableAppRoot(address);
-  const key = 'peerd.manual-app-install.pending';
+  const key = 'mcdollar.manual-app-install.pending';
   window.__manualAddressPrior = sessionStorage.getItem(key); sessionStorage.removeItem(key);
   window.__manualAddressCalls = [];
   if (${JSON.stringify(mode)} === 'unknown') sessionStorage.setItem(key, address);
@@ -54,7 +54,7 @@ const renderShareLink = (mode) => `(async () => {
   const { immutableAppRoot } = await import('/shared/address/immutable-app-root.js');
   const address = formatDwappUri({ did: encodeDidKey(new Uint8Array(32)), hash: 'a'.repeat(64) });
   const target = immutableAppRoot(address);
-  const key = 'peerd.manual-app-install.pending';
+  const key = 'mcdollar.manual-app-install.pending';
   window.__manualAddressPrior = sessionStorage.getItem(key); sessionStorage.removeItem(key);
   window.__manualAddressCalls = [];
   if (${JSON.stringify(mode)} === 'unknown') sessionStorage.setItem(key, address);
@@ -76,7 +76,7 @@ const renderShareLink = (mode) => `(async () => {
     if (message.type === 'dweb/distributed/info') return { ok: true, running: true, linkedCount: 1 };
     if (message.type === 'dweb/app-local-changes') return { ok: true, changed: false };
     if (message.type !== 'dweb/base/inspect-address') throw new Error('unexpected fixture mutation');
-    // why declared: a link check also reports what the verified files ask of peerd.
+    // why declared: a link check also reports what the verified files ask of mcdollar.
     return { ok: true, summary: { ...target, name: 'Peer-hosted WASM notebook',
       decodedBytes: 1200123, fileCount: 3, entryFile: 'index.html', containsWasm: true,
       declared: { hash: target.hash, dweb: true, instructions: false, observeAct: false } } };
@@ -108,7 +108,7 @@ const SHARE_LINK_READY = {
   verified: panelButton('Install and share'),
   rejected: rootHas('This link points to one file inside an app.', 'File paths are not supported'),
   unknown: `${panelButton(PHASE2 ? 'Check again' : 'Refresh')}
-    && ${rootHas('peerd is not sure the install finished.', 'peerd could not confirm whether the install finished.')}`,
+    && ${rootHas('mcdollar is not sure the install finished.', 'mcdollar could not confirm whether the install finished.')}`,
   installed: panelButton('Open'),
 };
 
@@ -149,7 +149,7 @@ return ({
         const root = document.querySelector('#e2e-manual-address');
         if (root) { (await import('/vendor/mithril/mithril.js')).default.mount(root, null); root.remove(); }
         document.querySelector('#e2e-manual-address-sheet')?.remove();
-        const key = 'peerd.manual-app-install.pending';
+        const key = 'mcdollar.manual-app-install.pending';
         if (typeof window.__manualAddressPrior === 'string') sessionStorage.setItem(key, window.__manualAddressPrior);
         else sessionStorage.removeItem(key);
         delete window.__manualAddressPrior; delete window.__manualAddressCalls;

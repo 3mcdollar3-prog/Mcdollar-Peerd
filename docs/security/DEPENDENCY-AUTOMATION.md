@@ -65,7 +65,7 @@ of these are true:
    complete, a trusted coordinator re-runs the already-authenticated failed
    release workflow; passage of time no longer requires a human click.
 7. On a disposable runner with only a read token, the workflow increments
-   peerd's patch version, adds release notes, regenerates the development
+   mcdollar's patch version, adds release notes, regenerates the development
    manifest, and, for Bun updates, rebuilds the checked-in CodeMirror bundle and
    its complete SHA-256 vendor lock. Candidate code never shares a runner with a
    repository-write token.
@@ -172,7 +172,7 @@ the repository. Apply them only after this workflow is present on `main`:
   “require review from Code Owners.” The Actions bot cannot be the repository's
   Code Owner; ordinary PRs still require one approval.
 - Add `CodeQL (javascript-typescript)`, `OSV scan (resolved dependency tree)`,
-  and `peerd security invariants` to the required checks alongside the existing
+  and `mcdollar security invariants` to the required checks alongside the existing
   full correctness/package matrix.
 - On the `release` environment, restrict deployments to tags matching `v*` and
   remove the required reviewers. The release job itself rejects tags whose

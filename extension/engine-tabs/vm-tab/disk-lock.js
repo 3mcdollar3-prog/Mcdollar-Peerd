@@ -18,7 +18,7 @@
 export const DISK_LOCK_WAIT_MS = 3000;
 
 /** @param {string} diskOverlayKey */
-export const diskLockName = (diskOverlayKey) => `peerd-vm-disk:${diskOverlayKey}`;
+export const diskLockName = (diskOverlayKey) => `mcdollar-vm-disk:${diskOverlayKey}`;
 
 /**
  * Hold the disk lock for the rest of this document's life.

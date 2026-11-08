@@ -52,7 +52,7 @@
   "cross_origin_opener_policy": { "value": "same-origin" },
 
   "action": {
-    "default_title": "peerd",
+    "default_title": "mcdollar",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
@@ -62,9 +62,9 @@
   },
 
   "commands": {
-    "pull-in-peerd": {
+    "pull-in-mcdollar": {
       "suggested_key": { "default": "Alt+Shift+P", "mac": "Command+Shift+P" },
-      "description": "Toggle the peerd side panel"
+      "description": "Toggle the mcdollar side panel"
     }
   }
 }

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { evalIn, waitFor } from './e2e-harness.mjs';
 
 const absentOnBase = (path, marker, rec) => {
-  if (process.env.PEERD_VISUAL_BASE_RENDER !== '1') return false;
+  if (process.env.MCDOLLAR_VISUAL_BASE_RENDER !== '1') return false;
   const extension = process.argv.find(arg => arg.startsWith('--extension='))?.slice('--extension='.length);
   if (!extension) throw new Error('base visual render requires an explicit extension tree');
   const file = join(extension, path);

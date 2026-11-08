@@ -6,7 +6,7 @@
 // "This script should only be loaded in a browser extension." whenever
 // chrome.runtime.id is absent — i.e. on any normal web page. Every curated
 // module that does `import browser from '/vendor/browser-polyfill.js'`
-// (peerd-egress storage, a few shared/* helpers) would fail at load. This shim
+// (mcdollar-egress storage, a few shared/* helpers) would fail at load. This shim
 // exports the same default `browser` object with the small surface those modules
 // actually touch: page-backed where it matters (storage), inert where it has no
 // meaning on a single page (runtime/tabs/windows messaging). The web target
@@ -38,7 +38,7 @@ const makeArea = (read, write) => ({
 });
 
 // storage.local → localStorage (survives reload); storage.session → memory.
-const LOCAL_KEY = 'peerd:web:storage.local';
+const LOCAL_KEY = 'mcdollar:web:storage.local';
 const readLocal = () => { try { return JSON.parse(localStorage.getItem(LOCAL_KEY) || '{}'); } catch { return {}; } };
 const writeLocal = (all) => { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(all)); } catch { /* quota/off */ } };
 let sessionMem = {};
@@ -51,7 +51,7 @@ const inertEvent = () => ({ addListener: noop, removeListener: noop, hasListener
 
 const browser = {
   runtime: {
-    id: 'peerd-web',                                  // truthy so runtime.id guards pass
+    id: 'mcdollar-web',                                  // truthy so runtime.id guards pass
     // why absolute: the real polyfill returns an absolute URL — callers do
     // `new URL(browser.runtime.getURL(x))` and sender-trust derives an ORIGIN
     // from getURL(''); a bare path would throw / compare wrong.

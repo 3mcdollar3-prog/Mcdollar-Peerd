@@ -17,7 +17,7 @@ import m from '/vendor/mithril/mithril.js';
 import { CHANNEL, DWEB_ENABLED } from '/shared/channel-config.js';
 import { openHome } from '/shared/open-home.js';
 // Reused-in-place management surfaces (sidepanel/ is chassis, not a
-// peerd-* module, so no import boundary applies).
+// mcdollar-* module, so no import boundary applies).
 import { SkillsView } from '/sidepanel/components/skills-view.js';
 import { HooksView } from '/sidepanel/components/hooks-view.js';
 import { DenylistView } from '/sidepanel/components/denylist-view.js';
@@ -119,8 +119,8 @@ const Wordmark = () => {
     oncreate: (/** @type {{ dom: HTMLElement }} */ v) => { el = v.dom; document.addEventListener('visibilitychange', replay); },
     onremove: () => document.removeEventListener('visibilitychange', replay),
     view: () => m('.wordmark.wordmark--intro', {
-      'aria-label': 'peerd: back to home', role: 'link', tabindex: '0',
-      title: 'Back to peerd home', style: 'cursor: pointer',
+      'aria-label': 'mcdollar: back to home', role: 'link', tabindex: '0',
+      title: 'Back to mcdollar home', style: 'cursor: pointer',
       onclick: () => openHome(),
       onkeydown: (/** @type {KeyboardEvent} */ e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHome(); } },
     }, [
@@ -198,14 +198,14 @@ const OptionsApp = {
     // Gate ladder. The page is reachable from chrome://extensions before
     // any vault exists, and unlock is a panel-only ceremony: this page
     // never renders unlock UI, it points at the panel and re-reads state
-    // on focus. ("the peerd panel", not "side panel": Firefox renders a
+    // on focus. ("the mcdollar panel", not "side panel": Firefox renders a
     // sidebar, and the phrase covers both.)
     if (!state) {
       if (vnode.attrs.stateLoadFailed) {
         return m('.options-gate', m('.options-gate-card', [
           m(Wordmark),
-          m('h2', 'Peerd is restarting'),
-          m('p', 'Peerd did not finish starting this page.'),
+          m('h2', 'Mcdollar is restarting'),
+          m('p', 'Mcdollar did not finish starting this page.'),
           m('button', {
             type: 'button',
             onclick: () => vnode.attrs.retryState?.(),
@@ -215,14 +215,14 @@ const OptionsApp = {
       return gate(null, 'Loading…');
     }
     if (!state.vault?.initialized) {
-      return gate('Set up peerd first',
-        'There’s no vault yet. Open the peerd panel from the extension '
-        + 'icon to set up peerd: this page picks the new state up when '
+      return gate('Set up mcdollar first',
+        'There’s no vault yet. Open the mcdollar panel from the extension '
+        + 'icon to set up mcdollar: this page picks the new state up when '
         + 'you return.');
     }
     if (state.vault.locked) {
       return gate('Vault locked',
-        'Unlock peerd in the peerd panel, then come back: this page '
+        'Unlock mcdollar in the mcdollar panel, then come back: this page '
         + 'refreshes when it regains focus.');
     }
 
@@ -252,7 +252,7 @@ const OptionsApp = {
       m('nav.options-nav', { 'aria-label': 'Settings sections' }, [
         m(Wordmark),
         CHANNEL === 'preview'
-          ? m('span.channel-badge.channel-badge--in', { title: 'peerd preview: dweb preview package' }, 'preview')
+          ? m('span.channel-badge.channel-badge--in', { title: 'mcdollar preview: dweb preview package' }, 'preview')
           : null,
         NAV.flatMap((group) => [
           m('.options-nav-group', group.label),
@@ -296,7 +296,7 @@ const OptionsApp = {
       // subsection, so there is no standalone git-credentials route/nav entry.
       case 'api-integrations': return m(ApiIntegrationsSection, { send });
       case 'denylist':  return m(DenylistView, { send });
-      // The inverse of the denylist: sites peerd itself decided are the user's.
+      // The inverse of the denylist: sites mcdollar itself decided are the user's.
       case 'learned-sites': return m(LearnedOriginsView, { send });
       case 'paced-sites': return m(PacedOriginsView, { send });
       case 'activity':  return m(ActivityView, { send });

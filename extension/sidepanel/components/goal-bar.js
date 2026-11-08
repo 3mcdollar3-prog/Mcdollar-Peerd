@@ -22,7 +22,7 @@ export const GoalBar = {
     const stop = () => settleUiEffect(send({ type: 'agent/stop' }));
     const turns = `turn ${goal.iteration}${goal.maxIterations ? ` / ${goal.maxIterations}` : ''}`;
     return m('.goal-bar', { role: 'status', 'aria-live': 'polite' }, [
-      m('span.peerd-spinner.peerd-spinner--sm', { 'aria-hidden': 'true' }),
+      m('span.mcdollar-spinner.mcdollar-spinner--sm', { 'aria-hidden': 'true' }),
       m('span.goal-bar-label', 'Goal'),
       m('span.goal-bar-meta', turns),
       goal.goal ? m('span.goal-bar-text', { title: goal.goal }, goal.goal) : null,

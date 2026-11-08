@@ -20,7 +20,7 @@ import {
   checkApiKeyFormat,
   probeGpuCapability,
   recommendOllamaModel,
-} from '/peerd-provider/options.js';
+} from '/mcdollar-provider/options.js';
 import { LocalModelsSection } from './local-models.js';
 import {
   isUnknownMutationOutcome, mutationFailureCopy,
@@ -31,7 +31,7 @@ import {
 
 // ── Provider logos ──────────────────────────────────────────────────────
 // Inline SVG marks (no network, no external asset — same privacy posture
-// as the rest of peerd). Brand-evocative, not pixel-exact reproductions:
+// as the rest of mcdollar). Brand-evocative, not pixel-exact reproductions:
 // a coral sunburst for Anthropic, a routing fan-out for OpenRouter, and a
 // neutral monogram tile for anything else.
 const ANTHROPIC_MARK =
@@ -254,7 +254,7 @@ export const ProvidersSection = {
     };
 
     // Save a key for ONE provider, independently of the others. The paste
-    // sanity check is the shared checkApiKeyFormat (peerd-provider) - the
+    // sanity check is the shared checkApiKeyFormat (mcdollar-provider) - the
     // onboarding provider step applies the identical rule (§5h).
     /** @param {string} name */
     const saveKey = async (name) => {
@@ -292,7 +292,7 @@ export const ProvidersSection = {
           ui.keyUncertain[name] = uncertain;
           ui.keyMsg[name] = { ok: false, text: mutationFailureCopy(reply, {
             action: 'saving the provider key', fallback: 'The provider key could not be saved.',
-            messages: { locked: 'Vault is locked; unlock in the peerd panel first.' },
+            messages: { locked: 'Vault is locked; unlock in the mcdollar panel first.' },
           }) };
         }
       } finally {
@@ -337,10 +337,10 @@ export const ProvidersSection = {
           }
         : {
             ok: false,
-            text: uncertain ? 'Peerd could not confirm the provider test. Refresh before testing again.'
+            text: uncertain ? 'Mcdollar could not confirm the provider test. Refresh before testing again.'
               : reply?.error === 'invalid-key' ? 'Provider rejected the key (401). Double-check it.'
               : reply?.error === 'no-key' ? 'No key saved for this provider yet.'
-              : reply?.error === 'locked' ? 'Vault is locked — unlock in the peerd panel first.'
+              : reply?.error === 'locked' ? 'Vault is locked — unlock in the mcdollar panel first.'
               : reply?.error === 'no-models' ? 'Ollama is running, but it has no models installed. Get one with: ollama pull qwen3:8b'
               : name === 'ollama' && reply?.error === 'unreachable'
                 ? 'Couldn’t reach Ollama. Start it with: ollama serve'
@@ -589,7 +589,7 @@ export const ProvidersSection = {
         + 'endpoint. Ollama runs models on a daemon you control: keyless '
         + 'with no per-token API cost. Using localhost keeps inference on this machine.'),
       ui.providerStatusError ? m('.settings-inline-error', { role: 'alert' }, [
-        m('p', 'Peerd could not refresh provider status. Existing choices remain unchanged.'),
+        m('p', 'Mcdollar could not refresh provider status. Existing choices remain unchanged.'),
         m('button', {
           type: 'button',
           onclick: () => ProvidersSection.loadProviderStatus({ attrs: { state, send }, state: ui }),
@@ -705,7 +705,7 @@ export const ProvidersSection = {
           }),
         ]),
         m('p.hint', { id: 'runner-model-hint' }, [
-          'The web actor — peerd’s page reader and operator — runs on a fast, cheap ',
+          'The web actor — mcdollar’s page reader and operator — runs on a fast, cheap ',
           'model. Leave blank for Automatic: ',
           ...(localRunnerCapable
             ? ['use Local WebGPU when its model is installed; otherwise use ']
@@ -755,7 +755,7 @@ export const ProvidersSection = {
 // (navigator.gpu adapter limits + deviceMemory/hardwareConcurrency) only
 // works in a document context — exactly where this component lives; the
 // SW never runs it. The recommendation logic itself is pure
-// (peerd-provider/ollama-recommend.js) and bun-tested.
+// (mcdollar-provider/ollama-recommend.js) and bun-tested.
 
 const OllamaRecommendation = {
   /** @param {{ state: any }} vnode */
@@ -819,7 +819,7 @@ const OllamaRecommendation = {
           // suggest the smallest tier rather than nothing.
           ? [
               m('p', [
-                'This browser exposes no hardware signals (WebGPU unavailable), so peerd can’t size this machine. ',
+                'This browser exposes no hardware signals (WebGPU unavailable), so mcdollar can’t size this machine. ',
                 m('code', smallest.model),
                 ` (${smallest.sizeClass}-class) is a safe starting point.`,
               ]),
